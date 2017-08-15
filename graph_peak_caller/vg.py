@@ -11,6 +11,18 @@ class Position(object):
         self.offset = offset
         self.is_reverse = is_reverse
 
+    def __eq__(self, other):
+        if self.node_id != other.node_id:
+            return False
+        if self.offset != other.offset:
+            return False
+        return self.is_reverse == other.is_reverse
+
+    def __str__(self):
+        return "Pos(%s, %s, %s)" % (self.node_id, self.offset, self.is_reverse)
+
+    __repr__ = __str__
+
     def to_obg(self):
         return offsetbasedgraph.Position(self.node_id, self.offset)
 
@@ -30,6 +42,11 @@ class Edit(object):
         self.from_length = from_length
         self.sequence = sequence
 
+    def __eq__(self, other):
+        attrs = ["to_length", "from_length", "sequence"]
+        return all(getattr(self, attr) == getattr(other, attr)
+                   for attr in attrs)
+
     @classmethod
     def from_json(cls, edit_dict):
         sequence = None if "sequence" not in edit_dict else edit_dict["sequence"]
@@ -42,6 +59,11 @@ class Mapping(object):
     def __init__(self, start_position, edits):
         self.start_position = start_position
         self.edits = edits
+
+    def __eq__(self, other):
+        attrs = ["start_position", "edits"]
+        return all(getattr(self, attr) == getattr(other, attr)
+                   for attr in attrs)
 
     def is_reverse(self):
         return self.start_position.is_reverse
@@ -72,6 +94,11 @@ class Path(object):
     def __init__(self, name, mappings):
         self.mappings = mappings
         self.name = name
+
+    def __eq__(self, other):
+        attrs = ["mappings", "name"]
+        return all(getattr(self, attr) == getattr(other, attr)
+                   for attr in attrs)
 
     def is_reverse(self):
         mapping_reverse = [mapping.is_reverse() for mapping in self.mappings]

@@ -1,24 +1,35 @@
 import unittest
 import json
-from graph_peak_caller.vg import Position
+from graph_peak_caller.vg import *
 import offsetbasedgraph
-position_json = json.loads('{"offset": 10, "node_id": 0}')
-position_json2 = json.loads('{"offset": 0, "node_id": 1, "is_reverse": true}')
+position_jsons = [json.loads(pos_str) for pos_str in
+                  ('{"offset": 10, "node_id": 0}',
+                   '{"offset": 0, "node_id": 1, "is_reverse": true}')]
+positions = [Position(0, 10, False), Position(1, 0, True)]
+
+edit_jsons = [json.loads(edit_str) for edit_str in
+              ['{"to_length": 4, "from_length": 4}',
+               '{"to_length": 1, "from_length": 1, "sequence": "N"}']]
+edits = [Edit(4, 4, None), Edit(1, 1, "N")]
+
+mapping_jsons = [
+    {"position": position_jsons[0], "edit": edit_jsons}]
+
+mappings = [Mapping(positions[0], edits)]
+
+path_jsons = [
+    {"name": "path1",
+     "mapping": mapping_jsons}]
+paths = [Path("path1", mappings)]
+intervals = [offsetbasedgraph.Interval(10, 15, [0])]
 
 
 class TestPosition(unittest.TestCase):
 
     def test_json(self):
-        position = Position.from_json(position_json)
-        self.assertEqual(position.offset, 10)
-        self.assertEqual(position.node_id, 0)
-        self.assertEqual(position.is_reverse, False)
-
-    def test_json2(self):
-        position = Position.from_json(position_json2)
-        self.assertEqual(position.offset, 0)
-        self.assertEqual(position.node_id, 1)
-        self.assertEqual(position.is_reverse, True)
+        for position_json, true_position in zip(position_jsons, positions):
+            position = Position.from_json(position_json)
+            self.assertEqual(position, true_position)
 
     def test_translate(self):
         position = Position(10, 20, False)
@@ -28,7 +39,14 @@ class TestPosition(unittest.TestCase):
 
 
 class TestPath(unittest.TestCase):
-    def test_path(self):
-        pass
+    def test_json(self):
+        path = Path.from_json(path_jsons[0])
+        self.assertEquals(path, paths[0])
+
+    def test_obg(self):
+        for path, interval in zip(paths, intervals):
+            self.assertEqual(path.to_obg(), interval)
+
+
 if __name__ == "__main__":
     unittest.main()
