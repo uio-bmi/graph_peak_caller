@@ -1,9 +1,9 @@
 import unittest
 import json
-from binary_correlation.vg import Position
+from graph_peak_caller.vg import Position
 import offsetbasedgraph
-position_json = json.loads("{offset: 10, node_id: 0}")
-position_json2 = json.loads("{offset: 0, node_id: 1, is_reverse: true}")
+position_json = json.loads('{"offset": 10, "node_id": 0}')
+position_json2 = json.loads('{"offset": 0, "node_id": 1, "is_reverse": true}')
 
 
 class TestPosition(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestPosition(unittest.TestCase):
         self.assertEqual(position.node_id, 0)
         self.assertEqual(position.is_reverse, False)
 
-    def test_json(self):
+    def test_json2(self):
         position = Position.from_json(position_json2)
         self.assertEqual(position.offset, 0)
         self.assertEqual(position.node_id, 1)
@@ -30,3 +30,5 @@ class TestPosition(unittest.TestCase):
 class TestPath(unittest.TestCase):
     def test_path(self):
         pass
+if __name__ == "__main__":
+    unittest.main()
