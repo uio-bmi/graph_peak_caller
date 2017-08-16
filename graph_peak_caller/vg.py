@@ -158,7 +158,7 @@ class Node(object):
 
 
 class Edge(object):
-    def __init__(self, from_node, to_node, from_start, to_end, overlap):
+    def __init__(self, from_node, to_node, from_start=False, to_end=False, overlap=0):
         self.from_node = from_node
         self.to_node = to_node
         self.from_start = int(from_start)
