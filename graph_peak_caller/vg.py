@@ -374,6 +374,17 @@ class Graph(object):
         return offsetbasedgraph.Translation(trans_dict, trans_dict_reverse, offset_based_graph)
 
 
+def vg_mapping_file_to_interval_list(offset_based_graph, vg_mapping_file_name):
+    f = open(vg_mapping_file_name)
+    jsons = (json.loads(line) for line in f.readlines())
+    alignments = [Alignment.from_json(json_dict) for json_dict in jsons]
+    obg_alignments = [alignment.path.to_obg() for alignment in alignments]
+
+
+
+
+
+
 if __name__ == "__main__":
 
     f = open("./dm_test_data/mapped_reads_sample.json")
