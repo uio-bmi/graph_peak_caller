@@ -117,13 +117,16 @@ class Path(object):
 
         return cls(name, mappings)
 
-    def to_obg(self, ob_graph):
+    def to_obg(self, ob_graph = False):
         if len(self.mappings) == 0:
             return offsetbasedgraph.Interval(0, 0, [])
 
         nodes = [mapping.start_position.node_id for mapping in self.mappings]
 
         if self.is_reverse():
+            if not ob_graph:
+                raise Exception("Path is reverse and offset based graph is not sent")
+
             nodes = nodes[::-1]
             start_block_length = ob_graph.blocks[nodes[0]].length()
             start_offset = start_block_length - self.mappings[-1].get_end_offset()
@@ -225,7 +228,13 @@ class Graph(object):
                 if "path" not in line:
                     continue
                 if line["path"][0]["name"] != limit_to_chromosome:
+                    if len(nodes) > 0:
+                        # Assuminng there are nothing more on this chromosome now
+                        break
+
                     continue
+
+
 
             if do_read_paths and "path" in line:
                 paths.extend([Path.from_json(json_object) for json_object in line["path"]])
@@ -237,10 +246,11 @@ class Graph(object):
             if max_lines_to_read and i >= max_lines_to_read:
                 break
 
+
         obj = cls(nodes, edges, paths)
         if do_read_paths:
-            obj._merge_paths_by_name()
             obj.paths_as_intervals_by_chr = {}
+            obj._merge_paths_by_name()
 
         return obj
 
@@ -252,7 +262,7 @@ class Graph(object):
 
     def is_in_graph(self, obj):
         if isinstance(obj, Position):
-            return obj.node_id in self.nodes
+            return obj.node_id in self.nodes 
         elif isinstance(obj, Mapping):
             return self.is_in_graph(obj.start_position)
         elif isinstance(obj, Path):
@@ -401,14 +411,9 @@ def vg_mapping_file_to_interval_list(vg_graph, vg_mapping_file_name, offset_base
     jsons = (json.loads(line) for line in f.readlines())
     alignments = [Alignment.from_json(json_dict) for json_dict in jsons]
 
-    paths = [alignment.path for alignment in alignment]
-    paths = vg_graph.filter_
-
-    obg_alignments = [alignment.path.to_obg(offsetbasedgraph) for alignment in alignments]
-
-
-
-
+    paths = [alignment.path for alignment in alignments]
+    paths = vg_graph.filter(paths)   # Keep only the ones in graph
+    obg_alignments = [alignment.path.to_obg(offset_based_graph) for alignment in alignments]
 
 
 
