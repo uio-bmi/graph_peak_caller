@@ -250,6 +250,20 @@ class Graph(object):
                 return False
         return True
 
+    def is_in_graph(self, obj):
+        if isinstance(obj, Position):
+            return obj.node_id in self.nodes
+        elif isinstance(obj, Mapping):
+            return self.is_in_graph(obj.start_position)
+        elif isinstance(obj, Path):
+            return all(self.is_in_graph(mapping) for mapping
+                       in obj.mappings)
+        elif isinstance(obj, Alignment):
+            return self.is_in_graph(obj.path)
+
+    def filter(self, objects):
+        return [obj for obj in objects if self.is_in_graph(obj)]
+
     def edges_from_node(self, node_id):
         edges = []
         for edge in self.edges:
