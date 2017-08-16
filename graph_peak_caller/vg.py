@@ -141,6 +141,10 @@ class Node(object):
         self.id = id
         self.n_basepairs = n_basepairs
 
+    def __str__(self):
+        return "Node(%s, %s)" % (self.id, self.n_basepairs)
+    __repr__ = __str__
+
     @classmethod
     def from_json(cls, json_object):
         name = ""
@@ -204,6 +208,7 @@ class Graph(object):
         self.nodes = nodes
         self.edges = edges
         self.paths = paths
+        self.node_dict = {node.id: node.n_basepairs for node in self.nodes}
 
     @classmethod
     def create_from_file(cls, json_file_name, max_lines_to_read=False, limit_to_chromosome=False, do_read_paths=True):
@@ -252,7 +257,7 @@ class Graph(object):
 
     def is_in_graph(self, obj):
         if isinstance(obj, Position):
-            return obj.node_id in self.nodes
+            return obj.node_id in self.node_dict
         elif isinstance(obj, Mapping):
             return self.is_in_graph(obj.start_position)
         elif isinstance(obj, Path):
@@ -260,6 +265,7 @@ class Graph(object):
                        in obj.mappings)
         elif isinstance(obj, Alignment):
             return self.is_in_graph(obj.path)
+        assert False, type(obj)
 
     def filter(self, objects):
         return [obj for obj in objects if self.is_in_graph(obj)]

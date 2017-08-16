@@ -1,7 +1,7 @@
 import vg
 import offsetbasedgraph
 import json
-
+import cProfile
 from pileup import Pileup
 
 
@@ -23,5 +23,4 @@ if __name__ == "__main__":
                       for alignment in alignments]
     print("Creating pileup")
     pileup = Pileup(ob_graph, obg_alignments)
-    pileup.create()
-    print(pileup.summary())
+    cProfile.run("pileup.create()")
