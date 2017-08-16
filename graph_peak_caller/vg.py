@@ -65,23 +65,20 @@ class Mapping(object):
         return all(getattr(self, attr) == getattr(other, attr)
                    for attr in attrs)
 
+    def __str__(self):
+        return "Map(%s, %s)" % (
+            self.start_position, sum(edit.to_length for edit in self.edits))
+
     def is_reverse(self):
         return self.start_position.is_reverse
 
-    def get_start_position(self):
-        offset = self.start_position.offset
-        if self.is_reverse():
-            return Position(self.start_position.node_id, offset)
-        else:
-            return Position(self.start_position.node_id, offset)
+    def get_start_offset(self):
+        return self.start_position.offset
 
-    def get_end_position(self):
-        offset = self.start_position.offset
+    def get_end_offset(self):
+        start_offset = self.start_position.offset
         length = sum(edit.from_length for edit in self.edits)
-        if self.is_reverse():
-            return Position(self.start_position.node_id, offset+length)
-        else:
-            return Position(self.start_position.node_id, offset+length)
+        return start_offset + length
 
     @classmethod
     def from_json(cls, mapping_dict):
@@ -96,9 +93,14 @@ class Path(object):
         self.name = name
 
     def __eq__(self, other):
-        attrs = ["mappings", "name"]
+        attrs = ["mappings"]
         return all(getattr(self, attr) == getattr(other, attr)
                    for attr in attrs)
+
+    def __str__(self):
+        return "Path[%s]" % ", ".join(str(mapping) for mapping in self.mappings)
+
+    __repr__ = __str__
 
     def is_reverse(self):
         mapping_reverse = [mapping.is_reverse() for mapping in self.mappings]
@@ -115,20 +117,22 @@ class Path(object):
 
         return cls(name, mappings)
 
-    def to_obg(self):
-
+    def to_obg(self, ob_graph):
         if len(self.mappings) == 0:
             return offsetbasedgraph.Interval(0, 0, [])
 
         nodes = [mapping.start_position.node_id for mapping in self.mappings]
+
         if self.is_reverse():
             nodes = nodes[::-1]
-            start_pos = self.mappings[-1].get_start_position().to_obg()
-            end_pos = self.mappings[0].get_end_position().to_obg()
+            start_block_length = ob_graph.blocks[nodes[0]].length()
+            start_offset = start_block_length - self.mappings[-1].get_end_offset()
+            end_block_length = ob_graph.blocks[nodes[-1]].length()
+            end_offset = end_block_length - self.mappings[0].get_end_offset()
         else:
-            start_pos = self.mappings[0].get_start_position().to_obg()
-            end_pos = self.mappings[-1].get_end_position().to_obg()
-        return offsetbasedgraph.Interval(start_pos, end_pos, nodes)
+            start_offset = self.mappings[0].get_start_offset()
+            end_offset = self.mappings[-1].get_end_offset()
+        return offsetbasedgraph.Interval(start_offset, end_offset, nodes)
 
 
 class Node(object):
