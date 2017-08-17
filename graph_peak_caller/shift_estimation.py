@@ -1,5 +1,6 @@
 import vg as vg
 from vg import vg_mapping_file_to_interval_list
+import subprocess
 
 def write_vg_alignemnts_as_linear_intervals_to_bed_file(vg_graph, alignments_json_file, limit_to_chromosome):
 
@@ -33,21 +34,29 @@ def translate_alignment_to_linear_genome(alignment_interval, translation):
 
     return False
 
+
 def write_linear_interval_to_bed_file(file_handler, interval):
 
     strand = "+"
     if interval.direction == -1:
         strand = "-"
-    file_handler.write("%s\t%d\t%d\t%s\n" % (interval.start_position.region_path_id,
+    file_handler.write("%s\t%d\t%d\t.\t0\t%s\n" % (interval.start_position.region_path_id,
                                        interval.start_position.offset,
                                        interval.end_position.offset,
                                        strand))
 
 
+def get_shift_size(vg_graph, alignments_json_file, limit_to_chromosome = False, genome_size = 10000000):
+    write_vg_alignemnts_as_linear_intervals_to_bed_file(vg_graph, alignments_json_file, limit_to_chromosome)
+    command = ["macs2", "predictd", "-i", "tmp.bed", "-g", str(genome_size), "-m", "5", "50"]
+    output = subprocess.check_output(command)
+    print(output)
+    # TODO parse output to get shift size
+
+
 if __name__ == "__main__":
-    chromosome = "chr4"
+    chromosome = "chr2R"
     vg_graph = vg.Graph.create_from_file("dm_test_data/x_%s.json" % chromosome, 30000, chromosome)
     vg_graph.to_file("%s.vggraph" % chromosome)
     #vg_graph = vg.Graph.from_file("%s.vggraph" % chromosome)
-
-    write_vg_alignemnts_as_linear_intervals_to_bed_file(vg_graph, "dm_test_data/reads3_large.json", chromosome)
+    get_shift_size(vg_graph, "dm_test_data/reads3_large.json", chromosome, 25000000)

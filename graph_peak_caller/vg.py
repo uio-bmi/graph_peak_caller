@@ -132,7 +132,7 @@ class Path(object):
             start_offset = start_block_length - self.mappings[-1].get_end_offset()
             end_block_length = ob_graph.blocks[nodes[-1]].length()
             end_offset = end_block_length - self.mappings[0].get_end_offset()
-            direction = -1
+            direction = -1 
         else:
             start_offset = self.mappings[0].get_start_offset()
             end_offset = self.mappings[-1].get_end_offset()
@@ -142,7 +142,7 @@ class Path(object):
         if ob_graph:
             interval_graph = ob_graph
 
-        
+
         return offsetbasedgraph.Interval(start_offset, end_offset, nodes, interval_graph, direction=direction)
 
 
