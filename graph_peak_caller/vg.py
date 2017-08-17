@@ -142,6 +142,7 @@ class Path(object):
         if ob_graph:
             interval_graph = ob_graph
 
+        
         return offsetbasedgraph.Interval(start_offset, end_offset, nodes, interval_graph, direction=direction)
 
 
