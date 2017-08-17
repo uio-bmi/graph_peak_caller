@@ -117,27 +117,34 @@ class Path(object):
 
         return cls(name, mappings)
 
-    def to_obg(self, ob_graph):
+    def to_obg(self, ob_graph = False):
         if len(self.mappings) == 0:
             return offsetbasedgraph.Interval(0, 0, [])
 
         nodes = [mapping.start_position.node_id for mapping in self.mappings]
 
         if self.is_reverse():
+            if not ob_graph:
+                raise Exception("Path is reverse and offset based graph is not sent")
+
             nodes = nodes[::-1]
             start_block_length = ob_graph.blocks[nodes[0]].length()
             start_offset = start_block_length - self.mappings[-1].get_end_offset()
             end_block_length = ob_graph.blocks[nodes[-1]].length()
             end_offset = end_block_length - self.mappings[0].get_end_offset()
-            direction = -1
+            direction = -1 
         else:
             start_offset = self.mappings[0].get_start_offset()
             end_offset = self.mappings[-1].get_end_offset()
             direction = 1
 
+        interval_graph = None
+        if ob_graph:
+            interval_graph = ob_graph
+
         return offsetbasedgraph.Interval(
             start_offset, end_offset,
-            nodes, direction=direction)
+            nodes, interval_graph, direction=direction)
 
 
 class Node(object):
@@ -202,6 +209,8 @@ class Alignment(object):
 
     @classmethod
     def from_json(cls, alignment_dict):
+
+        #print(alignment_dict)
         return cls(
             Path.from_json(alignment_dict["path"]),
             alignment_dict["identity"])
@@ -214,6 +223,10 @@ class Graph(object):
         self.edges = edges
         self.paths = paths
         self.node_dict = {node.id: node.n_basepairs for node in self.nodes}
+        self.edge_dict = {}
+        self.reverse_edge_dict = {}
+        self._create_edge_dicts()
+
 
     @classmethod
     def create_from_file(cls, json_file_name, max_lines_to_read=False, limit_to_chromosome=False, do_read_paths=True):
@@ -229,13 +242,20 @@ class Graph(object):
         i = 0
         for line in lines:
             line = json.loads(line)
-            print("Line: %d/%d" % (i, n_lines))
+            if i % 100 == 0:
+                print("Line: %d/%d" % (i, n_lines))
             i += 1
             if limit_to_chromosome:
                 if "path" not in line:
                     continue
                 if line["path"][0]["name"] != limit_to_chromosome:
+                    if len(nodes) > 0:
+                        # Assuminng there are nothing more on this chromosome now
+                        break
+
                     continue
+
+
 
             if do_read_paths and "path" in line:
                 paths.extend([Path.from_json(json_object) for json_object in line["path"]])
@@ -247,14 +267,30 @@ class Graph(object):
             if max_lines_to_read and i >= max_lines_to_read:
                 break
 
+
         obj = cls(nodes, edges, paths)
         if do_read_paths:
-            obj._merge_paths_by_name()
             obj.paths_as_intervals_by_chr = {}
+            obj._merge_paths_by_name()
 
         return obj
 
+    def _create_edge_dicts(self):
+        self.edge_dict = defaultdict(list)
+        self.reverse_edge_dict = defaultdict(list)
+
+        for edge in self.edges:
+            self.edge_dict[edge.from_node].append(edge.to_node)
+            self.reverse_edge_dict[edge.to_node].append(edge.from_node)
+
     def _interval_has_no_edges_in(self, interval):
+
+        start_node = interval.region_paths[0]
+        if start_node not in self.reverse_edge_dict:
+            return True
+
+        return False
+
         for edge in self.edges:
             if edge.to_node == interval.region_paths[0]:
                 return False
@@ -276,6 +312,9 @@ class Graph(object):
         return [obj for obj in objects if self.is_in_graph(obj)]
 
     def edges_from_node(self, node_id):
+
+        return self.edge_dict[node_id]
+
         edges = []
         for edge in self.edges:
             if edge.from_node == node_id:
@@ -284,6 +323,7 @@ class Graph(object):
         return edges
 
     def _merge_paths_by_name(self):
+        print("merging paths")
         # Join all paths with the same name
         paths_by_name = defaultdict(list)
         for path in self.paths:
@@ -331,7 +371,7 @@ class Graph(object):
 
             single_linear_interval = offsetbasedgraph.Interval(start_position, end_position, region_paths)
             assert number_of_intervals_added == len(intervals)
-            print(single_linear_interval)
+            #print(single_linear_interval)
 
             self.paths_as_intervals_by_chr[name] = single_linear_interval
 
@@ -369,7 +409,7 @@ class Graph(object):
         offset_based_blocks = {}
         for block in self.nodes:
             offset_based_blocks[block.id] = block.to_obg()
-        print(offset_based_blocks)
+        #print(offset_based_blocks)
         return offsetbasedgraph.Graph(offset_based_blocks,
                                       offset_based_edges)
 
@@ -385,6 +425,7 @@ class Graph(object):
                 continue
 
             offset_based_graph_path = self.paths_as_intervals_by_chr[chromosome]
+            offset_based_graph_path.graph = offset_based_graph
             trans_dict[chromosome] =  [offset_based_graph_path]
 
             # Create reverse dict
@@ -397,10 +438,47 @@ class Graph(object):
 
 
                 trans_dict_reverse[block] = [
-                            offsetbasedgraph.Interval(offset, offset + block_length, [chromosome], offset_based_graph)]
+                            offsetbasedgraph.Interval(offset, offset + block_length, [chromosome], None)]
                 offset += block_length
 
         return offsetbasedgraph.Translation(trans_dict, trans_dict_reverse, offset_based_graph)
+
+
+def vg_mapping_file_to_interval_list(vg_graph, vg_mapping_file_name, offset_based_graph=False):
+
+    if not offset_based_graph:
+        print("Creating offsetbasedgraph")
+        offset_based_graph = vg_graph.get_offset_based_graph()
+
+    f = open(vg_mapping_file_name)
+    jsons = (json.loads(line) for line in f.readlines())
+    alignments =  []
+    i = 0
+    for json_dict in jsons:
+        if "path" not in json_dict:  # Did not align
+            #print("Alignment missing path")
+            continue
+
+        if i % 100 == 0:
+            print("Alignment %d" % i)
+        i += 1
+
+        #alignments.append(Alignment.from_json(json_dict))
+        alignment = Alignment.from_json(json_dict)
+        path = alignment.path
+        paths = vg_graph.filter([path])
+        if len(paths) > 0:
+            obg_interval = path.to_obg(offset_based_graph)
+            yield obg_interval
+
+    #paths = [alignment.path for alignment in alignments]
+    #print("Filtering paths")
+    #paths = vg_graph.filter(paths)   # Keep only the ones in graph
+    #print("Translating")
+    #obg_alignments = [path.to_obg(offset_based_graph) for path in paths]
+
+    #return obg_alignments
+
 
 
 if __name__ == "__main__":
