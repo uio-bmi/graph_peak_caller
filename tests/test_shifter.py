@@ -5,7 +5,7 @@ from examples import *
 
 
 class TestShifter(unittest.TestCase):
-    def _test_shift_interval(self):
+    def test_shift_interval(self):
         graph = ob_graphs[0]
         interval = pileup_intervals[0]
         d = 3
@@ -34,6 +34,18 @@ class TestShifter(unittest.TestCase):
                       2: [15, 22],
                       3: [0, 5]}
 
+        self.assertEqual(areas, true_areas)
+
+    def test_shift_disjoint_reverse(self):
+        graph = ob_graphs[0].copy()
+        graph.blocks[2]._length = 22
+        shifter = Shifter(graph, [], -25)
+        interval = Interval(0, 10, [3], graph=graph)
+        areas = shifter.shift_interval(interval)
+        true_areas = {1: [0, 5],
+                      2: [0, 7],
+                      0: [5, 10]}
+        print("#####", areas)
         self.assertEqual(areas, true_areas)
 
 

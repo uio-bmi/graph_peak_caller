@@ -22,20 +22,28 @@ class Shifter(object):
         self.traverser = GraphTraverser(graph)
         self.intervals = intervals
         self.d = d
+        self.direction = self.d//abs(self.d)
 
     def shift_interval(self, interval):
         start_positions = self.traverser.guided_shift(interval, self.d)
-        length = interval.length()
+        length = interval.length()*self.direction
         areas = {}
         if interval.contains_position(start_positions[0]):
-            trunc_interval = Interval(start_positions[0], interval.end_position,
-                                      interval.region_paths[
-                                          interval.region_paths.index(start_positions[0].region_path_id):])
+            if self.d < 0:
+                trunc_interval = Interval(
+                    interval.start_position, start_positions[0],
+                    interval.region_paths[
+                        0:interval.region_paths.index(start_positions[0].region_path_id)])
+            else:
+                trunc_interval = Interval(
+                start_positions[0], interval.end_position,
+                interval.region_paths[
+                    interval.region_paths.index(start_positions[0].region_path_id):])
+
             areas = area_from_interval(trunc_interval, self.graph)
-            start_positions = [interval.end_position]
+            start_positions = [interval.end_position] if self.d >= 0 else [interval.start_position]
             length = self.d
 
-        print("SOMETHING")
         for start_position in start_positions:
             new_areas = self.traverser.get_areas_from_point(
                 start_position, length)
