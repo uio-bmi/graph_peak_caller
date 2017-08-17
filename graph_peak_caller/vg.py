@@ -135,7 +135,9 @@ class Path(object):
             end_offset = self.mappings[-1].get_end_offset()
             direction = 1
 
-        return offsetbasedgraph.Interval(start_offset, end_offset, nodes, direction=direction)
+        return offsetbasedgraph.Interval(
+            start_offset, end_offset,
+            nodes, direction=direction)
 
 
 class Node(object):

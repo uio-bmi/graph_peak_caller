@@ -26,6 +26,7 @@ class Shifter(object):
     def shift_interval(self, interval):
         start_positions = self.traverser.guided_shift(interval, self.d)
         length = interval.length()
+        areas = {}
         if interval.contains_position(start_positions[0]):
             trunc_interval = Interval(start_positions[0], interval.end_position,
                                       interval.region_paths[
