@@ -132,15 +132,17 @@ class Path(object):
             start_offset = start_block_length - self.mappings[-1].get_end_offset()
             end_block_length = ob_graph.blocks[nodes[-1]].length()
             end_offset = end_block_length - self.mappings[0].get_end_offset()
+            direction = -1
         else:
             start_offset = self.mappings[0].get_start_offset()
             end_offset = self.mappings[-1].get_end_offset()
+            direction = 1
 
         interval_graph = None
         if ob_graph:
             interval_graph = ob_graph
 
-        return offsetbasedgraph.Interval(start_offset, end_offset, nodes, interval_graph)
+        return offsetbasedgraph.Interval(start_offset, end_offset, nodes, interval_graph, direction=direction)
 
 
 class Node(object):
@@ -166,7 +168,7 @@ class Node(object):
 
 
 class Edge(object):
-    def __init__(self, from_node, to_node, from_start, to_end, overlap):
+    def __init__(self, from_node, to_node, from_start=False, to_end=False, overlap=0):
         self.from_node = from_node
         self.to_node = to_node
         self.from_start = int(from_start)
