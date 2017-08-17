@@ -30,9 +30,8 @@ class Pileup(object):
 
     def add_interval(self, interval):
         print("Trying to add")
-        if not all(region_path in self.graph.blocks for
-                   region_path in interval.region_paths):
-            return
+        assert all(region_path in self.graph.blocks for
+                   region_path in interval.region_paths)
         print("Adding")
         for i, region_path in enumerate(interval.region_paths):
             start = 0
@@ -43,6 +42,23 @@ class Pileup(object):
                 end = interval.end_position.offset
             print("#", region_path, start, end, self.graph.blocks[region_path].length())
             self.count_arrays[region_path][start:end] += 1
+
+    def add_shifted_interval(self, interval, d):
+        print("Trying to add")
+        assert all(region_path in self.graph.blocks for
+                   region_path in interval.region_paths)
+        print("Adding")
+        for i, region_path in enumerate(interval.region_paths):
+            start = 0
+            end = self.graph.blocks[region_path].length()
+            if i == 0:
+                start = interval.start_position.offset
+            if i == len(interval.region_paths)-1:
+                end = interval.end_position.offset
+            print("#", region_path, start, end, self.graph.blocks[region_path].length())
+            self.count_arrays[region_path][start:end] += 1
+
+        
 
     def summary(self):
         return sum(array.sum() for array in self.count_arrays.values())
