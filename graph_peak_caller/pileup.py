@@ -1,5 +1,5 @@
 import numpy as np
-from .shifter import Shifter
+from shifter import Shifter
 
 
 class Pileup(object):
@@ -25,7 +25,7 @@ class Pileup(object):
         self.create_count_arrays()
         for interval in self.intervals:
             if self.shift != 0:
-                self.add_shifted_interval(interval)
+                self.add_extended_interval(interval)
             else:
                 self.add_interval(interval)
 
@@ -35,10 +35,8 @@ class Pileup(object):
                              for node_id, block in self.graph.blocks.items()}
 
     def add_interval(self, interval):
-        print("Trying to add")
         assert all(region_path in self.graph.blocks for
                    region_path in interval.region_paths)
-        print("Adding")
         for i, region_path in enumerate(interval.region_paths):
             start = 0
             end = self.graph.blocks[region_path].length()
@@ -46,11 +44,16 @@ class Pileup(object):
                 start = interval.start_position.offset
             if i == len(interval.region_paths)-1:
                 end = interval.end_position.offset
-            print("#", region_path, start, end, self.graph.blocks[region_path].length())
             self.count_arrays[region_path][start:end] += 1
 
     def add_shifted_interval(self, interval):
         areas = self.shifter.shift_interval(interval)
+        for area, intervals in areas.items():
+            for i in range(len(intervals)//2):
+                self.count_arrays[area][intervals[i]:intervals[i+1]] += 1
+
+    def add_extended_interval(self, interval):
+        areas = self.shifter.extend_interval(interval)
         for area, intervals in areas.items():
             for i in range(len(intervals)//2):
                 self.count_arrays[area][intervals[i]:intervals[i+1]] += 1
