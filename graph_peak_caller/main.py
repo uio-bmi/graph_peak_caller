@@ -22,5 +22,7 @@ if __name__ == "__main__":
     obg_alignments = [alignment.path.to_obg(ob_graph)
                       for alignment in alignments]
     print("Creating pileup")
-    pileup = Pileup(ob_graph, obg_alignments)
+    pileup = Pileup(ob_graph, obg_alignments, shift=50)
     cProfile.run("pileup.create()")
+    print("#", pileup.summary())
+    print("#", (sum(interval.length() for interval in obg_alignments)))

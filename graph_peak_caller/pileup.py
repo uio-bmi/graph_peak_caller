@@ -1,5 +1,5 @@
 import numpy as np
-from shifter import Shifter
+from .shifter import Shifter
 
 
 class Pileup(object):
@@ -7,6 +7,7 @@ class Pileup(object):
         self.graph = graph
         self.intervals = intervals
         self.shifter = Shifter(graph, intervals, shift)
+        self.shift = shift
 
     def __eq__(self, other):
         if False and self.graph != other.graph:
@@ -23,7 +24,10 @@ class Pileup(object):
         print("Creating")
         self.create_count_arrays()
         for interval in self.intervals:
-            self.add_interval(interval)
+            if self.shift != 0:
+                self.add_shifted_interval(interval)
+            else:
+                self.add_interval(interval)
 
     def create_count_arrays(self):
         print("Init count_arrays")
