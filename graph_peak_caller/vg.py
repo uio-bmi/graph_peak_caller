@@ -216,6 +216,21 @@ class Alignment(object):
             alignment_dict["identity"])
 
 
+class AlignmentCollection(object):
+    def __init__(self, alignments):
+        self.alignments = alignments
+
+    @classmethod
+    def create_generator_from_file(cls, file_name):
+        f = open(file_name)
+        jsons = (json.loads(line) for line in f.readlines())
+        alignments = (Alignment.from_json(json_dict) for json_dict in jsons)
+        return cls(alignments)
+
+    def __iter__(self):
+        return self.alignments.__iter__()
+
+
 class Graph(object):
 
     def __init__(self, nodes, edges, paths):

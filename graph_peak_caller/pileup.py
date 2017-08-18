@@ -29,6 +29,11 @@ class Pileup(object):
             else:
                 self.add_interval(interval)
 
+    def init_value(self, value):
+        self.count_arrays = {
+            node_id: value*np.ones(block.length(), dtype="int32")
+            for node_id, block in self.graph.blocks.items()}
+
     def create_count_arrays(self):
         print("Init count_arrays")
         self.count_arrays = {node_id: np.zeros(block.length(), dtype="int32")
@@ -60,3 +65,14 @@ class Pileup(object):
 
     def summary(self):
         return sum(array.sum() for array in self.count_arrays.values())
+
+
+class SparsePileup(Pileup):
+    def create_data_struct(self):
+        # valued intervals = [(idx,  value)]
+        self.valued_intervals = defaultdict(list)
+
+    def _add_areas(self, areas):
+        for node_id, intervals in areas:
+            old_intervals = self.valued_intervals
+            for node_id
