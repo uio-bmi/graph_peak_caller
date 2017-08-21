@@ -6,6 +6,7 @@ class Pileup(object):
         self.graph = graph
         self.intervals = intervals
 
+
     def __eq__(self, other):
         if False and self.graph != other.graph:
             return False
@@ -18,16 +19,29 @@ class Pileup(object):
         return len(self.count_arrays) == len(other.count_arrays)
 
     @classmethod
-    def from_file(cls, graph, file_name):
+    def from_bed_graph(cls, graph, file_name):
         file = open(file_name)
-        pileup = cls(graph, [], 0)
+        pileup = cls(graph, [])
+        pileup.create_count_arrays()
+        print(pileup.count_arrays)
 
-        for line  in file:
+        graph_uses_int_ids = isinstance(list(graph.blocks.keys())[0], int)
+
+        for line in file:
             data = line.split()
-            block_id = line[0]
-            start = int(line[1])
-            end = int(line[2])
-            pileup.add_
+            print(data)
+            block_id = data[0]
+            if graph_uses_int_ids:
+                block_id = int(block_id)
+
+            start = int(data[1])
+            end = int(data[2])
+            value = int(data[3])
+
+            pileup.add_area(block_id, start, end, value)
+
+        file.close()
+        return pileup
 
     def create(self):
         self.create_count_arrays()
@@ -55,6 +69,12 @@ class Pileup(object):
             if i == len(interval.region_paths)-1:
                 end = interval.end_position.offset
             self.count_arrays[region_path][start:end] += 1
+
+    def add_area(self, block_id, start, end, value=1):
+        print("add area")
+        print(self.count_arrays)
+        count_array_block = self.count_arrays[block_id]
+        count_array_block[start:end] += value
 
     def add_areas(self, areas):
         for area, intervals in areas.items():
