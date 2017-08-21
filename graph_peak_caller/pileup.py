@@ -64,6 +64,7 @@ class Pileup(object):
             interval = (node_id, start, len(count_array), cur_val)
             f.write("%s\t%s\t%s\t%s\n" % interval)
         f.close()
+        return filename
 
     def summary(self):
         return sum(array.sum() for array in self.count_arrays.values())
