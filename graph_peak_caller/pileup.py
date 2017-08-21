@@ -1,13 +1,10 @@
 import numpy as np
-from .shifter import Shifter
 
 
 class Pileup(object):
-    def __init__(self, graph, intervals, shift=0):
+    def __init__(self, graph, intervals):
         self.graph = graph
         self.intervals = intervals
-        self.shifter = Shifter(graph, intervals, shift)
-        self.shift = shift
 
     def __eq__(self, other):
         if False and self.graph != other.graph:
@@ -21,13 +18,9 @@ class Pileup(object):
         return len(self.count_arrays) == len(other.count_arrays)
 
     def create(self):
-        print("Creating")
         self.create_count_arrays()
         for interval in self.intervals:
-            if self.shift != 0:
-                self.add_extended_interval(interval)
-            else:
-                self.add_interval(interval)
+            self.add_interval(interval)
 
     def init_value(self, value):
         self.count_arrays = {
@@ -51,14 +44,7 @@ class Pileup(object):
                 end = interval.end_position.offset
             self.count_arrays[region_path][start:end] += 1
 
-    def add_shifted_interval(self, interval):
-        areas = self.shifter.shift_interval(interval)
-        for area, intervals in areas.items():
-            for i in range(len(intervals)//2):
-                self.count_arrays[area][intervals[i]:intervals[i+1]] += 1
-
-    def add_extended_interval(self, interval):
-        areas = self.shifter.extend_interval(interval)
+    def add_areas(self, areas):
         for area, intervals in areas.items():
             for i in range(len(intervals)//2):
                 self.count_arrays[area][intervals[i]:intervals[i+1]] += 1
