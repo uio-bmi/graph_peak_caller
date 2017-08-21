@@ -1,7 +1,6 @@
 import graph_peak_caller.vg as vg
 import offsetbasedgraph
 import json
-import cProfile
 from graph_peak_caller.pileup import Pileup
 
 
@@ -29,6 +28,8 @@ if __name__ == "__main__":
     for alignment in obg_alignments:
         print(alignment)
     print("Creating pileup")
+
+
     pileup = Pileup(ob_graph, obg_alignments, shift=50)
     pileup.create()
     pileup.to_bed_graph("tmp.bdg")

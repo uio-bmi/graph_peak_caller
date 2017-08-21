@@ -23,7 +23,7 @@ class Shifter(object):
         self.intervals = intervals
         self.d = d
         self.direction = self.d//abs(self.d) if self.d != 0 else 0
-
+ 
     def shift_interval(self, interval):
         start_positions = self.traverser.guided_shift(interval, self.d)
         length = interval.length()*self.direction
@@ -52,11 +52,21 @@ class Shifter(object):
 
         return areas
 
-    def extend_interval(self, interval, direction=1):
+    def extend_interval(self, interval, local_direction=1):
+        """Direction: -1 backward, +1 forward, 0 both"""
+        assert local_direction in [-1, 0, 1]
         areas = area_from_interval(interval, self.graph)
-        direction = interval.direction*direction
-        end_position = interval.start_position if direction == -1 else interval.end_position
-        new_areas = self.traverser.get_areas_from_point(
-            end_position, direction*self.d)
-        update_areas(areas, new_areas)
+        if local_direction != -1:
+            direction = interval.direction
+            end_position = interval.end_position if direction == 1 else interval.start_position 
+            new_areas = self.traverser.get_areas_from_point(
+                end_position, direction*self.d)
+            update_areas(areas, new_areas)
+        if local_direction != 1:
+            direction = interval.direction*-1
+            end_position = interval.end_position if direction == 1 else interval.start_position 
+            new_areas = self.traverser.get_areas_from_point(
+                end_position, direction*self.d)
+            update_areas(areas, new_areas)
+
         return areas
