@@ -59,9 +59,9 @@ true_pileup.count_arrays = true_counts
 
 
 one_block_graph = offsetbasedgraph.Graph({1: offsetbasedgraph.Block(10)}, {})
-one_block_pileup1_intervals = [offsetbasedgraph.Interval(0, 10, [1], one_block_graph),
-                               offsetbasedgraph.Interval(0, 10, [1], one_block_graph)]
+one_block_pileup1_intervals = [offsetbasedgraph.Interval(1, 10, [1], one_block_graph),
+                               offsetbasedgraph.Interval(1, 5, [1], one_block_graph)]
 one_block_pileup2_intervals = [offsetbasedgraph.Interval(0, 5, [1], one_block_graph)]
 
-pileup1_one_block = Pileup(one_block_graph, one_block_pileup1_intervals)
-pileup2_one_block = Pileup(one_block_graph, one_block_pileup2_intervals)
+pileup1_one_block = Pileup(one_block_graph, one_block_pileup1_intervals).create()
+pileup2_one_block = Pileup(one_block_graph, one_block_pileup2_intervals).create()

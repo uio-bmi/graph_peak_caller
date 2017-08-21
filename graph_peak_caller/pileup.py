@@ -23,20 +23,18 @@ class Pileup(object):
         file = open(file_name)
         pileup = cls(graph, [])
         pileup.create_count_arrays()
-        print(pileup.count_arrays)
 
         graph_uses_int_ids = isinstance(list(graph.blocks.keys())[0], int)
 
         for line in file:
             data = line.split()
-            print(data)
             block_id = data[0]
             if graph_uses_int_ids:
                 block_id = int(block_id)
 
             start = int(data[1])
             end = int(data[2])
-            value = int(data[3])
+            value = float(data[3])
 
             pileup.add_area(block_id, start, end, value)
 
@@ -47,15 +45,15 @@ class Pileup(object):
         self.create_count_arrays()
         for interval in self.intervals:
             self.add_interval(interval)
+        return self
 
     def init_value(self, value):
         self.count_arrays = {
-            node_id: value*np.ones(block.length(), dtype="int32")
+            node_id: value*np.ones(block.length(), dtype="float")
             for node_id, block in self.graph.blocks.items()}
 
     def create_count_arrays(self):
-        print("Init count_arrays")
-        self.count_arrays = {node_id: np.zeros(block.length(), dtype="int32")
+        self.count_arrays = {node_id: np.zeros(block.length(), dtype="float")
                              for node_id, block in self.graph.blocks.items()}
 
     def add_interval(self, interval):
@@ -71,8 +69,6 @@ class Pileup(object):
             self.count_arrays[region_path][start:end] += 1
 
     def add_area(self, block_id, start, end, value=1):
-        print("add area")
-        print(self.count_arrays)
         count_array_block = self.count_arrays[block_id]
         count_array_block[start:end] += value
 

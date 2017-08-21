@@ -1,7 +1,7 @@
 import unittest
 from graph_peak_caller.pileup import Pileup
 from offsetbasedgraph import Graph, Block, Interval
-from bdgcmp import create_background_pileup_as_max_from_pileups
+from graph_peak_caller import bdgcmp
 import numpy as np
 from examples import *
 
@@ -13,10 +13,13 @@ class TestPileup(unittest.TestCase):
         pileup1 = pileup1_one_block
         pileup2 = pileup2_one_block
 
-        max_pileup = create_background_pileup_as_max_from_pileups([pileup1, pileup2])
+        max_pileup = bdgcmp.create_background_pileup_as_max_from_pileups(graph, [pileup1, pileup2])
 
-        correct_count_array = np.array([2, 2, 2, 2, 2, 1, 1, 1, 1])
-        self.assertTrue(max_pileup.count_arrays[1] == correct_count_array)
+        correct_count_array = np.array([1, 2, 2, 2, 2, 1, 1, 1, 1, 1])
+        closeness = np.isclose(max_pileup.count_arrays[1], correct_count_array)
+        print(closeness)
+        print(max_pileup.count_arrays[1])
+        self.assertTrue(np.all(np.isclose(max_pileup.count_arrays[1], correct_count_array)))
 
 
 
