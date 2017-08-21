@@ -63,6 +63,21 @@ class Pileup(object):
             for i in range(len(intervals)//2):
                 self.count_arrays[area][intervals[i]:intervals[i+1]] += 1
 
+    def to_bed_graph(self, filename):
+        f = open(filename, "w")
+        for node_id, count_array in self.count_arrays.items():
+            start = None
+            cur_val = count_array[0]
+            for i, new_val in enumerate(count_array):
+                if new_val != cur_val:
+                    if start is not None:
+                        interval = (node_id, start, i, cur_val)
+                        f.write("%s\t%s\t%s\t%s\n" % interval)
+                    start = i
+                    cur_val = new_val
+            interval = (node_id, start, len(count_array), cur_val)
+            f.write("%s\t%s\t%s\t%s\n" % interval)
+
     def summary(self):
         return sum(array.sum() for array in self.count_arrays.values())
 
