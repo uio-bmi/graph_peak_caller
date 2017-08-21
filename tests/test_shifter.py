@@ -99,6 +99,19 @@ class TestExtend(unittest.TestCase):
         print("#####", areas)
         self.assertEqual(areas, true_areas)
 
+    def test_extend_both_sides(self):
+        graph = ob_graphs[0].copy()
+        graph.blocks[2]._length = 22
+        shifter = Shifter(graph, [], 10)
+        interval = Interval(5, 15, [1], graph=graph, direction=-1)
+        areas = shifter.extend_interval(interval, 0)
+        true_areas = {
+            3: [0, 5],
+            1: [0, 20],
+            0: [5, 10]}
+        print("#####", areas)
+        self.assertEqual(areas, true_areas)
+
 
 if __name__ == "__main__":
     unittest.main()
