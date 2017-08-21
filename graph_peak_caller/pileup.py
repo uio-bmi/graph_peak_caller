@@ -20,6 +20,18 @@ class Pileup(object):
 
         return len(self.count_arrays) == len(other.count_arrays)
 
+    @classmethod
+    def from_file(cls, graph, file_name):
+        file = open(file_name)
+        pileup = cls(graph, [], 0)
+
+        for line  in file:
+            data = line.split()
+            block_id = line[0]
+            start = int(line[1])
+            end = int(line[2])
+            pileup.add_
+
     def create(self):
         print("Creating")
         self.create_count_arrays()
