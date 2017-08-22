@@ -1,4 +1,4 @@
-import graph_peak_caller.vg as vg
+import pyvg as vg
 import offsetbasedgraph
 import json
 from graph_peak_caller.pileup import Pileup
