@@ -1,25 +1,32 @@
 from offsetbasedgraph import IntervalCollection
+import pyvg as vg
+import .shifter
 
 class CallPeaks(object):
-    def __init__(self, graph_file_name, sample_file_name, control_file_name=None, chromosome=None):
+    def __init__(self, graph_file_name, sample_file_name, control_file_name=None):
         self.graph_file_name = graph_file_name
         self.sample_file_name = sample_file_name
         self.control_file_name = control_file_name if control_file_name is not None else sample_file_name
         self.has_control = control_file_name is not None
-        self.linear_genome_size = 0  # Size of linear genome
+
+    def run(self):
         self.find_info()
+        self.determine_shift()
         self.create_graphs()
+        self.remove_alignments_not_in_graph(self.sample_file_name)
+        if self.control_file_name is not None:
+            self.remove_alignments_not_in_graph(self.control_file_name)
+        self.create_control()
+        self.create_sample_pileup()
+        self.get_p_values()
+        self.find_peaks()
 
-        self.chromosome = chromosome
-
-    def remove_alignments_not_in_graph(self):
-        for alignment_file in [self.sample_file_name, self.control_file_name]:
-            if alignment_file is not None:
-                interval_collection = IntervalCollection.create_generator_from_file(alignment_file)
-                filtered_file = open(alignment_file + "_filtered", "w")
-                for interval in self._get_intervals_in_ob_graph(innterval_collection):
-                    filtered_file.writelines(["%s\n" % interval.to_file_line()])
-                filtered_file.close()
+    def remove_alignments_not_in_graph(self, alignment_file_name):
+        interval_collection = IntervalCollection.create_generator_from_file(alignment_file_name)
+        filtered_file = open(alignment_file_name + "_filtered", "w")
+        for interval in self._get_intervals_in_ob_graph(interval_collection):
+            filtered_file.writelines(["%s\n" % interval.to_file_line()])
+        filtered_file.close()
 
     def _get_intervals_in_ob_graph(self, intervals):
         # Returns only those intervals that exist in vg_graph
@@ -34,21 +41,29 @@ class CallPeaks(object):
 
         self.genome_size = sum(sizes)
         self.n_reads = sum(1 for line in open(self.control_file_name))
-        
+
     def determine_shift(self):
         self.shift = get_shift_size(self.vg_graph, self.sample_file_name, self.chromosome, self.linear_genome_size)
-        
+
     def create_graphs(self):
         self.vg_graph = vg.Graph.create_from_file(self.graph_file_name)
         self.ob_graph = self.vg_graph.get_offset_based_graph()
 
     def create_control(self):
-        bg_track = BackgroundTrack(self.ob_graph, control_file_name, self.d, 1000, 10000, )
+        bg_track = BackgroundTrack(self.ob_graph, control_file_name, self.d, 1000, 10000)
         f = open()
-        jsons = (j
-                 son.loads(line) for line in f.readlines())
-        alignments = [vg.Alignment.from_json(json_dict) for json_dict in jsons])
-                                   
+        jsons = (json.loads(line) for line in f.readlines())
+        alignments = [vg.Alignment.from_json(json_dict) for json_dict in jsons]
+
+    def create_sample_pileup(self):
+        alignments = vg.AlignmentCollection.create_generator_from_file(
+            self.control_file_name)
+        obg_alignments = (alignment.path.to_obg(ob_graph) for alignment in alignments)
+        shifter = shifter.Shifter(self.ob_graph, obg_alignments, self.shift)
+        areas_list = (shifter.extend_interval(interval) for interval in obg_alignments)
+        pileup = Pileup(self.ob_graph, [])
+        (pileup.add_areas() for area in areas)
+
     def _write_vg_alignments_as_intervals_to_bed_file(self):
         pass
 
