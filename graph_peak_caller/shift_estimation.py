@@ -55,7 +55,7 @@ def get_shift_size(vg_graph, alignments_json_file, limit_to_chromosome = False, 
 
 
 if __name__ == "__main__":
-    chromosome = "chr2R"
+    chromosome = "chr4"
     vg_graph = vg.Graph.create_from_file("dm_test_data/x_%s.json" % chromosome, 30000, chromosome)
     vg_graph.to_file("%s.vggraph" % chromosome)
     #vg_graph = vg.Graph.from_file("%s.vggraph" % chromosome)
