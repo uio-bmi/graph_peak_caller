@@ -1,3 +1,5 @@
+from offsetbasedgraph import IntervalCollection
+
 class CallPeaks(object):
     def __init__(self, graph_file_name, sample_file_name, control_file_name=None, chromosome=None):
         self.graph_file_name = graph_file_name
@@ -9,6 +11,21 @@ class CallPeaks(object):
         self.create_graphs()
 
         self.chromosome = chromosome
+
+    def remove_alignments_not_in_graph(self):
+        for alignment_file in [self.sample_file_name, self.control_file_name]:
+            if alignment_file is not None:
+                interval_collection = IntervalCollection.create_generator_from_file(alignment_file)
+                filtered_file = open(alignment_file + "_filtered", "w")
+                for interval in self._get_intervals_in_ob_graph(innterval_collection):
+                    filtered_file.writelines(["%s\n" % interval.to_file_line()])
+                filtered_file.close()
+
+    def _get_intervals_in_ob_graph(self, intervals):
+        # Returns only those intervals that exist in vg_graph
+        for interval in intervals:
+             if interval.region_paths[0] in self.vg_graph.blocks:
+                 yield interval
 
     def find_info(self):
         genome_size = 0

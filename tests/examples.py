@@ -1,7 +1,7 @@
 import numpy as np
 import json
 import offsetbasedgraph
-from pyvg import *
+from pyvg import *bd
 from graph_peak_caller.pileup import Pileup
 
 position_jsons = [json.loads(pos_str) for pos_str in
