@@ -1,5 +1,6 @@
 import vg
-from pileup import Pileup
+from .pileup import Pileup
+from .shifter import Shifter
 
 
 class ControlInfo(object):
@@ -28,7 +29,7 @@ class BackgroundTrack(object):
 
     def generate_background_track(self):
         pileup = Pileup(self.graph, [], 0)
-        genome_lambda = control_info.n_reads * control_info * fragment_length/control_info.genome_size
+        genome_lambda = control_info.n_reads * control_info.fragment_length/control_info.genome_size
         pileup.init_value(genome_lambda)
         pileups = (self._get_pileup(extension) for extension in self.extensions)
         (pileup.update_max(ext_pileup) for ext_pileup in pileup)
@@ -36,11 +37,16 @@ class BackgroundTrack(object):
 
     def create_background_tracks(self):
         for extension in self.extensions:
+            shift = extension//2
             alignments = vg.AlignmentCollection.create_generator_from_file(self.file_name)
             obg_alignments = (alignment.path.to_obg(self.graph) for alignment in alignments)
-            pileup = Pileup(self.graph, obg_alignments, extension)
-            pileup.create()
+            pileup = Pileup(self.graph, [])
+            shifter = Shifter(self.graph, [], shift)
+            areas_list = (shifter.extend_interval(interval, 0) for interval in obg_alignments)
+            (pileup.add_areas(areas) for areas in areas_list)
+            pileup.scale(extension/self.d)
             pileup.to_bed_graph(self._get_file_name(extension))
+            pileup.clear()
 
     def _get_file_name(self, extension):
         self.file_name.replace(".json", "%sbg.bdg" % extension)

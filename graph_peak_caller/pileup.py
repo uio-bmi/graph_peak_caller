@@ -2,21 +2,24 @@ import numpy as np
 
 
 class Pileup(object):
-    def __init__(self, graph, intervals):
+    def __init__(self, graph):
         self.graph = graph
-        self.intervals = intervals
-
+        self.filename = None
+        self.is_written = False
 
     def __eq__(self, other):
         if False and self.graph != other.graph:
             return False
-        for key, value in self.count_arrays.items():
-            if key not in other.count_arrays:
+        for key, value in self.__count_arrays.items():
+            if key not in other.__count_arrays:
                 return False
-            if not all(value == other.count_arrays[key]):
+            if not all(value == other.__count_arrays[key]):
                 return False
 
-        return len(self.count_arrays) == len(other.count_arrays)
+        return len(self.__count_arrays) == len(other.__count_arrays)
+
+    def clear(self):
+        self.__count_arrays = None
 
     @classmethod
     def from_bed_graph(cls, graph, file_name):
@@ -48,12 +51,12 @@ class Pileup(object):
         return self
 
     def init_value(self, value):
-        self.count_arrays = {
+        self.__count_arrays = {
             node_id: value*np.ones(block.length(), dtype="float")
             for node_id, block in self.graph.blocks.items()}
 
     def create_count_arrays(self):
-        self.count_arrays = {node_id: np.zeros(block.length(), dtype="float")
+        self.__count_arrays = {node_id: np.zeros(block.length(), dtype="float")
                              for node_id, block in self.graph.blocks.items()}
 
     def add_interval(self, interval):
@@ -66,20 +69,20 @@ class Pileup(object):
                 start = interval.start_position.offset
             if i == len(interval.region_paths)-1:
                 end = interval.end_position.offset
-            self.count_arrays[region_path][start:end] += 1
+            self.__count_arrays[region_path][start:end] += 1
 
     def add_area(self, block_id, start, end, value=1):
-        count_array_block = self.count_arrays[block_id]
+        count_array_block = self.__count_arrays[block_id]
         count_array_block[start:end] += value
 
     def add_areas(self, areas):
         for area, intervals in areas.items():
             for i in range(len(intervals)//2):
-                self.count_arrays[area][intervals[i]:intervals[i+1]] += 1
+                self.__count_arrays[area][intervals[i]:intervals[i+1]] += 1
 
     def to_bed_graph(self, filename):
         f = open(filename, "w")
-        for node_id, count_array in self.count_arrays.items():
+        for node_id, count_array in self.__count_arrays.items():
             start = 0
             cur_val = None
             for i, new_val in enumerate(count_array):
@@ -92,10 +95,16 @@ class Pileup(object):
             interval = (node_id, start, len(count_array), cur_val)
             f.write("%s\t%s\t%s\t%s\n" % interval)
         f.close()
+        self.filename = filename
+        self.is_written = True
         return filename
 
+    def scale(self, scale):
+        for count_array in self.__count_arrays.values():
+            count_array *= scale
+
     def summary(self):
-        return sum(array.sum() for array in self.count_arrays.values())
+        return sum(array.sum() for array in self.__count_arrays.values())
 
 
 class SparsePileup(Pileup):
