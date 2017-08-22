@@ -1,38 +1,8 @@
-import vg as vg
-from vg import vg_mapping_file_to_interval_list
+import pyvg as vg
+from pyvg.util import vg_mapping_file_to_interval_list
+#from vg import vg_mapping_file_to_interval_list
 import subprocess
-
-def write_vg_alignemnts_as_linear_intervals_to_bed_file(vg_graph, alignments_json_file, limit_to_chromosome):
-
-    bed_file = open("tmp.bed", "w")
-
-    print("Creating translation")
-    translation = vg_graph.get_translation(limit_to_chromosome)
-
-    print("Mapping to intervals")
-    i = 0
-    for alignment_interval in vg_mapping_file_to_interval_list(vg_graph, alignments_json_file):
-
-        #print("Alignment %d" % i)
-        # Translate to linear genome
-        linear_interval = translate_alignment_to_linear_genome(alignment_interval, translation)
-        if linear_interval:
-            write_linear_interval_to_bed_file(bed_file, linear_interval)
-
-        i += 1
-    bed_file.close()
-
-
-def translate_alignment_to_linear_genome(alignment_interval, translation):
-    if all([rp in translation._b_to_a for rp in alignment_interval.region_paths]):
-        translated_intervals = translation.translate_interval(alignment_interval, True).get_single_path_intervals()
-        #print(translated_intervals)
-        assert len(translated_intervals) <= 1
-
-        if len(translated_intervals) > 0:
-            return translated_intervals[0]
-
-    return False
+from offsetbasedgraph import IntervalCollection
 
 
 def write_linear_interval_to_bed_file(file_handler, interval):
@@ -46,9 +16,22 @@ def write_linear_interval_to_bed_file(file_handler, interval):
                                        strand))
 
 
-def get_shift_size(vg_graph, alignments_json_file, limit_to_chromosome = False, genome_size = 10000000):
-    write_vg_alignemnts_as_linear_intervals_to_bed_file(vg_graph, alignments_json_file, limit_to_chromosome)
-    command = ["macs2", "predictd", "-i", "tmp.bed", "-g", str(genome_size), "-m", "5", "50"]
+
+def get_shift_size_on_offset_based_graph(offset_based_graph, interval_file_name):
+    linear_graph, trans_to_linear = offset_based_graph.get_arbitrary_linear_graph()
+    bed_file = open("tmp2.bed", "w")
+
+    for interval in IntervalCollection.create_generator_from_file(interval_file_name):
+        interval.graph = offset_based_graph
+        linear_intervals = trans_to_linear.translate_interval(interval).get_single_path_intervals()
+        assert len(linear_intervals) == 1
+        linear_interval = linear_intervals[0]
+        if linear_interval != interval:
+            write_linear_interval_to_bed_file(bed_file, linear_interval)
+
+
+    bed_file.close()
+    command = ["macs2", "predictd", "-i", "tmp2.bed", "-g", str(linear_graph.number_of_basepairs()), "-m", "5", "50"]
     output = subprocess.check_output(command)
     print(output)
     # TODO parse output to get shift size
@@ -57,6 +40,9 @@ def get_shift_size(vg_graph, alignments_json_file, limit_to_chromosome = False, 
 if __name__ == "__main__":
     chromosome = "chr4"
     vg_graph = vg.Graph.create_from_file("dm_test_data/x_%s.json" % chromosome, 30000, chromosome)
-    vg_graph.to_file("%s.vggraph" % chromosome)
-    #vg_graph = vg.Graph.from_file("%s.vggraph" % chromosome)
-    get_shift_size(vg_graph, "dm_test_data/reads3_large.json", chromosome, 25000000)
+    ofbg = vg_graph.get_offset_based_graph()
+    #intervals = vg_mapping_file_to_interval_list(vg_graph, "dm_test_data/reads3.json")
+    #interval_collection = IntervalCollection(intervals)
+    #interval_collection.to_file("interval_collection.tmp")
+    get_shift_size_on_offset_based_graph(ofbg, "interval_collection.tmp")
+
