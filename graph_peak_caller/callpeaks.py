@@ -1,6 +1,7 @@
 from offsetbasedgraph import IntervalCollection
 import pyvg as vg
 import .shifter
+from shift_estimation import get_shift_size
 
 class CallPeaks(object):
     def __init__(self, graph_file_name, sample_file_name, control_file_name=None):
@@ -67,7 +68,3 @@ class CallPeaks(object):
     def _write_vg_alignments_as_intervals_to_bed_file(self):
         pass
 
-    def write_alignments_to_linear_genome_to_bed_file(self):
-        # Write only those alignments that fall on the lniear genome to bed file
-        # TODO use method from shift_estimation.py
-        pass
