@@ -12,10 +12,15 @@ class Pipeline(object):
         self.sample_file_name = sample_file_name
         self.control_file_name = control_file_name if control_file_name is not None else sample_file_name
         self.has_control = control_file_name is not None
-        self.create_graphs()
         self.chromosome = chromosome
 
-    def 
+    def find_info(self):
+        genome_size = 0
+        lines = (line["node"] for line in self.graph_file_name.readlines() if "node" in line)
+        sizes = (sum(Node.from_json(json_obj).n_basepairs for json_obj in line) for line in lines)
+
+        self.genome_size = sum(sizes)
+        self.n_reads = sum(1 for line in open(self.control_file_name))
 
     def create_graphs(self):
         self.vg_graph = vg.Graph.create_from_file(self.graph_file_name)
@@ -24,9 +29,9 @@ class Pipeline(object):
     def create_control(self):
         bg_track = BackgroundTrack(self.ob_graph, control_file_name, self.d, 1000, 10000, 
         f = open()
-
-        jsons = (json.loads(line) for line in f.readlines())
-        alignments = [vg.Alignment.from_json(json_dict) for json_dict in jsons]        
+        jsons = (j
+                 son.loads(line) for line in f.readlines())
+        alignments = [vg.Alignment.from_json(json_dict) for json_dict in jsons]
 
 if __name__ == "__main__":
     print("Creating vg graph")

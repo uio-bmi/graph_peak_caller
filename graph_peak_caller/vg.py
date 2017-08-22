@@ -242,7 +242,6 @@ class Graph(object):
         self.reverse_edge_dict = {}
         self._create_edge_dicts()
 
-
     @classmethod
     def create_from_file(cls, json_file_name, max_lines_to_read=False, limit_to_chromosome=False, do_read_paths=True):
         paths = []
@@ -269,7 +268,6 @@ class Graph(object):
                         break
 
                     continue
-
 
 
             if do_read_paths and "path" in line:
