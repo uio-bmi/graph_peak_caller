@@ -44,9 +44,8 @@ def get_shift_size_on_offset_based_graph(offset_based_graph, interval_file_name)
     fragment_length = re.search("fragment length is ([0-9]+) bp", output).groups()[0]
     fragment_length = int(fragment_length)
     shift = fragment_length - tag_size
-
     print("Shift: %d" % shift)
-    return shift
+    return fragment_length
 
 
 if __name__ == "__main__":
