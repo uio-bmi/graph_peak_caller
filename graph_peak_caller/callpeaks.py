@@ -1,8 +1,11 @@
 from offsetbasedgraph import IntervalCollection
 import offsetbasedgraph
+import numpy as np
 import pyvg as vg
 from graph_peak_caller import Shifter
 from graph_peak_caller import get_shift_size_on_offset_based_graph
+from .bdgcmp import *
+
 
 class CallPeaks(object):
     def __init__(self, graph_file_name, sample_file_name, control_file_name=None):
@@ -23,7 +26,6 @@ class CallPeaks(object):
         self.sample_file_name = self.filter_duplicates(self.sample_file_name)
         if self.control_file_name is not None:
             self.control_file_name = self.filter_duplicates(self.control_file_name)
-
 
         self.create_control()
         self.create_sample_pileup()
@@ -85,10 +87,23 @@ class CallPeaks(object):
         self.ob_graph = offsetbasedgraph.Graph.from_file(self.graph_file_name)
 
     def create_control(self):
-        bg_track = BackgroundTrack(self.ob_graph, control_file_name, self.d, 1000, 10000)
-        f = open()
-        jsons = (json.loads(line) for line in f.readlines())
-        alignments = [vg.Alignment.from_json(json_dict) for json_dict in jsons]
+        extensions = [self.shift, 1000, 5000, 10000] if self.has_control else [5000, 10000]
+        control_track = ControlTrack(
+            self.ob_graph, self.control_file_name,
+            self.shift, self.genome_size, self.n_reads,
+            extensions)
+        background_value = self.n_reads*self.shift/self.genome_size
+        self.control_pileup = create_background_pileup_as_max_from_pileups(
+            self.graph, control_track.generate_background_tracks(),
+            background_value)
+
+    def get_p_values(self):
+        self.p_values = get_p_value(self.ob_graph, self._control_track, self._sample_track, self._p_value_track)
+
+    def call_peaks(self, cutoff=0.05):
+        self.p_values.threshold(-np.log10(cutoff))
+        self.p_values.fill_small_wholes(self.read_length)
+        self.final_track = self.p_values
 
     def create_sample_pileup(self):
         alignments = vg.AlignmentCollection.create_generator_from_file(

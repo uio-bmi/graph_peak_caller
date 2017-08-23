@@ -17,10 +17,9 @@ def area_from_interval(interval, graph):
 
 
 class Shifter(object):
-    def __init__(self, graph, intervals, d):
+    def __init__(self, graph, d):
         self.graph = graph
         self.traverser = GraphTraverser(graph)
-        self.intervals = intervals
         self.d = d
         self.direction = self.d//abs(self.d) if self.d != 0 else 0
  
