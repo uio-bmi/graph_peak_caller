@@ -14,22 +14,17 @@ def translate_intervals():
     vg_graph = vg.Graph.create_from_file(
         data_folder+"x.json",
         limit_to_chromosome="chr4")
-    ob_graph = vg_graph.to_obg()
+    ob_graph = vg_graph.get_offset_based_graph()
     pyvg.util.vg_mapping_file_to_interval_file(
         "intervals_test", vg_graph, data_folder + "sample_reads.json",
         ob_graph)
 
 
 if __name__ == "__main__":
-    translate_intervals()
-    exit()
     chromosome = "chr4"
     obg = obg.Graph.from_file(data_folder+"obg%s.tmp" % chromosome)
-    interval_file = pyvg.util.vg_mapping_file_to_interval_file(
-        "intervals_test", vg_graph, data_folder + "sample_reads.json", ofbg)
-    ofbg.to_file("graph.tmp")
-
-    caller = CallPeaks("graph.tmp", interval_file)
+    caller = CallPeaks(data_folder + "obg%s.tmp" % chromosome,
+                       data_folder + "intervals_test")
     caller.run()
 
     #caller.create_graph()

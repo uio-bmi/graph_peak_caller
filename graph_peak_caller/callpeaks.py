@@ -4,6 +4,7 @@ import numpy as np
 import pyvg as vg
 from graph_peak_caller import Shifter
 from graph_peak_caller import get_shift_size_on_offset_based_graph
+from .control import ControlTrack
 from .bdgcmp import *
 
 
@@ -13,12 +14,13 @@ class CallPeaks(object):
         self.sample_file_name = sample_file_name
         self.control_file_name = control_file_name if control_file_name is not None else sample_file_name
         self.has_control = control_file_name is not None
+        self._p_value_track = "p_value_track"
+        self.read_length = 42
 
     def run(self):
+        self.create_graph()
         self.find_info()
         self.determine_shift()
-        self.create_graph()
-
         self.sample_file_name = self.remove_alignments_not_in_graph(self.sample_file_name)
         if self.control_file_name is not None:
             self.control_file_name = self.remove_alignments_not_in_graph(self.control_file_name)
@@ -30,7 +32,7 @@ class CallPeaks(object):
         self.create_control()
         self.create_sample_pileup()
         self.get_p_values()
-        self.find_peaks()
+        self.call_peaks()
 
     def remove_alignments_not_in_graph(self, alignment_file_name):
         interval_collection = IntervalCollection.create_generator_from_file(alignment_file_name)
@@ -90,29 +92,32 @@ class CallPeaks(object):
         extensions = [self.shift, 1000, 5000, 10000] if self.has_control else [5000, 10000]
         control_track = ControlTrack(
             self.ob_graph, self.control_file_name,
-            self.shift, self.genome_size, self.n_reads,
-            extensions)
+            self.shift, extensions)
         background_value = self.n_reads*self.shift/self.genome_size
-        self.control_pileup = create_background_pileup_as_max_from_pileups(
-            self.graph, control_track.generate_background_tracks(),
-            background_value)
+        self._control_track = create_background_pileup_as_max_from_pileups(
+            self.ob_graph, control_track.generate_background_tracks(),
+            background_value, "control_track.bdg")
 
     def get_p_values(self):
-        self.p_values = get_p_value(self.ob_graph, self._control_track, self._sample_track, self._p_value_track)
+        self.p_values = get_p_value_track(self.ob_graph, self._control_track, self._sample_track, self._p_value_track)
 
     def call_peaks(self, cutoff=0.05):
         self.p_values.threshold(-np.log10(cutoff))
         self.p_values.fill_small_wholes(self.read_length)
         self.final_track = self.p_values
+        self.final_track.to_bed_graph("final_track")
 
     def create_sample_pileup(self):
-        alignments = vg.AlignmentCollection.create_generator_from_file(
+        alignments = IntervalCollection.create_generator_from_file(
             self.control_file_name)
-        obg_alignments = (alignment.path.to_obg(ob_graph) for alignment in alignments)
-        shifter = Shifter(self.ob_graph, obg_alignments, self.shift)
-        areas_list = (shifter.extend_interval(interval) for interval in obg_alignments)
-        pileup = Pileup(self.ob_graph, [])
-        (pileup.add_areas() for area in areas)
+        shifter = Shifter(self.ob_graph, self.shift)
+        areas_list = (shifter.extend_interval(interval)
+                      for interval in alignments)
+        pileup = Pileup(self.ob_graph)
+        (pileup.add_areas(areas) for areas in areas_list)
+        self._sample_track = "sample_track.bdg"
+        print(pileup)
+        pileup.to_bed_graph(self._sample_track)
 
     def _write_vg_alignments_as_intervals_to_bed_file(self):
         pass

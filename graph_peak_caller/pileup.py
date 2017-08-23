@@ -31,7 +31,7 @@ class Pileup(object):
 
     def threshold(self, cutoff):
         for node_id, count_array in self.__count_arrays.items():
-            self.count_arrays[node_id] = count_array > cutoff
+            self.__count_arrays[node_id] = count_array > cutoff
 
     def clear(self):
         self.__count_arrays = None
@@ -45,6 +45,9 @@ class Pileup(object):
         graph_uses_int_ids = isinstance(list(graph.blocks.keys())[0], int)
 
         for line in file:
+            if line.startswith("track"):
+                continue
+
             data = line.split()
             block_id = data[0]
             if graph_uses_int_ids:

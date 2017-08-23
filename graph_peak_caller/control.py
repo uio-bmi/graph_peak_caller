@@ -1,4 +1,3 @@
-import vg
 from .pileup import Pileup
 from .shifter import Shifter
 from offsetbasedgraph.interval import IntervalCollection

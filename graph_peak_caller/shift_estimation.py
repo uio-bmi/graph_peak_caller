@@ -33,7 +33,7 @@ def get_shift_size_on_offset_based_graph(offset_based_graph, interval_file_name)
     command = ["macs2", "predictd", "-i", "tmp2.bed", "-g", str(linear_graph.number_of_basepairs()), "-m", "1", "50"]
     output = subprocess.check_output(command, stderr=subprocess.STDOUT)
     output = output.decode("utf-8")
-
+    print(output)
     if "Too few paired peaks" in str(output):
         #print(output)
         raise RuntimeError("Too few paired peaks for doing shift estimation")
