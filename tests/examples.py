@@ -1,7 +1,7 @@
 import numpy as np
 import json
 import offsetbasedgraph
-from pyvg import *bd
+from pyvg.vg import *
 from graph_peak_caller.pileup import Pileup
 
 position_jsons = [json.loads(pos_str) for pos_str in
@@ -54,8 +54,8 @@ true_counts = {node.id: np.zeros(node.n_basepairs, dtype="int32")
 true_counts[0][5:] = 1
 true_counts[1][:5] = 2
 true_counts[1][5:15] = 1
-true_pileup = Pileup(None, None)
-true_pileup.count_arrays = true_counts
+true_pileup = Pileup(None)
+true_pileup.set_count_arrays(true_counts)
 
 
 one_block_graph = offsetbasedgraph.Graph({1: offsetbasedgraph.Block(10)}, {})
@@ -63,5 +63,7 @@ one_block_pileup1_intervals = [offsetbasedgraph.Interval(1, 10, [1], one_block_g
                                offsetbasedgraph.Interval(1, 5, [1], one_block_graph)]
 one_block_pileup2_intervals = [offsetbasedgraph.Interval(0, 5, [1], one_block_graph)]
 
-pileup1_one_block = Pileup(one_block_graph, one_block_pileup1_intervals).create()
-pileup2_one_block = Pileup(one_block_graph, one_block_pileup2_intervals).create()
+pileup1_one_block = Pileup(one_block_graph)
+pileup1_one_block.add_intervals(one_block_pileup1_intervals)
+pileup2_one_block = Pileup(one_block_graph)
+pileup2_one_block.add_intervals(one_block_pileup2_intervals)

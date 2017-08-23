@@ -6,6 +6,11 @@ class Pileup(object):
         self.graph = graph
         self.filename = None
         self.is_written = False
+        if self.graph is not None:
+            self.create_count_arrays()
+
+    def set_count_arrays(self, count_arrays):
+        self.__count_arrays = count_arrays
 
     def __eq__(self, other):
         if False and self.graph != other.graph:
@@ -28,8 +33,8 @@ class Pileup(object):
     @classmethod
     def from_bed_graph(cls, graph, file_name):
         file = open(file_name)
-        pileup = cls(graph, [])
-        pileup.create_count_arrays()
+        pileup = cls(graph)
+        # pileup.create_count_arrays()
 
         graph_uses_int_ids = isinstance(list(graph.blocks.keys())[0], int)
 
@@ -62,6 +67,9 @@ class Pileup(object):
     def create_count_arrays(self):
         self.__count_arrays = {node_id: np.zeros(block.length(), dtype="float")
                              for node_id, block in self.graph.blocks.items()}
+
+    def add_intervals(self, intervals):
+        [self.add_interval(interval) for interval in intervals]
 
     def add_interval(self, interval):
         assert all(region_path in self.graph.blocks for
@@ -154,7 +162,7 @@ class Pileup(object):
         interval_dict, end_interval_dict, whole_intervals = self.find_valued_intevals(0)
         small_intervals = SmallIntervals(interval_dict, end_interval_dict, whole_intervals, self.graph, max_size)
         self.set_areas_value(small_intervals.small_areas, 1)
-        [self.set_interval_value(interval) for interval in small_intervals.small_intervals)
+        [self.set_interval_value(interval) for interval in small_intervals.small_intervals]
 
     def _merge_intervals(self, interval_dict, end_interval_dict, whole_intervals):
         final_intervals = []
@@ -190,7 +198,7 @@ class SmallIntervals(object):
                 if start == 0 and all(prev_node in self.end_interval_dict for prev_node in
                                       self.graph.reverse_adj_list[node_id]):
                     continue
-                cur_list.extend([start, end))
+                cur_list.extend([start, end])
             if cur_list:
                 self.small_areas[node_id] = cur_list
         
