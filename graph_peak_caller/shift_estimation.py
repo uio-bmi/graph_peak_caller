@@ -1,4 +1,5 @@
 import pyvg as vg
+import re
 from pyvg.util import vg_mapping_file_to_interval_list
 #from vg import vg_mapping_file_to_interval_list
 import subprocess
@@ -16,7 +17,6 @@ def write_linear_interval_to_bed_file(file_handler, interval):
                                        strand))
 
 
-
 def get_shift_size_on_offset_based_graph(offset_based_graph, interval_file_name):
     linear_graph, trans_to_linear = offset_based_graph.get_arbitrary_linear_graph()
     bed_file = open("tmp2.bed", "w")
@@ -31,10 +31,21 @@ def get_shift_size_on_offset_based_graph(offset_based_graph, interval_file_name)
 
 
     bed_file.close()
-    command = ["macs2", "predictd", "-i", "tmp2.bed", "-g", str(linear_graph.number_of_basepairs()), "-m", "5", "50"]
-    output = subprocess.check_output(command)
-    print(output)
-    # TODO parse output to get shift size
+    command = ["macs2", "predictd", "-i", "tmp2.bed", "-g", str(linear_graph.number_of_basepairs()), "-m", "1", "50"]
+    output = subprocess.check_output(command, stderr=subprocess.STDOUT)
+    output = output.decode("utf-8")
+
+    if "Too few paired peaks" in str(output):
+        print(output)
+        raise Exception("Too few paired peaks for doing shift estimation")
+
+    tag_size = re.search("tag size = ([0-9]+)", output).groups()[0]
+    tag_size = int(tag_size)
+    fragment_length = re.search("fragment length is ([0-9]+) bp", output).groups()[0]
+    fragment_length = int(fragment_length)
+    shift = fragment_length - tag_size
+    print("Shift: %d" % shift)
+    return fragment_length
 
 
 if __name__ == "__main__":

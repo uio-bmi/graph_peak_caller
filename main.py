@@ -3,7 +3,7 @@ import offsetbasedgraph
 import json
 from graph_peak_caller.pileup import Pileup
 from graph_peak_caller.get_lambda_track import BackgroundTrack, ControlInfo
-from graph_peak_caller.shift_estimation import get_shift_size
+from graph_peak_caller.shift_estimation import get_shift_size_on_offset_based_graph
 
 
 class Pipeline(object):
@@ -27,12 +27,14 @@ class Pipeline(object):
         self.genome_size = sum(sizes)
         self.n_reads = sum(1 for line in open(self.control_file_name))
 
-    def determine_shift(self):
-        self.shift = get_shift_size(self.vg_graph, self.sample_file_name, self.chromosome, self.linear_genome_size)
-
     def create_graphs(self):
         self.vg_graph = vg.Graph.create_from_file(self.graph_file_name)
         self.ob_graph = self.vg_graph.get_offset_based_graph()
+
+    def determine_shift(self):
+        self.shift = get_shift_size_on_offset_based_graph(self.vg_graph, self.sample_file_name, self.chromosome, self.linear_genome_size)
+
+
 
     def create_control(self):
         bg_track = BackgroundTrack(self.ob_graph, control_file_name, self.d, 1000, 10000, 
@@ -40,14 +42,6 @@ class Pipeline(object):
         jsons = (j
                  son.loads(line) for line in f.readlines())
         alignments = [vg.Alignment.from_json(json_dict) for json_dict in jsons]
-
-    def _write_vg_alignments_as_intervals_to_bed_file(self):
-        pass
-
-    def write_alignments_to_linear_genome_to_bed_file(self):
-        # Write only those alignments that fall on the lniear genome to bed file
-        # TODO use method from shift_estimation.py
-        pass
 
 
 
