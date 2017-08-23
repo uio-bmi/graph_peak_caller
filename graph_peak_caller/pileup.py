@@ -1,4 +1,5 @@
 import numpy as np
+import offsetbasedgraph as obg
 
 
 class Pileup(object):
@@ -8,6 +9,11 @@ class Pileup(object):
         self.is_written = False
         if self.graph is not None:
             self.create_count_arrays()
+
+    def __str__(self):
+        return "\n".join("%s: %s" % (node_id, sum(array)) for node_id, array in self.__count_arrays.items())
+
+    __repr__ = __str__
 
     def set_count_arrays(self, count_arrays):
         self.__count_arrays = count_arrays
@@ -161,23 +167,23 @@ class Pileup(object):
     def fill_small_wholes(self, max_size):
         interval_dict, end_interval_dict, whole_intervals = self.find_valued_intevals(0)
         small_intervals = SmallIntervals(interval_dict, end_interval_dict, whole_intervals, self.graph, max_size)
+        small_intervals.run()
+        print(small_intervals.small_areas)
+        print(small_intervals.small_intervals)
         self.set_areas_value(small_intervals.small_areas, 1)
-        [self.set_interval_value(interval) for interval in small_intervals.small_intervals]
-
-    def _merge_intervals(self, interval_dict, end_interval_dict, whole_intervals):
-        final_intervals = []
-        for node_id, interval in end_interval_dict.items():
-            intervals = self._get_intervals(interval_dict, end_interval_dict, whole_intervals, node_id, [interval[0]])
-            intervals = Interval(intervals[0], intervals[-1], intervals[1:-1])
+        [self.set_interval_value(interval, 1) for interval in small_intervals.small_intervals]
 
 
 class SmallIntervals(object):
-    def __init__(self, interval_dict, end_interval_dict, whole_intervals, graph, max_size):
+    def __init__(self, interval_dict, end_interval_dict,
+                 whole_intervals, graph, max_size):
         self.graph = graph
         self.interval_dict = interval_dict
         self.end_interval_dict = end_interval_dict
         self.whole_intervals = whole_intervals
         self.max_size = max_size
+
+    def run(self):
         self.merge_intervals()
         self.filter_intervals()
 
@@ -185,12 +191,14 @@ class SmallIntervals(object):
         self.intervals = []
         for node_id, interval in self.end_interval_dict.items():
             intervals = self._get_intervals(node_id, [interval[0]])
-            self.intervals.extend([Interval(i[0], i[-1], i[1:-1], graph=self.graph) for i in intervals])
+            self.intervals.extend(
+                [obg.Interval(i[0], i[-1], i[1:-1], graph=self.graph)
+                 for i in intervals])
 
     def filter_intervals(self):
         self.small_intervals = [interval for interval in self.intervals if interval.length()<=self.max_size]
         self.small_areas = {}
-        for node_id, intervals in self.interval_dict:
+        for node_id, intervals in self.interval_dict.items():
             cur_list = []
             for i in range(len(intervals)//2):
                 start = intervals[i]
@@ -201,21 +209,28 @@ class SmallIntervals(object):
                 cur_list.extend([start, end])
             if cur_list:
                 self.small_areas[node_id] = cur_list
-        
 
     def _get_intervals(self, node_id, cur_interval):
         intervals = []
         my_interval = cur_interval + [node_id]
+        print(node_id, cur_interval)
         for next_node in self.graph.adj_list[node_id]:
+            print("->", next_node)
             if next_node in self.whole_intervals:
                 intervals.extend(
                     self._get_intervals(next_node, my_interval))
-            elif self.interval_dict[next_node] and self.interval_dict[next_node][0] == 0:
-                intervals.append(my_interval + [next_node, self.interval_dict[next_node][1]])
-            else:
-                intervals.append(my_interval + [self.graph.blocks[node_id].length()])
+                continue
+
+            if next_node in self.interval_dict:
+                print("# Trigger")
+                print("#", self.interval_dict[next_node])
+                if self.interval_dict[next_node] and self.interval_dict[next_node][0][0] == 0:
+                    intervals.append(my_interval + [next_node, self.interval_dict[next_node][0][1]])
+                    continue
+            intervals.append(my_interval + [self.graph.blocks[node_id].length()])
         return intervals
-                    
+
+
 class SparsePileup(Pileup):
     def create_data_struct(self):
         # valued intervals = [(idx,  value)]
