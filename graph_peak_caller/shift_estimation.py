@@ -1,7 +1,6 @@
 import pyvg as vg
 import re
-from pyvg.util import vg_mapping_file_to_interval_list
-#from vg import vg_mapping_file_to_interval_list
+import pyvg.util
 import subprocess
 from offsetbasedgraph import IntervalCollection
 
@@ -51,9 +50,12 @@ def get_shift_size_on_offset_based_graph(offset_based_graph, interval_file_name)
 if __name__ == "__main__":
     chromosome = "chr4"
     vg_graph = vg.Graph.create_from_file("dm_test_data/x_%s.json" % chromosome, 30000, chromosome)
-    ofbg = vg_graph.get_offset_based_graph()
-    #intervals = vg_mapping_file_to_interval_list(vg_graph, "dm_test_data/reads3.json")
+    #ofbg = vg_graph.get_offset_based_graph()
+    print("Intervals:")
+    for interval in pyvg.util.vg_mapping_file_to_interval_list(vg_graph, "dm_test_data/reads3_large.json"):
+        print("Length: %d" % interval.length())
+    print("done")
     #interval_collection = IntervalCollection(intervals)
     #interval_collection.to_file("interval_collection.tmp")
-    get_shift_size_on_offset_based_graph(ofbg, "interval_collection.tmp")
+    #get_shift_size_on_offset_based_graph(ofbg, "interval_collection.tmp")
 
