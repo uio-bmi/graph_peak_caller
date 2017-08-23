@@ -18,6 +18,10 @@ class Pileup(object):
 
         return len(self.__count_arrays) == len(other.__count_arrays)
 
+    def threshold(self, cutoff):
+        for node_id, count_array in self.__count_arrays.items():
+            self.count_arrays[node_id] = count_array > cutoff
+
     def clear(self):
         self.__count_arrays = None
 
@@ -106,7 +110,36 @@ class Pileup(object):
     def summary(self):
         return sum(array.sum() for array in self.__count_arrays.values())
 
+    def find_valued_intevals(self, value=0):
+        interval_dict = {}
+        end_interval_dict = {}
+        for node_id, count_array in self.__count_arrays.items():
+            cur_area = False
+            cur_list = []
+            cur_start = None
+            for i, val in enumerate(count_array):
+                if val == value and not cur_area:
+                    cur_start = i
+                    cur_area = True
+                elif val != value and cur_area:
+                    cur_list.append((cur_start, i))
+                    cur_area = False
+            if cur_area:
+                end_interval_dict[node_id] = (cur_start, len(count_array))
+            interval_dict[node_id] = cur_list
+        return interval_dict
 
+    def _merge_intervals(self, interval_dict, end_interval_dict):
+        final_intervals = []
+        for node_id, interval in end_interval_dict.items():
+            for following_node in self.graph.adj_list[node_id]:
+                next_intervals = interval_dict[following_node]
+                if next_intervals and next_intervals[0][0] == 0:
+                    final_intervals.append(Interval(inteval[0], next_intervals[0][1], [node_id, following_node]))
+                elif following_node in end_interval_dict and end_interval_dict[following_node][0] == 0:
+                    pass
+
+                    
 class SparsePileup(Pileup):
     def create_data_struct(self):
         # valued intervals = [(idx,  value)]
