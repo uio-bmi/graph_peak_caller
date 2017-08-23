@@ -35,8 +35,8 @@ def get_shift_size_on_offset_based_graph(offset_based_graph, interval_file_name)
     output = output.decode("utf-8")
 
     if "Too few paired peaks" in str(output):
-        print(output)
-        raise Exception("Too few paired peaks for doing shift estimation")
+        #print(output)
+        raise RuntimeError("Too few paired peaks for doing shift estimation")
 
     tag_size = re.search("tag size = ([0-9]+)", output).groups()[0]
     tag_size = int(tag_size)

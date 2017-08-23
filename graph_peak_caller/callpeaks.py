@@ -1,4 +1,5 @@
 from offsetbasedgraph import IntervalCollection
+import offsetbasedgraph
 import pyvg as vg
 from graph_peak_caller import Shifter
 from graph_peak_caller import get_shift_size_on_offset_based_graph
@@ -13,7 +14,7 @@ class CallPeaks(object):
     def run(self):
         self.find_info()
         self.determine_shift()
-        self.create_graphs()
+        self.create_graph()
 
         self.sample_file_name = self.remove_alignments_not_in_graph(self.sample_file_name)
         if self.control_file_name is not None:
@@ -36,6 +37,7 @@ class CallPeaks(object):
         for interval in self._get_intervals_in_ob_graph(interval_collection):
             filtered_file.writelines(["%s\n" % interval.to_file_line()])
         filtered_file.close()
+        print("Alignments without duplicates written to %s" % filtered_file_name)
         return filtered_file_name
 
     def filter_duplicates(self, alignment_file_name):
@@ -47,34 +49,40 @@ class CallPeaks(object):
         for interval in interval_collection:
             hash = interval.hash()
             if hash in interval_hashes:
-                print("Duplicate found")
+                #print("Duplicate found")
                 continue
 
             interval_hashes[hash] = True
             filtered_file.writelines(["%s\n" % interval.to_file_line()])
         filtered_file.close()
+        print("Filtered alignments written to %s" % filtered_file_name)
         return filtered_file_name
 
     def _get_intervals_in_ob_graph(self, intervals):
-        # Returns only those intervals that exist in vg_graph
+        # Returns only those intervals that exist in graph
         for interval in intervals:
-             if interval.region_paths[0] in self.vg_graph.blocks:
+             if interval.region_paths[0] in self.ob_graph.blocks:
                  yield interval
 
     def find_info(self):
         genome_size = 0
-        lines = (line["node"] for line in self.graph_file_name.readlines() if "node" in line)
-        sizes = (sum(Node.from_json(json_obj).n_basepairs for json_obj in line) for line in lines)
+        #lines = (line["node"] for line in self.graph_file_name.readlines() if "node" in line)
+        #sizes = (sum(Node.from_json(json_obj).n_basepairs for json_obj in line) for line in lines)
+        sizes = (block.length() for block in self.ob_graph.blocks.values())
 
         self.genome_size = sum(sizes)
         self.n_reads = sum(1 for line in open(self.control_file_name))
 
     def determine_shift(self):
-        self.shift = get_shift_size_on_offset_based_graph(self.vg_graph, self.sample_file_name, self.chromosome, self.linear_genome_size)
+        try:
+            self.shift = get_shift_size_on_offset_based_graph(self.ob_graph, self.sample_file_name)
+        except RuntimeError:
+            print("WARNING: To litle data to compute shift. Setting default shift")
+            self.shift = 125
 
-    def create_graphs(self):
-        self.vg_graph = vg.Graph.create_from_file(self.graph_file_name)
-        self.ob_graph = self.vg_graph.get_offset_based_graph()
+    def create_graph(self):
+        #self.vg_graph = vg.Graph.create_from_file(self.graph_file_name)
+        self.ob_graph = offsetbasedgraph.Graph.from_file(self.graph_file_name)
 
     def create_control(self):
         bg_track = BackgroundTrack(self.ob_graph, control_file_name, self.d, 1000, 10000)
@@ -96,9 +104,16 @@ class CallPeaks(object):
 
 
 if __name__ == "__main__":
-    chromosome = "chr2R"
+
+    chromosome = "chr4"
     vg_graph = vg.Graph.create_from_file("dm_test_data/x_%s.json" % chromosome, 30000, chromosome)
     ofbg = vg_graph.get_offset_based_graph()
-    interval_file = vg.util.vg_mapping_file_to_interval_file("intervals_test", vg_graph, "dm_test_data/reads3.json", ofbg)
-    caller = CallPeaks(ofbg, interval_file)
-    caller.filter_duplicates(caller.sample_file_name)
+    interval_file = vg.util.vg_mapping_file_to_interval_file("intervals_test", vg_graph, "dm_test_data/sample_reads.json", ofbg)
+    ofbg.to_file("graph.tmp")
+
+    caller = CallPeaks("graph.tmp", interval_file)
+    caller.create_graph()
+    caller.find_info()
+    caller.determine_shift()
+    caller.sample_file_name = caller.remove_alignments_not_in_graph(caller.sample_file_name)
+    caller.sample_file_name = caller.filter_duplicates(caller.sample_file_name)
