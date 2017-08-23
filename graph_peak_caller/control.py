@@ -17,7 +17,7 @@ class ControlTrack(object):
         areas_generator = (shifter.extend_interval(alignment, 0) for alignment
                            in alignments)
         pileup = Pileup(self.graph)
-        (pileup.add_areas(areas) for areas in areas_generator)
+        [pileup.add_areas(areas) for areas in areas_generator]
         return pileup
 
     def generate_background_tracks(self):

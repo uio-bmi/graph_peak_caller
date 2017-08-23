@@ -171,8 +171,6 @@ class Pileup(object):
         interval_dict, end_interval_dict, whole_intervals = self.find_valued_intevals(0)
         small_intervals = SmallIntervals(interval_dict, end_interval_dict, whole_intervals, self.graph, max_size)
         small_intervals.run()
-        print(small_intervals.small_areas)
-        print(small_intervals.small_intervals)
         self.set_areas_value(small_intervals.small_areas, 1)
         [self.set_interval_value(interval, 1) for interval in small_intervals.small_intervals]
 
@@ -216,17 +214,13 @@ class SmallIntervals(object):
     def _get_intervals(self, node_id, cur_interval):
         intervals = []
         my_interval = cur_interval + [node_id]
-        print(node_id, cur_interval)
         for next_node in self.graph.adj_list[node_id]:
-            print("->", next_node)
             if next_node in self.whole_intervals:
                 intervals.extend(
                     self._get_intervals(next_node, my_interval))
                 continue
 
             if next_node in self.interval_dict:
-                print("# Trigger")
-                print("#", self.interval_dict[next_node])
                 if self.interval_dict[next_node] and self.interval_dict[next_node][0][0] == 0:
                     intervals.append(my_interval + [next_node, self.interval_dict[next_node][0][1]])
                     continue

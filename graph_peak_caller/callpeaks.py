@@ -9,7 +9,8 @@ from .bdgcmp import *
 
 
 class CallPeaks(object):
-    def __init__(self, graph_file_name, sample_file_name, control_file_name=None):
+    def __init__(self, graph_file_name, sample_file_name,
+                 control_file_name=None):
         self.graph_file_name = graph_file_name
         self.sample_file_name = sample_file_name
         self.control_file_name = control_file_name if control_file_name is not None else sample_file_name
@@ -109,14 +110,14 @@ class CallPeaks(object):
 
     def create_sample_pileup(self):
         alignments = IntervalCollection.create_generator_from_file(
-            self.control_file_name)
+            self.sample_file_name)
+
         shifter = Shifter(self.ob_graph, self.shift)
         areas_list = (shifter.extend_interval(interval)
                       for interval in alignments)
         pileup = Pileup(self.ob_graph)
-        (pileup.add_areas(areas) for areas in areas_list)
+        [pileup.add_areas(areas) for areas in areas_list]
         self._sample_track = "sample_track.bdg"
-        print(pileup)
         pileup.to_bed_graph(self._sample_track)
 
     def _write_vg_alignments_as_intervals_to_bed_file(self):
