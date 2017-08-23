@@ -1,5 +1,7 @@
-import .vg
+from offsetbasedgraph import IntervalCollection
+import pyvg as vg
 import .shifter
+from shift_estimation import get_shift_size
 
 class CallPeaks(object):
     def __init__(self, graph_file_name, sample_file_name, control_file_name=None):
@@ -7,16 +9,31 @@ class CallPeaks(object):
         self.sample_file_name = sample_file_name
         self.control_file_name = control_file_name if control_file_name is not None else sample_file_name
         self.has_control = control_file_name is not None
-        self.chromosome = chromosome
 
     def run(self):
         self.find_info()
         self.determine_shift()
         self.create_graphs()
+        self.remove_alignments_not_in_graph(self.sample_file_name)
+        if self.control_file_name is not None:
+            self.remove_alignments_not_in_graph(self.control_file_name)
         self.create_control()
         self.create_sample_pileup()
         self.get_p_values()
         self.find_peaks()
+
+    def remove_alignments_not_in_graph(self, alignment_file_name):
+        interval_collection = IntervalCollection.create_generator_from_file(alignment_file_name)
+        filtered_file = open(alignment_file_name + "_filtered", "w")
+        for interval in self._get_intervals_in_ob_graph(interval_collection):
+            filtered_file.writelines(["%s\n" % interval.to_file_line()])
+        filtered_file.close()
+
+    def _get_intervals_in_ob_graph(self, intervals):
+        # Returns only those intervals that exist in vg_graph
+        for interval in intervals:
+             if interval.region_paths[0] in self.vg_graph.blocks:
+                 yield interval
 
     def find_info(self):
         genome_size = 0
@@ -51,7 +68,3 @@ class CallPeaks(object):
     def _write_vg_alignments_as_intervals_to_bed_file(self):
         pass
 
-    def write_alignments_to_linear_genome_to_bed_file(self):
-        # Write only those alignments that fall on the lniear genome to bed file
-        # TODO use method from shift_estimation.py
-        pass
