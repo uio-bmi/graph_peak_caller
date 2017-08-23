@@ -84,6 +84,23 @@ class Pileup(object):
             for i in range(len(intervals)//2):
                 self.__count_arrays[area][intervals[i]:intervals[i+1]] += 1
 
+    def set_areas_value(self, areas, value):
+        for area, intervals in areas.items():
+            for i in range(len(intervals)//2):
+                self.__count_arrays[area][intervals[i]:intervals[i+1]] = value
+
+    def set_interval_value(self, interval, value):
+        assert all(region_path in self.graph.blocks for
+                   region_path in interval.region_paths)
+        for i, region_path in enumerate(interval.region_paths):
+            start = 0
+            end = self.graph.blocks[region_path].length()
+            if i == 0:
+                start = interval.start_position.offset
+            if i == len(interval.region_paths)-1:
+                end = interval.end_position.offset
+            self.__count_arrays[region_path][start:end] = value
+
     def to_bed_graph(self, filename):
         f = open(filename, "w")
         for node_id, count_array in self.__count_arrays.items():
@@ -113,6 +130,7 @@ class Pileup(object):
     def find_valued_intevals(self, value=0):
         interval_dict = {}
         end_interval_dict = {}
+        whole_intervals = []
         for node_id, count_array in self.__count_arrays.items():
             cur_area = False
             cur_list = []
@@ -125,20 +143,70 @@ class Pileup(object):
                     cur_list.append((cur_start, i))
                     cur_area = False
             if cur_area:
+                if cur_start == 0:
+                    whole_intervals.append(node_id)
+                    cur_list = []
                 end_interval_dict[node_id] = (cur_start, len(count_array))
             interval_dict[node_id] = cur_list
-        return interval_dict
+        return interval_dict, end_interval_dict, whole_intervals
 
-    def _merge_intervals(self, interval_dict, end_interval_dict):
+    def fill_small_wholes(self, max_size):
+        interval_dict, end_interval_dict, whole_intervals = self.find_valued_intevals(0)
+        small_intervals = SmallIntervals(interval_dict, end_interval_dict, whole_intervals, self.graph, max_size)
+        self.set_areas_value(small_intervals.small_areas, 1)
+        [self.set_interval_value(interval) for interval in small_intervals.small_intervals)
+
+    def _merge_intervals(self, interval_dict, end_interval_dict, whole_intervals):
         final_intervals = []
         for node_id, interval in end_interval_dict.items():
-            for following_node in self.graph.adj_list[node_id]:
-                next_intervals = interval_dict[following_node]
-                if next_intervals and next_intervals[0][0] == 0:
-                    final_intervals.append(Interval(inteval[0], next_intervals[0][1], [node_id, following_node]))
-                elif following_node in end_interval_dict and end_interval_dict[following_node][0] == 0:
-                    pass
+            intervals = self._get_intervals(interval_dict, end_interval_dict, whole_intervals, node_id, [interval[0]])
+            intervals = Interval(intervals[0], intervals[-1], intervals[1:-1])
 
+
+class SmallIntervals(object):
+    def __init__(self, interval_dict, end_interval_dict, whole_intervals, graph, max_size):
+        self.graph = graph
+        self.interval_dict = interval_dict
+        self.end_interval_dict = end_interval_dict
+        self.whole_intervals = whole_intervals
+        self.max_size = max_size
+        self.merge_intervals()
+        self.filter_intervals()
+
+    def merge_intervals(self):
+        self.intervals = []
+        for node_id, interval in self.end_interval_dict.items():
+            intervals = self._get_intervals(node_id, [interval[0]])
+            self.intervals.extend([Interval(i[0], i[-1], i[1:-1], graph=self.graph) for i in intervals])
+
+    def filter_intervals(self):
+        self.small_intervals = [interval for interval in self.intervals if interval.length()<=self.max_size]
+        self.small_areas = {}
+        for node_id, intervals in self.interval_dict:
+            cur_list = []
+            for i in range(len(intervals)//2):
+                start = intervals[i]
+                end = intervlas[i+1]
+                if start == 0 and all(prev_node in self.end_interval_dict for prev_node in
+                                      self.graph.reverse_adj_list[node_id]):
+                    continue
+                cur_list.extend([start, end))
+            if cur_list:
+                self.small_areas[node_id] = cur_list
+        
+
+    def _get_intervals(self, node_id, cur_interval):
+        intervals = []
+        my_interval = cur_interval + [node_id]
+        for next_node in self.graph.adj_list[node_id]:
+            if next_node in self.whole_intervals:
+                intervals.extend(
+                    self._get_intervals(next_node, my_interval))
+            elif self.interval_dict[next_node] and self.interval_dict[next_node][0] == 0:
+                intervals.append(my_interval + [next_node, self.interval_dict[next_node][1]])
+            else:
+                intervals.append(my_interval + [self.graph.blocks[node_id].length()])
+        return intervals
                     
 class SparsePileup(Pileup):
     def create_data_struct(self):
