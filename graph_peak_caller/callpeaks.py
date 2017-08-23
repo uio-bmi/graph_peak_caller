@@ -94,3 +94,11 @@ class CallPeaks(object):
     def _write_vg_alignments_as_intervals_to_bed_file(self):
         pass
 
+
+if __name__ == "__main__":
+    chromosome = "chr2R"
+    vg_graph = vg.Graph.create_from_file("dm_test_data/x_%s.json" % chromosome, 30000, chromosome)
+    ofbg = vg_graph.get_offset_based_graph()
+    interval_file = vg.util.vg_mapping_file_to_interval_file("intervals_test", vg_graph, "dm_test_data/reads3.json", ofbg)
+    caller = CallPeaks(ofbg, interval_file)
+    caller.filter_duplicates(caller.sample_file_name)
