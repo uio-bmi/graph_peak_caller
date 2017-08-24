@@ -1,6 +1,7 @@
 from offsetbasedgraph import Graph, Block, Position, Interval
 from offsetbasedgraph.interval import IntervalCollection
 from graph_peak_caller.callpeaks import CallPeaks
+import subprocess
 import random
 
 
@@ -24,6 +25,11 @@ class SimpleInterval(object):
         direction = +1 if dir_symbol == "+" else -1
         return cls(int(start), int(end), direction)
 
+    def __eq__(self, other):
+        attrs = ["start", "end", "direction"]
+        return (getattr(self, attr) == getattr(other, attr)
+                for attr in attrs)
+
 
 class MACSTests(object):
     def __init__(self, node_size, n_nodes, n_intervals, read_length=50):
@@ -32,14 +38,47 @@ class MACSTests(object):
         self.n_intervals = n_intervals
         self.read_length = read_length
         self.genome_size = node_size*n_nodes
+        self.setup()
 
-    def run(self):
+    def setup(self):
         self.create_linear_graph()
         self.create_intervals()
         self.write_intervals()
 
+    def linear_to_graph_interval(self, lin_interval):
+        start = lin_interval.start
+        end = lin_interval.end
+        start_rp = start//self.node_size
+        end_rp = (end+1)//self.node_size
+        start_pos = Position(
+            start_rp,
+            start % self.node_size)
+        end_pos = Position(
+            end_rp,
+            (end % self.node_size) + 1)
+        region_paths = list(range(start_rp, end_rp+1))
+        return Interval(start_pos, end_pos, region_paths, direction=direction)
+
+    def graph_to_linear_pos(self, pos):
+        return pos.region_path_id*self.node_size + pos.offset
+
+    def graph_to_linear_interval(self, graph_interval):
+        start = self.graph_to_linear_pos(graph_interval.start_position)
+        end = self.graph_to_linear_pos(graph_interval.end_position)
+        return SimpleInterval(start, end, graph_interval.direction)
+
+    def assertEqualIntervals(self, linear_intervals, graph_intervals):
+        graph_intervals = [self.graph_to_linear_interval(g_interval)
+                           for g_interval in graph_intervals]
+        assert len(graph_intervals) == len(linear_intervals)
+        for interval in graph_intervals:
+            assert interval in linear_intervals
+
+    def test_filter_dup(self):
         caller = CallPeaks("lin_graph", "graph_intervals")
-        caller.run()
+        command = "macs2 filterdup -i %s --keep-dup=1 -o %s" % ("lin_intervals.bed", "lin_intervals_dup.bed")
+        subprocess.check_output(command)
+        caller.remove_alignments_not_in_graph(self)
 
     def write_intervals(self):
         f = open("lin_intervals.bed", "w")
@@ -81,4 +120,4 @@ class MACSTests(object):
 
 if __name__ == "__main__":
     test = MACSTests(100, 100, 100)
-    test.run()
+    test.test_filter_dup()
