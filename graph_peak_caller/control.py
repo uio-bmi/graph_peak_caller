@@ -4,7 +4,7 @@ from offsetbasedgraph.interval import IntervalCollection
 
 
 class ControlTrack(object):
-    def __init__(self, graph, file_name, fragment_length,extensions):
+    def __init__(self, graph, file_name, fragment_length, extensions):
         self.graph = graph
         self.file_name = file_name
         self.fragment_length = fragment_length
@@ -17,7 +17,8 @@ class ControlTrack(object):
         areas_generator = (shifter.extend_interval(alignment, 0) for alignment
                            in alignments)
         pileup = Pileup(self.graph)
-        [pileup.add_areas(areas) for areas in areas_generator]
+        for areas in areas_generator:
+            pileup.add_areas(areas)
         return pileup
 
     def generate_background_tracks(self):
