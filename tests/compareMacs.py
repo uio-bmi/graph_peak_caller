@@ -90,7 +90,7 @@ class MACSTests(object):
         self.assertEqualIntervals(
             list(linear_intervals),
             list(graph_intervals))
-        
+
     def write_intervals(self):
         f = open("lin_intervals.bed", "w")
         f.writelines(interval.to_file_line() for
@@ -122,8 +122,8 @@ class MACSTests(object):
         self.graph_intervals = []
         for _ in range(self.n_intervals):
             direction = random.choice((-1, 1))
-            start = random.randint(0, self.genome_size-1)
-            end = random.randint(start+1, self.genome_size)
+            start = random.randint(0, self.genome_size-self.read_length)
+            end = start+self.read_length
             self.linear_intervals.append(SimpleInterval(start, end, direction))
             self.graph_intervals.append(
                 self._get_graph_interval(start, end, direction))
