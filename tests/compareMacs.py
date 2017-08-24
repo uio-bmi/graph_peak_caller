@@ -19,7 +19,7 @@ class SimpleInterval(object):
     def to_file_line(self):
         return "\t".join(
             str(v) for v in
-            (self.node_id, self.start, self.end, self.dir_symbol))+"\n"
+            (self.node_id, self.start, self.end, ".", "0", self.dir_symbol))+"\n"
 
     @classmethod
     def from_file_line(cls, line):
@@ -130,7 +130,9 @@ class MACSTests(object):
         fragment_length_graph = info.fragment_length
 
         # Macs
-        command = ["macs2", "predictd", "-i", "lin_intervals.bed", "-g", str(self.genome_size), "m", "5", "50"]
+        command = ["macs2", "predictd", "-i", "lin_intervals.bed", "-g", str(self.genome_size), "-m", "1", "50"]
+        string_commmand = ' '.join(command)
+        print(string_commmand)
         output = subprocess.check_output(command, stderr=subprocess.STDOUT)
         output = output.decode("utf-8")
         print(output)
@@ -143,6 +145,6 @@ class MACSTests(object):
         assert fragment_length_graph == fragment_length
 
 if __name__ == "__main__":
-    test = MACSTests(100, 100, 100)
+    test = MACSTests(100, 10000, 100)
     # test.test_filter_dup()
     test.test_shift_estimation()
