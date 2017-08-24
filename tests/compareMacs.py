@@ -23,7 +23,7 @@ class SimpleInterval(object):
 
     @classmethod
     def from_file_line(cls, line):
-        _, start, end, dir_symbol = line.split("\t")
+        _, start, end, _, _, dir_symbol = line.split("\t")
         direction = +1 if dir_symbol == "+" else -1
         return cls(int(start), int(end), direction)
 
@@ -82,8 +82,15 @@ class MACSTests(object):
         print(command)
         command = command.split()
         subprocess.check_output(command)
-        caller.remove_alignments_not_in_graph(self)
-
+        file_name = caller.filter_duplicates("graph_intervals")
+        graph_intervals = IntervalCollection.create_generator_from_file(
+            file_name)
+        linear_intervals = (SimpleInterval.from_file_line(line) for
+                            line in open("lin_intervals_dup.bed").readlines())
+        self.assertEqualIntervals(
+            list(linear_intervals),
+            list(graph_intervals))
+        
     def write_intervals(self):
         f = open("lin_intervals.bed", "w")
         f.writelines(interval.to_file_line() for
@@ -120,6 +127,10 @@ class MACSTests(object):
             self.linear_intervals.append(SimpleInterval(start, end, direction))
             self.graph_intervals.append(
                 self._get_graph_interval(start, end, direction))
+            if start % 10 == 0:
+                self.linear_intervals.append(SimpleInterval(start, end, direction))
+                self.graph_intervals.append(
+                    self._get_graph_interval(start, end, direction))
 
     def test_shift_estimation(self):
         self.setup()
