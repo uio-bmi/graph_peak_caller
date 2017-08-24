@@ -24,8 +24,13 @@ class SimpleInterval(object):
 
     @classmethod
     def from_file_line(cls, line):
-        _, start, end, _, _, dir_symbol = line.split("\t")
+        if line.startswith("track"):
+            return None
+        _, start, end, _, _, dir_symbol = line.split("\t")[:6]
         direction = +1 if dir_symbol == "+" else -1
+        if dir_symbol == ".":
+            direction = None
+
         return cls(int(start), int(end), direction)
 
     def __eq__(self, other):
@@ -57,7 +62,7 @@ class MACSTests(object):
         self.read_length = read_length
         self.genome_size = node_size*n_nodes
         self.setup()
-        self.fragment_length = 500
+        self.fragment_length = 20
 
     def setup(self):
         self.create_linear_graph()
@@ -105,6 +110,28 @@ class MACSTests(object):
                             line in open(linear_file).readlines())
         self.assertEqualIntervals(list(linear_intervals), graph_intervals)
 
+    def _create_binary_track(self, intervals):
+        pileup = np.zeros(self.genome_size, dtype="bool")
+        for interval in intervals:
+            if interval is None:
+                continue
+            pileup[interval.start:interval.end] = True
+        return pileup
+
+    def assertEqualBedFiles(self, graph_file, linear_file):
+        graph_intervals = [SimpleInterval.from_file_line(line)
+                           for line in open(graph_file).readlines()]
+        linear_intervals = [SimpleInterval.from_file_line(line) for
+                            line in open(linear_file).readlines()]
+
+        for graph_interval in graph_intervals:
+            self._convert_valued_interval(graph_interval)
+        pileup1 = self._create_binary_track(linear_intervals)
+        pileup2 = self._create_binary_track(graph_intervals)
+        print(pileup1)
+        print(pileup2)
+        assert all(pileup1 == pileup2)
+
     def test_filter_dup(self):
         caller = CallPeaks("lin_graph", "graph_intervals")
         command = "macs2 filterdup -i %s --keep-dup=1 -o %s" % (
@@ -138,21 +165,53 @@ class MACSTests(object):
         assert sum(graph_pileup) > 0
         assert all(linear_pileup == graph_pileup)
 
+    def _create_sample_pileup(self):
+        command = "macs2 pileup -i %s -o %s --extsize %s" % (
+            "lin_intervals.bed", "lin_sample_pileup.bdg", self.fragment_length)
+        print(command)
+        subprocess.check_output(command.split())
+
     def test_sample_pileup(self):
         info = ExperimentInfo(self.genome_size, self.n_intervals,
-                              self.n_intervals, 100, self.read_length)
+                              self.n_intervals, self.fragment_length,
+                              self.read_length)
         caller = CallPeaks("lin_graph", "graph_intervals",
                            experiment_info=info)
         caller.create_graph()
         caller.create_sample_pileup()
-        command = "macs2 pileup -i %s -o %s --extsize %s" % (
-            "lin_intervals.bed", "lin_sample_pileup.bdg", 100)
-        print(command)
-        subprocess.check_output(command.split())
         print(caller._sample_track)
         self.assertPileupFilesEqual(
             caller._sample_track,
             "lin_sample_pileup.bdg")
+
+    def _get_scores(self):
+        command = "macs2 bdgcmp -t lin_sample_pileup.bdg -c lin_control_pileup.bdg -m ppois -o lin_scores.bdg"
+        print(command)
+        subprocess.check_output(command.split())
+
+    def _call_peaks(self):
+        threshold = -np.log10(0.05)
+        command = "macs2 bdgpeakcall -i lin_scores.bdg -c %s -l %s -g %s -o lin_peaks.bed" % (
+            threshold, self.fragment_length, self.read_length)
+        print(command)
+        subprocess.check_output(command.split())
+
+    def test_call_peaks(self):
+        info = ExperimentInfo(self.genome_size, self.n_intervals,
+                              self.n_intervals, self.fragment_length,
+                              self.read_length)
+        caller = CallPeaks("lin_graph", "graph_intervals",
+                           experiment_info=info)
+        caller.create_graph()
+        caller.create_sample_pileup()
+        caller.create_control()
+        caller.get_p_values()
+        caller.call_peaks()
+        self._create_control()
+        self._create_sample_pileup()
+        self._get_scores()
+        self._call_peaks()
+        self.assertEqualBedFiles("final_track", "lin_peaks.bed")
 
     def _create_control(self):
         for ext in [2500, 5000]:
@@ -244,8 +303,9 @@ class MACSTests(object):
         assert fragment_length_graph == fragment_length
 
 if __name__ == "__main__":
-    test = MACSTests(100, 1000, 100)
+    test = MACSTests(15, 15, 20)
     # test.test_filter_dup()
     # test.test_sample_pileup()
-    test.test_control_pileup()
+    # test.test_control_pileup()
+    test.test_call_peaks()
     # test.test_shift_estimation()

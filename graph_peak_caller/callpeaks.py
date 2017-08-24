@@ -142,7 +142,7 @@ class CallPeaks(object):
         self.p_values.threshold(-np.log10(cutoff))
         self.p_values.fill_small_wholes(self.info.read_length)
         self.final_track = self.p_values
-        self.final_track.to_bed_graph("final_track")
+        self.final_track.to_bed_file("final_track")
 
     def create_sample_pileup(self):
         print("Create sample pileup")
