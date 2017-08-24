@@ -30,8 +30,24 @@ def max_pileup_vs_value(pileup_name, value, out_filename):
     output = subprocess.check_output(command)
     print(output)
 
+
 def get_p_value_track(graph, control_file_name, sample_file_name, out_filename):
     command = ["macs2", "bdgcmp", "-t",  sample_file_name, "-c", control_file_name, "-m", "ppois", "-o", out_filename]
     output = subprocess.check_output(command)
     print(output)
     return Pileup.from_bed_graph(graph, out_filename)
+
+
+def scale_down_tracks(ratio, track1, track2):
+    if ratio > 1:
+        _scale_track(1/ratio, track1)
+    else:
+        _scale_track(ratio, track2)
+
+
+def _scale_track(ratio, track):
+    command = ["macs2", "bdgopt", "-i", track,
+               "-m", "multiply", "-p", str(ratio),
+               "-o", track]
+    output = subprocess.check_output(command)
+    print(output)
