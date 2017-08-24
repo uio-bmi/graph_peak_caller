@@ -8,20 +8,43 @@ from .control import ControlTrack
 from .bdgcmp import *
 
 
+class ExperimentInfo(object):
+    def __init__(self, genome_size, n_sample_reads, n_control_reads, fragment_length):
+        self.genome_size = genome_size
+        self.n_sample_reads = n_sample_reads
+        self.n_control_reads = n_control_reads
+        self.fragment_length = fragment_length
+
+    @classmethod
+    def find_info(cls, graph, sample_file_name, control_file_name=None):
+        sizes = (block.length() for block in graph.blocks.values())
+        genome_size = sum(sizes)
+        n_sample_reads = sum(1 for line in open(control_file_name))
+        n_control_reads = n_sample_reads
+        if control_file_name is not None:
+            n_control_reads = sum(1 for line in open(control_file_name))
+        try:
+            fragment_length = get_shift_size_on_offset_based_graph(
+                graph, sample_file_name)
+        except RuntimeError:
+            print("WARNING: To litle data to compute shift. Setting to default.")
+            fragment_length = 125
+        return cls(genome_size, n_sample_reads, n_control_reads, fragment_length)
+
+
 class CallPeaks(object):
     def __init__(self, graph_file_name, sample_file_name,
-                 control_file_name=None):
+                 control_file_name=None, experiment_info=None):
         self.graph_file_name = graph_file_name
         self.sample_file_name = sample_file_name
-        self.control_file_name = control_file_name if control_file_name is not None else sample_file_name
         self.has_control = control_file_name is not None
+        self.control_file_name = control_file_name if self.has_control else sample_file_name
         self._p_value_track = "p_value_track"
         self.read_length = 42
+        self.info = experiment_info
 
     def run(self):
         self.create_graph()
-        self.find_info()
-        self.determine_shift()
         self.sample_file_name = self.remove_alignments_not_in_graph(self.sample_file_name)
         if self.control_file_name is not None:
             self.control_file_name = self.remove_alignments_not_in_graph(self.control_file_name)
@@ -29,6 +52,9 @@ class CallPeaks(object):
         self.sample_file_name = self.filter_duplicates(self.sample_file_name)
         if self.control_file_name is not None:
             self.control_file_name = self.filter_duplicates(self.control_file_name)
+        if self.info is None:
+            self.info = ExperimentInfo.find_info(
+                self.ob_graph, self.sample_file_name, self.control_file_name)
 
         self.create_control()
         self.create_sample_pileup()
@@ -78,23 +104,15 @@ class CallPeaks(object):
         self.genome_size = sum(sizes)
         self.n_reads = sum(1 for line in open(self.control_file_name))
 
-    def determine_shift(self):
-        try:
-            self.shift = get_shift_size_on_offset_based_graph(self.ob_graph, self.sample_file_name)
-        except RuntimeError:
-            print("WARNING: To litle data to compute shift. Setting default shift")
-            self.shift = 125
-
     def create_graph(self):
-        #self.vg_graph = vg.Graph.create_from_file(self.graph_file_name)
         self.ob_graph = offsetbasedgraph.Graph.from_file(self.graph_file_name)
 
     def create_control(self):
-        extensions = [self.shift, 1000, 5000, 10000] if self.has_control else [5000, 10000]
+        extensions = [self.info.fragment_length, 1000, 5000, 10000] if self.has_control else [5000, 10000]
         control_track = ControlTrack(
             self.ob_graph, self.control_file_name,
-            self.shift, extensions)
-        background_value = self.n_reads*self.shift/self.genome_size
+            self.info.fragment_length, extensions)
+        background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
         self._control_track = create_background_pileup_as_max_from_pileups(
             self.ob_graph, control_track.generate_background_tracks(),
             background_value, "control_track.bdg")
@@ -112,7 +130,7 @@ class CallPeaks(object):
         alignments = IntervalCollection.create_generator_from_file(
             self.sample_file_name)
 
-        shifter = Shifter(self.ob_graph, self.shift)
+        shifter = Shifter(self.ob_graph, self.info.fragment_length)
         areas_list = (shifter.extend_interval(interval)
                       for interval in alignments)
         pileup = Pileup(self.ob_graph)
