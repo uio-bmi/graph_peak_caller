@@ -20,7 +20,7 @@ class SimpleInterval(object):
     def to_file_line(self):
         return "\t".join(
             str(v) for v in
-            (self.node_id, self.start, self.end, ".", ".", self.dir_symbol))+"\n"
+            (self.node_id, self.start, self.end, ".", "0", self.dir_symbol))+"\n"
 
     @classmethod
     def from_file_line(cls, line):
@@ -74,7 +74,7 @@ class MACSTests(object):
             ((end-1) % self.node_size) + 1)
         region_paths = list(range(start_rp, end_rp+1))
         return Interval(start_pos, end_pos, region_paths,
-                        direction=lin_interval.direction)
+                        direction=lin_interval.direction, graph=self.graph)
 
     def _convert_valued_interval(self, interval):
         interval.start += self.node_size*interval.node_id
@@ -133,14 +133,14 @@ class MACSTests(object):
 
     def test_sample_pileup(self):
         info = ExperimentInfo(self.genome_size, self.n_intervals,
-                              self.n_intervals, 5, self.read_length)
+                              self.n_intervals, 100, self.read_length)
         caller = CallPeaks("lin_graph", self.dup_file_name,
                            experiment_info=info)
         caller.create_graph()
         caller.preprocess()
         caller.create_sample_pileup()
         command = "macs2 pileup -i %s -o %s --extsize %s" % (
-            "lin_intervals_dup.bed", "lin_sample_pileup.bdg", 5)
+            "lin_intervals_dup.bed", "lin_sample_pileup.bdg", 100)
         print(command)
         subprocess.check_output(command.split())
         print(caller._sample_track)
@@ -188,7 +188,6 @@ class MACSTests(object):
                 self.linear_intervals.append(interval)
                 self.graph_intervals.append(self.linear_to_graph_interval(interval))
 
-
     def test_shift_estimation(self):
         self.setup()
         caller = CallPeaks("lin_graph", "graph_intervals")
@@ -198,7 +197,8 @@ class MACSTests(object):
         fragment_length_graph = caller.fragment_length
 
         # Macs
-        command = ["macs", "predictd", "-i", "lin_intervals.bed", "-g", self.genome_size, "m", "5", "50"]
+        command = ["macs", "predictd", "-i", "lin_intervals.bed", "-g",
+                   self.genome_size, "m", "5", "50"]
         output = subprocess.check_output(command, stderr=subprocess.STDOUT)
         output = output.decode("utf-8")
         print(output)
@@ -211,7 +211,7 @@ class MACSTests(object):
         assert fragment_length_graph == fragment_length
 
 if __name__ == "__main__":
-    test = MACSTests(10, 10, 3)
+    test = MACSTests(100, 100, 100)
     test.test_filter_dup()
     test.test_sample_pileup()
     # test.test_shift_estimation()
