@@ -9,11 +9,13 @@ from .bdgcmp import *
 
 
 class ExperimentInfo(object):
-    def __init__(self, genome_size, n_sample_reads, n_control_reads, fragment_length):
+    def __init__(self, genome_size, n_sample_reads,
+                 n_control_reads, fragment_length, read_length):
         self.genome_size = genome_size
         self.n_sample_reads = n_sample_reads
         self.n_control_reads = n_control_reads
         self.fragment_length = fragment_length
+        self.read_length = read_length
 
     @classmethod
     def find_info(cls, graph, sample_file_name, control_file_name=None):
@@ -24,12 +26,13 @@ class ExperimentInfo(object):
         if control_file_name is not None:
             n_control_reads = sum(1 for line in open(control_file_name))
         try:
-            fragment_length = get_shift_size_on_offset_based_graph(
+            fragment_length, read_length = get_shift_size_on_offset_based_graph(
                 graph, sample_file_name)
         except RuntimeError:
-            print("WARNING: To litle data to compute shift. Setting to default.")
+            print("WARNING: To liptle data to compute shift. Setting to default.")
             fragment_length = 125
-        return cls(genome_size, n_sample_reads, n_control_reads, fragment_length)
+            read_length = 20
+        return cls(genome_size, n_sample_reads, n_control_reads, fragment_length, read_length)
 
 
 class CallPeaks(object):
@@ -40,7 +43,6 @@ class CallPeaks(object):
         self.has_control = control_file_name is not None
         self.control_file_name = control_file_name if self.has_control else sample_file_name
         self._p_value_track = "p_value_track"
-        self.read_length = 42
         self.info = experiment_info
         self.verbose = verbose
 
@@ -138,7 +140,7 @@ class CallPeaks(object):
     def call_peaks(self, cutoff=0.05):
         print("Calling peaks")
         self.p_values.threshold(-np.log10(cutoff))
-        self.p_values.fill_small_wholes(self.read_length)
+        self.p_values.fill_small_wholes(self.info.read_length)
         self.final_track = self.p_values
         self.final_track.to_bed_graph("final_track")
 

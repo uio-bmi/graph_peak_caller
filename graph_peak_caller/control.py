@@ -12,13 +12,15 @@ class ControlTrack(object):
 
     def _get_pileup(self, extension):
         """TODO: read obg_alignments directly"""
-        alignments = IntervalCollection.create_generator_from_file(self.file_name)
+        alignments = IntervalCollection.create_generator_from_file(
+            self.file_name)
         shifter = Shifter(self.graph, extension)
         areas_generator = (shifter.extend_interval(alignment, 0) for alignment
                            in alignments)
         pileup = Pileup(self.graph)
         for areas in areas_generator:
             pileup.add_areas(areas)
+        pileup.scale(self.fragment_length/(extension*2))
         return pileup
 
     def generate_background_tracks(self):
