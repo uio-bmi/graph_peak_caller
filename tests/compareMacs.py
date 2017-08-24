@@ -1,6 +1,6 @@
 from offsetbasedgraph import Graph, Block, Position, Interval
 from offsetbasedgraph.interval import IntervalCollection
-from graph_peak_caller.callpeaks import CallPeaks
+from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo
 import subprocess
 import random
 import subprocess
@@ -123,12 +123,12 @@ class MACSTests(object):
         self.setup()
         caller = CallPeaks("lin_graph", "graph_intervals")
         caller.create_graph()
-        caller.find_info()
-        read_length_graph = caller.read_length
-        fragment_length_graph = caller.fragment_length
+        info = ExperimentInfo.find_info(caller.ob_graph, caller.sample_file_name, caller.control_file_name)
+        read_length_graph = info.read_length
+        fragment_length_graph = info.fragment_length
 
         # Macs
-        command = ["macs", "predictd", "-i", "lin_intervals.bed", "-g", self.genome_size, "m", "5", "50"]
+        command = ["macs2", "predictd", "-i", "lin_intervals.bed", "-g", str(self.genome_size), "m", "5", "50"]
         output = subprocess.check_output(command, stderr=subprocess.STDOUT)
         output = output.decode("utf-8")
         print(output)
@@ -142,5 +142,5 @@ class MACSTests(object):
 
 if __name__ == "__main__":
     test = MACSTests(100, 100, 100)
-    test.test_filter_dup()
-    # test.test_shift_estimation()
+    # test.test_filter_dup()
+    test.test_shift_estimation()
