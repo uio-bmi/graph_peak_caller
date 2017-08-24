@@ -21,7 +21,7 @@ def peaks_are_treshold_of_signal(signal_file_name, peaks_file_name):
         #print(chrom, start, stop)
 
         signal_at_start = signal_file.values(chrom, start-1, start + 2)
-        print(signal_at_start)
+        #print(signal_at_start)
 
 
 def get_long_segments(signal_file_name, peaks_file_name, min_segment_length=1e6):

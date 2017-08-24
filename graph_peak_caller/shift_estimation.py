@@ -19,21 +19,27 @@ def write_linear_interval_to_bed_file(file_handler, interval):
 def get_shift_size_on_offset_based_graph(offset_based_graph, interval_file_name):
     linear_graph, trans_to_linear = offset_based_graph.get_arbitrary_linear_graph()
     bed_file = open("tmp2.bed", "w")
+    n_not_translation = 0
 
     for interval in IntervalCollection.create_generator_from_file(interval_file_name):
         interval.graph = offset_based_graph
-        linear_intervals = trans_to_linear.translate_interval(interval).get_single_path_intervals()
-        assert len(linear_intervals) == 1
-        linear_interval = linear_intervals[0]
-        if linear_interval != interval:
+        if trans_to_linear.interval_has_translation(interval):
+            linear_intervals = trans_to_linear.translate_interval(interval).get_single_path_intervals()
+            assert len(linear_intervals) == 1
+            linear_interval = linear_intervals[0]
             write_linear_interval_to_bed_file(bed_file, linear_interval)
+        else:
+            n_not_translation += 11
 
+    print("%d intervals did not have translation to linear graph" % n_not_translation)
 
     bed_file.close()
     command = ["macs2", "predictd", "-i", "tmp2.bed", "-g", str(linear_graph.number_of_basepairs()), "-m", "1", "50"]
+    command_str = ' '.join(command)
+    print("Macs shift command: " + command_str)
     output = subprocess.check_output(command, stderr=subprocess.STDOUT)
     output = output.decode("utf-8")
-    print(output)
+    #print(output)
     if "Too few paired peaks" in str(output):
         #print(output)
         raise RuntimeError("Too few paired peaks for doing shift estimation")
@@ -44,7 +50,7 @@ def get_shift_size_on_offset_based_graph(offset_based_graph, interval_file_name)
     fragment_length = int(fragment_length)
     shift = fragment_length - tag_size
     print("Shift: %d" % shift)
-    return fragment_length
+    return fragment_length, tag_size
 
 
 if __name__ == "__main__":
