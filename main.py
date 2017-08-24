@@ -10,21 +10,26 @@ def create_graphs():
         data_folder + "x.json", data_folder + "obg")
 
 
-def translate_intervals():
+def translate_intervals(interval_file, limimt_to_chromosome=None):
     vg_graph = vg.Graph.create_from_file(
         data_folder+"x.json",
-        limit_to_chromosome="chr4")
+        limit_to_chromosome=limimt_to_chromosome)
     ob_graph = vg_graph.get_offset_based_graph()
     pyvg.util.vg_mapping_file_to_interval_file(
-        "intervals_test", vg_graph, data_folder + "sample_reads.json",
-        ob_graph)
+                        data_folder + "intervals_" + limimt_to_chromosome,
+                        vg_graph,
+                        data_folder + interval_file,
+                        ob_graph)
 
 
 if __name__ == "__main__":
-    chromosome = "chr4"
+    #create_graphs()
+    chromosome = "chr2R"
+    #translate_intervals("reads3.json", chromosome)
+
     obg = obg.Graph.from_file(data_folder+"obg%s.tmp" % chromosome)
     caller = CallPeaks(data_folder + "obg%s.tmp" % chromosome,
-                       data_folder + "intervals_test")
+                       data_folder + "intervals_" + chromosome)
     caller.run()
 
     #caller.create_graph()
