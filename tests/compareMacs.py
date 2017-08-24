@@ -19,7 +19,7 @@ class SimpleInterval(object):
     def to_file_line(self):
         return "\t".join(
             str(v) for v in
-            (self.node_id, self.start, self.end, self.dir_symbol))
+            (self.node_id, self.start, self.end, self.dir_symbol))+"\n"
 
     @classmethod
     def from_file_line(cls, line):
@@ -79,6 +79,8 @@ class MACSTests(object):
     def test_filter_dup(self):
         caller = CallPeaks("lin_graph", "graph_intervals")
         command = "macs2 filterdup -i %s --keep-dup=1 -o %s" % ("lin_intervals.bed", "lin_intervals_dup.bed")
+        print(command)
+        command = command.split()
         subprocess.check_output(command)
         caller.remove_alignments_not_in_graph(self)
 
@@ -115,7 +117,7 @@ class MACSTests(object):
             direction = random.choice((-1, 1))
             start = random.randint(0, self.genome_size-1)
             end = random.randint(start+1, self.genome_size)
-            self.linear_intervals.append(Interval(start, end, [0]))
+            self.linear_intervals.append(SimpleInterval(start, end, direction))
             self.graph_intervals.append(
                 self._get_graph_interval(start, end, direction))
 
