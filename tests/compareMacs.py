@@ -3,6 +3,8 @@ from offsetbasedgraph.interval import IntervalCollection
 from graph_peak_caller.callpeaks import CallPeaks
 import subprocess
 import random
+import subprocess
+import re
 
 
 class SimpleInterval(object):
@@ -117,7 +119,28 @@ class MACSTests(object):
             self.graph_intervals.append(
                 self._get_graph_interval(start, end, direction))
 
+    def test_shift_estimation(self):
+        self.setup()
+        caller = CallPeaks("lin_graph", "graph_intervals")
+        caller.create_graph()
+        caller.find_info()
+        read_length_graph = caller.read_length
+        fragment_length_graph = caller.fragment_length
+
+        # Macs
+        command = ["macs", "predictd", "-i", "lin_intervals.bed", "-g", self.genome_size, "m", "5", "50"]
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT)
+        output = output.decode("utf-8")
+        print(output)
+        tag_size = re.search("tag size = ([0-9]+)", output).groups()[0]
+        tag_size = int(tag_size)
+        fragment_length = re.search("fragment length is ([0-9]+) bp", output).groups()[0]
+        fragment_length = int(fragment_length)
+
+        assert read_length_graph == tag_size
+        assert fragment_length_graph == fragment_length
 
 if __name__ == "__main__":
     test = MACSTests(100, 100, 100)
     test.test_filter_dup()
+    # test.test_shift_estimation()
