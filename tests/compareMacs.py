@@ -41,6 +41,8 @@ class ValuedInterval(SimpleInterval):
 
     @classmethod
     def from_file_line(cls, line):
+        if line.startswith("track"):
+            return None
         node_id, start, end, value = line.split("\t")
         obj = cls(int(start), int(end), value)
         obj.node_id = int(node_id)
@@ -55,6 +57,7 @@ class MACSTests(object):
         self.read_length = read_length
         self.genome_size = node_size*n_nodes
         self.setup()
+        self.fragment_length = 500
 
     def setup(self):
         self.create_linear_graph()
@@ -119,6 +122,8 @@ class MACSTests(object):
         valued_intervals = (ValuedInterval.from_file_line(line) for line in
                             open(pileup_file).readlines())
         for interval in valued_intervals:
+            if interval is None:
+                continue
             if convert:
                 self._convert_valued_interval(interval)
             pileup[interval.start:interval.end] = interval.value
@@ -129,24 +134,52 @@ class MACSTests(object):
         graph_pileup = self._create_pileup(graph_file, convert=True)
         print(linear_pileup)
         print(graph_pileup)
+        assert not all(graph_pileup == graph_pileup[0])
+        assert sum(graph_pileup) > 0
         assert all(linear_pileup == graph_pileup)
 
     def test_sample_pileup(self):
         info = ExperimentInfo(self.genome_size, self.n_intervals,
                               self.n_intervals, 100, self.read_length)
-        caller = CallPeaks("lin_graph", self.dup_file_name,
+        caller = CallPeaks("lin_graph", "graph_intervals",
                            experiment_info=info)
         caller.create_graph()
-        caller.preprocess()
         caller.create_sample_pileup()
         command = "macs2 pileup -i %s -o %s --extsize %s" % (
-            "lin_intervals_dup.bed", "lin_sample_pileup.bdg", 100)
+            "lin_intervals.bed", "lin_sample_pileup.bdg", 100)
         print(command)
         subprocess.check_output(command.split())
         print(caller._sample_track)
         self.assertPileupFilesEqual(
             caller._sample_track,
             "lin_sample_pileup.bdg")
+
+    def _create_control(self):
+        for ext in [2500, 5000]:
+            command = "macs2 pileup -i %s -o %s -B --extsize %s" % (
+                "lin_intervals.bed", "lin_control_pileup%s.bdg" % ext, ext)
+            subprocess.check_output(command.split())
+            command = "macs2 bdgopt -i lin_control_pileup%s.bdg -m multiply -p %s -o lin_control_pileup%s.bdg" % (
+                ext, self.fragment_length/(ext*2), ext)
+            subprocess.check_output(command.split())
+        command = "macs2 bdgcmp -m max -t lin_control_pileup2500.bdg -c lin_control_pileup5000.bdg -o lin_control_pileup.bdg"
+
+        subprocess.check_output(command.split())
+
+        background = self.n_intervals * self.fragment_length / self.genome_size
+        command = "macs2 bdgopt -i lin_control_pileup.bdg -m max -p %s -o lin_control_pileup.bdg" % background
+        subprocess.check_output(command.split())
+
+    def test_control_pileup(self):
+        info = ExperimentInfo(self.genome_size, self.n_intervals,
+                              self.n_intervals, self.fragment_length,
+                              self.read_length)
+        caller = CallPeaks("lin_graph", "graph_intervals",
+                           experiment_info=info)
+        caller.create_graph()
+        caller.create_control()
+        self._create_control()
+        self.assertPileupFilesEqual(caller._control_track, "lin_control_pileup.bdg")
 
     def write_intervals(self):
         f = open("lin_intervals.bed", "w")
@@ -211,7 +244,8 @@ class MACSTests(object):
         assert fragment_length_graph == fragment_length
 
 if __name__ == "__main__":
-    test = MACSTests(100, 100, 100)
-    test.test_filter_dup()
-    test.test_sample_pileup()
+    test = MACSTests(100, 1000, 100)
+    # test.test_filter_dup()
+    # test.test_sample_pileup()
+    test.test_control_pileup()
     # test.test_shift_estimation()

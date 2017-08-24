@@ -62,15 +62,15 @@ class Shifter(object):
         areas = area_from_interval(interval, self.graph)
         if local_direction != -1:
             direction = interval.direction
-            end_position = interval.end_position if direction == 1 else interval.start_position 
+            end_position = interval.end_position if direction == 1 else interval.start_position
             new_areas = self.traverser.get_areas_from_point(
                 end_position, direction*extension_length)
             update_areas(areas, new_areas)
         if local_direction != 1:
-            direction = interval.direction*-1
-            end_position = interval.end_position if direction == 1 else interval.start_position 
+            direction = interval.direction * -1
+            end_position = interval.end_position if direction == 1 else interval.start_position
             new_areas = self.traverser.get_areas_from_point(
-                end_position, direction*extension_length)
+                end_position, direction*self.d)
             update_areas(areas, new_areas)
 
         return areas
