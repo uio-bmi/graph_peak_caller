@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     obg = obg.Graph.from_file(data_folder+"obg%s.tmp" % chromosome)
     caller = CallPeaks(data_folder + "obg%s.tmp" % chromosome,
-                       data_folder + "intervals_" + chromosome)
+                       data_folder + "intervals_" + chromosome, verbose=True)
     caller.run()
 
     #caller.create_graph()

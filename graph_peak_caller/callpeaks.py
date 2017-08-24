@@ -34,7 +34,7 @@ class ExperimentInfo(object):
 
 class CallPeaks(object):
     def __init__(self, graph_file_name, sample_file_name,
-                 control_file_name=None, experiment_info=None):
+                 control_file_name=None, experiment_info=None, verbose=False):
         self.graph_file_name = graph_file_name
         self.sample_file_name = sample_file_name
         self.has_control = control_file_name is not None
@@ -42,6 +42,7 @@ class CallPeaks(object):
         self._p_value_track = "p_value_track"
         self.read_length = 42
         self.info = experiment_info
+        self.verbose = verbose
 
     def run(self):
         self.create_graph()
@@ -68,7 +69,8 @@ class CallPeaks(object):
         for interval in self._get_intervals_in_ob_graph(interval_collection):
             filtered_file.writelines(["%s\n" % interval.to_file_line()])
         filtered_file.close()
-        print("Alignments without duplicates written to %s" % filtered_file_name)
+        if self.verbose:
+            print("Alignments without duplicates written to %s" % filtered_file_name)
         return filtered_file_name
 
     def filter_duplicates(self, alignment_file_name):
@@ -77,16 +79,18 @@ class CallPeaks(object):
         filtered_file = open(filtered_file_name, "w")
 
         interval_hashes = {}
+        n_duplicates = 0
         for interval in interval_collection:
             hash = interval.hash()
             if hash in interval_hashes:
-                #print("Duplicate found")
+                n_duplicates += 1
                 continue
 
             interval_hashes[hash] = True
             filtered_file.writelines(["%s\n" % interval.to_file_line()])
         filtered_file.close()
-        print("Filtered alignments written to %s" % filtered_file_name)
+        if self.verbose:
+            print("Filtered alignments written to %s. %d duplicates removed." % (filtered_file_name, n_duplicates))
         return filtered_file_name
 
     def _get_intervals_in_ob_graph(self, intervals):
@@ -108,6 +112,8 @@ class CallPeaks(object):
         self.ob_graph = offsetbasedgraph.Graph.from_file(self.graph_file_name)
 
     def create_control(self):
+        if self.verbose:
+            print("Creating control")
         extensions = [self.info.fragment_length, 1000, 5000, 10000] if self.has_control else [5000, 10000]
         control_track = ControlTrack(
             self.ob_graph, self.control_file_name,
@@ -115,18 +121,21 @@ class CallPeaks(object):
         background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
         self._control_track = create_background_pileup_as_max_from_pileups(
             self.ob_graph, control_track.generate_background_tracks(),
-            background_value, "control_track.bdg")
+            background_value, "control_track.bdg", self.verbose)
 
     def get_p_values(self):
+        print("Get p-values")
         self.p_values = get_p_value_track(self.ob_graph, self._control_track, self._sample_track, self._p_value_track)
 
     def call_peaks(self, cutoff=0.05):
+        print("Calling peaks")
         self.p_values.threshold(-np.log10(cutoff))
         self.p_values.fill_small_wholes(self.read_length)
         self.final_track = self.p_values
         self.final_track.to_bed_graph("final_track")
 
     def create_sample_pileup(self):
+        print("Create sample pileup")
         alignments = IntervalCollection.create_generator_from_file(
             self.sample_file_name)
 
