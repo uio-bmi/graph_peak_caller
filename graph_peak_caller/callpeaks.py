@@ -46,6 +46,17 @@ class CallPeaks(object):
 
     def run(self):
         self.create_graph()
+        self.preprocess()
+        if self.info is None:
+            self.info = ExperimentInfo.find_info(
+                self.ob_graph, self.sample_file_name, self.control_file_name)
+        self.create_control()
+        self.create_sample_pileup()
+        self.scale_tracks()
+        self.get_p_values()
+        self.call_peaks()
+
+    def preprocess(self):
         self.sample_file_name = self.remove_alignments_not_in_graph(self.sample_file_name)
         if self.control_file_name is not None:
             self.control_file_name = self.remove_alignments_not_in_graph(self.control_file_name)
@@ -53,14 +64,6 @@ class CallPeaks(object):
         self.sample_file_name = self.filter_duplicates(self.sample_file_name)
         if self.control_file_name is not None:
             self.control_file_name = self.filter_duplicates(self.control_file_name)
-        if self.info is None:
-            self.info = ExperimentInfo.find_info(
-                self.ob_graph, self.sample_file_name, self.control_file_name)
-
-        self.create_control()
-        self.create_sample_pileup()
-        self.get_p_values()
-        self.call_peaks()
 
     def remove_alignments_not_in_graph(self, alignment_file_name):
         interval_collection = IntervalCollection.create_generator_from_file(alignment_file_name)
@@ -74,7 +77,8 @@ class CallPeaks(object):
         return filtered_file_name
 
     def filter_duplicates(self, alignment_file_name):
-        interval_collection = IntervalCollection.create_generator_from_file(alignment_file_name)
+        interval_collection = IntervalCollection.create_generator_from_file(
+            alignment_file_name)
         filtered_file_name = alignment_file_name + "_filtered_duplicates"
         filtered_file = open(filtered_file_name, "w")
 
@@ -96,8 +100,12 @@ class CallPeaks(object):
     def _get_intervals_in_ob_graph(self, intervals):
         # Returns only those intervals that exist in graph
         for interval in intervals:
-             if interval.region_paths[0] in self.ob_graph.blocks:
-                 yield interval
+            if interval.region_paths[0] in self.ob_graph.blocks:
+                yield interval
+
+    def scale_tracks(self):
+        ratio = self.info.n_sample_reads/self.info.n_control_reads
+        scale_down_tracks(ratio, self.sample_file_name, self.control_file_name)
 
     def find_info(self):
         genome_size = 0
