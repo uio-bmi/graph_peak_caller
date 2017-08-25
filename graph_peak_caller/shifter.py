@@ -6,7 +6,11 @@ def area_from_interval(interval, graph):
     areas = {}
     for i, region_path in enumerate(interval.region_paths):
         start = 0
-        end = graph.node_size(region_path)
+        try:
+            end = graph.node_size(region_path)
+        except:
+            print(interval)
+            raise
         if region_path == interval.start_position.region_path_id:
             start = interval.start_position.offset
         if region_path == interval.end_position.region_path_id:

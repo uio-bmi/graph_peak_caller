@@ -143,6 +143,8 @@ class CallPeaks(object):
         print(self.p_values)
         self.p_values.fill_small_wholes(self.info.read_length)
         print(self.p_values)
+        self.p_values.remove_small_peaks(self.info.fragment_length)
+        print(self.p_values)
         self.final_track = self.p_values
         self.final_track.to_bed_file("final_track")
 
