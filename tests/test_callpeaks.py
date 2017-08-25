@@ -30,7 +30,7 @@ class TestCallpeaks(unittest.TestCase):
         interval_collection.to_file("test_intervals")
 
         caller = callpeaks.CallPeaks("test_graph", "test_intervals")
-        filtered_intervals_file_name = caller.filter_duplicates(caller.sample_file_name)
+        filtered_intervals_file_name = caller.filter_duplicates(caller.sample_file_name, write_to_file = "filtered_intervals_test")
 
         intervals_filtered = []
         for interval in IntervalCollection.create_generator_from_file(filtered_intervals_file_name):

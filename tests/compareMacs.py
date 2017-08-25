@@ -91,7 +91,7 @@ class MACSTests(object):
             "lin_intervals.bed", "lin_intervals_dup.bed")
         command = command.split()
         subprocess.check_output(command)
-        self.dup_file_name = self.caller.filter_duplicates("graph_intervals")
+        self.dup_file_name = self.caller.filter_duplicates("graph_intervals", write_to_file="graph_intervals_filtered")
         self.assertEqualIntervalFiles(
             self.dup_file_name,
             "lin_intervals_dup.bed")
@@ -354,9 +354,9 @@ class MACSTests(object):
 if __name__ == "__main__":
 
     test = MACSTests(50000, 100, 5000, read_length=51, fragment_length=120)
-    #test.test_filter_dup()
-    #test.test_shift_estimation()
+    test.test_filter_dup()
+    test.test_shift_estimation()
     test.test_sample_pileup()
-    test.test_control_pileup()
-    test.test_call_peaks()
-    test.assertEqualBedFiles("final_track", "lin_peaks.bed")
+    #test.test_control_pileup()
+    #test.test_call_peaks()
+    #test.assertEqualBedFiles("final_track", "lin_peaks.bed")

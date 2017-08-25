@@ -10,14 +10,18 @@ from .bdgcmp import *
 
 def enable_filewrite(func):
     def wrapper(*args, **kwargs):
+        intervals = args[1]
+        if isinstance(intervals, str):
+            intervals = IntervalCollection.create_generator_from_file(intervals)
+
         write_to_file = kwargs.pop("write_to_file", False)
-        interval_list = func(*args, **kwargs)
+        interval_list = func(args[0], intervals, **kwargs)
 
         if write_to_file:
-            file = open(write_to_file, "w")
-            for interval in interval_list:
-                file.writelines(["%s\n" % interval.to_file_line()])
-            file.close()
+            with open(write_to_file, "w") as file:
+                print("Wrote results to " + str(write_to_file))
+                file.writelines(("%s\n" % interval.to_file_line() for interval in interval_list))
+
             return write_to_file
         else:
             return interval_list
@@ -76,47 +80,32 @@ class CallPeaks(object):
         self.call_peaks()
 
     def preprocess(self):
-        self.sample_file_name = self.remove_alignments_not_in_graph(self.sample_file_name)
-        if self.control_file_name is not None:
-            self.control_file_name = self.remove_alignments_not_in_graph(self.control_file_name)
+        self.sample_intervals = self.remove_alignments_not_in_graph(self.sample_file_name)
+        self.sample_intervals = self.filter_duplicates(self.sample_intervals)
 
-        self.sample_file_name = self.filter_duplicates(self.sample_file_name)
         if self.control_file_name is not None:
-            self.control_file_name = self.filter_duplicates(self.control_file_name)
-
-    def remove_alignments_not_in_graph(self, alignment_file_name):
-        interval_collection = IntervalCollection.create_generator_from_file(alignment_file_name)
-        filtered_file_name = alignment_file_name + "_filtered"
-        filtered_file = open(filtered_file_name, "w")
-        for interval in self._get_intervals_in_ob_graph(interval_collection):
-            filtered_file.writelines(["%s\n" % interval.to_file_line()])
-        filtered_file.close()
-        if self.verbose:
-            print("Alignments without duplicates written to %s" % filtered_file_name)
-        return filtered_file_name
+            self.control_intervals = self.remove_alignments_not_in_graph(self.control_file_name)
+            self.control_intervals = self.filter_duplicates(self.control_intervals)
 
 
     @enable_filewrite
-    def filter_duplicates(self, alignment_file_name):
-        interval_collection = IntervalCollection.create_generator_from_file(
-            alignment_file_name)
-        filtered_file_name = alignment_file_name + "_filtered_duplicates"
-        filtered_file = open(filtered_file_name, "w")
+    def remove_alignments_not_in_graph(self, intervals):
+        for interval in self._get_intervals_in_ob_graph(intervals):
+            yield interval
+
+    @enable_filewrite
+    def filter_duplicates(self, intervals):
 
         interval_hashes = {}
         n_duplicates = 0
-        for interval in interval_collection:
+        for interval in intervals:
             hash = interval.hash()
             if hash in interval_hashes:
                 n_duplicates += 1
                 continue
 
             interval_hashes[hash] = True
-            filtered_file.writelines(["%s\n" % interval.to_file_line()])
-        filtered_file.close()
-        if self.verbose:
-            print("Filtered alignments written to %s. %d duplicates removed." % (filtered_file_name, n_duplicates))
-        return filtered_file_name
+            yield interval
 
     def _get_intervals_in_ob_graph(self, intervals):
         # Returns only those intervals that exist in graph
