@@ -1,3 +1,4 @@
+from itertools import chain
 import numpy as np
 import offsetbasedgraph as obg
 
@@ -11,7 +12,9 @@ class Pileup(object):
             self.create_count_arrays()
 
     def __str__(self):
-        return "\n".join("%s: %s" % (node_id, sum(array)) for node_id, array in self.__count_arrays.items())
+        return "\n".join(
+            "%s: %s" % (node_id, sum(array))
+            for node_id, array in self.__count_arrays.items())
 
     __repr__ = __str__
 
@@ -130,14 +133,11 @@ class Pileup(object):
 
     def to_bed_file(self, filename):
         f = open(filename, "w")
-        interval_dict, end_interval_dict, whole_intervals = self.find_valued_intevals(True)
-        all_intervals = []
-        for node, intervals in sorted(interval_dict.items()):
-            all_intervals.extend((node, i[0], i[1]) for i in intervals)
-        all_intervals.extend((node, i[0], i[1]) for node, i in end_interval_dict.items())
-        all_intervals.extend((node, 0, self.graph.node_size(node)) for node in whole_intervals)
-        for interval in all_intervals:
-            f.write("%s\t%s\t%s\t.\t.\t.\n" % interval)
+        areas = self.find_valued_areas(True)
+        for node_id, idxs in areas.items():
+            for i in range(len(idxs)//2):
+                interval = (node_id, idxs[2*i], idxs[2*i+1])
+                f.write("%s\t%s\t%s\t.\t.\t.\n" % interval)
         f.close()
         return filename
 
@@ -171,7 +171,7 @@ class Pileup(object):
     def summary(self):
         return sum(array.sum() for array in self.__count_arrays.values())
 
-    def find_valued_areas(self, value=False):
+    def old_find_valued_areas(self, value=False):
         areas = {}
         for node_id, count_array in self.__count_arrays.items():
             cur_area = False
@@ -187,6 +187,25 @@ class Pileup(object):
             if cur_area:
                 cur_list.extend([cur_start, len(count_array)])
             areas[node_id] = cur_list
+        return areas
+
+    def find_valued_areas(self, value=False):
+        # [1 1 1 2 2 2 0 0 0 1 1 1]
+        # [- 0 0 1 0 0 1
+        areas = {}
+        for node_id, count_array in self.__count_arrays.items():
+            diffs = count_array[1:]-count_array[:-1]
+            changes = np.where(diffs != 0)[0]
+            changes = np.pad(changes, 1, "constant")
+            changes[0] = -1
+            changes += 1
+            changes[-1] = self.graph.node_size(node_id)
+            vals = count_array[changes[:-1]]
+            start_idxs = np.where(vals == value)[0]
+            end_idxs = start_idxs + 1
+            starts = changes[start_idxs]
+            ends = changes[end_idxs]
+            areas[node_id] = [int(i) for i in chain.from_iterable(zip(starts, ends))]
         return areas
 
     def areas_to_intervals(self, areas, include_partial_stubs):

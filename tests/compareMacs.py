@@ -1,3 +1,5 @@
+import cProfile
+import pstats
 from offsetbasedgraph import Graph, Block, Position, Interval
 from offsetbasedgraph.interval import IntervalCollection
 from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo
@@ -50,6 +52,7 @@ class SimpleInterval(object):
     def __repr__(self):
         return self.__str__()
 
+
 class ValuedInterval(SimpleInterval):
     def __init__(self, start, end, value):
         SimpleInterval.__init__(self, start, end, None)
@@ -77,8 +80,8 @@ class MACSTests(object):
 
     def setup(self):
         self.create_linear_graph()
-        self.create_intervals()
-        self.write_intervals()
+        # self.create_intervals()
+        # self.write_intervals()
         self.info = ExperimentInfo(self.genome_size, self.n_intervals,
                                    self.n_intervals, self.fragment_length,
                                    self.read_length)
@@ -333,6 +336,9 @@ class MACSTests(object):
             "Read length from graph % d != %d (macs reads length)" % (read_length_graph, tag_size)
         assert fragment_length_graph == fragment_length
 
+    def profile(self):
+        self.caller.run()
+
 
 def small_test():
     return MACSTests(100, 10, 100, read_length=15, fragment_length=20)
@@ -344,6 +350,11 @@ def big_test():
 
 if __name__ == "__main__":
     test = big_test()
+    cProfile.run("test.profile()", "profiling")
+    p = pstats.Stats("profiling")
+    p.sort_stats("tottime").print_stats()
+    exit()
+
     test.test_filter_dup()
     test.test_shift_estimation()
     test.test_sample_pileup()
