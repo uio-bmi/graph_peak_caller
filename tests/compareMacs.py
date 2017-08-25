@@ -156,6 +156,6 @@ class MACSTests(object):
         assert fragment_length_graph == fragment_length
 
 if __name__ == "__main__":
-    test = MACSTests(100, 10000, 100)
+    test = MACSTests(100, 100, 100000)
     # test.test_filter_dup()
     test.test_shift_estimation()
