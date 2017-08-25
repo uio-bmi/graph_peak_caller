@@ -293,6 +293,7 @@ class MACSTests(object):
     def create_intervals(self):
         self.linear_intervals = []
         self.graph_intervals = []
+        self.n_duplicates = 0
         for _ in range(self.n_intervals):
             direction = random.choice((-1, 1))
             start = random.randint(self.fragment_length, self.genome_size-self.read_length)
@@ -304,6 +305,7 @@ class MACSTests(object):
             if start % 10 == 0:
                 self.linear_intervals.append(interval)
                 self.graph_intervals.append(self.linear_to_graph_interval(interval))
+                self.n_duplicates += 1
 
             # Add pair
             if start % 2 == 0 or True:
