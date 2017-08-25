@@ -80,8 +80,8 @@ class MACSTests(object):
 
     def setup(self):
         self.create_linear_graph()
-        # self.create_intervals()
-        # self.write_intervals()
+        self.create_intervals()
+        self.write_intervals()
         self.info = ExperimentInfo(self.genome_size, self.n_intervals,
                                    self.n_intervals, self.fragment_length,
                                    self.read_length)
@@ -345,18 +345,18 @@ def small_test():
 
 
 def big_test():
-    return MACSTests(50000, 100, 5000, read_length=51, fragment_length=120)
+    return MACSTests(5000, 10000, 10000, read_length=51, fragment_length=120)
 
 
 if __name__ == "__main__":
     test = big_test()
     cProfile.run("test.profile()", "profiling")
     p = pstats.Stats("profiling")
-    p.sort_stats("tottime").print_stats()
+    p.sort_stats("cumtime").print_stats()
     exit()
 
     test.test_filter_dup()
-    test.test_shift_estimation()
+    # test.test_shift_estimation()
     test.test_sample_pileup()
     test.test_control_pileup()
     test.test_call_peaks()

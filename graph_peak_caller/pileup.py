@@ -141,24 +141,28 @@ class Pileup(object):
         f.close()
         return filename
 
+    def get_areas_with_value(self):
+        areas = {}
+        for node_id, count_array in self.__count_arrays.items():
+            diffs = count_array[1:]-count_array[:-1]
+            changes = np.where(diffs != 0)[0]
+            changes = np.pad(changes, 1, "constant")
+            changes[0] = -1
+            changes += 1
+            changes[-1] = self.graph.node_size(node_id)
+            vals = count_array[changes[:-1]]
+            areas[node_id] = list(zip(changes[:-1], changes[1:], vals))
+        return areas
+
     def to_bed_graph(self, filename):
         f = open(filename, "w")
-        
-        for node_id, count_array in sorted(self.__count_arrays.items()):
-            start = 0
-            cur_val = None
-            for i, new_val in enumerate(count_array):
-                if new_val != cur_val:
-                    if cur_val is not None:
-                        interval = (node_id, start, i, cur_val)
-                        f.write("%s\t%s\t%s\t%s\n" % interval)
-                    start = i
-                    cur_val = new_val
-            # EMULATE MACS HACK!:
-            if cur_val == 0 and not self.graph.adj_list[node_id]:
+        areas = self.get_areas_with_value()
+        for node_id, tuples in areas.items():
+            for t in tuples[:-1]:
+                f.write("%s\t%s\t%s\t%s\n" % ((node_id,) + t))
+            if tuples[-1][-1] == 0 and not self.graph.adj_list[node_id]:
                 continue
-            interval = (node_id, start, len(count_array), cur_val)
-            f.write("%s\t%s\t%s\t%s\n" % interval)
+            f.write("%s\t%s\t%s\t%s\n" % ((node_id,) + tuples[-1]))
         f.close()
         self.filename = filename
         self.is_written = True
