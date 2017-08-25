@@ -13,13 +13,13 @@ class TestPileup(unittest.TestCase):
         pileup1 = pileup1_one_block
         pileup2 = pileup2_one_block
 
-        max_pileup = bdgcmp.create_background_pileup_as_max_from_pileups(graph, [pileup1, pileup2])
+        max_pileup = bdgcmp.create_background_pileup_as_max_from_pileups(graph, iter([pileup1, pileup2]), 0)
 
         correct_count_array = np.array([1, 2, 2, 2, 2, 1, 1, 1, 1, 1])
-        closeness = np.isclose(max_pileup.count_arrays[1], correct_count_array)
+        closeness = np.isclose(max_pileup.get_count_arrays()[1], correct_count_array)
         print(closeness)
-        print(max_pileup.count_arrays[1])
-        self.assertTrue(np.all(np.isclose(max_pileup.count_arrays[1], correct_count_array)))
+        print(max_pileup.get_count_arrays()[1])
+        self.assertTrue(np.all(np.isclose(max_pileup.get_count_arrays()[1], correct_count_array)))
 
 
 

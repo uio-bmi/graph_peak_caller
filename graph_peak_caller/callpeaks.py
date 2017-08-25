@@ -83,11 +83,11 @@ class CallPeaks(object):
 
     def preprocess(self):
         self.sample_intervals = self.remove_alignments_not_in_graph(self.sample_file_name)
-        self.sample_intervals = self.filter_duplicates(self.sample_intervals)
+        self.sample_file_name = self.filter_duplicates(self.sample_intervals, write_to_file=self.sample_file_name+"_filtered")
 
         if self.control_file_name is not None:
             self.control_intervals = self.remove_alignments_not_in_graph(self.control_file_name)
-            self.control_intervals = self.filter_duplicates(self.control_intervals)
+            self.control_file_name = self.filter_duplicates(self.control_intervals, write_to_file=self.control_file_name+"_filtered")
 
 
     @enable_filewrite
@@ -136,14 +136,8 @@ class CallPeaks(object):
             print("Creating control")
         extensions = [self.info.fragment_length, 1000, 5000, 10000] if self.has_control else [5000, 10000]
 
-        if len(self.control_intervals) > 0:
-            control_intervals = self.control_intervals
-        else:
-            control_intervals = self.control_file_name
-        print("Control intervals: " + str(control_intervals))
-        print(self.has_control)
         control_track = ControlTrack(
-            self.ob_graph, control_intervals,
+            self.ob_graph, self.control_file_name,
             self.info.fragment_length, extensions)
 
         background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
