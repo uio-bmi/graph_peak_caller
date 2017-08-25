@@ -206,10 +206,12 @@ class MACSTests(object):
         caller.create_sample_pileup()
         caller.create_control()
         caller.get_p_values()
-        caller.call_peaks()
         self._create_control()
         self._create_sample_pileup()
         self._get_scores()
+        self.assertPileupFilesEqual(caller._p_value_track, "lin_scores.bdg")
+
+        caller.call_peaks()
         self._call_peaks()
         self.assertEqualBedFiles("final_track", "lin_peaks.bed")
 
