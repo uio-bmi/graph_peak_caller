@@ -11,8 +11,6 @@ class ControlTrack(object):
         assert isinstance(intervals, str), "Intervals must be a file name"
         #if isinstance(intervals, str):
         #    self.intervals = IntervalCollection.create_generator_from_file(intervals)
-
-
         self.fragment_length = fragment_length
         self.extensions = extensions
 
@@ -31,6 +29,13 @@ class ControlTrack(object):
     def generate_background_tracks(self):
         extensions = [ext//2 for ext in self.extensions]
         return (self._get_pileup(extension) for extension in extensions)
+
+    def combine_backgrounds(self, backgrounds, base_value):
+        pileup = Pileup(self.graph)
+        pileup.init_value(base_value)
+        for new_pileup in backgrounds:
+            pileup.update_max(new_pileup)
+        return pileup
 
     def generate_background_track(self):
         pileup = Pileup(self.graph, [], 0)

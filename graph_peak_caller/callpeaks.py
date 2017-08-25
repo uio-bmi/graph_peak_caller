@@ -140,10 +140,14 @@ class CallPeaks(object):
             self.ob_graph, self.control_file_name,
             self.info.fragment_length, extensions)
 
+        tracks = control_track.generate_background_tracks()
         background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
-        self._control_track = create_background_pileup_as_max_from_pileups(
-            self.ob_graph, control_track.generate_background_tracks(),
-            background_value, "control_track.bdg", self.verbose)
+        pileup = control_track.combine_backgrounds(tracks, background_value)
+        self._control_track = "control_track.bdg"
+        pileup.to_bed_graph(self._control_track)
+        # self._control_track = create_background_pileup_as_max_from_pileups(
+        #     self.ob_graph, control_track.generate_background_tracks(),
+        #     background_value, "control_track.bdg", self.verbose)
 
     def get_p_values(self):
         print("Get p-values")
@@ -152,11 +156,8 @@ class CallPeaks(object):
     def call_peaks(self, cutoff=0.05):
         print("Calling peaks")
         self.p_values.threshold(-np.log10(cutoff))
-        print(self.p_values)
         self.p_values.fill_small_wholes(self.info.read_length)
-        print(self.p_values)
         self.p_values.remove_small_peaks(self.info.fragment_length)
-        print(self.p_values)
         self.final_track = self.p_values
         self.final_track.to_bed_file("final_track")
 

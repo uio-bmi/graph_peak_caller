@@ -40,6 +40,12 @@ class Pileup(object):
     def get_count_arrays(self):
         return self.__count_arrays
 
+    def update_max(self, other):
+        for node_id, count_array in self.__count_arrays.items():
+            self.__count_arrays[node_id] = np.maximum(
+                count_array,
+                other.__count_arrays[node_id])
+
     @classmethod
     def from_bed_graph(cls, graph, file_name):
         file = open(file_name)
