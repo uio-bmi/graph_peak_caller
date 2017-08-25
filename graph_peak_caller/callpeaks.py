@@ -140,7 +140,9 @@ class CallPeaks(object):
     def call_peaks(self, cutoff=0.05):
         print("Calling peaks")
         self.p_values.threshold(-np.log10(cutoff))
+        print(self.p_values)
         self.p_values.fill_small_wholes(self.info.read_length)
+        print(self.p_values)
         self.final_track = self.p_values
         self.final_track.to_bed_file("final_track")
 
