@@ -104,6 +104,8 @@ class Pileup(object):
     def set_areas_value(self, areas, value):
         for area, intervals in areas.items():
             for i in range(len(intervals)//2):
+                print(intervals[i])
+                print(intervals[i+1])
                 self.__count_arrays[area][intervals[i]:intervals[i+1]] = value
 
     def set_interval_value(self, interval, value):

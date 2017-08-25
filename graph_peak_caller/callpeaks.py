@@ -8,6 +8,27 @@ from .control import ControlTrack
 from .bdgcmp import *
 
 
+def enable_filewrite(func):
+    def wrapper(*args, **kwargs):
+        intervals = args[1]
+        if isinstance(intervals, str):
+            intervals = IntervalCollection.create_generator_from_file(intervals)
+
+        write_to_file = kwargs.pop("write_to_file", False)
+        interval_list = func(args[0], intervals, **kwargs)
+
+        if write_to_file:
+            with open(write_to_file, "w") as file:
+                print("Wrote results to " + str(write_to_file))
+                file.writelines(("%s\n" % interval.to_file_line() for interval in interval_list))
+
+            return write_to_file
+        else:
+            return interval_list
+
+    return wrapper
+
+
 class ExperimentInfo(object):
     def __init__(self, genome_size, n_sample_reads,
                  n_control_reads, fragment_length, read_length):
@@ -45,6 +66,8 @@ class CallPeaks(object):
         self._p_value_track = "p_value_track"
         self.info = experiment_info
         self.verbose = verbose
+        self.sample_intervals = []
+        self.control_intervals = []
 
     def run(self):
         self.create_graph()
@@ -59,45 +82,32 @@ class CallPeaks(object):
         self.call_peaks()
 
     def preprocess(self):
-        self.sample_file_name = self.remove_alignments_not_in_graph(self.sample_file_name)
+        self.sample_intervals = self.remove_alignments_not_in_graph(self.sample_file_name)
+        self.sample_intervals = self.filter_duplicates(self.sample_intervals)
+
         if self.control_file_name is not None:
-            self.control_file_name = self.remove_alignments_not_in_graph(self.control_file_name)
+            self.control_intervals = self.remove_alignments_not_in_graph(self.control_file_name)
+            self.control_intervals = self.filter_duplicates(self.control_intervals)
 
-        self.sample_file_name = self.filter_duplicates(self.sample_file_name)
-        if self.control_file_name is not None:
-            self.control_file_name = self.filter_duplicates(self.control_file_name)
 
-    def remove_alignments_not_in_graph(self, alignment_file_name):
-        interval_collection = IntervalCollection.create_generator_from_file(alignment_file_name)
-        filtered_file_name = alignment_file_name + "_filtered"
-        filtered_file = open(filtered_file_name, "w")
-        for interval in self._get_intervals_in_ob_graph(interval_collection):
-            filtered_file.writelines(["%s\n" % interval.to_file_line()])
-        filtered_file.close()
-        if self.verbose:
-            print("Alignments without duplicates written to %s" % filtered_file_name)
-        return filtered_file_name
+    @enable_filewrite
+    def remove_alignments_not_in_graph(self, intervals):
+        for interval in self._get_intervals_in_ob_graph(intervals):
+            yield interval
 
-    def filter_duplicates(self, alignment_file_name):
-        interval_collection = IntervalCollection.create_generator_from_file(
-            alignment_file_name)
-        filtered_file_name = alignment_file_name + "_filtered_duplicates"
-        filtered_file = open(filtered_file_name, "w")
+    @enable_filewrite
+    def filter_duplicates(self, intervals):
 
         interval_hashes = {}
         n_duplicates = 0
-        for interval in interval_collection:
+        for interval in intervals:
             hash = interval.hash()
             if hash in interval_hashes:
                 n_duplicates += 1
                 continue
 
             interval_hashes[hash] = True
-            filtered_file.writelines(["%s\n" % interval.to_file_line()])
-        filtered_file.close()
-        if self.verbose:
-            print("Filtered alignments written to %s. %d duplicates removed." % (filtered_file_name, n_duplicates))
-        return filtered_file_name
+            yield interval
 
     def _get_intervals_in_ob_graph(self, intervals):
         # Returns only those intervals that exist in graph
@@ -125,9 +135,17 @@ class CallPeaks(object):
         if self.verbose:
             print("Creating control")
         extensions = [self.info.fragment_length, 1000, 5000, 10000] if self.has_control else [5000, 10000]
+
+        if len(self.control_intervals) > 0:
+            control_intervals = self.control_intervals
+        else:
+            control_intervals = self.control_file_name
+        print("Control intervals: " + str(control_intervals))
+        print(self.has_control)
         control_track = ControlTrack(
-            self.ob_graph, self.control_file_name,
+            self.ob_graph, control_intervals,
             self.info.fragment_length, extensions)
+
         background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
         self._control_track = create_background_pileup_as_max_from_pileups(
             self.ob_graph, control_track.generate_background_tracks(),

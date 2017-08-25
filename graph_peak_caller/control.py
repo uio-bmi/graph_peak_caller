@@ -4,16 +4,21 @@ from offsetbasedgraph.interval import IntervalCollection
 
 
 class ControlTrack(object):
-    def __init__(self, graph, file_name, fragment_length, extensions):
+    def __init__(self, graph, intervals, fragment_length, extensions):
         self.graph = graph
-        self.file_name = file_name
+
+        self.intervals = intervals
+        assert isinstance(intervals, str), "Intervals must be a file name"
+        #if isinstance(intervals, str):
+        #    self.intervals = IntervalCollection.create_generator_from_file(intervals)
+
+
         self.fragment_length = fragment_length
         self.extensions = extensions
 
     def _get_pileup(self, extension):
         """TODO: read obg_alignments directly"""
-        alignments = IntervalCollection.create_generator_from_file(
-            self.file_name)
+        alignments = IntervalCollection.create_generator_from_file(self.intervals)
         shifter = Shifter(self.graph, extension)
         areas_generator = (shifter.extend_interval(alignment, 0) for alignment
                            in alignments)
@@ -39,7 +44,7 @@ class ControlTrack(object):
         for extension in self.extensions:
             shift = extension//2
             
-            alignments = vg.AlignmentCollection.create_generator_from_file(self.file_name)
+            alignments = IntervalCollection.create_generator_from_file(self.intervals)
             obg_alignments = (alignment.path.to_obg(self.graph) for alignment in alignments)
             pileup = Pileup(self.graph, [])
             shifter = Shifter(self.graph, [], shift)
@@ -50,6 +55,7 @@ class ControlTrack(object):
             pileup.clear()
 
     def _get_file_name(self, extension):
+        return "intervals_%sbg.bdg" % extension
         self.file_name.replace(".json", "%sbg.bdg" % extension)
 
     def merge_background_tracks(self):

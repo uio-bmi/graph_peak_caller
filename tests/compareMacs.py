@@ -92,7 +92,7 @@ class MACSTests(object):
             "lin_intervals.bed", "lin_intervals_dup.bed")
         command = command.split()
         subprocess.check_output(command)
-        self.dup_file_name = self.caller.filter_duplicates("graph_intervals")
+        self.dup_file_name = self.caller.filter_duplicates("graph_intervals", write_to_file="graph_intervals_filtered")
         self.assertEqualIntervalFiles(
             self.dup_file_name,
             "lin_intervals_dup.bed")
@@ -225,7 +225,8 @@ class MACSTests(object):
         print(graph_pileup)
         # assert not all(graph_pileup == graph_pileup[0])
         assert sum(graph_pileup) > 0
-        assert all(linear_pileup == graph_pileup)
+        assert all(linear_pileup == graph_pileup) , \
+                "Pileup in %s != pileup in %s" % (linear_file, graph_file)
 
     def _create_sample_pileup(self):
         command = "macs2 pileup -i %s -o %s --extsize %s" % (
@@ -291,6 +292,7 @@ class MACSTests(object):
     def create_intervals(self):
         self.linear_intervals = []
         self.graph_intervals = []
+        self.n_duplicates = 0
         for _ in range(self.n_intervals):
             direction = random.choice((-1, 1))
             start = random.randint(self.fragment_length, self.genome_size-self.read_length)
@@ -302,6 +304,7 @@ class MACSTests(object):
             if start % 10 == 0:
                 self.linear_intervals.append(interval)
                 self.graph_intervals.append(self.linear_to_graph_interval(interval))
+                self.n_duplicates += 1
 
             # Add pair
             if start % 2 == 0 or True:
@@ -351,14 +354,15 @@ def small_test():
     return MACSTests(1000, 10, 3, read_length=15, fragment_length=20)
 
 
+
 def big_test():
     return MACSTests(50000, 100, 5000, read_length=51, fragment_length=120)
 
 
 if __name__ == "__main__":
-    test = small_test()
-    test.test_filter_dup()
-    # test.test_shift_estimation()
+    test = big_test()
+    #test.test_filter_dup()
+    #test.test_shift_estimation()
     test.test_sample_pileup()
     test.test_control_pileup()
-    test.test_call_peaks()
+    #test.test_call_peaks()
