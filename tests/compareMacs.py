@@ -203,8 +203,7 @@ class MACSTests(object):
             self._convert_valued_interval(graph_interval)
         pileup1 = self._create_binary_track(linear_intervals)
         pileup2 = self._create_binary_track(graph_intervals)
-        print(pileup1)
-        print(pileup2)
+        print(np.where(pileup1 != pileup2))
         assert np.allclose(pileup1, pileup2)
 
     def _create_pileup(self, pileup_file, convert=False, limit=False):
@@ -349,7 +348,7 @@ class MACSTests(object):
 
 
 def small_test():
-    return MACSTests(10, 10, 3, read_length=15, fragment_length=20)
+    return MACSTests(1000, 10, 3, read_length=15, fragment_length=20)
 
 
 def big_test():
@@ -357,9 +356,9 @@ def big_test():
 
 
 if __name__ == "__main__":
-    test = big_test()
+    test = small_test()
     test.test_filter_dup()
-    test.test_shift_estimation()
+    # test.test_shift_estimation()
     test.test_sample_pileup()
     test.test_control_pileup()
     test.test_call_peaks()

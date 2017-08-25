@@ -167,7 +167,7 @@ class Pileup(object):
                 if val == value and not cur_area:
                     cur_start = i
                     cur_area = True
-                elif val != value and cur_area:
+                elif (val != value) and cur_area:
                     cur_list.extend([cur_start, i])
                     cur_area = False
             if cur_area:
@@ -259,6 +259,7 @@ class Pileup(object):
         intervals = self.areas_to_intervals(areas, include_partial_stubs=False)
         large_intervals = [interval for interval in intervals
                            if interval.length() >= min_size]
+        print(large_intervals)
         print("+", large_intervals)
         for node_id, count_array in self.__count_arrays.items():
             count_array *= False
