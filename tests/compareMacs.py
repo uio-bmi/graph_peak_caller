@@ -172,7 +172,8 @@ class MACSTests(object):
     def assertEqualIntervals(self, linear_intervals, graph_intervals):
         graph_intervals = [self.graph_to_linear_interval(g_interval)
                            for g_interval in graph_intervals]
-        assert len(graph_intervals) == len(linear_intervals)
+        assert len(graph_intervals) == len(linear_intervals), \
+                "%d != %d" % (len(graph_intervals), len(linear_intervals))
         for interval in graph_intervals:
             assert interval in linear_intervals
 
@@ -321,6 +322,8 @@ class MACSTests(object):
                 #print("to")
                 #print(interval)
 
+        assert len(self.linear_intervals) == len(self.graph_intervals)
+
     def test_shift_estimation(self):
         self.setup()
         caller = CallPeaks("lin_graph", "graph_intervals")
@@ -348,10 +351,10 @@ class MACSTests(object):
 
 if __name__ == "__main__":
 
-    test = MACSTests(50000, 100, 5000, read_length=50, fragment_length=120)
-    #test.assertEqualBedFiles("final_track", "lin_peaks.bed")
-    # test.test_filter_dup()
-    # test.test_sample_pileup()
-    # test.test_control_pileup()
-    # test.test_call_peaks()
+    test = MACSTests(50000, 100, 5000, read_length=51, fragment_length=120)
+    test.test_filter_dup()
     test.test_shift_estimation()
+    test.test_sample_pileup()
+    test.test_control_pileup()
+    test.test_call_peaks()
+    test.assertEqualBedFiles("final_track", "lin_peaks.bed")
