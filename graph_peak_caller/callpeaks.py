@@ -8,6 +8,23 @@ from .control import ControlTrack
 from .bdgcmp import *
 
 
+def enable_filewrite(func):
+    def wrapper(*args, **kwargs):
+        write_to_file = kwargs.pop("write_to_file", False)
+        interval_list = func(*args, **kwargs)
+
+        if write_to_file:
+            file = open(write_to_file, "w")
+            for interval in interval_list:
+                file.writelines(["%s\n" % interval.to_file_line()])
+            file.close()
+            return write_to_file
+        else:
+            return interval_list
+
+    return wrapper
+
+
 class ExperimentInfo(object):
     def __init__(self, genome_size, n_sample_reads,
                  n_control_reads, fragment_length, read_length):
@@ -78,6 +95,8 @@ class CallPeaks(object):
             print("Alignments without duplicates written to %s" % filtered_file_name)
         return filtered_file_name
 
+
+    @enable_filewrite
     def filter_duplicates(self, alignment_file_name):
         interval_collection = IntervalCollection.create_generator_from_file(
             alignment_file_name)
