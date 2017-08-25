@@ -66,6 +66,8 @@ class CallPeaks(object):
         self._p_value_track = "p_value_track"
         self.info = experiment_info
         self.verbose = verbose
+        self.sample_intervals = []
+        self.control_intervals = []
 
     def run(self):
         self.create_graph()
@@ -133,9 +135,17 @@ class CallPeaks(object):
         if self.verbose:
             print("Creating control")
         extensions = [self.info.fragment_length, 1000, 5000, 10000] if self.has_control else [5000, 10000]
+
+        if len(self.control_intervals) > 0:
+            control_intervals = self.control_intervals
+        else:
+            control_intervals = self.control_file_name
+        print("Control intervals: " + str(control_intervals))
+        print(self.has_control)
         control_track = ControlTrack(
-            self.ob_graph, self.control_file_name,
+            self.ob_graph, control_intervals,
             self.info.fragment_length, extensions)
+
         background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
         self._control_track = create_background_pileup_as_max_from_pileups(
             self.ob_graph, control_track.generate_background_tracks(),

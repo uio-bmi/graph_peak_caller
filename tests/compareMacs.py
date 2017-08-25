@@ -227,7 +227,8 @@ class MACSTests(object):
         print(graph_pileup)
         # assert not all(graph_pileup == graph_pileup[0])
         assert sum(graph_pileup) > 0
-        assert all(linear_pileup == graph_pileup)
+        assert all(linear_pileup == graph_pileup) , \
+                "Pileup in %s != pileup in %s" % (linear_file, graph_file)
 
     def _create_sample_pileup(self):
         command = "macs2 pileup -i %s -o %s --extsize %s" % (
@@ -354,9 +355,9 @@ class MACSTests(object):
 if __name__ == "__main__":
 
     test = MACSTests(50000, 100, 5000, read_length=51, fragment_length=120)
-    test.test_filter_dup()
-    test.test_shift_estimation()
+    #test.test_filter_dup()
+    #test.test_shift_estimation()
     test.test_sample_pileup()
-    #test.test_control_pileup()
+    test.test_control_pileup()
     #test.test_call_peaks()
     #test.assertEqualBedFiles("final_track", "lin_peaks.bed")
