@@ -105,8 +105,6 @@ class Pileup(object):
     def set_areas_value(self, areas, value):
         for area, intervals in areas.items():
             for i in range(len(intervals)//2):
-                print(intervals[i])
-                print(intervals[i+1])
                 self.__count_arrays[area][intervals[i]:intervals[i+1]] = value
 
     def set_interval_value(self, interval, value):
@@ -180,7 +178,6 @@ class Pileup(object):
             if cur_area:
                 cur_list.extend([cur_start, len(count_array)])
             areas[node_id] = cur_list
-        print(areas[0])
         return areas
 
     def areas_to_intervals(self, areas, include_partial_stubs):
@@ -224,6 +221,8 @@ class Pileup(object):
         f = all if include_partial_stubs else any
         if not f(next_node in areas and areas[next_node] and areas[next_node][0] == 0 for
                  next_node in self.graph.adj_list[node_id]):
+            if include_partial_stubs:
+                assert self.graph.adj_list[node_id]
             intervals.append(
                 obg.Interval(my_interval[0], self.graph.node_size(node_id),
                              my_interval[1:], graph=self.graph))
@@ -253,24 +252,18 @@ class Pileup(object):
         return interval_dict, end_interval_dict, whole_intervals
 
     def fill_small_wholes(self, max_size):
-        print(self.__count_arrays[0])
         areas = self.find_valued_areas(False)
-        intervals = self.areas_to_intervals(areas, False)
-        print("INIT", intervals)
+        intervals = self.areas_to_intervals(areas, True)
         intervals = [interval for interval in intervals if
                      interval.length() <= max_size]
-        print("-", intervals)
         for interval in intervals:
             self.set_interval_value(interval, True)
 
     def remove_small_peaks(self, min_size):
-        print(self.__count_arrays[0])
         areas = self.find_valued_areas(True)
         intervals = self.areas_to_intervals(areas, include_partial_stubs=False)
         large_intervals = [interval for interval in intervals
                            if interval.length() >= min_size]
-        print(intervals)
-        print("+", large_intervals)
         for node_id, count_array in self.__count_arrays.items():
             count_array *= False
         for interval in large_intervals:

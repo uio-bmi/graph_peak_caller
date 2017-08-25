@@ -77,8 +77,8 @@ class MACSTests(object):
 
     def setup(self):
         self.create_linear_graph()
-        # self.create_intervals()
-        # self.write_intervals()
+        self.create_intervals()
+        self.write_intervals()
         self.info = ExperimentInfo(self.genome_size, self.n_intervals,
                                    self.n_intervals, self.fragment_length,
                                    self.read_length)
@@ -203,7 +203,7 @@ class MACSTests(object):
             self._convert_valued_interval(graph_interval)
         pileup1 = self._create_binary_track(linear_intervals)
         pileup2 = self._create_binary_track(graph_intervals)
-        print(np.where(pileup1 != pileup2))
+        # print(np.where(pileup1 != pileup2))
         assert np.allclose(pileup1, pileup2)
 
     def _create_pileup(self, pileup_file, convert=False, limit=False):
@@ -221,8 +221,6 @@ class MACSTests(object):
     def assertPileupFilesEqual(self, graph_file, linear_file):
         linear_pileup = self._create_pileup(linear_file)
         graph_pileup = self._create_pileup(graph_file, convert=True)
-        print(linear_pileup)
-        print(graph_pileup)
         # assert not all(graph_pileup == graph_pileup[0])
         assert sum(graph_pileup) > 0
         assert all(linear_pileup == graph_pileup) , \
@@ -295,7 +293,11 @@ class MACSTests(object):
         self.n_duplicates = 0
         for _ in range(self.n_intervals):
             direction = random.choice((-1, 1))
-            start = random.randint(self.fragment_length, self.genome_size-self.read_length)
+            if direction == -1:
+                start = random.randint(self.fragment_length-self.read_length,
+                                       self.genome_size-self.read_length)
+            else:
+                start = random.randint(0, self.genome_size-self.read_length-self.fragment_length)
             end = start+self.read_length
             interval = SimpleInterval(start, end, direction)
             self.linear_intervals.append(interval)
@@ -307,7 +309,7 @@ class MACSTests(object):
                 self.n_duplicates += 1
 
             # Add pair
-            if start % 2 == 0 or True:
+            if (start % 2 == 0) or True:
                 if direction == 1:
                     start = start + self.fragment_length - self.read_length
                 else:
@@ -359,8 +361,8 @@ def big_test():
 
 
 if __name__ == "__main__":
-    test = small_test()
-    #test.test_filter_dup()
+    test = big_test()
+    test.test_filter_dup()
     #test.test_shift_estimation()
     test.test_sample_pileup()
     test.test_control_pileup()
