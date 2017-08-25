@@ -36,6 +36,9 @@ class Pileup(object):
     def clear(self):
         self.__count_arrays = None
 
+    def get_count_arrays(self):
+        return self.__count_arrays
+
     @classmethod
     def from_bed_graph(cls, graph, file_name):
         file = open(file_name)

@@ -1,9 +1,22 @@
 import shutil
 from .pileup import Pileup
 import subprocess
+import numpy as np
 
 
 def create_background_pileup_as_max_from_pileups(graph, pileups, background_value, out_file=None, verbose=False):
+
+    first_pileup = pileups.__next__()
+    max = first_pileup.get_count_arrays()
+    for p in pileups:
+        for node_id, count_array in p.get_count_arrays().items():
+            max[node_id] = np.maximum(max[node_id], count_array[node_id])
+
+    max_pileup = Pileup(graph)
+    max_pileup.set_count_arrays(max)
+    return max_pileup
+
+
     if verbose:
         print("Creating bedgraph files")
     pileup_files = [p.to_bed_graph("pileup_%d.tmp" % i)
