@@ -77,8 +77,8 @@ class MACSTests(object):
 
     def setup(self):
         self.create_linear_graph()
-        self.create_intervals()
-        self.write_intervals()
+        # self.create_intervals()
+        # self.write_intervals()
         self.info = ExperimentInfo(self.genome_size, self.n_intervals,
                                    self.n_intervals, self.fragment_length,
                                    self.read_length)
@@ -114,8 +114,8 @@ class MACSTests(object):
     def test_call_peaks(self):
         self.caller.get_p_values()
         self._get_scores()
-        # self.assertPileupFilesEqual(self.caller._p_value_track,
-        # "lin_scores.bdg")
+        self.assertPileupFilesEqual(self.caller._p_value_track,
+                                    "lin_scores.bdg")
 
         self.caller.call_peaks()
         self._call_peaks()
@@ -351,8 +351,7 @@ class MACSTests(object):
 
 
 def small_test():
-    return MACSTests(1000, 10, 3, read_length=15, fragment_length=20)
-
+    return MACSTests(100, 10, 100, read_length=15, fragment_length=20)
 
 
 def big_test():
@@ -360,9 +359,9 @@ def big_test():
 
 
 if __name__ == "__main__":
-    test = big_test()
+    test = small_test()
     #test.test_filter_dup()
     #test.test_shift_estimation()
     test.test_sample_pileup()
     test.test_control_pileup()
-    #test.test_call_peaks()
+    test.test_call_peaks()

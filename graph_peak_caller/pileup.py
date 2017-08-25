@@ -32,6 +32,7 @@ class Pileup(object):
     def threshold(self, cutoff):
         for node_id, count_array in self.__count_arrays.items():
             self.__count_arrays[node_id] = count_array > cutoff
+            assert self.__count_arrays[node_id].dtype == np.dtype("bool")
 
     def clear(self):
         self.__count_arrays = None
@@ -124,7 +125,7 @@ class Pileup(object):
         f = open(filename, "w")
         interval_dict, end_interval_dict, whole_intervals = self.find_valued_intevals(True)
         all_intervals = []
-        for node, intervals in interval_dict.items():
+        for node, intervals in sorted(interval_dict.items()):
             all_intervals.extend((node, i[0], i[1]) for i in intervals)
         all_intervals.extend((node, i[0], i[1]) for node, i in end_interval_dict.items())
         all_intervals.extend((node, 0, self.graph.node_size(node)) for node in whole_intervals)
@@ -135,7 +136,8 @@ class Pileup(object):
 
     def to_bed_graph(self, filename):
         f = open(filename, "w")
-        for node_id, count_array in self.__count_arrays.items():
+        
+        for node_id, count_array in sorted(self.__count_arrays.items()):
             start = 0
             cur_val = None
             for i, new_val in enumerate(count_array):
@@ -145,6 +147,9 @@ class Pileup(object):
                         f.write("%s\t%s\t%s\t%s\n" % interval)
                     start = i
                     cur_val = new_val
+            # EMULATE MACS HACK!:
+            if cur_val == 0 and not self.graph.adj_list[node_id]:
+                continue
             interval = (node_id, start, len(count_array), cur_val)
             f.write("%s\t%s\t%s\t%s\n" % interval)
         f.close()
@@ -166,7 +171,7 @@ class Pileup(object):
             cur_list = []
             cur_start = None
             for i, val in enumerate(count_array):
-                if val == value and not cur_area:
+                if (val == value) and (not cur_area):
                     cur_start = i
                     cur_area = True
                 elif (val != value) and cur_area:
@@ -175,7 +180,7 @@ class Pileup(object):
             if cur_area:
                 cur_list.extend([cur_start, len(count_array)])
             areas[node_id] = cur_list
-
+        print(areas[0])
         return areas
 
     def areas_to_intervals(self, areas, include_partial_stubs):
@@ -183,8 +188,8 @@ class Pileup(object):
         intervals = []
         for node_id, startends in areas.items():
             for i in range(len(startends)//2):
-                start = startends[i]
-                end = startends[i+1]
+                start = startends[2*i]
+                end = startends[2*i+1]
                 if start == 0:
                     if f(prev_id in areas and areas[prev_id] and areas[prev_id][-1] == self.graph.node_size(prev_id)
                          for prev_id in self.graph.reverse_adj_list[node_id]):
@@ -248,8 +253,10 @@ class Pileup(object):
         return interval_dict, end_interval_dict, whole_intervals
 
     def fill_small_wholes(self, max_size):
+        print(self.__count_arrays[0])
         areas = self.find_valued_areas(False)
-        intervals = self.areas_to_intervals(areas, True)
+        intervals = self.areas_to_intervals(areas, False)
+        print("INIT", intervals)
         intervals = [interval for interval in intervals if
                      interval.length() <= max_size]
         print("-", intervals)
@@ -257,11 +264,12 @@ class Pileup(object):
             self.set_interval_value(interval, True)
 
     def remove_small_peaks(self, min_size):
+        print(self.__count_arrays[0])
         areas = self.find_valued_areas(True)
         intervals = self.areas_to_intervals(areas, include_partial_stubs=False)
         large_intervals = [interval for interval in intervals
                            if interval.length() >= min_size]
-        print(large_intervals)
+        print(intervals)
         print("+", large_intervals)
         for node_id, count_array in self.__count_arrays.items():
             count_array *= False
