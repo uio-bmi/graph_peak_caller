@@ -84,6 +84,7 @@ class MACSTests(object):
                                    self.read_length)
         self.caller = CallPeaks("lin_graph", "graph_intervals",
                                 experiment_info=self.info)
+        self.caller.create_graph()
 
     # Tests
     def test_filter_dup(self):
@@ -97,7 +98,7 @@ class MACSTests(object):
             "lin_intervals_dup.bed")
 
     def test_sample_pileup(self):
-        self.caller.create_graph()
+        # self.caller.create_graph()
         self.caller.create_sample_pileup()
         self._create_sample_pileup()
         self.assertPileupFilesEqual(
@@ -197,8 +198,6 @@ class MACSTests(object):
                            for line in open(graph_file).readlines()]
         linear_intervals = [SimpleInterval.from_file_line(line) for
                             line in open(linear_file).readlines()]
-
-        print(graph_intervals)
 
         for graph_interval in graph_intervals:
             self._convert_valued_interval(graph_interval)
@@ -352,12 +351,19 @@ class MACSTests(object):
         assert fragment_length_graph == fragment_length
 
 
-if __name__ == "__main__":
+def small_test():
+    return MACSTests(10, 10, 3, read_length=15, fragment_length=20)
 
-    test = MACSTests(50000, 100, 5000, read_length=51, fragment_length=120)
+
+
+def big_test():
+    return MACSTests(50000, 100, 5000, read_length=51, fragment_length=120)
+
+
+if __name__ == "__main__":
+    test = big_test()
     #test.test_filter_dup()
     #test.test_shift_estimation()
     test.test_sample_pileup()
     test.test_control_pileup()
     #test.test_call_peaks()
-    #test.assertEqualBedFiles("final_track", "lin_peaks.bed")
