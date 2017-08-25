@@ -6,6 +6,7 @@ import numpy as np
 
 def create_background_pileup_as_max_from_pileups(graph, pileups, background_value, out_file=None, verbose=False):
 
+    """
     first_pileup = pileups.__next__()
     max = first_pileup.get_count_arrays()
     for p in pileups:
@@ -14,8 +15,10 @@ def create_background_pileup_as_max_from_pileups(graph, pileups, background_valu
 
     max_pileup = Pileup(graph)
     max_pileup.set_count_arrays(max)
+    if out_file:
+        return out_file
     return max_pileup
-
+    """
 
     if verbose:
         print("Creating bedgraph files")
@@ -23,6 +26,7 @@ def create_background_pileup_as_max_from_pileups(graph, pileups, background_valu
                     for i, p in enumerate(pileups)]
 
     max_pileup = "pileup_max.tmp" if out_file is None else out_file
+
     shutil.copyfile("pileup_0.tmp", max_pileup)
 
     for pileup in pileup_files:

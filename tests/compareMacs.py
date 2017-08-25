@@ -108,6 +108,7 @@ class MACSTests(object):
     def test_control_pileup(self):
         self.caller.create_control()
         self._create_control()
+        assert isinstance(self.caller._control_track, str)
         self.assertPileupFilesEqual(self.caller._control_track,
                                     "lin_control_pileup.bdg")
 
@@ -219,6 +220,9 @@ class MACSTests(object):
         return pileup
 
     def assertPileupFilesEqual(self, graph_file, linear_file):
+        assert isinstance(graph_file, str)
+        assert isinstance(linear_file, str)
+
         linear_pileup = self._create_pileup(linear_file)
         graph_pileup = self._create_pileup(graph_file, convert=True)
         # assert not all(graph_pileup == graph_pileup[0])
