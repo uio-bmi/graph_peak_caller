@@ -118,6 +118,19 @@ class Pileup(object):
                 end = interval.end_position.offset
             self.__count_arrays[region_path][start:end] = value
 
+    def to_bed_file(self, filename):
+        f = open(filename, "w")
+        interval_dict, end_interval_dict, whole_intervals = self.find_valued_intevals(True)
+        all_intervals = []
+        for node, intervals in interval_dict.items():
+            all_intervals.extend((node, i[0], i[1]) for i in intervals)
+        all_intervals.extend((node, i[0], i[1]) for node, i in end_interval_dict.items())
+        all_intervals.extend((node, 0, self.graph.blocks[node].length()) for node in whole_intervals)
+        for interval in all_intervals:
+            f.write("%s\t%s\t%s\t.\t.\t.\n" % interval)
+        f.close()
+        return filename
+
     def to_bed_graph(self, filename):
         f = open(filename, "w")
         for node_id, count_array in self.__count_arrays.items():
@@ -203,7 +216,7 @@ class SmallIntervals(object):
             cur_list = []
             for i in range(len(intervals)//2):
                 start = intervals[i]
-                end = intervlas[i+1]
+                end = intervals[i+1]
                 if start == 0 and all(prev_node in self.end_interval_dict for prev_node in
                                       self.graph.reverse_adj_list[node_id]):
                     continue

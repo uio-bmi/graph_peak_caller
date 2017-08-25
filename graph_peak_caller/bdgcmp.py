@@ -2,6 +2,7 @@ import shutil
 from .pileup import Pileup
 import subprocess
 
+
 def create_background_pileup_as_max_from_pileups(graph, pileups, background_value, out_file=None, verbose=False):
     if verbose:
         print("Creating bedgraph files")
