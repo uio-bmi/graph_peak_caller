@@ -27,6 +27,7 @@ def get_shift_size_on_offset_based_graph(offset_based_graph, interval_file_name)
             linear_intervals = trans_to_linear.translate_interval(interval).get_single_path_intervals()
             assert len(linear_intervals) == 1
             linear_interval = linear_intervals[0]
+            linear_interval.direction = interval.direction
             write_linear_interval_to_bed_file(bed_file, linear_interval)
         else:
             n_not_translation += 11

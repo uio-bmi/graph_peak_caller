@@ -349,9 +349,9 @@ class MACSTests(object):
 if __name__ == "__main__":
 
     test = MACSTests(50000, 100, 5000, read_length=50, fragment_length=120)
-    test.assertEqualBedFiles("final_track", "lin_peaks.bed")
+    #test.assertEqualBedFiles("final_track", "lin_peaks.bed")
     # test.test_filter_dup()
     # test.test_sample_pileup()
     # test.test_control_pileup()
     # test.test_call_peaks()
-    # test.test_shift_estimation()
+    test.test_shift_estimation()
