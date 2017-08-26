@@ -111,8 +111,9 @@ class Pileup(object):
 
     def add_areas(self, areas):
         for area, intervals in areas.items():
-            for i in range(len(intervals)//2):
-                self.__count_arrays[area][intervals[i]:intervals[i+1]] += 1
+            self.__count_arrays[area][intervals[0]:intervals[1]] += 1
+            # for i in range(len(intervals)//2):
+            #    self.__count_arrays[area][intervals[i]:intervals[i+1]] += 1
 
     def set_areas_value(self, areas, value):
         for area, intervals in areas.items():
@@ -195,7 +196,7 @@ class Pileup(object):
 
     def find_valued_areas(self, value=False):
         # [1 1 1 2 2 2 0 0 0 1 1 1]
-        # [- 0 0 1 0 0 1
+        # [- 0 0 1 0 0 1]
         areas = {}
         for node_id, count_array in self.__count_arrays.items():
             diffs = count_array[1:]-count_array[:-1]

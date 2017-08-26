@@ -18,7 +18,7 @@ class ControlTrack(object):
         """TODO: read obg_alignments directly"""
         alignments = IntervalCollection.create_generator_from_file(self.intervals)
         shifter = Shifter(self.graph, extension)
-        areas_generator = (shifter.extend_interval(alignment, 0) for alignment
+        areas_generator = (shifter.extend_interval_fast(alignment, 0) for alignment
                            in alignments)
         pileup = Pileup(self.graph)
         for areas in areas_generator:
@@ -36,28 +36,6 @@ class ControlTrack(object):
         for new_pileup in backgrounds:
             pileup.update_max(new_pileup)
         return pileup
-
-    def generate_background_track(self):
-        pileup = Pileup(self.graph, [], 0)
-        genome_lambda = self.n_reads * self.fragment_length/self.genome_size
-        pileup.init_value(genome_lambda)
-        pileups = (self._get_pileup(extension) for extension in self.extensions)
-        (pileup.update_max(ext_pileup) for ext_pileup in pileup)
-        return pileup
-
-    def create_background_tracks(self):
-        for extension in self.extensions:
-            shift = extension//2
-            
-            alignments = IntervalCollection.create_generator_from_file(self.intervals)
-            obg_alignments = (alignment.path.to_obg(self.graph) for alignment in alignments)
-            pileup = Pileup(self.graph, [])
-            shifter = Shifter(self.graph, [], shift)
-            areas_list = (shifter.extend_interval(interval, 0) for interval in obg_alignments)
-            (pileup.add_areas(areas) for areas in areas_list)
-            pileup.scale(extension/self.d)
-            pileup.to_bed_graph(self._get_file_name(extension))
-            pileup.clear()
 
     def _get_file_name(self, extension):
         return "intervals_%sbg.bdg" % extension

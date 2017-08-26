@@ -6,18 +6,22 @@ def area_from_interval(interval, graph):
     areas = {}
     for i, region_path in enumerate(interval.region_paths):
         start = 0
-        try:
-            end = graph.node_size(region_path)
-        except:
-            print(interval)
-            raise
+        end = graph.node_size(region_path)
         if region_path == interval.start_position.region_path_id:
             start = interval.start_position.offset
         if region_path == interval.end_position.region_path_id:
             end = interval.end_position.offset
         areas[region_path] = [start, end]
-
     return areas
+
+
+def update_areas_fast(areas, new_areas):
+    for area, startend in new_areas.items():
+        if area not in areas:
+            areas[area] = startend
+            continue
+        areas[area] = [min(startend[0], areas[area][0]),
+                       max(startend[1], areas[area][1])]
 
 
 class Shifter(object):
@@ -77,4 +81,45 @@ class Shifter(object):
                 end_position, direction*self.d)
             update_areas(areas, new_areas)
 
+        return areas
+
+    def get_areas_from_point(self, point, is_reverse, length):
+        if is_reverse:
+            length = (self.graph.node_size(point.region_path_id)-point.offset)+length
+        else:
+            length = point.offset + length
+        visited = {}
+        self.traverser.extend_from_block(
+            point.region_path_id, length, is_reverse, visited)
+        visited = {node_id: min(self.graph.node_size(node_id), l)
+                   for node_id, l in visited.items()}
+        if is_reverse:
+            visited = {node_id: [self.graph.node_size(node_id)-l,
+                                 self.graph.node_size(node_id)]
+                       for node_id, l in visited.items()}
+            visited[point.region_path_id][1] = point.offset
+        else:
+            visited = {node_id: [0, l] for node_id, l in visited.items()}
+            visited[point.region_path_id][0] = point.offset
+        return visited
+
+    def extend_interval_fast(self, interval, local_direction=1):
+        """Direction: +1 forward, 0 both"""
+        assert local_direction in [-1, 0, 1]
+        interval.graph = self.graph
+        extension_length = self.d - interval.length()
+        assert extension_length > 0
+        areas = area_from_interval(interval, self.graph)
+        direction = interval.direction
+        end_position = interval.end_position if direction == 1 else interval.start_position
+        new_areas = self.get_areas_from_point(
+            end_position, direction == -1, extension_length)
+        update_areas_fast(areas, new_areas)
+
+        if local_direction == 0:
+            direction = interval.direction * -1
+            end_position = interval.end_position if direction == 1 else interval.start_position
+            new_areas = self.get_areas_from_point(
+                end_position, direction == -1, self.d)
+            update_areas_fast(areas, new_areas)
         return areas

@@ -167,7 +167,7 @@ class CallPeaks(object):
             self.sample_file_name)
 
         shifter = Shifter(self.ob_graph, self.info.fragment_length)
-        areas_list = (shifter.extend_interval(interval)
+        areas_list = (shifter.extend_interval_fast(interval)
                       for interval in alignments)
         pileup = Pileup(self.ob_graph)
         for areas in areas_list:
@@ -180,7 +180,6 @@ class CallPeaks(object):
 
 
 if __name__ == "__main__":
-
     chromosome = "chr2R"
     vg_graph = vg.Graph.create_from_file("dm_test_data/x_%s.json" % chromosome, 30000, chromosome)
     ofbg = vg_graph.get_offset_based_graph()
