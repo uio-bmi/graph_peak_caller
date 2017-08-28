@@ -49,6 +49,7 @@ class ExperimentInfo(object):
         try:
             fragment_length, read_length = get_shift_size_on_offset_based_graph(
                 graph, sample_file_name)
+            print("Found fragment length=%d, read length=%d" % (fragment_length, read_length))
         except RuntimeError:
             print("WARNING: To liptle data to compute shift. Setting to default.")
             fragment_length = 125
@@ -71,7 +72,7 @@ class CallPeaks(object):
         self._control_pileup = None
         self._sample_pileup = None
 
-    def run(self):
+    def run(self, out_file="final_peaks"):
         self.create_graph()
         self.preprocess()
         if self.info is None:
@@ -81,7 +82,7 @@ class CallPeaks(object):
         self.create_sample_pileup()
         self.scale_tracks()
         self.get_p_values()
-        self.call_peaks()
+        self.call_peaks(out_file)
 
     def preprocess(self):
         self.sample_intervals = self.remove_alignments_not_in_graph(self.sample_file_name)
@@ -91,6 +92,15 @@ class CallPeaks(object):
             self.control_intervals = self.remove_alignments_not_in_graph(self.control_file_name)
             self.control_file_name = self.filter_duplicates(self.control_intervals, write_to_file=self.control_file_name+"_filtered")
 
+        self.info.n_sample_reads = self.count_number_of_intervals_in_file(self.sample_file_name)
+        self.info.n_control_reads = self.count_number_of_intervals_in_file(self.control_file_name)
+
+    def count_number_of_intervals_in_file(self, interval_file_name):
+        n = 0
+        for interval in IntervalCollection.create_generator_from_file(interval_file_name):
+            n += 1
+        print("Number of intervals: %d" % n)
+        return n
 
     @enable_filewrite
     def remove_alignments_not_in_graph(self, intervals):
@@ -102,6 +112,7 @@ class CallPeaks(object):
 
         interval_hashes = {}
         n_duplicates = 0
+        n_reads_left = 0
         for interval in intervals:
             hash = interval.hash()
             if hash in interval_hashes:
@@ -109,6 +120,7 @@ class CallPeaks(object):
                 continue
 
             interval_hashes[hash] = True
+
             yield interval
 
     def _get_intervals_in_ob_graph(self, intervals):
@@ -160,13 +172,13 @@ class CallPeaks(object):
         #self.p_values.to_bed_graph(self._p_value_track)
         print(self.p_values)
 
-    def call_peaks(self, cutoff=0.05):
+    def call_peaks(self, out_file="final_peaks", cutoff=0.05):
         print("Calling peaks")
         self.p_values.threshold(-np.log10(cutoff))
         self.p_values.fill_small_wholes(self.info.read_length)
         self.p_values.remove_small_peaks(self.info.fragment_length)
         self.final_track = self.p_values
-        self.final_track.to_bed_file("final_track")
+        self.final_track.to_bed_file(out_file)
 
     def create_sample_pileup(self, save_to_file=False):
         print("Create sample pileup")
@@ -188,6 +200,7 @@ class CallPeaks(object):
 
     def _write_vg_alignments_as_intervals_to_bed_file(self):
         pass
+
 
 
 if __name__ == "__main__":

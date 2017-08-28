@@ -86,7 +86,8 @@ class MACSTests(object):
                                    self.n_intervals, self.fragment_length,
                                    self.read_length)
         self.caller = CallPeaks("lin_graph", "graph_intervals",
-                                experiment_info=self.info)
+                                experiment_info=self.info,
+                                verbose=True)
         self.caller.create_graph()
 
     # Tests
@@ -123,7 +124,7 @@ class MACSTests(object):
 
         self.caller.call_peaks()
         self._call_peaks()
-        self.assertEqualBedFiles("final_track", "lin_peaks.bed")
+        self.assertEqualBedFiles("final_peaks", "lin_peaks.bed")
 
     def linear_to_graph_interval(self, lin_interval):
         start = lin_interval.start
@@ -185,7 +186,11 @@ class MACSTests(object):
             self._convert_valued_interval(graph_interval)
         pileup1 = self._create_binary_track(linear_intervals)
         pileup2 = self._create_binary_track(graph_intervals)
-        print(np.where(pileup1 != pileup2))
+        indices = np.where(pileup1 != pileup2)
+        #for i in indices[0]:
+        #    print(i)
+
+        print(indices)
         print("Pileup1")
         print(pileup1)
         print("Pileup2")
@@ -262,8 +267,10 @@ class MACSTests(object):
         f.writelines(interval.to_file_line() for
                      interval in self.linear_intervals)
         f.close()
+        print("Wrote to lin_intervals.bed")
         graph_intervals = IntervalCollection(self.graph_intervals)
         graph_intervals.to_file("graph_intervals")
+        print("Wrote to graph_intervals")
 
     def create_linear_graph(self):
         nodes = {i: Block(self.node_size) for i in range(self.n_nodes)}
@@ -287,6 +294,8 @@ class MACSTests(object):
         self.linear_intervals = []
         self.graph_intervals = []
         self.n_duplicates = 0
+        i = 0
+        random.seed(1)
         for _ in range(self.n_intervals):
             direction = random.choice((-1, 1))
             if direction == -1:
@@ -298,11 +307,15 @@ class MACSTests(object):
             interval = SimpleInterval(start, end, direction)
             self.linear_intervals.append(interval)
             self.graph_intervals.append(self.linear_to_graph_interval(interval))
+
+            i += 1
+
             # Add duplicate
             if start % 10 == 0:
                 self.linear_intervals.append(interval)
                 self.graph_intervals.append(self.linear_to_graph_interval(interval))
                 self.n_duplicates += 1
+                i += 1
 
             # Add pair
             if (start % 2 == 0) or True:
@@ -320,6 +333,10 @@ class MACSTests(object):
                 #print(paired_interval)
                 #print("to")
                 #print(interval)
+                i += 1
+
+        self.n_intervals = i
+        print("Created totalt %d intervals " % i)
 
         assert len(self.linear_intervals) == len(self.graph_intervals)
 
@@ -332,7 +349,7 @@ class MACSTests(object):
         fragment_length_graph = info.fragment_length
 
         # Macs
-        command = ["macs2", "predictd", "-i", "lin_intervals.bed", "-g", str(self.genome_size), "-m", "1", "50"]
+        command = ["macs2", "predictd", "-i", "lin_intervals.bed", "-g", str(self.genome_size), "-m", "5", "50"]
         string_commmand = ' '.join(command)
         print(string_commmand)
         output = subprocess.check_output(command, stderr=subprocess.STDOUT)
@@ -350,6 +367,35 @@ class MACSTests(object):
     def profile(self):
         self.caller.run()
 
+    def _run_whole_macs(self):
+        command = "macs2 callpeak -t lin_intervals.bed -f BED -g " + str(self.genome_size) + " -n macstest -B -p 0.05 --slocal 5000 --llocal 10000"
+        print(command)
+        command = command.split()
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT)
+        output = output.decode("utf-8")
+        print(output)
+
+    def test_whole_pipeline(self):
+        #self.caller.run("final_peaks")
+        self.caller.create_graph()
+
+        self.caller.info = ExperimentInfo.find_info(
+            self.caller.ob_graph, self.caller.sample_file_name, self.caller.control_file_name)
+
+        self.caller.preprocess()
+
+        self.caller.create_sample_pileup()
+
+        self.assertPileupFilesEqual("sample_track.bdg", "macstest_treat_pileup.bdg")
+        self.caller.create_control(True)
+        #self.caller.scale_tracks()
+        #self.caller.get_p_values()
+        #self.caller.call_peaks("final_peaks")
+
+
+        #self._run_whole_macs()
+        #self.assertPileupFilesEqual("control_track.bdg", "macstest_control_lambda.bdg")
+        #self.assertEqualBedFiles("final_peaks", "test_peaks.narrowPeak")
 
 def small_test():
     return MACSTests(1000, 1000, 100000, read_length=15, fragment_length=20)
@@ -360,14 +406,15 @@ def big_test():
 
 
 if __name__ == "__main__":
-    test = small_test()
+    test = big_test()
     #cProfile.run("test.profile()", "profiling")
     #p = pstats.Stats("profiling")
     #p.sort_stats("tottime").print_stats()
     #exit()
 
-    test.test_filter_dup()
-    test.test_shift_estimation()
-    test.test_sample_pileup()
-    test.test_control_pileup()
-    test.test_call_peaks()
+    #test.test_filter_dup()
+    #test.test_shift_estimation()
+    #test.test_sample_pileup()
+    #test.test_control_pileup()
+    #test.test_call_peaks()
+    test.test_whole_pipeline()

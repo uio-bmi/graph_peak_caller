@@ -35,7 +35,7 @@ def get_shift_size_on_offset_based_graph(offset_based_graph, interval_file_name)
     print("%d intervals did not have translation to linear graph" % n_not_translation)
 
     bed_file.close()
-    command = ["macs2", "predictd", "-i", "tmp2.bed", "-g", str(linear_graph.number_of_basepairs()), "-m", "1", "50"]
+    command = ["macs2", "predictd", "-i", "tmp2.bed", "-g", str(linear_graph.number_of_basepairs()), "-m", "5", "50"]
     command_str = ' '.join(command)
     print("Macs shift command: " + command_str)
     output = subprocess.check_output(command, stderr=subprocess.STDOUT)
