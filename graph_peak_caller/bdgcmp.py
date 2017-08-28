@@ -59,6 +59,21 @@ def get_p_value_track(graph, control_file_name, sample_file_name, out_filename):
     output = subprocess.check_output(command)
     return Pileup.from_bed_graph(graph, out_filename)
 
+def get_p_value_track_from_pileups(graph, control_pileup, sample_pileup):
+    # Using old macs
+    from scipy.stats import poisson
+
+    p_value_pileup = Pileup(graph)
+    p_value_count = {}
+    for node_id in sample_pileup.get_count_arrays():
+        p_value_count[node_id] = -np.log10(1 -
+                                    poisson.cdf(sample_pileup.get_count_arrays()[node_id],
+                                                control_pileup.get_count_arrays()[node_id])
+                                    )
+
+    p_value_pileup.set_count_arrays(p_value_count)
+    return p_value_pileup
+
 
 def scale_down_tracks(ratio, track1, track2):
     if ratio > 1:

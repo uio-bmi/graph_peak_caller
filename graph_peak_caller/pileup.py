@@ -32,6 +32,17 @@ class Pileup(object):
 
         return len(self.__count_arrays) == len(other.__count_arrays)
 
+    def is_numerically_equal(self, other):
+        if False and self.graph != other.graph:
+            return False
+        for key, value in self.__count_arrays.items():
+            if key not in other.__count_arrays:
+                return False
+            if not all(np.isclose(value, other.__count_arrays[key])):
+                return False
+
+        return len(self.__count_arrays) == len(other.__count_arrays)
+
     def threshold(self, cutoff):
         for node_id, count_array in self.__count_arrays.items():
             self.__count_arrays[node_id] = count_array > cutoff

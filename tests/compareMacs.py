@@ -102,14 +102,14 @@ class MACSTests(object):
 
     def test_sample_pileup(self):
         # self.caller.create_graph()
-        self.caller.create_sample_pileup()
+        self.caller.create_sample_pileup(True)
         self._create_sample_pileup()
         self.assertPileupFilesEqual(
             self.caller._sample_track,
             "lin_sample_pileup.bdg")
 
     def test_control_pileup(self):
-        self.caller.create_control()
+        self.caller.create_control(True)
         self._create_control()
         assert isinstance(self.caller._control_track, str)
         self.assertPileupFilesEqual(self.caller._control_track,
@@ -185,7 +185,11 @@ class MACSTests(object):
             self._convert_valued_interval(graph_interval)
         pileup1 = self._create_binary_track(linear_intervals)
         pileup2 = self._create_binary_track(graph_intervals)
-        # print(np.where(pileup1 != pileup2))
+        print(np.where(pileup1 != pileup2))
+        print("Pileup1")
+        print(pileup1)
+        print("Pileup2")
+        print(pileup2)
         assert np.allclose(pileup1, pileup2)
 
     def _create_pileup(self, pileup_file, convert=False, limit=False, min_value=None):
@@ -348,7 +352,7 @@ class MACSTests(object):
 
 
 def small_test():
-    return MACSTests(1000, 1000, 1000, read_length=15, fragment_length=20)
+    return MACSTests(1000, 1000, 100000, read_length=15, fragment_length=20)
 
 
 def big_test():
@@ -356,14 +360,14 @@ def big_test():
 
 
 if __name__ == "__main__":
-    test = big_test()
-    cProfile.run("test.profile()", "profiling")
-    p = pstats.Stats("profiling")
-    p.sort_stats("tottime").print_stats()
-    exit()
+    test = small_test()
+    #cProfile.run("test.profile()", "profiling")
+    #p = pstats.Stats("profiling")
+    #p.sort_stats("tottime").print_stats()
+    #exit()
 
     test.test_filter_dup()
-    # test.test_shift_estimation()
+    test.test_shift_estimation()
     test.test_sample_pileup()
     test.test_control_pileup()
-    # test.test_call_peaks()
+    test.test_call_peaks()

@@ -68,6 +68,8 @@ class CallPeaks(object):
         self.verbose = verbose
         self.sample_intervals = []
         self.control_intervals = []
+        self._control_pileup = None
+        self._sample_pileup = None
 
     def run(self):
         self.create_graph()
@@ -131,7 +133,7 @@ class CallPeaks(object):
     def create_graph(self):
         self.ob_graph = offsetbasedgraph.Graph.from_file(self.graph_file_name)
 
-    def create_control(self):
+    def create_control(self, save_to_file=False):
         if self.verbose:
             print("Creating control")
         extensions = [self.info.fragment_length, 1000, 5000, 10000] if self.has_control else [5000, 10000]
@@ -143,15 +145,20 @@ class CallPeaks(object):
         tracks = control_track.generate_background_tracks()
         background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
         pileup = control_track.combine_backgrounds(tracks, background_value)
-        self._control_track = "control_track.bdg"
-        pileup.to_bed_graph(self._control_track)
-        # self._control_track = create_background_pileup_as_max_from_pileups(
-        #     self.ob_graph, control_track.generate_background_tracks(),
-        #     background_value, "control_track.bdg", self.verbose)
+
+        if save_to_file:
+            self._control_track = "control_track.bdg"
+            pileup.to_bed_graph(self._control_track)
+            print("Saved control pileup to " + self._control_track)
+
+        self._control_pileup = pileup
 
     def get_p_values(self):
         print("Get p-values")
-        self.p_values = get_p_value_track(self.ob_graph, self._control_track, self._sample_track, self._p_value_track)
+        #self.p_values = get_p_value_track(self.ob_graph, self._control_track, self._sample_track, self._p_value_track)
+        self.p_values = get_p_value_track_from_pileups(self.ob_graph, self._control_pileup, self._sample_pileupey )
+        #self.p_values.to_bed_graph(self._p_value_track)
+        print(self.p_values)
 
     def call_peaks(self, cutoff=0.05):
         print("Calling peaks")
@@ -161,7 +168,7 @@ class CallPeaks(object):
         self.final_track = self.p_values
         self.final_track.to_bed_file("final_track")
 
-    def create_sample_pileup(self):
+    def create_sample_pileup(self, save_to_file=False):
         print("Create sample pileup")
         alignments = IntervalCollection.create_generator_from_file(
             self.sample_file_name)
@@ -173,7 +180,11 @@ class CallPeaks(object):
         for areas in areas_list:
             pileup.add_areas(areas)
         self._sample_track = "sample_track.bdg"
-        pileup.to_bed_graph(self._sample_track)
+        if save_to_file:
+            pileup.to_bed_graph(self._sample_track)
+            print("Saved sample pileup to " + self._sample_track)
+
+        self._sample_pileup = pileup
 
     def _write_vg_alignments_as_intervals_to_bed_file(self):
         pass
