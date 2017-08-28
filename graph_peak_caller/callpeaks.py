@@ -156,7 +156,7 @@ class CallPeaks(object):
     def get_p_values(self):
         print("Get p-values")
         #self.p_values = get_p_value_track(self.ob_graph, self._control_track, self._sample_track, self._p_value_track)
-        self.p_values = get_p_value_track_from_pileups(self.ob_graph, self._control_pileup, self._sample_pileupey )
+        self.p_values = get_p_value_track_from_pileups(self.ob_graph, self._control_pileup, self._sample_pileup)
         #self.p_values.to_bed_graph(self._p_value_track)
         print(self.p_values)
 
