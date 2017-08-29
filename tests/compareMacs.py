@@ -83,8 +83,8 @@ class MACSTests(object):
         self.create_intervals()
         self.write_intervals()
         self.info = ExperimentInfo(self.genome_size, self.n_intervals,
-                                   self.n_intervals, self.fragment_length,
-                                   self.read_length)
+                                   self.n_intervals, self.fragment_length - 1,
+                                   self.read_length )
         self.caller = CallPeaks("lin_graph", "graph_intervals",
                                 experiment_info=self.info,
                                 verbose=True)
@@ -219,12 +219,18 @@ class MACSTests(object):
         graph_pileup = self._create_pileup(graph_file, convert=True)
         # assert not all(graph_pileup == graph_pileup[0])
         assert sum(graph_pileup) > 0
+        rtol = 0.001
 
-        if not np.allclose(linear_pileup, graph_pileup):
+        if not np.allclose(linear_pileup, graph_pileup, rtol=rtol):
+            different = np.abs(linear_pileup - graph_pileup) > rtol
             print(linear_pileup)
             print(graph_pileup)
-            print(np.where(linear_pileup != graph_pileup))
-        assert np.allclose(linear_pileup, graph_pileup), \
+            print(different)
+            print(np.where(different))
+            print("Number of indices different")
+            print(len(np.where(different)[0]))
+
+        assert np.allclose(linear_pileup, graph_pileup, rtol=rtol), \
             "Pileup in %s != pileup in %s" % (linear_file, graph_file)
 
     def _create_sample_pileup(self):
@@ -335,6 +341,9 @@ class MACSTests(object):
                 #print(interval)
                 i += 1
 
+        self.linear_intervals = sorted(self.linear_intervals, key = lambda x: (x.node_id, x.start))
+        self.graph_intervals = sorted(self.graph_intervals, key = lambda x: (x.region_paths[0], x.start_position.offset))
+
         self.n_intervals = i
         print("Created totalt %d intervals " % i)
 
@@ -368,7 +377,7 @@ class MACSTests(object):
         self.caller.run()
 
     def _run_whole_macs(self):
-        command = "macs2 callpeak -t lin_intervals.bed -f BED -g " + str(self.genome_size) + " -n macstest -B -p 0.05 --slocal 5000 --llocal 10000"
+        command = "macs2 callpeak -t lin_intervals.bed -f BED -g " + str(self.genome_size) + " -n macstest -B -p 0.05 --slocal 2500 --llocal 5000"
         print(command)
         command = command.split()
         output = subprocess.check_output(command, stderr=subprocess.STDOUT)
@@ -377,6 +386,12 @@ class MACSTests(object):
 
     def test_whole_pipeline(self):
         #self.caller.run("final_peaks")
+        """
+        self._run_whole_macs()
+
+        #self._create_sample_pileup()
+
+
         self.caller.create_graph()
 
         self.caller.info = ExperimentInfo.find_info(
@@ -384,16 +399,20 @@ class MACSTests(object):
 
         self.caller.preprocess()
 
-        self.caller.create_sample_pileup()
+        self.caller.create_sample_pileup(True)
 
         self.assertPileupFilesEqual("sample_track.bdg", "macstest_treat_pileup.bdg")
         self.caller.create_control(True)
+        """
+
+        self.assertPileupFilesEqual("control_track.bdg", "macstest_control_lambda.bdg")
+
         #self.caller.scale_tracks()
         #self.caller.get_p_values()
         #self.caller.call_peaks("final_peaks")
 
 
-        #self._run_whole_macs()
+
         #self.assertPileupFilesEqual("control_track.bdg", "macstest_control_lambda.bdg")
         #self.assertEqualBedFiles("final_peaks", "test_peaks.narrowPeak")
 
