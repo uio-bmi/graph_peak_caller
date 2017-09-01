@@ -130,6 +130,7 @@ class CallPeaks(object):
                 yield interval
 
     def scale_tracks(self):
+        print("Scaling tracks to ratio: %d / %d" % (self.info.n_sample_reads, self.info.n_control_reads))
         ratio = self.info.n_sample_reads/self.info.n_control_reads
         scale_down_tracks(ratio, self.sample_file_name, self.control_file_name)
 
@@ -148,7 +149,7 @@ class CallPeaks(object):
     def create_control(self, save_to_file=False):
         if self.verbose:
             print("Creating control")
-        extensions = [self.info.fragment_length, 1000, 5000, 10000] if self.has_control else [5000, 10000]
+        extensions = [self.info.fragment_length, 1000, 5000, 10000] if self.has_control else [5000]
 
         control_track = ControlTrack(
             self.ob_graph, self.control_file_name,
@@ -156,6 +157,11 @@ class CallPeaks(object):
 
         tracks = control_track.generate_background_tracks()
         background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
+        print("Background value: %.4f" % background_value)
+        print("N control reads: %d"  % self.info.n_control_reads)
+        print(self.info.fragment_length)
+        print(self.info.genome_size)
+
         pileup = control_track.combine_backgrounds(tracks, background_value)
 
         if save_to_file:
