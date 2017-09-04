@@ -43,6 +43,11 @@ class Pileup(object):
 
         return len(self.__count_arrays) == len(other.__count_arrays)
 
+    def map_values(self, value_map):
+        vectorized_map = np.vectorize(value_map.get)
+        for node_id, values in self.__count_arrays.items():
+            self.__count_arrays[node_id] = vectorized_map(values)
+
     def threshold(self, cutoff):
         for node_id, count_array in self.__count_arrays.items():
             self.__count_arrays[node_id] = count_array > cutoff
@@ -223,6 +228,12 @@ class Pileup(object):
             ends = changes[end_idxs]
             areas[node_id] = [int(i) for i in chain.from_iterable(zip(starts, ends))]
         return areas
+
+    def count_values(self):
+        value_dict = defaultdict(int)
+        for node_id, values in self.__count_arrays.items():
+            for v in values:
+                value_dict[v] += 1
 
     def areas_to_intervals(self, areas, include_partial_stubs):
         f = all if include_partial_stubs else any

@@ -82,6 +82,7 @@ class CallPeaks(object):
         self.create_sample_pileup()
         self.scale_tracks()
         self.get_p_values()
+        self.get_q_values()
         self.call_peaks(out_file)
 
     def preprocess(self):
@@ -171,9 +172,11 @@ class CallPeaks(object):
 
         self._control_pileup = pileup
 
+    def get_q_values(self):
+        get_q_values_track_from_p_values(self.p_values)
+
     def get_p_values(self):
         print("Get p-values")
-        #self.p_values = get_p_value_track(self.ob_graph, self._control_track, self._sample_track, self._p_value_track)
         self.p_values = get_p_value_track_from_pileups(self.ob_graph, self._control_pileup, self._sample_pileup)
         #self.p_values.to_bed_graph(self._p_value_track)
         print(self.p_values)
