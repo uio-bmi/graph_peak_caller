@@ -65,6 +65,7 @@ class CallPeaks(object):
         self.has_control = control_file_name is not None
         self.control_file_name = control_file_name if self.has_control else sample_file_name
         self._p_value_track = "p_value_track"
+        self._q_value_track = "q_value_track"
         self.info = experiment_info
         self.verbose = verbose
         self.sample_intervals = []
@@ -209,7 +210,6 @@ class CallPeaks(object):
 
     def _write_vg_alignments_as_intervals_to_bed_file(self):
         pass
-
 
 
 if __name__ == "__main__":

@@ -75,23 +75,28 @@ def get_p_value_track_from_pileups(graph, control_pileup, sample_pileup):
     return p_value_pileup
 
 
-def get_q_values_track_from_p_values(p_value_track):
+def create_p_to_q_dict(p_value_counts):
     p_to_q_values = {}
-    p_value_counts = p_value_track.count_values()
     sorted_p_values = sorted(p_value_counts.keys(), reverse=True)
     rank = 1
     logN = np.log10(sum(p_value_counts.values()))
     pre_q = None
     for p_value in sorted_p_values:
         value_count = p_value_counts[p_value]
-        q_value = p_value + (np.log10(rank) + logN)
+        q_value = p_value + (np.log10(rank) - logN)
         if rank == 1:
-            q_value = max(0, min(pre_q, q_value))
-        else:
             q_value = max(0, q_value)
+        else:
+            q_value = max(0, min(pre_q, q_value))
         p_to_q_values[p_value] = q_value
         pre_q = q_value
         rank += value_count
+    return p_to_q_values
+
+
+def get_q_values_track_from_p_values(p_value_track):
+    p_value_counts = p_value_track.count_values()
+    p_to_q_values = create_p_to_q_dict(p_value_counts)
     p_value_track.map_values(p_to_q_values)
 
 

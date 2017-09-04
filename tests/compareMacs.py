@@ -3,6 +3,7 @@ import pstats
 from offsetbasedgraph import Graph, Block, Position, Interval
 from offsetbasedgraph.interval import IntervalCollection
 from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo
+from graph_peak_caller.pileup import Pileup
 import subprocess
 import random
 import re
@@ -117,11 +118,20 @@ class MACSTests(object):
                                     "lin_control_pileup.bdg", min_value=self.background)
 
     def test_call_peaks(self):
+        self.assertPileupFilesEqual("control_track.bdg", "macstest_control_lambda.bdg")
+        self.assertPileupFilesEqual("sample_track.bdg", "macstest_treat_pileup.bdg")
+        self.caller._control_pileup = Pileup.from_bed_graph(self.graph, "control_track.bdg")
+        self.caller._sample_pileup = Pileup.from_bed_graph(self.graph, "sample_track.bdg")
         self.caller.get_p_values()
-        self._get_scores()
-        # self.assertPileupFilesEqual(self.caller._p_value_track,
+        #self.caller.p_values.to_bed_graph(self.caller._p_value_track)
+        self._get_scores("qpois")
+        #self.assertPileupFilesEqual(self.caller._p_value_track,
         # "lin_scores.bdg")
 
+        self.caller.get_q_values()
+        self.caller.p_values.to_bed_graph(self.caller._q_value_track)
+        self.assertPileupFilesEqual(self.caller._q_value_track,
+                                    "lin_scores.bdg")
         self.caller.call_peaks()
         self._call_peaks()
         self.assertEqualBedFiles("final_peaks", "lin_peaks.bed")
@@ -229,6 +239,8 @@ class MACSTests(object):
             print(np.where(different))
             print("Number of indices different")
             print(len(np.where(different)[0]))
+            if not len(np.where(different)[0]):
+                return
             print("Differences:")
 
             #for different_index in np.where(different)[0]:
@@ -247,8 +259,9 @@ class MACSTests(object):
         print(command)
         subprocess.check_output(command.split())
 
-    def _get_scores(self):
-        command = "macs2 bdgcmp -t lin_sample_pileup.bdg -c lin_control_pileup.bdg -m ppois -o lin_scores.bdg"
+    def _get_scores(self, t="qpois"):
+        # command = "macs2 bdgcmp -t lin_sample_pileup.bdg -c lin_control_pileup.bdg -m ppois -o lin_scores.bdg"
+        command = "macs2 bdgcmp -t macstest_treat_pileup.bdg -c macstest_control_lambda.bdg  -m %s -o lin_scores.bdg" % t
         print(command)
         subprocess.check_output(command.split())
 
@@ -259,21 +272,20 @@ class MACSTests(object):
         print(command)
         subprocess.check_output(command.split())
 
-
     def _create_control(self):
-        for ext in [2500, 5000]:
+        for ext in [2500]:
             command = "macs2 pileup -i %s -o %s -B --extsize %s" % (
                 "lin_intervals.bed", "lin_control_pileup%s.bdg" % ext, ext)
             subprocess.check_output(command.split())
             command = "macs2 bdgopt -i lin_control_pileup%s.bdg -m multiply -p %s -o lin_control_pileup%s.bdg" % (
                 ext, (self.fragment_length-1)/(ext*2), ext)
             subprocess.check_output(command.split())
-        command = "macs2 bdgcmp -m max -t lin_control_pileup2500.bdg -c lin_control_pileup5000.bdg -o lin_control_pileup.bdg"
+        # command = "macs2 bdgcmp -m max -t lin_control_pileup2500.bdg -c lin_control_pileup5000.bdg -o lin_control_pileup.bdg"
 
-        subprocess.check_output(command.split())
-
+        # subprocess.check_output(command.split())
+        print("##############", self.background)
         self.background = self.n_intervals * (self.fragment_length-1) / self.genome_size
-        command = "macs2 bdgopt -i lin_control_pileup.bdg -m max -p %s -o lin_control_pileup.bdg" % self.background
+        command = "macs2 bdgopt -i lin_control_pileup5000.bdg -m max -p %s -o lin_control_pileup.bdg" % self.background
         subprocess.check_output(command.split())
 
     def write_intervals(self):
@@ -359,14 +371,14 @@ class MACSTests(object):
 
     def test_shift_estimation(self):
         self.setup()
-        caller = CallPeaks("lin_graph", "graph_intervals")
+        caller = CallPeaks("lin_graph", "graph_intervals_filtered")
         caller.create_graph()
         info = ExperimentInfo.find_info(caller.ob_graph, caller.sample_file_name, caller.control_file_name)
         read_length_graph = info.read_length
         fragment_length_graph = info.fragment_length
 
         # Macs
-        command = ["macs2", "predictd", "-i", "lin_intervals.bed", "-g", str(self.genome_size), "-m", "5", "50"]
+        command = ["macs2", "predictd", "-i", "lin_intervals_dup.bed", "-g", str(self.genome_size), "-m", "5", "50"]
         string_commmand = ' '.join(command)
         print(string_commmand)
         output = subprocess.check_output(command, stderr=subprocess.STDOUT)
@@ -385,7 +397,7 @@ class MACSTests(object):
         self.caller.run()
 
     def _run_whole_macs(self):
-        command = "macs2 callpeak -t lin_intervals.bed -f BED -g " + str(self.genome_size) + " -n macstest -B -p 0.05 --llocal 5000"
+        command = "macs2 callpeak -t lin_intervals.bed -f BED -g " + str(self.genome_size) + " -n macstest -B -q 0.05 --llocal 5000"
         print(command)
         command = command.split()
         output = subprocess.check_output(command, stderr=subprocess.STDOUT)
@@ -408,6 +420,7 @@ class MACSTests(object):
         self.caller.scale_tracks()
         self.assertPileupFilesEqual("control_track.bdg", "macstest_control_lambda.bdg")
         self.caller.get_p_values()
+        self.caller.get_q_values()
         self.caller.call_peaks("final_peaks")
 
         self.assertEqualBedFiles("final_peaks", "macstest_peaks.narrowPeak")
@@ -427,9 +440,9 @@ if __name__ == "__main__":
     #p.sort_stats("tottime").print_stats()
     #exit()
 
-    #test.test_filter_dup()
-    #test.test_shift_estimation()
-    #test.test_sample_pileup()
-    #test.test_control_pileup()
-    #test.test_call_peaks()
+    # test.test_filter_dup()
+    # test.test_shift_estimation()
+    # test.test_sample_pileup()
+    # test.test_control_pileup()
+    # test.test_call_peaks()
     test.test_whole_pipeline()
