@@ -394,7 +394,7 @@ class MACSTests(object):
 
     def test_whole_pipeline(self):
         #self.caller.run("final_peaks")
-        """
+
         self._run_whole_macs()
 
         self.caller.create_graph()
@@ -409,7 +409,7 @@ class MACSTests(object):
         self.assertPileupFilesEqual("control_track.bdg", "macstest_control_lambda.bdg")
         self.caller.get_p_values()
         self.caller.call_peaks("final_peaks")
-        """
+
         self.assertEqualBedFiles("final_peaks", "macstest_peaks.narrowPeak")
 
 def small_test():
