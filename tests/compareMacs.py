@@ -65,6 +65,7 @@ class ValuedInterval(SimpleInterval):
         node_id, start, end, value = line.split("\t")
         obj = cls(int(start), int(end), value)
         obj.node_id = int(node_id)
+
         return obj
 
 
@@ -309,7 +310,7 @@ class MACSTests(object):
         self.graph_intervals = []
         self.n_duplicates = 0
         i = 0
-        random.seed(1)
+        random.seed(2)
         for _ in range(self.n_intervals):
             direction = random.choice((-1, 1))
             if direction == -1:
@@ -429,7 +430,7 @@ if __name__ == "__main__":
 
     #test.test_filter_dup()
     #test.test_shift_estimation()
-    #test.test_sample_pileup()
-    #test.test_control_pileup()
-    #test.test_call_peaks()
-    test.test_whole_pipeline()
+    test.test_sample_pileup()
+    test.test_control_pileup()
+    test.test_call_peaks()
+    #test.test_whole_pipeline()
