@@ -193,7 +193,7 @@ class CallPeaks(object):
 
         print("N control reads: %d" % self.info.n_control_reads)
 
-        tracks = control_track.generate_background_tracks_simultatniously()
+        tracks = control_track.generate_background_tracks()
         background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
         print("Background value: %.4f" % background_value)
         print("N control reads: %d"  % self.info.n_control_reads)
