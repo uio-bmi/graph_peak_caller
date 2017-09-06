@@ -91,16 +91,20 @@ class CallPeaks(object):
         self.call_peaks(out_file)
 
     def preprocess(self):
+        print("Preprocess")
         self.sample_intervals = self.remove_alignments_not_in_graph(self.sample_file_name)
-        self.sample_file_name = self.filter_duplicates(self.sample_intervals, write_to_file=self.sample_file_name+"_filtered")
+        self.sample_intervals = self.filter_duplicates(self.sample_intervals)
 
         if self.control_file_name is not None:
-            self.control_intervals = self.remove_alignments_not_in_graph(self.control_file_name)
-            self.control_file_name = self.filter_duplicates(self.control_intervals, write_to_file=self.control_file_name+"_filtered")
+            self.control_intervals = self.remove_alignments_not_in_graph(self.control_file_name, is_control=True)
+            self.control_intervals = self.filter_duplicates(self.control_intervals, is_control=True)
 
-        self.info.n_sample_reads = self.count_number_of_intervals_in_file(self.sample_file_name)
-        self.info.n_control_reads = self.count_number_of_intervals_in_file(self.control_file_name)
+        #self.info.n_sample_reads = self.count_number_of_intervals_in_file(self.sample_file_name)
+        #self.info.n_control_reads = self.count_number_of_intervals_in_file(self.control_file_name)
 
+
+
+    # DELETE
     def count_number_of_intervals_in_file(self, interval_file_name):
         n = 0
         for interval in IntervalCollection.from_file(interval_file_name):
@@ -109,13 +113,19 @@ class CallPeaks(object):
         return n
 
     @enable_filewrite
-    def remove_alignments_not_in_graph(self, intervals):
+    def remove_alignments_not_in_graph(self, intervals, is_control=False):
         for interval in self._get_intervals_in_ob_graph(intervals):
-            yield interval
+            if not interval is False:
+                yield interval
+            else:
+                if is_control:
+                    self.info.n_control_reads -= 1
+                else:
+                    self.info.n_sample_reads -= 1
+
 
     @enable_filewrite
-    def filter_duplicates(self, intervals):
-
+    def filter_duplicates(self, intervals, is_control=False):
         interval_hashes = {}
         n_duplicates = 0
         n_reads_left = 0
@@ -123,6 +133,11 @@ class CallPeaks(object):
             hash = interval.hash()
             if hash in interval_hashes:
                 n_duplicates += 1
+                #print("Removing duplicate")
+                if is_control:
+                    self.info.n_control_reads -= 1
+                else:
+                    self.info.n_sample_reads -= 1
                 continue
 
             interval_hashes[hash] = True
@@ -134,6 +149,8 @@ class CallPeaks(object):
         for interval in intervals:
             if interval.region_paths[0] in self.ob_graph.blocks:
                 yield interval
+            else:
+                yield False
 
     def scale_tracks(self, update_saved_files=False):
         print("Scaling tracks to ratio: %d / %d" % (self.info.n_sample_reads, self.info.n_control_reads))
@@ -171,10 +188,12 @@ class CallPeaks(object):
         extensions = [self.info.fragment_length, 2500, 5000] if self.has_control else [5000]
 
         control_track = ControlTrack(
-            self.ob_graph, self.control_file_name,
+            self.ob_graph, self.control_intervals,
             self.info.fragment_length, extensions)
 
-        tracks = control_track.generate_background_tracks()
+        print("N control reads: %d" % self.info.n_control_reads)
+
+        tracks = control_track.generate_background_tracks_simultatniously()
         background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
         print("Background value: %.4f" % background_value)
         print("N control reads: %d"  % self.info.n_control_reads)
@@ -209,8 +228,9 @@ class CallPeaks(object):
 
     def create_sample_pileup(self, save_to_file=False):
         print("Create sample pileup")
-        alignments = IntervalCollection.from_file(
-            self.sample_file_name)
+        #alignments = IntervalCollection.from_file(
+        #    self.sample_file_name)
+        alignments = self.sample_intervals
 
         shifter = Shifter(self.ob_graph, self.info.fragment_length)
         areas_list = (shifter.extend_interval_fast(interval)

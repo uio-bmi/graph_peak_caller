@@ -8,27 +8,49 @@ class ControlTrack(object):
         self.graph = graph
 
         self.intervals = intervals
-        assert isinstance(intervals, str), "Intervals must be a file name"
+        #assert isinstance(intervals, str), "Intervals must be a file name"
         #if isinstance(intervals, str):
-        #    self.intervals = IntervalCollection.create_generator_from_file(intervals)
+        #    self.intervals = IntervalCollection.from_file(intervals)
+
         self.fragment_length = fragment_length
         self.extensions = extensions
 
+        self.background_pileups = []
+
     def _get_pileup(self, extension):
-        """TODO: read obg_alignments directly"""
-        alignments = IntervalCollection.from_file(self.intervals)
+
         shifter = Shifter(self.graph, extension)
         areas_generator = (shifter.extend_interval_fast(alignment, 0) for alignment
-                           in alignments)
+                           in self.intervals)
         pileup = Pileup(self.graph)
         for areas in areas_generator:
             pileup.add_areas(areas)
         pileup.scale(self.fragment_length/(extension*2))
         return pileup
 
+    def _get_pileups(self, extensions):
+        # Creating all pileups simultaniously. One fore each extension
+
+        shifters = [Shifter(self.graph, extension) for extension in extensions]
+        areas_generator = (([shifter.extend_interval_fast(alignment, 0) for shifter in shifters]
+                                for alignment in self.intervals))
+        pileups = [Pileup(self.graph) for _ in extensions]
+        for areas in areas_generator:
+            for i in range(0, len(areas)):
+                pileups[i].add_areas(areas[i])
+
+        for i in range(0, len(pileups)):
+            pileups[i].scale(self.fragment_length/(extensions[i]*2))
+
+        return pileups
+
     def generate_background_tracks(self):
         extensions = [ext//2 for ext in self.extensions]
         return (self._get_pileup(extension) for extension in extensions)
+
+    def generate_background_tracks_simultatniously(self):
+        extensions = [ext//2 for ext in self.extensions]
+        return self._get_pileups(extensions)
 
     def combine_backgrounds(self, backgrounds, base_value):
         pileup = Pileup(self.graph)

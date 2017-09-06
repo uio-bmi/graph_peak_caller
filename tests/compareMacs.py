@@ -347,7 +347,7 @@ class MACSTests(object):
             reads.append(interval)
 
             # Add duplicate
-            if start % 50 == 0 and False:
+            if start % 50 == 0:
                 reads.append(interval)
 
             # Add pair
@@ -429,12 +429,17 @@ class MACSTests(object):
         self._run_whole_macs()
         self.caller.create_graph()
         self.caller.preprocess()
-        self.caller.create_sample_pileup(True)
 
+        self.caller.create_sample_pileup(True)
+        print(self.caller.info.n_control_reads)
         self.caller.create_control(True)
+        print(self.caller.info.n_control_reads)
         self.caller.scale_tracks(update_saved_files=True)
         self.assertPileupFilesEqual("sample_track.bdg", "macstest_treat_pileup.bdg")
+
         self.assertPileupFilesEqual("control_track.bdg", "macstest_control_lambda.bdg")
+
+
         self.caller.get_p_values()
         self.caller.get_q_values()
         self.caller.call_peaks("final_peaks")
@@ -442,7 +447,7 @@ class MACSTests(object):
         self.assertEqualBedFiles("final_peaks", "macstest_peaks.narrowPeak")
 
 def small_test(with_control=False):
-    return MACSTests(1000, 1000, 100000, read_length=15, fragment_length=20, with_control=with_control)
+    return MACSTests(1000, 1000, 100000, read_length=6, fragment_length=20, with_control=with_control)
 
 
 def big_test(with_control=False):
