@@ -130,8 +130,8 @@ class MACSTests(object):
 
         # self.caller.get_q_values()
         self.caller.q_values.to_bed_graph(self.caller._q_value_track)
-        # self.assertPileupFilesEqual(self.caller._q_value_track,
-        #                             "lin_scores.bdg")
+        self.assertPileupFilesEqual(self.caller._q_value_track,
+                                    "lin_scores.bdg")
         # self.caller.call_peaks()
         # self._call_peaks()
         # self.assertEqualBedFiles("final_peaks", "lin_peaks.bed")
@@ -434,13 +434,12 @@ def small_test():
 
 
 def big_test():
-    return MACSTests(10000, 5000, 100000, read_length=51, fragment_length=121)
-
+    return MACSTests(10000*2500, 2, 100000, read_length=51, fragment_length=121)
 
 if __name__ == "__main__":
     test = big_test()
-
-    test.test_call_peaks()
+    # test.test_whole_pipeline()
+    # test.test_call_peaks()
     cProfile.run("test.test_call_peaks()", "profiling")
     #  cProfile.run("test.profile()", "profiling")
     p = pstats.Stats("profiling")

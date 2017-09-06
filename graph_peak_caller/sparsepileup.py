@@ -19,7 +19,6 @@ class ValuedIndexes(object):
         if np.any(self.indexes != other.indexes):
             return False
 
-        print(type(self.start_value))
         if isinstance(self.start_value, np.ndarray):
             if np.any(self.start_value != other.start_value):
                 return False
@@ -158,18 +157,18 @@ class SparsePileup(Pileup):
 
 class SparseControlSample(SparsePileup):
     def get_p_dict(self):
-        p_value_dict = {}
+        p_value_dict = defaultdict(dict)
         count_dict = defaultdict(int)
         for node_id, valued_indexes in self.data.items():
             start = 0
             val = valued_indexes.start_value
             for start, end, val in valued_indexes:
-                sval = str(val)
-                if sval not in p_value_dict:
-                    p_value_dict[sval] = -np.log10(
+                # sval = str(val)
+                if val[1] not in p_value_dict[val[0]]:
+                    p_value_dict[val[0]][val[1]] = -np.log10(
                         1 - poisson.cdf(val[1],
                                         val[0]))
-                p = p_value_dict[sval]
+                p = p_value_dict[val[0]][val[1]]
                 count_dict[p] += end-start
         self.p_value_dict = p_value_dict
         self.count_dict = count_dict
@@ -184,11 +183,10 @@ class SparseControlSample(SparsePileup):
         for p_value in sorted_p_values:
             value_count = p_value_counts[p_value]
             q_value = p_value + (np.log10(rank) - logN)
-            print(p_value, np.log10(rank), logN, q_value)
             if rank == 1:
-                q_value = max(0, q_value)
+                q_value = max(0.0, q_value)
             else:
-                q_value = max(0, min(pre_q, q_value))
+                q_value = max(0.0, min(pre_q, q_value))
             p_to_q_values[p_value] = q_value
             pre_q = q_value
             rank += value_count
@@ -197,20 +195,18 @@ class SparseControlSample(SparsePileup):
     def get_q_values(self):
         def translation(x):
             return self.p_to_q_values[
-                self.p_value_dict[str(x)]]
+                self.p_value_dict[x[0]][x[1]]]
         # f = np.vectorize(translation)
         for valued_indexes in self.data.values():
             valued_indexes.values = np.apply_along_axis(
                 translation, 1, valued_indexes.values)
             valued_indexes.start_value = translation(
                 valued_indexes.start_value)
+            valued_indexes.sanitize()
 
     def get_scores(self):
-        print("GETTING P VALUES")
         self.get_p_dict()
-        print("GETTING Q VALUES")
         self.get_p_to_q_values()
-        print("SETTING Q VALUES")
         self.get_q_values()
 
     def to_bed_graph(self, filename):
@@ -225,7 +221,6 @@ class SparseControlSample(SparsePileup):
 
     @classmethod
     def from_control_and_sample(cls, control, sample):
-        print("GETTING SPARSE PILEUP")
         sparse_pileup = cls(control.graph)
         for node_id in sparse_pileup.graph.blocks:
             control_counts = control.get_count_array(node_id)
