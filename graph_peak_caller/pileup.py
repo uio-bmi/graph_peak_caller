@@ -60,6 +60,12 @@ class Pileup(object):
     def get_count_arrays(self):
         return self.__count_arrays
 
+    def update_max_value(self, value):
+        for node_id, count_array in self.__count_arrays.items():
+            self.__count_arrays[node_id] = np.maximum(
+                count_array,
+                value)
+
     def update_max(self, other):
         for node_id, count_array in self.__count_arrays.items():
             self.__count_arrays[node_id] = np.maximum(

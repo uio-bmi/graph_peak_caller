@@ -195,11 +195,6 @@ class CallPeaks(object):
 
         tracks = control_track.generate_background_tracks()
         background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
-        print("Background value: %.4f" % background_value)
-        print("N control reads: %d"  % self.info.n_control_reads)
-        print(self.info.fragment_length)
-        print(self.info.genome_size)
-
         pileup = control_track.combine_backgrounds(tracks, background_value)
 
         if save_to_file:

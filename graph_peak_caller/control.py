@@ -29,9 +29,18 @@ class ControlTrack(object):
         extensions = [ext//2 for ext in self.extensions]
         return self._get_pileups(extensions)
 
-    def combine_backgrounds(self, backgrounds, base_value):
+    def _combine_backgrounds(self, background_pileups, base_value):
         pileup = Pileup(self.graph)
         pileup.init_value(base_value)
-        for new_pileup in backgrounds:
+        for new_pileup in background_pileups:
             pileup.update_max(new_pileup)
         return pileup
+
+    def combine_backgrounds(self, background_pileups, base_value):
+        max_pileup = background_pileups[0]
+        for pileup in background_pileups[1:]:
+            max_pileup.update_max(pileup)
+
+        max_pileup.update_max_value(base_value)
+
+        return max_pileup
