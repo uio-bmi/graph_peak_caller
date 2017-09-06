@@ -66,13 +66,15 @@ class ValuedInterval(SimpleInterval):
         node_id, start, end, value = line.split("\t")
         obj = cls(int(start), int(end), value)
         obj.node_id = int(node_id)
+
         return obj
 
 
 class MACSTests(object):
-    def __init__(self, node_size, n_nodes, n_intervals, read_length=15, fragment_length=50):
+    def __init__(self, node_size, n_nodes, n_intervals, read_length=15, fragment_length=50, with_control=False):
         self.node_size = node_size
         self.n_nodes = n_nodes
+        self.with_control = with_control
         self.n_intervals = n_intervals
         self.read_length = read_length
         self.genome_size = node_size*n_nodes
@@ -84,11 +86,17 @@ class MACSTests(object):
         self.create_intervals()
         self.write_intervals()
         self.info = ExperimentInfo(self.genome_size, self.n_intervals,
-                                   self.n_intervals, self.fragment_length - 1,
+                                   self.n_intervals_control, self.fragment_length - 1,
                                    self.read_length )
-        self.caller = CallPeaks("lin_graph", "graph_intervals",
-                                experiment_info=self.info,
-                                verbose=True)
+
+        control_file_name = None
+        if self.with_control:
+            control_file_name = "graph_intervals_control"
+
+        self.caller = CallPeaks("lin_graph", "graph_intervals", control_file_name,
+                            experiment_info=self.info,
+                            verbose=True)
+
         self.caller.create_graph()
 
     # Tests
@@ -172,7 +180,7 @@ class MACSTests(object):
             assert interval in linear_intervals
 
     def assertEqualIntervalFiles(self, graph_file, linear_file):
-        graph_intervals = IntervalCollection.create_generator_from_file(
+        graph_intervals = IntervalCollection.from_file(
             graph_file)
         linear_intervals = (SimpleInterval.from_file_line(line) for
                             line in open(linear_file).readlines())
@@ -296,6 +304,15 @@ class MACSTests(object):
         print("Wrote to lin_intervals.bed")
         graph_intervals = IntervalCollection(self.graph_intervals)
         graph_intervals.to_file("graph_intervals")
+
+        if self.with_control:
+            f = open("lin_intervals_control.bed", "w")
+            f.writelines(interval.to_file_line() for
+                         interval in self.linear_intervals_control)
+            f.close()
+            graph_intervals = IntervalCollection(self.graph_intervals_control)
+            graph_intervals.to_file("graph_intervals_control")
+
         print("Wrote to graph_intervals")
 
     def create_linear_graph(self):
@@ -316,13 +333,9 @@ class MACSTests(object):
         region_paths = list(range(start_rp, end_rp+1))
         return Interval(start_pos, end_pos, region_paths, direction=direction)
 
-    def create_intervals(self):
-        self.linear_intervals = []
-        self.graph_intervals = []
-        self.n_duplicates = 0
-        i = 0
-        random.seed(1)
-        for _ in range(self.n_intervals):
+    def create_random_linear_reads(self, n_reads, include_pairs=False):
+        reads = []
+        for i in range(n_reads):
             direction = random.choice((-1, 1))
             if direction == -1:
                 start = random.randint(self.fragment_length-self.read_length,
@@ -331,20 +344,14 @@ class MACSTests(object):
                 start = random.randint(0, self.genome_size-self.read_length-self.fragment_length)
             end = start+self.read_length
             interval = SimpleInterval(start, end, direction)
-            self.linear_intervals.append(interval)
-            self.graph_intervals.append(self.linear_to_graph_interval(interval))
-
-            i += 1
+            reads.append(interval)
 
             # Add duplicate
-            if start % 10 == 0 and False:
-                self.linear_intervals.append(interval)
-                self.graph_intervals.append(self.linear_to_graph_interval(interval))
-                self.n_duplicates += 1
-                i += 1
+            if start % 50 == 0:
+                reads.append(interval)
 
             # Add pair
-            if (start % 2 == 0) or True:
+            if include_pairs:
                 if direction == 1:
                     start = start + self.fragment_length - self.read_length
                 else:
@@ -353,21 +360,31 @@ class MACSTests(object):
                 end = start + self.read_length
                 direction = direction * -1
                 paired_interval = SimpleInterval(start, end, direction)
-                self.linear_intervals.append(paired_interval)
-                self.graph_intervals.append(self.linear_to_graph_interval(paired_interval))
-                #print("Creating paired interval")
-                #print(paired_interval)
-                #print("to")
-                #print(interval)
-                i += 1
+                reads.append(paired_interval)
 
+        return reads
+
+    def create_intervals(self):
+        self.linear_intervals = self.create_random_linear_reads(self.n_intervals, include_pairs=True)
+        dummy_end = SimpleInterval(self.genome_size - self.read_length, self.genome_size, -1)
+        self.linear_intervals.append(dummy_end)
+        self.graph_intervals = [self.linear_to_graph_interval(i) for i in self.linear_intervals]
+        self.n_intervals = len(self.linear_intervals)
         self.linear_intervals = sorted(self.linear_intervals, key = lambda x: (x.node_id, x.start))
         self.graph_intervals = sorted(self.graph_intervals, key = lambda x: (x.region_paths[0], x.start_position.offset))
+        print("Created %d intervals " % self.n_intervals)
 
-        self.n_intervals = i
-        print("Created totalt %d intervals " % i)
 
-        assert len(self.linear_intervals) == len(self.graph_intervals)
+        if self.with_control:
+            self.linear_intervals_control = self.create_random_linear_reads(self.n_intervals // 2, include_pairs=False)
+
+            self.linear_intervals_control.append(dummy_end)
+
+            self.graph_intervals_control = [self.linear_to_graph_interval(i) for i in self.linear_intervals_control]
+            self.n_intervals_control = len(self.linear_intervals_control)
+            print("Created %d control intervals " % self.n_intervals_control)
+        else:
+            self.n_intervals_control = self.n_intervals
 
     def test_shift_estimation(self):
         self.setup()
@@ -397,7 +414,11 @@ class MACSTests(object):
         self.caller.run()
 
     def _run_whole_macs(self):
+
         command = "macs2 callpeak -t lin_intervals.bed -f BED -g " + str(self.genome_size) + " -n macstest -B -q 0.05 --llocal 5000"
+        if self.with_control:
+            command += " --slocal 2500 -c lin_intervals_control.bed"
+
         print(command)
         command = command.split()
         output = subprocess.check_output(command, stderr=subprocess.STDOUT)
@@ -405,22 +426,18 @@ class MACSTests(object):
         print(output)
 
     def test_whole_pipeline(self):
-        #self.caller.run("final_peaks")
-
         self._run_whole_macs()
-
         self.caller.create_graph()
-        #self.caller.info = ExperimentInfo.find_info(
-        #    self.caller.ob_graph, self.caller.sample_file_name, self.caller.control_file_name)
         self.caller.preprocess()
-        self.caller.create_sample_pileup(True)
 
-        self.assertPileupFilesEqual("sample_track.bdg", "macstest_treat_pileup.bdg")
+        self.caller.create_sample_pileup(True)
+        print(self.caller.info.n_control_reads)
         self.caller.create_control(True)
-        self.caller.scale_tracks()
+        print(self.caller.info.n_control_reads)
+        self.caller.scale_tracks(update_saved_files=True)
+        self.assertPileupFilesEqual("sample_track.bdg", "macstest_treat_pileup.bdg")
+
         self.assertPileupFilesEqual("control_track.bdg", "macstest_control_lambda.bdg")
-        # self.caller.get_p_values()
-        # self.caller.get_q_values()
         print("################### GETTING SCORE")
         self.caller.get_score()
         print("################### CALLING PEAKS")
@@ -428,23 +445,21 @@ class MACSTests(object):
 
         self.assertEqualBedFiles("final_peaks", "macstest_peaks.narrowPeak")
 
+def small_test(with_control=False):
+    return MACSTests(1000, 1000, 100000, read_length=6, fragment_length=20, with_control=with_control)
 
-def small_test():
-    return MACSTests(1000, 1000, 100000, read_length=15, fragment_length=20)
 
+def big_test(with_control=False):
+    return MACSTests(5000*10000, 1, 100000, read_length=51, fragment_length=121, with_control=with_control)
 
-def big_test():
-    return MACSTests(10000*2500, 2, 100000, read_length=51, fragment_length=121)
 
 if __name__ == "__main__":
-    test = big_test()
-    # test.test_whole_pipeline()
-    # test.test_call_peaks()
-    cProfile.run("test.test_call_peaks()", "profiling")
-    #  cProfile.run("test.profile()", "profiling")
-    p = pstats.Stats("profiling")
-    p.sort_stats("tottime").print_stats()
-    exit()
+    test = big_test(True)
+    test.test_whole_pipeline()
+    #cProfile.run("test.profile()", "profiling")
+    #p = pstats.Stats("profiling")
+    #p.sort_stats("tottime").print_stats()
+    #exit()
 
     # test.test_filter_dup()
     # test.test_shift_estimation()

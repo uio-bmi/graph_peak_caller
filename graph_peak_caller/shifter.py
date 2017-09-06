@@ -108,7 +108,7 @@ class Shifter(object):
         assert local_direction in [-1, 0, 1]
         interval.graph = self.graph
         extension_length = self.d - interval.length()
-        assert extension_length > 0
+        assert extension_length > 0, "Extension length is %d. D: %d, interval length: %d" % (extension_length, self.d, interval.length())
         areas = area_from_interval(interval, self.graph)
         direction = interval.direction
         end_position = interval.end_position if direction == 1 else interval.start_position
