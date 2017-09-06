@@ -59,6 +59,7 @@ def get_p_value_track(graph, control_file_name, sample_file_name, out_filename):
     output = subprocess.check_output(command)
     return Pileup.from_bed_graph(graph, out_filename)
 
+
 def get_p_value_track_from_pileups(graph, control_pileup, sample_pileup):
     # Using old macs
     from scipy.stats import poisson

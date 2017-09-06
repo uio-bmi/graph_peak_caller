@@ -2,6 +2,7 @@ from itertools import chain
 import numpy as np
 import offsetbasedgraph as obg
 from collections import defaultdict
+# from .sparsepileup import ValuedIndexes, SparsePileup
 
 
 class Pileup(object):
@@ -193,6 +194,9 @@ class Pileup(object):
     def summary(self):
         return sum(array.sum() for array in self.__count_arrays.values())
 
+    def get_count_array(self, node_id):
+        return self.__count_arrays[node_id]
+
     def old_find_valued_areas(self, value=False):
         areas = {}
         for node_id, count_array in self.__count_arrays.items():
@@ -210,6 +214,23 @@ class Pileup(object):
                 cur_list.extend([cur_start, len(count_array)])
             areas[node_id] = cur_list
         return areas
+
+    def get_sparse_representation(self):
+        sparse_pileup = SparsePileup(self.graph)
+        for node_id, count_array in self.__count_arrays.items():
+            diffs = count_array[1:]-count_array[:-1]
+            changes = np.where(diffs != 0)[0]
+            vals = count_array[changes+1]
+            init_value = count_array[0]
+            # startends = np.empty((2, changes.shape[0]))
+            # startends[1:, 0] = changes
+            # startends[:-1, 1] = changes
+            # startends[0, 0] = 0
+            # startends[-1, -1] = count_array.shape[0]
+            valued_indexes = ValuedIndexes(
+                changes, vals, init_value, count_array.shape[0])
+            sparse_pileup.set_valued_intervals(node_id, valued_indexes)
+        return sparse_pileup
 
     def find_valued_areas(self, value=False):
         # [1 1 1 2 2 2 0 0 0 1 1 1]

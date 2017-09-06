@@ -122,19 +122,19 @@ class MACSTests(object):
         self.assertPileupFilesEqual("sample_track.bdg", "macstest_treat_pileup.bdg")
         self.caller._control_pileup = Pileup.from_bed_graph(self.graph, "control_track.bdg")
         self.caller._sample_pileup = Pileup.from_bed_graph(self.graph, "sample_track.bdg")
-        self.caller.get_p_values()
-        #self.caller.p_values.to_bed_graph(self.caller._p_value_track)
+        self.caller.get_score()
+        # self.caller.p_values.to_bed_graph(self.caller._p_value_track)
         self._get_scores("qpois")
         #self.assertPileupFilesEqual(self.caller._p_value_track,
         # "lin_scores.bdg")
 
-        self.caller.get_q_values()
-        self.caller.p_values.to_bed_graph(self.caller._q_value_track)
-        self.assertPileupFilesEqual(self.caller._q_value_track,
-                                    "lin_scores.bdg")
-        self.caller.call_peaks()
-        self._call_peaks()
-        self.assertEqualBedFiles("final_peaks", "lin_peaks.bed")
+        # self.caller.get_q_values()
+        self.caller.q_values.to_bed_graph(self.caller._q_value_track)
+        # self.assertPileupFilesEqual(self.caller._q_value_track,
+        #                             "lin_scores.bdg")
+        # self.caller.call_peaks()
+        # self._call_peaks()
+        # self.assertEqualBedFiles("final_peaks", "lin_peaks.bed")
 
     def linear_to_graph_interval(self, lin_interval):
         start = lin_interval.start
@@ -419,30 +419,37 @@ class MACSTests(object):
         self.caller.create_control(True)
         self.caller.scale_tracks()
         self.assertPileupFilesEqual("control_track.bdg", "macstest_control_lambda.bdg")
-        self.caller.get_p_values()
-        self.caller.get_q_values()
+        # self.caller.get_p_values()
+        # self.caller.get_q_values()
+        print("################### GETTING SCORE")
+        self.caller.get_score()
+        print("################### CALLING PEAKS")
         self.caller.call_peaks("final_peaks")
 
         self.assertEqualBedFiles("final_peaks", "macstest_peaks.narrowPeak")
+
 
 def small_test():
     return MACSTests(1000, 1000, 100000, read_length=15, fragment_length=20)
 
 
 def big_test():
-    return MACSTests(5000*10000, 1, 100000, read_length=51, fragment_length=121)
+    return MACSTests(10000, 5000, 100000, read_length=51, fragment_length=121)
 
 
 if __name__ == "__main__":
     test = big_test()
-    #cProfile.run("test.profile()", "profiling")
-    #p = pstats.Stats("profiling")
-    #p.sort_stats("tottime").print_stats()
-    #exit()
+
+    test.test_call_peaks()
+    cProfile.run("test.test_call_peaks()", "profiling")
+    #  cProfile.run("test.profile()", "profiling")
+    p = pstats.Stats("profiling")
+    p.sort_stats("tottime").print_stats()
+    exit()
 
     # test.test_filter_dup()
     # test.test_shift_estimation()
     # test.test_sample_pileup()
     # test.test_control_pileup()
     # test.test_call_peaks()
-    test.test_whole_pipeline()
+    

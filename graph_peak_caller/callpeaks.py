@@ -5,6 +5,7 @@ import pyvg as vg
 from graph_peak_caller import Shifter
 from graph_peak_caller import get_shift_size_on_offset_based_graph
 from .control import ControlTrack
+from .sparsepileup import SparseControlSample
 from .bdgcmp import *
 
 
@@ -82,8 +83,9 @@ class CallPeaks(object):
         self.create_control()
         self.create_sample_pileup()
         self.scale_tracks()
-        self.get_p_values()
-        self.get_q_values()
+        self.get_score()
+        # self.get_p_values()
+        # self.get_q_values()
         self.call_peaks(out_file)
 
     def preprocess(self):
@@ -176,9 +178,17 @@ class CallPeaks(object):
     def get_q_values(self):
         get_q_values_track_from_p_values(self.p_values)
 
+    def get_score(self):
+        sparse_pileup = SparseControlSample.from_control_and_sample(
+            self._control_pileup, self._sample_pileup)
+        sparse_pileup.get_scores()
+        self.p_values = sparse_pileup
+        self.q_values = sparse_pileup
+
     def get_p_values(self):
         print("Get p-values")
-        self.p_values = get_p_value_track_from_pileups(self.ob_graph, self._control_pileup, self._sample_pileup)
+        self.p_values = get_p_value_track_from_pileups(
+            self.ob_graph, self._control_pileup, self._sample_pileup)
         #self.p_values.to_bed_graph(self._p_value_track)
         print(self.p_values)
 
