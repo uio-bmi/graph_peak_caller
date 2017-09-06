@@ -12,12 +12,16 @@ def enable_filewrite(func):
     def wrapper(*args, **kwargs):
         intervals = args[1]
         if isinstance(intervals, str):
-            intervals = IntervalCollection.create_generator_from_file(intervals)
+            intervals = IntervalCollection.from_file(intervals)
 
         write_to_file = kwargs.pop("write_to_file", False)
         interval_list = func(args[0], intervals, **kwargs)
 
         if write_to_file:
+            interval_collection = IntervalCollection(interval_list)
+            interval_collection.to_file(write_to_file)
+            return write_to_file
+
             with open(write_to_file, "w") as file:
                 print("Wrote results to " + str(write_to_file))
                 file.writelines(("%s\n" % interval.to_file_line() for interval in interval_list))
@@ -65,6 +69,7 @@ class CallPeaks(object):
         self.has_control = control_file_name is not None
         self.control_file_name = control_file_name if self.has_control else sample_file_name
         self._p_value_track = "p_value_track"
+        self._q_value_track = "q_value_track"
         self.info = experiment_info
         self.verbose = verbose
         self.sample_intervals = []
@@ -82,6 +87,7 @@ class CallPeaks(object):
         self.create_sample_pileup()
         self.scale_tracks()
         self.get_p_values()
+        self.get_q_values()
         self.call_peaks(out_file)
 
     def preprocess(self):
@@ -97,7 +103,7 @@ class CallPeaks(object):
 
     def count_number_of_intervals_in_file(self, interval_file_name):
         n = 0
-        for interval in IntervalCollection.create_generator_from_file(interval_file_name):
+        for interval in IntervalCollection.from_file(interval_file_name):
             n += 1
         print("Number of intervals: %d" % n)
         return n
@@ -129,10 +135,23 @@ class CallPeaks(object):
             if interval.region_paths[0] in self.ob_graph.blocks:
                 yield interval
 
-    def scale_tracks(self):
+    def scale_tracks(self, update_saved_files=False):
         print("Scaling tracks to ratio: %d / %d" % (self.info.n_sample_reads, self.info.n_control_reads))
         ratio = self.info.n_sample_reads/self.info.n_control_reads
-        scale_down_tracks(ratio, self.sample_file_name, self.control_file_name)
+
+        if self.info.n_sample_reads == self.info.n_control_reads:
+            return
+
+        if ratio > 1:
+            self._sample_pileup.scale(1/ratio)
+            if update_saved_files:
+                self._sample_pileup.to_bed_graph(self._sample_track)
+        else:
+            self._control_pileup(ratio)
+            if update_saved_files:
+                self._control_pileup.to_bed_graph(self._control_track)
+
+        #scale_down_tracks(ratio, self.sample_file_name, self.control_file_name)
 
     def find_info(self):
         genome_size = 0
@@ -149,7 +168,7 @@ class CallPeaks(object):
     def create_control(self, save_to_file=False):
         if self.verbose:
             print("Creating control")
-        extensions = [self.info.fragment_length, 1000, 5000, 10000] if self.has_control else [5000]
+        extensions = [self.info.fragment_length, 2500, 5000] if self.has_control else [5000]
 
         control_track = ControlTrack(
             self.ob_graph, self.control_file_name,
@@ -171,9 +190,11 @@ class CallPeaks(object):
 
         self._control_pileup = pileup
 
+    def get_q_values(self):
+        get_q_values_track_from_p_values(self.p_values)
+
     def get_p_values(self):
         print("Get p-values")
-        #self.p_values = get_p_value_track(self.ob_graph, self._control_track, self._sample_track, self._p_value_track)
         self.p_values = get_p_value_track_from_pileups(self.ob_graph, self._control_pileup, self._sample_pileup)
         #self.p_values.to_bed_graph(self._p_value_track)
         print(self.p_values)
@@ -188,7 +209,7 @@ class CallPeaks(object):
 
     def create_sample_pileup(self, save_to_file=False):
         print("Create sample pileup")
-        alignments = IntervalCollection.create_generator_from_file(
+        alignments = IntervalCollection.from_file(
             self.sample_file_name)
 
         shifter = Shifter(self.ob_graph, self.info.fragment_length)
@@ -206,7 +227,6 @@ class CallPeaks(object):
 
     def _write_vg_alignments_as_intervals_to_bed_file(self):
         pass
-
 
 
 if __name__ == "__main__":
