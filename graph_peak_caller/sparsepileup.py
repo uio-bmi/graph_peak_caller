@@ -111,6 +111,29 @@ class SparsePileup(Pileup):
     def set_valued_intervals(self, node_id, valued_indexes):
         self.data[node_id] = valued_indexes
 
+    @classmethod
+    def from_intervals(cls, graph, intervals):
+        starts, ends = intervals_to_start_and_ends(graph, intervals)
+
+        pileup = cls(graph)
+        for rp in starts:
+            indexes, values = starts_and_ends_to_sparse_pileup(starts[rp], ends[rp])
+            start_value = False
+            length = graph.blocks[rp].length()
+            if indexes[0] == 0:
+                start_value = values[0]
+                indexes = indexes[1:]
+                values = values[1:]
+
+            if len(indexes) > 0:
+                if indexes[-1] == length:
+                    indexes = indexes[:-1]
+                    values = values[:-1]
+
+            pileup.data[rp] = ValuedIndexes(indexes, values, start_value, length)
+
+        return pileup
+
     def __str__(self):
         return "\n".join(
             "%s: %s" % (node_id, valued_indexes.indexes)
@@ -269,3 +292,60 @@ class SparseControlSample(SparsePileup):
             assert not np.any(vals[:, 0] == 0)
             sparse_pileup.set_valued_intervals(node_id, valued_indexes)
         return sparse_pileup
+
+
+def intervals_to_start_and_ends(graph, intervals):
+    # Returns two dict on rp => positions (start/ends)
+    starts = defaultdict(list)
+    ends = defaultdict(list)
+
+    for interval in intervals:
+        for i, region_path in enumerate(interval.region_paths):
+            start = 0
+            end = graph.node_size(region_path)
+            if i == 0:
+                start = interval.start_position.offset
+            if i == len(interval.region_paths)-1:
+                end = interval.end_position.offset
+
+            starts[region_path].append(start)
+            ends[region_path].append(end)
+
+    for rp in starts:
+        starts[rp] = np.array(starts[rp])
+
+    for rp in ends:
+        ends[rp] = np.array(ends[rp])
+
+    return starts, ends
+
+
+def filter_pileup_duplicated_position(positions, values):
+    equal_to_previous = (positions[:-1] == positions[1:])
+    true_array = np.ones(len(positions))
+    true_array[np.where(equal_to_previous)] = False
+    return positions[np.where(true_array)], values[np.where(true_array)]
+
+
+def starts_and_ends_to_sparse_pileup(starts, ends):
+    coded_starts = starts * 8 + 5
+    coded_ends = ends * 8 + 3
+
+    pileup_encoded_positions = np.concatenate((coded_starts, coded_ends))
+    pileup_encoded_positions.sort()
+    #print("Sorted positions")
+    #print(pileup_encoded_positions)
+
+    event_codes = (pileup_encoded_positions % 8) - 4  # Containing -1s and 1s
+    #print("Decoded positions")
+    #print(event_codes)
+
+    pileup_values = np.add.accumulate(event_codes)
+    #print("Accumulation")
+    #print(pileup_values)
+    #print("Pileup positions")
+    pileup_positions = pileup_encoded_positions // 8
+    #print(pileup_positions)
+
+    return filter_pileup_duplicated_position(pileup_positions, pileup_values)
+
