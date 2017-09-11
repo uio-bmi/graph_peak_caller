@@ -227,8 +227,8 @@ class CallPeaks(object):
         print("Calling peaks")
         self.p_values.threshold(-np.log10(cutoff))
         self.p_values.fill_small_wholes(self.info.read_length)
-        self.p_values.remove_small_peaks(self.info.fragment_length)
-        self.final_track = self.p_values
+        self.final_track = self.p_values.remove_small_peaks(
+            self.info.fragment_length)
         self.final_track.to_bed_file(out_file)
 
     def create_sample_pileup(self, save_to_file=False):

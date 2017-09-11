@@ -203,6 +203,14 @@ class SparsePileup(Pileup):
             valued_indexes.indexes = np.array([], dtype="int")
             valued_indexes.values = np.array([], dtype="bool")
 
+    def remove_small_peaks(self, min_size):
+        areas = self.find_valued_areas(True)
+        intervals = self.areas_to_intervals(areas, include_partial_stubs=False)
+        large_intervals = [interval for interval in intervals
+                           if interval.length() >= min_size]
+        return self.from_intervals(large_intervals)
+
+
 
 class SparseControlSample(SparsePileup):
     def get_p_dict(self):
