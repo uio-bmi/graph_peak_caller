@@ -75,6 +75,26 @@ class ValuedIndexes(object):
             )
 
 
+"""
+   |     |
+    |      |
+     |  |
+   |       |
+"""
+
+
+class BinaryIndexes(object):
+    def __init__(self, starts, ends, length):
+        self.starts = starts
+        self.ends = ends
+        self.length = length
+
+    def add_interval(self, start, end):
+        self.starts.append(start)
+        self.ends.append(end)
+        self.starts.sort
+        
+
 class SparsePileup(Pileup):
     def __init__(self, graph):
         self.graph = graph
@@ -117,18 +137,18 @@ class SparsePileup(Pileup):
                 start = interval.start_position.offset
             if i == len(interval.region_paths)-1:
                 end = interval.end_position.offset
-            self.valued_intervals[region_path].add_interval(
+            self.data[region_path].add_interval(
                 start, end)
 
     def add_areas(self, areas):
         for area, intervals in areas.items():
-            self.valued_intervals[area].add_interval(
+            self.data[area].add_interval(
                 intervals[0], intervals[1])
 
     def set_areas_value(self, areas, value):
         for area, intervals in areas.items():
             for i in range(len(intervals)//2):
-                self.valued_intervals[area].set_interval_value(
+                self.data[area].set_interval_value(
                     intervals[i], intervals[i+1], value)
 
     def set_interval_value(self, interval, value):
@@ -141,7 +161,7 @@ class SparsePileup(Pileup):
                 start = interval.start_position.offset
             if i == len(interval.region_paths)-1:
                 end = interval.end_position.offset
-            self.valued_intervals[region_path].set_interval_value(
+            self.data[region_path].set_interval_value(
                 start, end, value)
 
     def to_bed_file(self, filename):
@@ -153,6 +173,12 @@ class SparsePileup(Pileup):
                 f.write("%s\t%s\t%s\t.\t.\t.\n" % interval)
         f.close()
         return filename
+
+    def set_to_false(self):
+        for valued_indexes in self.data.values():
+            valued_indexes.start_value = False
+            valued_indexes.indexes = np.array([], dtype="int")
+            valued_indexes.values = np.array([], dtype="bool")
 
 
 class SparseControlSample(SparsePileup):
@@ -170,6 +196,9 @@ class SparseControlSample(SparsePileup):
                                         val[0]))
                 p = p_value_dict[val[0]][val[1]]
                 count_dict[p] += end-start
+        # for key, v in p_value_dict.items():
+        #    print("%s: %s" % (key, v.keys()))
+
         self.p_value_dict = p_value_dict
         self.count_dict = count_dict
 
@@ -198,9 +227,12 @@ class SparseControlSample(SparsePileup):
                 self.p_value_dict[x[0]][x[1]]]
         # f = np.vectorize(translation)
         for valued_indexes in self.data.values():
-            valued_indexes.values = np.apply_along_axis(
-                translation, 1, valued_indexes.values)
-            valued_indexes.start_value = translation(
+            if valued_indexes.values.size:
+                valued_indexes.values = np.apply_along_axis(
+                    translation, 1, valued_indexes.values)
+
+            valued_indexes.sta
+            rt_value = translation(
                 valued_indexes.start_value)
             valued_indexes.sanitize()
 
@@ -230,9 +262,10 @@ class SparseControlSample(SparsePileup):
             changes = np.where(np.logical_or(control_diffs != 0,
                                              sample_diffs))[0] + 1
             vals = np.column_stack([control_counts[changes],
-                                    sample_counts[changes]])
+                                    np.floor(sample_counts[changes])])
             init_value = np.array([control_counts[0], sample_counts[0]])
             valued_indexes = ValuedIndexes(
                  changes, vals, init_value, control_counts.shape[0])
+            assert not np.any(vals[:, 0] == 0)
             sparse_pileup.set_valued_intervals(node_id, valued_indexes)
         return sparse_pileup

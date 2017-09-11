@@ -282,7 +282,7 @@ class Pileup(object):
                                             areas, include_partial_stubs))
                 else:
                     intervals.append(
-                        obg.Interval(start, end, [node_id], graph=self.graph))
+                        obg.Interval(int(start), int(end), [node_id], graph=self.graph))
         return intervals
             
     def _get_intervals(self, node_id, cur_interval, areas,
@@ -344,13 +344,16 @@ class Pileup(object):
         for interval in intervals:
             self.set_interval_value(interval, True)
 
+    def set_to_false(self):
+        for node_id, count_array in self.__count_arrays.items():
+            count_array *= False
+
     def remove_small_peaks(self, min_size):
         areas = self.find_valued_areas(True)
         intervals = self.areas_to_intervals(areas, include_partial_stubs=False)
         large_intervals = [interval for interval in intervals
                            if interval.length() >= min_size]
-        for node_id, count_array in self.__count_arrays.items():
-            count_array *= False
+        self.set_to_false()
         for interval in large_intervals:
             self.set_interval_value(interval, True)
 

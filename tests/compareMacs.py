@@ -85,8 +85,9 @@ class MACSTests(object):
         self.create_linear_graph()
         self.create_intervals()
         self.write_intervals()
+        # self.n_intervals_control = self.n_intervals
         self.info = ExperimentInfo(self.genome_size, self.n_intervals,
-                                   self.n_intervals_control, self.fragment_length - 1,
+                                   self.n_intervals_control, self.fragment_length - 2,
                                    self.read_length )
 
         control_file_name = None
@@ -94,8 +95,8 @@ class MACSTests(object):
             control_file_name = "graph_intervals_control"
 
         self.caller = CallPeaks("lin_graph", "graph_intervals", control_file_name,
-                            experiment_info=self.info,
-                            verbose=True)
+                                experiment_info=self.info,
+                                verbose=True)
 
         self.caller.create_graph()
 
@@ -126,11 +127,12 @@ class MACSTests(object):
                                     "lin_control_pileup.bdg", min_value=self.background)
 
     def test_call_peaks(self):
-        self.assertPileupFilesEqual("control_track.bdg", "macstest_control_lambda.bdg")
-        self.assertPileupFilesEqual("sample_track.bdg", "macstest_treat_pileup.bdg")
+        # self.assertPileupFilesEqual("control_track.bdg", "macstest_control_lambda.bdg")
+        # self.assertPileupFilesEqual("sample_track.bdg", "macstest_treat_pileup.bdg")
         self.caller._control_pileup = Pileup.from_bed_graph(self.graph, "control_track.bdg")
         self.caller._sample_pileup = Pileup.from_bed_graph(self.graph, "sample_track.bdg")
         self.caller.get_score()
+        return
         # self.caller.p_values.to_bed_graph(self.caller._p_value_track)
         self._get_scores("qpois")
         #self.assertPileupFilesEqual(self.caller._p_value_track,
@@ -140,9 +142,9 @@ class MACSTests(object):
         self.caller.q_values.to_bed_graph(self.caller._q_value_track)
         self.assertPileupFilesEqual(self.caller._q_value_track,
                                     "lin_scores.bdg")
-        # self.caller.call_peaks()
-        # self._call_peaks()
-        # self.assertEqualBedFiles("final_peaks", "lin_peaks.bed")
+        self.caller.call_peaks()
+        self._call_peaks()
+        self.assertEqualBedFiles("final_peaks", "lin_peaks.bed")
 
     def linear_to_graph_interval(self, lin_interval):
         start = lin_interval.start
@@ -333,9 +335,27 @@ class MACSTests(object):
         region_paths = list(range(start_rp, end_rp+1))
         return Interval(start_pos, end_pos, region_paths, direction=direction)
 
+    def create_pairs_around_point(self, point, n=100):
+        intervals = []
+        for _ in range(n):
+            offset = random.randint(-n, n)
+            point = point+offset
+            pos_start = point-self.fragment_length//2
+            pos_end = pos_start+self.read_length
+            if pos_start > 0:
+                intervals.append(SimpleInterval(pos_start, pos_end, 1))
+            neg_end = point+self.fragment_length//2
+            neg_start = neg_end-self.read_length
+            if neg_end < self.genome_size:
+                intervals.append(SimpleInterval(neg_start, neg_end, -1))
+        return intervals
+
     def create_random_linear_reads(self, n_reads, include_pairs=False):
         reads = []
-        for i in range(n_reads):
+        for i in range(n_reads//100+1):
+            point = random.randint(0, self.genome_size)
+            reads.extend(self.create_pairs_around_point(point))
+            continue
             direction = random.choice((-1, 1))
             if direction == -1:
                 start = random.randint(self.fragment_length-self.read_length,
@@ -436,7 +456,6 @@ class MACSTests(object):
         print(self.caller.info.n_control_reads)
         self.caller.scale_tracks(update_saved_files=True)
         self.assertPileupFilesEqual("sample_track.bdg", "macstest_treat_pileup.bdg")
-
         self.assertPileupFilesEqual("control_track.bdg", "macstest_control_lambda.bdg")
         print("################### GETTING SCORE")
         self.caller.get_score()
@@ -450,16 +469,24 @@ def small_test(with_control=False):
 
 
 def big_test(with_control=False):
-    return MACSTests(5000*10000, 1, 100000, read_length=51, fragment_length=121, with_control=with_control)
+    return MACSTests(10000, 1000, 100000, read_length=51, fragment_length=121, with_control=with_control)
 
 
 if __name__ == "__main__":
-    test = big_test(True)
+    test = big_test(False)
     test.test_whole_pipeline()
+    exit()
+    caller = test.caller
+    caller._control_pileup = Pileup.from_bed_graph(test.graph, "control_track.bdg")
+    caller._sample_pileup = Pileup.from_bed_graph(test.graph, "sample_track.bdg")
+    cProfile.run("caller.get_score()", "profiling")
+    #test.test_call_peaks()
+
+
     #cProfile.run("test.profile()", "profiling")
-    #p = pstats.Stats("profiling")
-    #p.sort_stats("tottime").print_stats()
-    #exit()
+    p = pstats.Stats("profiling")
+    p.sort_stats("tottime").print_stats()
+    exit()
 
     # test.test_filter_dup()
     # test.test_shift_estimation()
