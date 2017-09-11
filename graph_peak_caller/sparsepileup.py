@@ -208,7 +208,7 @@ class SparsePileup(Pileup):
         intervals = self.areas_to_intervals(areas, include_partial_stubs=False)
         large_intervals = [interval for interval in intervals
                            if interval.length() >= min_size]
-        return self.from_intervals(large_intervals)
+        return self.from_intervals(self.graph, large_intervals)
 
 
 
@@ -262,8 +262,7 @@ class SparseControlSample(SparsePileup):
                 valued_indexes.values = np.apply_along_axis(
                     translation, 1, valued_indexes.values)
 
-            valued_indexes.sta
-            rt_value = translation(
+            valued_indexes.start_value = translation(
                 valued_indexes.start_value)
             valued_indexes.sanitize()
 
