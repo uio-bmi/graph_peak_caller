@@ -100,6 +100,10 @@ class SparsePileup(Pileup):
         self.graph = graph
         self.data = {}
 
+    def fill_small_wholes(self, max_size):
+        super().fill_small_wholes(max_size)
+        self.sanitize()
+
     def sanitize(self):
         for valued_indexes in self.data.values():
             valued_indexes.sanitize()
@@ -206,10 +210,14 @@ class SparsePileup(Pileup):
     def remove_small_peaks(self, min_size):
         areas = self.find_valued_areas(True)
         intervals = self.areas_to_intervals(areas, include_partial_stubs=False)
+        small_peaks = [interval for interval in intervals
+                       if interval.length() < min_size]
+        for small_peak in small_peaks:
+            if small_peak.start_position.offset < 100000:
+                print("#", small_peak)
         large_intervals = [interval for interval in intervals
                            if interval.length() >= min_size]
         return self.from_intervals(self.graph, large_intervals)
-
 
 
 class SparseControlSample(SparsePileup):

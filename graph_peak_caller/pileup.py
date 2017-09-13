@@ -284,7 +284,7 @@ class Pileup(object):
                     intervals.append(
                         obg.Interval(int(start), int(end), [node_id], graph=self.graph))
         return intervals
-            
+
     def _get_intervals(self, node_id, cur_interval, areas,
                        include_partial_stubs=False):
         intervals = []
@@ -301,7 +301,8 @@ class Pileup(object):
             else:
                 intervals.append(
                     obg.Interval(
-                        my_interval[0], end, my_interval[1:]+[next_node],
+                        int(my_interval[0]), int(end),
+                        my_interval[1:]+[next_node],
                         graph=self.graph))
         f = all if include_partial_stubs else any
         if not f(next_node in areas and areas[next_node] and areas[next_node][0] == 0 for
@@ -309,7 +310,7 @@ class Pileup(object):
             if include_partial_stubs:
                 assert self.graph.adj_list[node_id]
             intervals.append(
-                obg.Interval(my_interval[0], self.graph.node_size(node_id),
+                obg.Interval(int(my_interval[0]), int(self.graph.node_size(node_id)),
                              my_interval[1:], graph=self.graph))
         return intervals
 

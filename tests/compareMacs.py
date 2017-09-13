@@ -28,7 +28,8 @@ class SimpleInterval(object):
     def to_file_line(self):
         return "\t".join(
             str(v) for v in
-            (self.node_id, self.start, self.end, ".", "0", self.dir_symbol))+"\n"
+            (self.node_id, self.start, self.end, ".",
+             "0", self.dir_symbol)) + "\n"
 
     @classmethod
     def from_file_line(cls, line):
@@ -47,8 +48,10 @@ class SimpleInterval(object):
         attrs = ["start", "end", "direction"]
         return (getattr(self, attr) == getattr(other, attr)
                 for attr in attrs)
+
     def __str__(self):
-        return "%s %d %d %s" % (self.node_id, self.start, self.end, self.dir_symbol)
+        return "%s %d %d %s" % (
+            self.node_id, self.start, self.end, self.dir_symbol)
 
     def __repr__(self):
         return self.__str__()
@@ -71,7 +74,8 @@ class ValuedInterval(SimpleInterval):
 
 
 class MACSTests(object):
-    def __init__(self, node_size, n_nodes, n_intervals, read_length=15, fragment_length=50, with_control=False):
+    def __init__(self, node_size, n_nodes, n_intervals,
+                 read_length=15, fragment_length=50, with_control=False):
         self.node_size = node_size
         self.n_nodes = n_nodes
         self.with_control = with_control
@@ -82,10 +86,11 @@ class MACSTests(object):
         self.setup()
 
     def setup(self):
+        print("######## SETUP ########")
         self.create_linear_graph()
         self.create_intervals()
         self.write_intervals()
-        # self.n_intervals_control = self.n_intervals
+        self.n_intervals_control = self.n_intervals
         self.info = ExperimentInfo(self.genome_size, self.n_intervals,
                                    self.n_intervals_control, self.fragment_length - 2,
                                    self.read_length )
@@ -464,12 +469,14 @@ class MACSTests(object):
 
         self.assertEqualBedFiles("final_peaks", "macstest_peaks.narrowPeak")
 
+
 def small_test(with_control=False):
     return MACSTests(1000, 1000, 100000, read_length=6, fragment_length=20, with_control=with_control)
 
 
 def big_test(with_control=False):
-    return MACSTests(10000, 1000, 100000, read_length=51, fragment_length=121, with_control=with_control)
+    return MACSTests(10000000, 1, 100000, read_length=51,
+                     fragment_length=121, with_control=with_control)
 
 
 if __name__ == "__main__":
