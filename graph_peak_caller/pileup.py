@@ -452,13 +452,3 @@ class SmallIntervals(object):
                     continue
             intervals.append(my_interval + [self.graph.node_size(node_id)])
         return intervals
-
-
-class SparsePileup(Pileup):
-    def create_data_struct(self):
-        # valued intervals = [(idx,  value)]
-        self.valued_intervals = defaultdict(list)
-
-    def _add_areas(self, areas):
-        for node_id, intervals in areas:
-            old_intervals = self.valued_intervals

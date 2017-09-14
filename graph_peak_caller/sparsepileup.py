@@ -93,6 +93,30 @@ class ValuedIndexes(object):
         obj.sanitize()
         return obj
 
+    @classmethod
+    def combine(cls, vi_a, vi_b):
+        a = vi_a.all_idxs()[:-1]*2
+        b = vi_b.all_idxs()[:-1]*2+1
+        all_idxs = np.concatenate([a, b])
+        all_idxs.sort()
+        vi_list = [vi_a, vi_b]
+        values_list = []
+        for i, vi in enumerate(vi_list):
+            idxs = np.nonzero((all_idxs % 2) == i)[0]
+            all_values = vi.all_values()
+            value_diffs = np.diff(all_values)
+            values = np.zeros(all_idxs.shape)
+            values[idxs[1:]] = value_diffs
+            values[idxs[0]] = all_values[0]
+            values_list.append(values.cumsum())
+        values = np.array(values_list[0], values_list[1])
+        idxs = all_idxs // 2
+        unique_idxs = np.nonzero(np.diff(idxs))[0]
+        idxs = idxs[unique_idxs]
+        values = values[:, unique_idxs]
+        obj = cls(idxs[1:], values[1:], values[0], vi_a.length)
+        return obj
+
     def trunctate(self, min_value):
         self.values = np.maximum(self.values, min_value)
         self.start_value = max(min_value, self.start_value)
@@ -163,7 +187,7 @@ class SparsePileup(Pileup):
                 starts, ends = get_starts_ends(idx_list)
                 starts_dict[rp].extend(starts)
                 ends_dict[rp].extend(ends)
-        cls.from_starts_and_ends(cls, graph, starts, ends)
+        cls.from_starts_and_ends(graph, starts, ends)
 
     @classmethod
     def from_starts_and_ends(cls, graph, starts, ends):
@@ -191,7 +215,7 @@ class SparsePileup(Pileup):
     @classmethod
     def from_intervals(cls, graph, intervals):
         starts, ends = intervals_to_start_and_ends(graph, intervals)
-        return cls.from_starts_and_ends(cls, graph, starts, ends)
+        return cls.from_starts_and_ends(graph, starts, ends)
 
     def __str__(self):
         return "\n".join(
@@ -347,6 +371,15 @@ class SparseControlSample(SparsePileup):
         self.filename = filename
         self.is_written = True
         return filename
+
+    @classmethod
+    def from_sparse_control_and_sample(cls, control, sample):
+        sparse_pileup = cls(control.graph)
+        sparse_pileup.data = {
+            node_id: ValuedIndexes.combine(
+                control.data[node_id], sample.data[node_id])
+            for node_id in control.data}
+        return sparse_pileup
 
     @classmethod
     def from_control_and_sample(cls, control, sample):

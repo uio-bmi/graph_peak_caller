@@ -486,8 +486,8 @@ def big_test(with_control=False):
 
 if __name__ == "__main__":
     test = big_test(False)
-    # test.test_final_tracks()
-    # exit()
+    test.test_final_tracks()
+    exit()
 
 
     caller = test.caller
