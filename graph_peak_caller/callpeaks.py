@@ -64,9 +64,10 @@ class ExperimentInfo(object):
 
 
 class CallPeaks(object):
-    def __init__(self, graph_file_name, sample_file_name,
+    def __init__(self, graph, sample_file_name,
                  control_file_name=None, experiment_info=None, verbose=False, out_file_base_name=""):
-        self.graph_file_name = graph_file_name
+        self.graph = graph
+
         self.sample_file_name = sample_file_name
         self.has_control = control_file_name is not None
         self.control_file_name = control_file_name if self.has_control else sample_file_name
@@ -167,7 +168,10 @@ class CallPeaks(object):
         self.n_reads = sum(1 for line in open(self.control_file_name))
 
     def create_graph(self):
-        self.ob_graph = offsetbasedgraph.Graph.from_file(self.graph_file_name)
+        if isinstance(self.graph, str):
+            self.ob_graph = offsetbasedgraph.Graph.from_file(self.graph_file_name)
+        else:
+            self.ob_graph = self.graph
 
     def create_control(self, save_to_file=False):
         if self.verbose:
