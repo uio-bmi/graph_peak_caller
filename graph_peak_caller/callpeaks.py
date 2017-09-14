@@ -102,19 +102,6 @@ class CallPeaks(object):
             self.control_intervals = self.remove_alignments_not_in_graph(self.control_file_name, is_control=True)
             self.control_intervals = self.filter_duplicates(self.control_intervals, is_control=True)
 
-        #self.info.n_sample_reads = self.count_number_of_intervals_in_file(self.sample_file_name)
-        #self.info.n_control_reads = self.count_number_of_intervals_in_file(self.control_file_name)
-
-
-
-    # DELETE
-    def count_number_of_intervals_in_file(self, interval_file_name):
-        n = 0
-        for interval in IntervalCollection.from_file(interval_file_name):
-            n += 1
-        print("Number of intervals: %d" % n)
-        return n
-
     @enable_filewrite
     def remove_alignments_not_in_graph(self, intervals, is_control=False):
         for interval in self._get_intervals_in_ob_graph(intervals):
@@ -144,7 +131,6 @@ class CallPeaks(object):
                 continue
 
             interval_hashes[hash] = True
-
             yield interval
 
     def _get_intervals_in_ob_graph(self, intervals):
@@ -175,8 +161,6 @@ class CallPeaks(object):
 
     def find_info(self):
         genome_size = 0
-        #lines = (line["node"] for line in self.graph_file_name.readlines() if "node" in line)
-        #sizes = (sum(Node.from_json(json_obj).n_basepairs for json_obj in line) for line in lines)
         sizes = (block.length() for block in self.ob_graph.blocks.values())
 
         self.genome_size = sum(sizes)
