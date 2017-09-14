@@ -8,3 +8,9 @@
 .#*
 *.log
 *.tmp
+*.gam
+*.sam
+*.json
+*.bdg
+*.obgraph
+*.vggraph
