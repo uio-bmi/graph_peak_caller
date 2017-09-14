@@ -67,6 +67,32 @@ class ValuedIndexes(object):
         ends = all_indexes[idxs+1]
         return list(chain(*zip(starts, ends)))
 
+    @classmethod
+    def max(cls, vi_a, vi_b):
+        a = vi_a.all_idxs()[:-1]*2
+        b = vi_b.all_idxs()[:-1]*2+1
+        all_idxs = np.concatenate([a, b])
+        all_idxs.sort()
+        vi_list = [vi_a, vi_b]
+        values_list = []
+        for i, vi in enumerate(vi_list):
+            idxs = np.nonzero((all_idxs % 2) == i)[0]
+            all_values = vi.all_values()
+            value_diffs = np.diff(all_values)
+            values = np.zeros(all_idxs.shape)
+            values[idxs[1:]] = value_diffs
+            values[idxs[0]] = all_values[0]
+            values_list.append(values.cumsum())
+        values = np.maximum(values_list[0], values_list[1])
+        idxs = all_idxs // 2
+        empty_ends = np.nonzero(np.diff(idxs) == 0)[0]
+        max_values = np.maximum(values[empty_ends], values[empty_ends+1])
+        values[empty_ends+1] = max_values
+        values[empty_ends] = max_values
+        obj = cls(idxs[1:], values[1:], values[0], vi_a.length)
+        obj.sanitize()
+        return obj
+
     def __iter__(self):
         return zip(
             chain([0], self.indexes),
