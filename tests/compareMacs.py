@@ -91,8 +91,8 @@ class MACSTests(object):
         self.create_intervals()
         self.write_intervals()
         self.n_intervals_control = self.n_intervals
-        self.info = ExperimentInfo(self.genome_size, self.n_intervals,
-                                   self.n_intervals_control, self.fragment_length - 2,
+        self.info = ExperimentInfo(self.genome_size,
+                                   self.fragment_length - 2,
                                    self.read_length )
 
         control_file_name = None
@@ -488,6 +488,8 @@ if __name__ == "__main__":
     test = big_test(False)
     # test.test_final_tracks()
     # exit()
+
+
     caller = test.caller
     caller._control_pileup = Pileup.from_bed_graph(
         test.graph, "control_track.bdg")
