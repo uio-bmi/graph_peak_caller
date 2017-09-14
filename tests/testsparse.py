@@ -20,7 +20,27 @@ def valued_indexes():
                          20)
 
 
+def valued_indexes2():
+    return ValuedIndexes(np.array([5, 15, 17], dtype="int"),
+                         np.array([60, 210, 190]),
+                         40,
+                         20)
+
+
 class TestValuedIndexes(unittest.TestCase):
+
+    def test_max(self):
+        vi1 = valued_indexes()
+        vi2 = valued_indexes2()
+        max_vi = ValuedIndexes.max(vi1, vi2)
+        true_max = ValuedIndexes(np.array([5, 10, 15, 17], dtype="int"),
+                                 np.array([60, 100, 210, 200]),
+                                 50,
+                                 20)
+        # print(true_max)
+        # print(max_vi)
+        self.assertEqual(max_vi, true_max)
+
     def test_threshold(self):
         true_indexes = ValuedIndexes(np.array([15], dtype="int"),
                                      np.array([True], dtype="bool"),

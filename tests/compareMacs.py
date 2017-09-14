@@ -489,20 +489,11 @@ if __name__ == "__main__":
     # test.test_final_tracks()
     # exit()
     caller = test.caller
-    caller._control_pileup = Pileup.from_bed_graph(test.graph, "control_track.bdg")
-    caller._sample_pileup = Pileup.from_bed_graph(test.graph, "sample_track.bdg")
+    caller._control_pileup = Pileup.from_bed_graph(
+        test.graph, "control_track.bdg")
+    caller._sample_pileup = Pileup.from_bed_graph(
+        test.graph, "sample_track.bdg")
     cProfile.run("caller.get_score()", "profiling")
-    #test.test_call_peaks()
-
-
-    #cProfile.run("test.profile()", "profiling")
     p = pstats.Stats("profiling")
     p.sort_stats("tottime").print_stats()
     exit()
-
-    # test.test_filter_dup()
-    # test.test_shift_estimation()
-    # test.test_sample_pileup()
-    # test.test_control_pileup()
-    # test.test_call_peaks()
-    
