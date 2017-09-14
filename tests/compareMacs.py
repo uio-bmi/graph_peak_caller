@@ -469,20 +469,25 @@ class MACSTests(object):
 
         self.assertEqualBedFiles("final_peaks", "macstest_peaks.narrowPeak")
 
+    def test_final_tracks(self):
+        self._run_whole_macs()
+        self.caller.run()
+        self.assertEqualBedFiles("final_peaks", "macstest_peaks.narrowPeak")
+
 
 def small_test(with_control=False):
     return MACSTests(1000, 1000, 100000, read_length=6, fragment_length=20, with_control=with_control)
 
 
 def big_test(with_control=False):
-    return MACSTests(10000000, 1, 100000, read_length=51,
+    return MACSTests(100000, 100, 100000, read_length=51,
                      fragment_length=121, with_control=with_control)
 
 
 if __name__ == "__main__":
     test = big_test(False)
-    test.test_whole_pipeline()
-    exit()
+    # test.test_final_tracks()
+    # exit()
     caller = test.caller
     caller._control_pileup = Pileup.from_bed_graph(test.graph, "control_track.bdg")
     caller._sample_pileup = Pileup.from_bed_graph(test.graph, "sample_track.bdg")

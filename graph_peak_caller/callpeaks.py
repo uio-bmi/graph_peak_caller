@@ -59,7 +59,8 @@ class ExperimentInfo(object):
             print("WARNING: To liptle data to compute shift. Setting to default.")
             fragment_length = 125
             read_length = 20
-        return cls(genome_size, n_sample_reads, n_control_reads, fragment_length, read_length)
+        return cls(genome_size, n_sample_reads, n_control_reads,
+                   fragment_length, read_length)
 
 
 class CallPeaks(object):
