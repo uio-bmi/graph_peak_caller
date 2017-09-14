@@ -47,8 +47,6 @@ class ExperimentInfo(object):
         sizes = (block.length() for block in graph.blocks.values())
         genome_size = sum(sizes)
 
-        if control_file_name is not None:
-            n_control_reads = sum(1 for line in open(control_file_name))
         try:
             fragment_length, read_length = get_shift_size_on_offset_based_graph(
                 graph, sample_file_name)
