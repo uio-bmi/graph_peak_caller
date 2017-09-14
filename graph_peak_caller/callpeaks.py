@@ -229,9 +229,8 @@ class CallPeaks(object):
         shifter = Shifter(self.ob_graph, self.info.fragment_length)
         areas_list = (shifter.extend_interval_fast(interval)
                       for interval in alignments)
-        pileup = Pileup(self.ob_graph)
-        for areas in areas_list:
-            pileup.add_areas(areas)
+        pileup = Pileup.from_areas_collection(
+            self.ob_graph, areas_list)
         self._sample_track = self.out_file_base_name + "sample_track.bdg"
         if save_to_file:
             pileup.to_bed_graph(self._sample_track)

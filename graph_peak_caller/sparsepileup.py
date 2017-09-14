@@ -68,7 +68,7 @@ class ValuedIndexes(object):
         return list(chain(*zip(starts, ends)))
 
     @classmethod
-    def max(cls, vi_a, vi_b):
+    def maximum(cls, vi_a, vi_b):
         a = vi_a.all_idxs()[:-1]*2
         b = vi_b.all_idxs()[:-1]*2+1
         all_idxs = np.concatenate([a, b])
@@ -93,13 +93,17 @@ class ValuedIndexes(object):
         obj.sanitize()
         return obj
 
+    def trunctate(self, min_value):
+        self.values = np.maximum(self.values, min_value)
+        self.start_value = max(min_value, self.start_value)
+        self.sanitize()
+
     def __iter__(self):
         return zip(
             chain([0], self.indexes),
             chain(self.indexes, [self.length]),
             chain([self.start_value], self.values)
             )
-
 
 """
    |     |
@@ -119,7 +123,7 @@ class BinaryIndexes(object):
         self.starts.append(start)
         self.ends.append(end)
         self.starts.sort
-        
+
 
 class SparsePileup(Pileup):
     def __init__(self, graph):
@@ -142,12 +146,31 @@ class SparsePileup(Pileup):
         self.data[node_id] = valued_indexes
 
     @classmethod
-    def from_intervals(cls, graph, intervals):
-        starts, ends = intervals_to_start_and_ends(graph, intervals)
+    def from_areas_collection(cls, graph, areas_list):
+        def get_starts_ends(idx_list):
+            starts = []
+            ends = []
+            for i, idx in enumerate(idx_list):
+                if i % 2 == 0:
+                    starts.append(idx)
+                else:
+                    ends.append(idx)
+            return starts, ends
+        starts_dict = defaultdict(list)
+        ends_dict = defaultdict(list)
+        for areas in areas_list:
+            for rp, idx_list in areas.items():
+                starts, ends = get_starts_ends(idx_list)
+                starts_dict[rp].extend(starts)
+                ends_dict[rp].extend(ends)
+        cls.from_starts_and_ends(cls, graph, starts, ends)
 
+    @classmethod
+    def from_starts_and_ends(cls, graph, starts, ends):
         pileup = cls(graph)
         for rp in starts:
-            indexes, values = starts_and_ends_to_sparse_pileup(starts[rp], ends[rp])
+            indexes, values = starts_and_ends_to_sparse_pileup(
+                starts[rp], ends[rp])
             start_value = False
             length = graph.blocks[rp].length()
             if indexes[0] == 0:
@@ -160,9 +183,15 @@ class SparsePileup(Pileup):
                     indexes = indexes[:-1]
                     values = values[:-1]
 
-            pileup.data[rp] = ValuedIndexes(indexes, values, start_value, length)
+            pileup.data[rp] = ValuedIndexes(
+                indexes, values, start_value, length)
 
         return pileup
+
+    @classmethod
+    def from_intervals(cls, graph, intervals):
+        starts, ends = intervals_to_start_and_ends(graph, intervals)
+        return cls.from_starts_and_ends(cls, graph, starts, ends)
 
     def __str__(self):
         return "\n".join(
@@ -239,6 +268,15 @@ class SparsePileup(Pileup):
         large_intervals = [interval for interval in intervals
                            if interval.length() >= min_size]
         return self.from_intervals(self.graph, large_intervals)
+
+    def update_max(self, other):
+        for key, valued_indexes in self.data.items():
+            self.data[key] = ValuedIndexes.maximum(
+                valued_indexes, other.data[key])
+
+    def update_max_value(self, min_value):
+        for valued_indexes in self.data.values():
+            valued_indexes.trunctate(min_value)
 
 
 class SparseControlSample(SparsePileup):

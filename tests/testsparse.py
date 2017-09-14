@@ -37,8 +37,7 @@ class TestValuedIndexes(unittest.TestCase):
                                  np.array([60, 100, 210, 200]),
                                  50,
                                  20)
-        # print(true_max)
-        # print(max_vi)
+
         self.assertEqual(max_vi, true_max)
 
     def test_threshold(self):

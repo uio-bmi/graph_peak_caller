@@ -74,6 +74,13 @@ class Pileup(object):
                 other.__count_arrays[node_id])
 
     @classmethod
+    def from_areas_collection(cls, graph, areas_list):
+        pileup = cls(graph)
+        for areas in areas_list:
+            pileup.add_areas(areas)
+        return pileup
+
+    @classmethod
     def from_bed_graph(cls, graph, file_name):
         file = open(file_name)
         pileup = cls(graph)
