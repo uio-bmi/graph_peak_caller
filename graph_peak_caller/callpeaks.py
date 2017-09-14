@@ -35,11 +35,10 @@ def enable_filewrite(func):
 
 
 class ExperimentInfo(object):
-    def __init__(self, genome_size, n_sample_reads,
-                 n_control_reads, fragment_length, read_length):
+    def __init__(self, genome_size, fragment_length, read_length):
         self.genome_size = genome_size
-        self.n_sample_reads = n_sample_reads
-        self.n_control_reads = n_control_reads
+        self.n_sample_reads = 0  # Counters will be modified by Callpeaks
+        self.n_control_reads = 0
         self.fragment_length = fragment_length
         self.read_length = read_length
 
@@ -47,8 +46,7 @@ class ExperimentInfo(object):
     def find_info(cls, graph, sample_file_name, control_file_name=None):
         sizes = (block.length() for block in graph.blocks.values())
         genome_size = sum(sizes)
-        n_sample_reads = sum(1 for line in open(control_file_name))
-        n_control_reads = n_sample_reads
+
         if control_file_name is not None:
             n_control_reads = sum(1 for line in open(control_file_name))
         try:
@@ -59,7 +57,7 @@ class ExperimentInfo(object):
             print("WARNING: To liptle data to compute shift. Setting to default.")
             fragment_length = 125
             read_length = 20
-        return cls(genome_size, n_sample_reads, n_control_reads,
+        return cls(genome_size,
                    fragment_length, read_length)
 
 
@@ -109,11 +107,6 @@ class CallPeaks(object):
         for interval in self._get_intervals_in_ob_graph(intervals):
             if interval is not False:
                 yield interval
-            else:
-                if is_control:
-                    self.info.n_control_reads -= 1
-                else:
-                    self.info.n_sample_reads -= 1
 
     @enable_filewrite
     def filter_duplicates(self, intervals, is_control=False):
@@ -125,13 +118,14 @@ class CallPeaks(object):
             if hash in interval_hashes:
                 n_duplicates += 1
                 #print("Removing duplicate")
-                if is_control:
-                    self.info.n_control_reads -= 1
-                else:
-                    self.info.n_sample_reads -= 1
                 continue
 
             interval_hashes[hash] = True
+            if is_control:
+                self.info.n_control_reads += 1
+            else:
+                self.info.n_sample_reads += 1
+
             yield interval
 
     def _get_intervals_in_ob_graph(self, intervals):
@@ -169,7 +163,7 @@ class CallPeaks(object):
 
     def create_graph(self):
         if isinstance(self.graph, str):
-            self.ob_graph = offsetbasedgraph.Graph.from_file(self.graph_file_name)
+            self.ob_graph = offsetbasedgraph.Graph.from_file(self.graph)
         else:
             self.ob_graph = self.graph
 
