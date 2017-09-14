@@ -1,6 +1,6 @@
 from graph_peak_caller import callpeaks
 import pyvg
-from pyvg.util import vg_gam_file_to_intervals
+from pyvg.util import vg_gam_file_to_interval_collection
 import offsetbasedgraph as obg
 
 def run_with_gam(gam_file_name, vg_graph_file_name):
@@ -9,7 +9,7 @@ def run_with_gam(gam_file_name, vg_graph_file_name):
     #ob_graph.to_file("obgraph")
     ob_graph = obg.Graph.from_file("obgraph")
     #print(ob_graph.blocks)
-    reads_intervals = vg_gam_file_to_intervals(None, gam_file_name, ob_graph, max_intervals=1000)
+    reads_intervals = vg_gam_file_to_interval_collection(None, gam_file_name, ob_graph, max_intervals=1000)
     caller = callpeaks.CallPeaks(ob_graph, reads_intervals, out_file_base_name="real_data_")
     caller.run()
 

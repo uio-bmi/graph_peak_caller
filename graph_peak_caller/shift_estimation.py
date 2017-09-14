@@ -21,7 +21,15 @@ def get_shift_size_on_offset_based_graph(offset_based_graph, interval_file_name)
     bed_file = open("tmp2.bed", "w")
     n_not_translation = 0
 
-    for interval in IntervalCollection.create_generator_from_file(interval_file_name):
+    if not isinstance(interval_file_name, str):
+        # We have generator of intervals
+        file_name = interval_file_name.to_file("tmp_intervals_for_shifting")
+        intervals = IntervalCollection.from_file(file_name)
+        interval_file_name = IntervalCollection.from_file(file_name)  # Get back generator
+    else:
+        intervals = IntervalCollection.from_file(interval_file_name)
+
+    for interval in intervals:
         interval.graph = offset_based_graph
         if trans_to_linear.interval_has_translation(interval):
             linear_intervals = trans_to_linear.translate_interval(interval).get_single_path_intervals()
