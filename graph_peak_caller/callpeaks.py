@@ -65,7 +65,7 @@ class ExperimentInfo(object):
 
 class CallPeaks(object):
     def __init__(self, graph_file_name, sample_file_name,
-                 control_file_name=None, experiment_info=None, verbose=False):
+                 control_file_name=None, experiment_info=None, verbose=False, out_file_base_name=""):
         self.graph_file_name = graph_file_name
         self.sample_file_name = sample_file_name
         self.has_control = control_file_name is not None
@@ -78,6 +78,7 @@ class CallPeaks(object):
         self.control_intervals = []
         self._control_pileup = None
         self._sample_pileup = None
+        self.out_file_base_name = out_file_base_name
 
     def run(self, out_file="final_peaks"):
         self.create_graph()
@@ -185,7 +186,7 @@ class CallPeaks(object):
         pileup = control_track.combine_backgrounds(tracks, background_value)
 
         if save_to_file:
-            self._control_track = "control_track.bdg"
+            self._control_track = self.out_file_base_name + "control_track.bdg"
             pileup.to_bed_graph(self._control_track)
             print("Saved control pileup to " + self._control_track)
 
@@ -214,7 +215,7 @@ class CallPeaks(object):
         self.p_values.fill_small_wholes(self.info.read_length)
         self.final_track = self.p_values.remove_small_peaks(
             self.info.fragment_length)
-        self.final_track.to_bed_file(out_file)
+        self.final_track.to_bed_file(self.out_file_base_name + out_file)
 
     def create_sample_pileup(self, save_to_file=False):
         print("Create sample pileup")
@@ -228,7 +229,7 @@ class CallPeaks(object):
         pileup = Pileup(self.ob_graph)
         for areas in areas_list:
             pileup.add_areas(areas)
-        self._sample_track = "sample_track.bdg"
+        self._sample_track = self.out_file_base_name + "sample_track.bdg"
         if save_to_file:
             pileup.to_bed_graph(self._sample_track)
             print("Saved sample pileup to " + self._sample_track)
