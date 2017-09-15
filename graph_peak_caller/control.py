@@ -1,10 +1,10 @@
-from .pileup import Pileup, SparsePileup
+from .pileup import Pileup
+from .sparsepileup import SparsePileup
 from .shifter import Shifter
 from offsetbasedgraph.interval import IntervalCollection
 
 
 class ControlTrack(object):
-    
 
     def __init__(self, graph, intervals, fragment_length, extensions):
         self.graph = graph
@@ -27,7 +27,7 @@ class ControlTrack(object):
             for i in range(0, len(areas)):
                 areas_lists[i].append(areas[i])
                 # pileups[i].add_areas(areas[i])
-        pileups = [Pileup.from_areas_collection(self.graph, areas)
+        pileups = [SparsePileup.from_areas_collection(self.graph, areas)
                    for areas in areas_lists]
 
         for i in range(0, len(pileups)):
