@@ -74,6 +74,13 @@ class Pileup(object):
                 other.__count_arrays[node_id])
 
     @classmethod
+    def from_areas_collection(cls, graph, areas_list):
+        pileup = cls(graph)
+        for areas in areas_list:
+            pileup.add_areas(areas)
+        return pileup
+
+    @classmethod
     def from_bed_graph(cls, graph, file_name):
         file = open(file_name)
         pileup = cls(graph)
@@ -445,13 +452,3 @@ class SmallIntervals(object):
                     continue
             intervals.append(my_interval + [self.graph.node_size(node_id)])
         return intervals
-
-
-class SparsePileup(Pileup):
-    def create_data_struct(self):
-        # valued intervals = [(idx,  value)]
-        self.valued_intervals = defaultdict(list)
-
-    def _add_areas(self, areas):
-        for node_id, intervals in areas:
-            old_intervals = self.valued_intervals

@@ -12,6 +12,9 @@ class ValuedIndexes(object):
         self.indexes = indexes
         self.start_value = start_value
         self.length = length
+        self.__tmp_starts = []
+        self.__tmp_values = []
+        self.__tmp_end = 0
 
     def __eq__(self, other):
         if np.any(self.values != other.values):
@@ -33,6 +36,29 @@ class ValuedIndexes(object):
             self.start_value, self.length)
 
     __repr__ = __str__
+
+    def scale(self, scale):
+        self.values = self.values*scale
+        self.start_value = self.start_value*scale
+
+    def tmp_set_interval_value(self, start, end, value):
+        self.__tmp_starts.append(start)
+        self.__tmp_values.append(value)
+        self.__tmp_end = max(self.__tmp_end, end)
+
+    def fix_tmp_values(self):
+        assert self.__tmp_starts[0] == 0
+        self.start_value = self.__tmp_values[0]
+        self.length = self.__tmp_end
+        if len(self.__tmp_starts) < 2:
+            self.values = np.array([])
+            self.indexes = np.array([], dtype="int")
+        else:
+            self.indexes = self.__tmp_starts[1:]
+            self.values = self.__tmp_values[1:]
+        self.__tmp_values = []
+        self.__tmp_starts = []
+        self.__tmp_end = 0
 
     def set_interval_value(self, start, end, value):
         if start == 0:
@@ -68,7 +94,7 @@ class ValuedIndexes(object):
         return list(chain(*zip(starts, ends)))
 
     @classmethod
-    def max(cls, vi_a, vi_b):
+    def maximum(cls, vi_a, vi_b):
         a = vi_a.all_idxs()[:-1]*2
         b = vi_b.all_idxs()[:-1]*2+1
         all_idxs = np.concatenate([a, b])
@@ -93,13 +119,56 @@ class ValuedIndexes(object):
         obj.sanitize()
         return obj
 
+    @classmethod
+    def combine(cls, vi_a, vi_b):
+        a = vi_a.all_idxs()[:-1]*2
+        b = vi_b.all_idxs()[:-1]*2+1
+        all_idxs = np.concatenate([a, b])
+        all_idxs.sort()
+        vi_list = [vi_a, vi_b]
+        values_list = []
+        for i, vi in enumerate(vi_list):
+            idxs = np.nonzero((all_idxs % 2) == i)[0]
+            all_values = vi.all_values()
+            print("#", all_values)
+            value_diffs = np.diff(all_values)
+            values = np.zeros(all_idxs.shape)
+            values[idxs[1:]] = value_diffs
+            values[0] = all_values[0]
+            print("#", values.cumsum())
+            values_list.append(values.cumsum())
+
+        values = np.array([values_list[0], values_list[1]])
+        idxs = all_idxs // 2
+        print(values)
+        print(idxs)
+        unique_idxs = np.append(np.nonzero(np.diff(idxs))[0], len(idxs)-1)
+        print(unique_idxs)
+        idxs = idxs[unique_idxs]
+        values = values[:, unique_idxs]
+        print(values)
+        print(idxs)
+        obj = cls(idxs[1:], np.transpose(values[:, 1:]), values[:, 0], vi_a.length)
+        return obj
+
+    def trunctate(self, min_value):
+        self.values = np.maximum(self.values, min_value)
+        self.start_value = max(min_value, self.start_value)
+        self.sanitize()
+
+    @classmethod
+    def empty(cls, length):
+        return cls(np.array([], dtype="int"),
+                   np.array([]),
+                   0,
+                   length)
+
     def __iter__(self):
         return zip(
             chain([0], self.indexes),
             chain(self.indexes, [self.length]),
             chain([self.start_value], self.values)
             )
-
 
 """
    |     |
@@ -119,12 +188,16 @@ class BinaryIndexes(object):
         self.starts.append(start)
         self.ends.append(end)
         self.starts.sort
-        
+
 
 class SparsePileup(Pileup):
     def __init__(self, graph):
         self.graph = graph
-        self.data = {}
+        self.data = {rp: ValuedIndexes.empty(graph.node_size(rp))
+                     for rp in self.graph.blocks}
+
+    def scale(self, scale):
+        [vi.scale(scale) for vi in self.data.values()]
 
     def fill_small_wholes(self, max_size):
         super().fill_small_wholes(max_size)
@@ -142,13 +215,34 @@ class SparsePileup(Pileup):
         self.data[node_id] = valued_indexes
 
     @classmethod
-    def from_intervals(cls, graph, intervals):
-        starts, ends = intervals_to_start_and_ends(graph, intervals)
+    def from_areas_collection(cls, graph, areas_list):
+        def get_starts_ends(idx_list):
+            starts = []
+            ends = []
+            for i, idx in enumerate(idx_list):
+                if i % 2 == 0:
+                    starts.append(idx)
+                else:
+                    ends.append(idx)
+            return starts, ends
+        starts_dict = defaultdict(list)
+        ends_dict = defaultdict(list)
+        for areas in areas_list:
+            for rp, idx_list in areas.items():
+                starts, ends = get_starts_ends(idx_list)
+                starts_dict[rp].extend(starts)
+                ends_dict[rp].extend(ends)
+        starts_dict = {rp: np.array(v) for rp, v in starts_dict.items()}
+        ends_dict = {rp: np.array(v) for rp, v in ends_dict.items()}
+        return cls.from_starts_and_ends(graph, starts_dict, ends_dict, dtype=int)
 
+    @classmethod
+    def from_starts_and_ends(cls, graph, starts, ends, dtype=bool):
         pileup = cls(graph)
         for rp in starts:
-            indexes, values = starts_and_ends_to_sparse_pileup(starts[rp], ends[rp])
-            start_value = False
+            indexes, values = starts_and_ends_to_sparse_pileup(
+                starts[rp], ends[rp])
+            start_value = dtype(False)
             length = graph.blocks[rp].length()
             if indexes[0] == 0:
                 start_value = values[0]
@@ -160,9 +254,15 @@ class SparsePileup(Pileup):
                     indexes = indexes[:-1]
                     values = values[:-1]
 
-            pileup.data[rp] = ValuedIndexes(indexes, values, start_value, length)
+            pileup.data[rp] = ValuedIndexes(
+                indexes, values, start_value, length)
 
         return pileup
+
+    @classmethod
+    def from_intervals(cls, graph, intervals):
+        starts, ends = intervals_to_start_and_ends(graph, intervals)
+        return cls.from_starts_and_ends(graph, starts, ends)
 
     def __str__(self):
         return "\n".join(
@@ -192,6 +292,25 @@ class SparsePileup(Pileup):
                 end = interval.end_position.offset
             self.data[region_path].add_interval(
                 start, end)
+
+    def add_area(self, region_path, start, end, value):
+        """
+        NAIVE method to add single area to valued_inexes
+        Assumes it comes from a complete set of areas
+        """
+        vi = self.data[region_path]
+        vi.tmp_set_interval_value(start, end, value)
+
+    def fix_tmp_values(self):
+        for vi in self.data.values():
+            vi.fix_tmp_values()
+
+    @classmethod
+    def from_bed_graph(cls, graph, filename):
+        pileup = super().from_bed_graph(graph, filename)
+        assert isinstance(pileup, cls)
+        pileup.fix_tmp_values()
+        return pileup
 
     def add_areas(self, areas):
         for area, intervals in areas.items():
@@ -239,6 +358,25 @@ class SparsePileup(Pileup):
         large_intervals = [interval for interval in intervals
                            if interval.length() >= min_size]
         return self.from_intervals(self.graph, large_intervals)
+
+    def update_max(self, other):
+        for key, valued_indexes in self.data.items():
+            self.data[key] = ValuedIndexes.maximum(
+                valued_indexes, other.data[key])
+
+    def update_max_value(self, min_value):
+        for valued_indexes in self.data.values():
+            valued_indexes.trunctate(min_value)
+
+    def to_bed_graph(self, filename):
+        f = open(filename, "w")
+        for node_id, valued_indexes in self.data.items():
+            for t in valued_indexes:
+                f.write("%s\t%s\t%s\t%s\n" % ((node_id,) + t))
+        f.close()
+        self.filename = filename
+        self.is_written = True
+        return filename
 
 
 class SparseControlSample(SparsePileup):
@@ -300,15 +438,14 @@ class SparseControlSample(SparsePileup):
         self.get_p_to_q_values()
         self.get_q_values()
 
-    def to_bed_graph(self, filename):
-        f = open(filename, "w")
-        for node_id, valued_indexes in self.data.items():
-            for t in valued_indexes:
-                f.write("%s\t%s\t%s\t%s\n" % ((node_id,) + t))
-        f.close()
-        self.filename = filename
-        self.is_written = True
-        return filename
+    @classmethod
+    def from_sparse_control_and_sample(cls, control, sample):
+        sparse_pileup = cls(control.graph)
+        sparse_pileup.data = {
+            node_id: ValuedIndexes.combine(
+                control.data[node_id], sample.data[node_id])
+            for node_id in control.data}
+        return sparse_pileup
 
     @classmethod
     def from_control_and_sample(cls, control, sample):

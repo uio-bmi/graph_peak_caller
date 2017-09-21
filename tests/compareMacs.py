@@ -4,6 +4,7 @@ from offsetbasedgraph import Graph, Block, Position, Interval
 from offsetbasedgraph.interval import IntervalCollection
 from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo
 from graph_peak_caller.pileup import Pileup
+from graph_peak_caller.sparsepileup import SparsePileup
 import subprocess
 import random
 import re
@@ -93,7 +94,7 @@ class MACSTests(object):
         self.n_intervals_control = self.n_intervals
         self.info = ExperimentInfo(self.genome_size,
                                    self.fragment_length - 2,
-                                   self.read_length )
+                                   self.read_length)
 
         control_file_name = None
         if self.with_control:
@@ -134,10 +135,9 @@ class MACSTests(object):
     def test_call_peaks(self):
         # self.assertPileupFilesEqual("control_track.bdg", "macstest_control_lambda.bdg")
         # self.assertPileupFilesEqual("sample_track.bdg", "macstest_treat_pileup.bdg")
-        self.caller._control_pileup = Pileup.from_bed_graph(self.graph, "control_track.bdg")
-        self.caller._sample_pileup = Pileup.from_bed_graph(self.graph, "sample_track.bdg")
+        self.caller._control_pileup = SparsePileup.from_bed_graph(self.graph, "control_track.bdg")
+        self.caller._sample_pileup = SparsePileup.from_bed_graph(self.graph, "sample_track.bdg")
         self.caller.get_score()
-        return
         # self.caller.p_values.to_bed_graph(self.caller._p_value_track)
         self._get_scores("qpois")
         #self.assertPileupFilesEqual(self.caller._p_value_track,
@@ -147,9 +147,9 @@ class MACSTests(object):
         self.caller.q_values.to_bed_graph(self.caller._q_value_track)
         self.assertPileupFilesEqual(self.caller._q_value_track,
                                     "lin_scores.bdg")
-        self.caller.call_peaks()
-        self._call_peaks()
-        self.assertEqualBedFiles("final_peaks", "lin_peaks.bed")
+        # self.caller.call_peaks()
+        # self._call_peaks()
+        # self.assertEqualBedFiles("final_peaks", "lin_peaks.bed")
 
     def linear_to_graph_interval(self, lin_interval):
         start = lin_interval.start
@@ -231,7 +231,11 @@ class MACSTests(object):
                 continue
             if convert:
                 self._convert_valued_interval(interval)
-            pileup[interval.start:interval.end] = interval.value
+            try:
+                pileup[interval.start:interval.end] = interval.value
+            except:
+                print(interval.start, interval.end, interval.value)
+                raise
         if min_value is not None:
             pileup = np.maximum(pileup, min_value)
         return pileup
@@ -394,6 +398,9 @@ class MACSTests(object):
         dummy_end = SimpleInterval(self.genome_size - self.read_length, self.genome_size, -1)
         self.linear_intervals.append(dummy_end)
         self.graph_intervals = [self.linear_to_graph_interval(i) for i in self.linear_intervals]
+        t = all(all(rp in self.graph.blocks for rp in read.region_paths) for read in self.graph_intervals)
+        assert t
+
         self.n_intervals = len(self.linear_intervals)
         self.linear_intervals = sorted(self.linear_intervals, key = lambda x: (x.node_id, x.start))
         self.graph_intervals = sorted(self.graph_intervals, key = lambda x: (x.region_paths[0], x.start_position.offset))
@@ -480,14 +487,16 @@ def small_test(with_control=False):
 
 
 def big_test(with_control=False):
-    return MACSTests(100000, 100, 100000, read_length=51,
+    return MACSTests(10000000, 1, 100000, read_length=51,
                      fragment_length=121, with_control=with_control)
 
 
 if __name__ == "__main__":
+    random.seed(100)
     test = big_test(False)
-    # test.test_final_tracks()
-    # exit()
+    # test.test_call_peaks()
+    test.test_whole_pipeline()
+    exit()
 
 
     caller = test.caller
