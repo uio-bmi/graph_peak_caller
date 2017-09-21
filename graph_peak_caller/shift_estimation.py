@@ -38,7 +38,7 @@ def get_shift_size_on_offset_based_graph(offset_based_graph, interval_file_name)
             linear_interval.direction = interval.direction
             write_linear_interval_to_bed_file(bed_file, linear_interval)
         else:
-            n_not_translation += 11
+            n_not_translation += 1
 
     print("%d intervals did not have translation to linear graph" % n_not_translation)
 

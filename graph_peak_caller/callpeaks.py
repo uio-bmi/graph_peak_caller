@@ -48,6 +48,7 @@ class ExperimentInfo(object):
         genome_size = sum(sizes)
 
         try:
+            print("Finding shift")
             fragment_length, read_length = get_shift_size_on_offset_based_graph(
                 graph, sample_file_name)
             print("Found fragment length=%d, read length=%d" % (fragment_length, read_length))
@@ -160,10 +161,14 @@ class CallPeaks(object):
         self.n_reads = sum(1 for line in open(self.control_file_name))
 
     def create_graph(self):
+        if self.verbose:
+            print("Creating graph")
         if isinstance(self.graph, str):
             self.ob_graph = offsetbasedgraph.Graph.from_file(self.graph)
         else:
             self.ob_graph = self.graph
+            if self.verbose:
+                print("Graph already created")
 
     def create_control(self, save_to_file=False):
         if self.verbose:
@@ -213,7 +218,8 @@ class CallPeaks(object):
         self.final_track.to_bed_file(self.out_file_base_name + out_file)
 
     def create_sample_pileup(self, save_to_file=False):
-        print("Create sample pileup")
+        if self.verbose:
+            print("Create sample pileup")
         #alignments = IntervalCollection.from_file(
         #    self.sample_file_name)
         alignments = self.sample_intervals
