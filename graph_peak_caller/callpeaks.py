@@ -225,7 +225,7 @@ class CallPeaks(object):
         alignments = self.sample_intervals
 
         extender = Extender(self.ob_graph, self.info.fragment_length)
-        areas_list = (extender.extend_interval_fast(interval)
+        areas_list = (extender.extend_interval(interval)
                       for interval in alignments)
         pileup = SparsePileup.from_areas_collection(
             self.ob_graph, areas_list)

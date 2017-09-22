@@ -20,6 +20,7 @@ rev_edges.update(tmp_rev_edges)
 graph = Graph(nodes, edges, rev_adj_list=rev_edges)
 
 pos_interval = DirectedInterval(5, 15, [2])
+pos_interval = DirectedInterval(5, 15, [-2])
 
 
 class TestExtender(unittest.TestCase):
@@ -29,7 +30,9 @@ class TestExtender(unittest.TestCase):
         true_areas = Areas(graph, {2: [5, 20],
                                    3: [0, 5],
                                    1: [15, 20]})
+
         self.assertEqual(areas, true_areas)
+
 
 if __name__ == "__main__":
     unittest.main()

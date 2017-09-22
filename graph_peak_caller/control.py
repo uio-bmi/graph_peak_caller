@@ -17,7 +17,7 @@ class ControlTrack(object):
         extenders = [Extender(self.graph, extension)
                      for extension in extensions]
         areas_generator = ((
-            [extender.extend_interval_fast(alignment, 0)
+            [extender.extend_interval(alignment, 0)
              for extender in extenders]
             for alignment in self.intervals))
 
