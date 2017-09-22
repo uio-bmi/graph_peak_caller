@@ -4,10 +4,27 @@ from offsetbasedgraph.interval import Position
 
 class Areas(object):
     def __init__(self, graph, areas=None):
+        self.graph = graph
         if areas is None:
             self.areas = {}
         else:
             self.areas = areas
+
+    def __eq__(self, other):
+        if not len(self.areas) == len(other.areas):
+            return False
+
+        if not all(node_id in other.areas for node_id in self.areas):
+            return False
+
+        return all(startend == other.areas[node_id] for node_id, startend
+                   in self.areas.items())
+
+    def __str__(self):
+        return str(self.areas)
+
+    def __repr__(self):
+        return repr(self.areas)
 
     @classmethod
     def from_interval(cls, interval, graph):
@@ -34,20 +51,22 @@ class Areas(object):
                 max(startend[1], self.areas[node_id][1])]
 
     def reverse_reversals(self):
-        for node_id, startend in self.areas.items():
-            if node_id >= 0:
-                continue
+        print(self.areas)
+        neg_node_ids = [node_id for node_id in self.areas.keys()
+                        if node_id < 0]
+        for node_id in neg_node_ids:
+            startend = self.areas[node_id]
             l = self.graph.node_size(node_id)
             pos_coords = [l-pos for pos in reversed(startend)]
+            del self.areas[node_id]
             if -node_id not in self.areas:
                 self.areas[-node_id] = pos_coords
+                continue
             forward_areas = self.areas[-node_id]
             if forward_areas[-1] < pos_coords[0]:
                 forward_areas.extend(pos_coords)
             else:
                 self.areas[-node_id] = [forward_areas[0], pos_coords[-1]]
-        self.areas = {key: value for key, value in self.areas.items()
-                      if key >= 0}
 
     def get_starts(self, node_id):
         return [idx for i, idx in enumerate(self.areas[node_id])
@@ -74,9 +93,10 @@ class Extender(object):
                    for node_id, l in visited.items()}
         visited = {node_id: [0, l] for node_id, l in visited.items()}
         visited[point.region_path_id][0] = point.offset
+        print(visited)
         return Areas(self.graph, visited)
 
-    def extend_interval_fast(self, interval, local_direction=1):
+    def extend_interval(self, interval, local_direction=1):
         """Direction: +1 forward, 0 both"""
         assert local_direction in [-1, 0, 1]
         interval.graph = self.graph
