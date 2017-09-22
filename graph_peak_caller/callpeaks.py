@@ -2,11 +2,11 @@ from offsetbasedgraph import IntervalCollection
 import offsetbasedgraph
 import numpy as np
 import pyvg as vg
-from graph_peak_caller import Shifter
 from graph_peak_caller import get_shift_size_on_offset_based_graph
 from .control import ControlTrack
 from .sparsepileup import SparseControlSample, SparsePileup
 from .bdgcmp import *
+from .extender import Extender
 
 
 def enable_filewrite(func):
@@ -224,8 +224,8 @@ class CallPeaks(object):
         #    self.sample_file_name)
         alignments = self.sample_intervals
 
-        shifter = Shifter(self.ob_graph, self.info.fragment_length)
-        areas_list = (shifter.extend_interval_fast(interval)
+        extender = Extender(self.ob_graph, self.info.fragment_length)
+        areas_list = (extender.extend_interval_fast(interval)
                       for interval in alignments)
         pileup = SparsePileup.from_areas_collection(
             self.ob_graph, areas_list)

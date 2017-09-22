@@ -216,22 +216,12 @@ class SparsePileup(Pileup):
 
     @classmethod
     def from_areas_collection(cls, graph, areas_list):
-        def get_starts_ends(idx_list):
-            starts = []
-            ends = []
-            for i, idx in enumerate(idx_list):
-                if i % 2 == 0:
-                    starts.append(idx)
-                else:
-                    ends.append(idx)
-            return starts, ends
         starts_dict = defaultdict(list)
         ends_dict = defaultdict(list)
         for areas in areas_list:
-            for rp, idx_list in areas.items():
-                starts, ends = get_starts_ends(idx_list)
-                starts_dict[rp].extend(starts)
-                ends_dict[rp].extend(ends)
+            for rp in areas.areas:
+                starts_dict[rp].extend(areas.get_starts(rp))
+                ends_dict[rp].extend(areas.get_ends(rp))
         starts_dict = {rp: np.array(v) for rp, v in starts_dict.items()}
         ends_dict = {rp: np.array(v) for rp, v in ends_dict.items()}
         return cls.from_starts_and_ends(graph, starts_dict, ends_dict, dtype=int)
