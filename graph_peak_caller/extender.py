@@ -1,4 +1,5 @@
 from offsetbasedgraph.graphtraverser import GraphTraverser
+from offsetbasedgraph.interval import Position
 
 
 class Areas(object):
@@ -23,6 +24,7 @@ class Areas(object):
         return cls(graph, areas)
 
     def update(self, other):
+        """TODO: Hanlde cyclic graphs"""
         for node_id, startend in other.areas.items():
             if node_id not in self.areas:
                 self.areas[node_id] = startend
@@ -44,6 +46,8 @@ class Areas(object):
                 forward_areas.extend(pos_coords)
             else:
                 self.areas[-node_id] = [forward_areas[0], pos_coords[-1]]
+        self.areas = {key: value for key, value in self.areas.items()
+                      if key >= 0}
 
     def get_starts(self, node_id):
         return [idx for i, idx in enumerate(self.areas[node_id])
@@ -60,12 +64,11 @@ class Extender(object):
         self.pos_traverser = GraphTraverser(graph)
         self.neg_traverser = GraphTraverser(graph, -1)
         self.d = d
-        self.direction = self.d//abs(self.d) if self.d != 0 else 0
 
-    def get_areas_from_point(self, point, length):
+    def get_areas_from_point(self, point, length, traverser):
         length = point.offset + length
         visited = {}
-        self.pos_traverser.extend_from_block(
+        traverser.extend_from_block(
             point.region_path_id, length, visited)
         visited = {node_id: min(self.graph.node_size(node_id), l)
                    for node_id, l in visited.items()}
@@ -80,13 +83,28 @@ class Extender(object):
         extension_length = self.d - interval.length()
         areas = Areas.from_interval(interval, self.graph)
         end_position = interval.end_position
-        new_areas = self.get_areas_from_point(
-            end_position, extension_length)
-        areas.update(new_areas)
+        if interval.can_be_on_positive_strand():
+            new_areas = self.get_areas_from_point(
+                end_position, extension_length, self.pos_traverser)
+            areas.update(new_areas)
+        if interval.can_be_on_negative_strand():
+            new_areas = self.get_areas_from_point(
+                end_position, extension_length, self.neg_traverser)
+            areas.update(new_areas)
 
         if local_direction == 0:
             end_position = interval.start_position
-            new_areas = self.get_areas_from_point(
-                end_position, self.d)
-            areas.update(areas, new_areas)
+            region_path = end_position.region_path * (-1)
+            offset = self.graph.node_size(region_path) - end_position.offset
+            end_position = Position(region_path, offset)
+
+            if interval.can_be_on_positive_strand():
+                new_areas = self.get_areas_from_point(
+                    end_position, self.d, self.neg_traverser)
+                areas.update(areas, new_areas)
+            if interval.can_be_on_negative_strand():
+                new_areas = self.get_areas_from_point(
+                    end_position, self.d, self.pos_traverser)
+                areas.update(areas, new_areas)
+        areas.reverse_reversals()
         return areas
