@@ -103,6 +103,7 @@ class CallPeaks(object):
         self.sample_intervals = self.filter_duplicates(self.sample_intervals)
 
         if self.control_file_name is not None:
+            print("################## SHOULD NOT BE HERE ###############")
             self.control_intervals = self.remove_alignments_not_in_graph(self.control_file_name, is_control=True)
             self.control_intervals = self.filter_duplicates(self.control_intervals, is_control=True)
 
@@ -188,6 +189,7 @@ class CallPeaks(object):
 
         tracks = control_track.generate_background_tracks()
         background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
+        logging.warning(background_value)
         pileup = control_track.combine_backgrounds(tracks, background_value)
 
         if save_to_file:

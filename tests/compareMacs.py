@@ -13,7 +13,7 @@ from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo
 from graph_peak_caller.pileup import Pileup
 from graph_peak_caller.sparsepileup import SparsePileup
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.ERROR)
 
 
 class SimpleInterval(object):
@@ -100,6 +100,8 @@ class MACSTests(object):
         self.info = ExperimentInfo(self.genome_size,
                                    self.fragment_length - 1 - (self.fragment_length%2),
                                    self.read_length)
+        self.info.n_control_reads = self.n_intervals
+        self.info.n_sample_reads = self.n_intervals
 
         control_file_name = None
         if self.with_control:
@@ -117,7 +119,9 @@ class MACSTests(object):
             "lin_intervals.bed", "lin_intervals_dup.bed")
         command = command.split()
         subprocess.check_output(command)
-        self.dup_file_name = self.caller.filter_duplicates("graph_intervals", write_to_file="graph_intervals_filtered")
+        self.dup_file_name = self.caller.filter_duplicates(
+            "graph_intervals",
+            write_to_file="graph_intervals_filtered")
         self.assertEqualIntervalFiles(
             self.dup_file_name,
             "lin_intervals_dup.bed")
@@ -132,6 +136,7 @@ class MACSTests(object):
             "lin_sample_pileup.bdg")
 
     def test_control_pileup(self):
+        self.caller.control_intervals = self.graph_intervals
         self.caller.create_control(True)
         self._create_control()
         assert isinstance(self.caller._control_track, str)
@@ -315,7 +320,7 @@ class MACSTests(object):
     def _create_control(self):
         for ext in [2500]:
             command = "macs2 pileup -i %s -o %s -B --extsize %s" % (
-                "lin_intervals.bed", "lin_control_pileup%s.bdg" % ext, ext)
+                "lin_intervals.bed", "lin_control_pileup%s.bdg -f BED" % ext, ext)
             subprocess.check_output(command.split())
             command = "macs2 bdgopt -i lin_control_pileup%s.bdg -m multiply -p %s -o lin_control_pileup%s.bdg" % (
                 ext, (self.fragment_length-1)/(ext*2), ext)
@@ -323,9 +328,11 @@ class MACSTests(object):
         # command = "macs2 bdgcmp -m max -t lin_control_pileup2500.bdg -c lin_control_pileup5000.bdg -o lin_control_pileup.bdg"
 
         # subprocess.check_output(command.split())
-        print("##############", self.background)
-        self.background = self.n_intervals * (self.fragment_length-1) / self.genome_size
-        command = "macs2 bdgopt -i lin_control_pileup5000.bdg -m max -p %s -o lin_control_pileup.bdg" % self.background
+
+        self.background = self.n_intervals * self.info.fragment_length / self.genome_size
+        logging.info(self.background)
+        command = "macs2 bdgopt -i lin_control_pileup2500.bdg -m max -p %s -o lin_control_pileup.bdg" % self.background
+        print(command)
         subprocess.check_output(command.split())
 
     def write_intervals(self):
@@ -349,7 +356,7 @@ class MACSTests(object):
 
     def create_linear_graph(self):
         nodes = {i+1: Block(self.node_size) for i in range(self.n_nodes)}
-        adj_list = {i: [i+1] for i in range(self.n_nodes-1)}
+        adj_list = {i: [i+1] for i in range(1, self.n_nodes)}
         self.graph = Graph(nodes, adj_list)
         self.graph.to_file("lin_graph")
 
@@ -494,9 +501,9 @@ class MACSTests(object):
         self.caller.preprocess()
 
         self.caller.create_sample_pileup(True)
-        print(self.caller.info.n_control_reads)
+        print("#", self.caller.info.n_control_reads)
         self.caller.create_control(True)
-        print(self.caller.info.n_control_reads)
+        print("#", self.caller.info.n_control_reads)
         self.caller.scale_tracks(update_saved_files=True)
         self.assertPileupFilesEqual("sample_track.bdg", "macstest_treat_pileup.bdg")
         self.assertPileupFilesEqual("control_track.bdg", "macstest_control_lambda.bdg")
@@ -514,20 +521,21 @@ class MACSTests(object):
 
 
 def small_test(with_control=False):
-    return MACSTests(100, 11, 100, read_length=10,
+    return MACSTests(1000, 10, 10, read_length=10,
                      fragment_length=30, with_control=with_control)
 
 
 def big_test(with_control=False):
-    return MACSTests(10000000, 1, 100000, read_length=51,
-                     fragment_length=121, with_control=with_control)
+    return MACSTests(10000000, 1, 1, read_length=51,
+                     fragment_length=120, with_control=with_control)
 
 
 if __name__ == "__main__":
     random.seed(100)
-    test = small_test(False)
-    # test.test_call_peaks()
+    test = big_test(False)
     test.test_sample_pileup()
+    test.test_control_pileup()
+    test.test_call_peaks()
     # test.test_whole_pipeline()
     exit()
 

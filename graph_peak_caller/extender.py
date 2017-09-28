@@ -67,10 +67,12 @@ class Areas(object):
                 self.areas[-node_id] = pos_coords
                 continue
             forward_areas = self.areas[-node_id]
+
             if forward_areas[-1] < pos_coords[0]:
                 forward_areas.extend(pos_coords)
             else:
-                self.areas[-node_id] = [forward_areas[0], pos_coords[-1]]
+                all_coords = forward_areas + pos_coords
+                self.areas[-node_id] = [min(all_coords), max(all_coords)]
 
     def get_starts(self, node_id):
         return [idx for i, idx in enumerate(self.areas[node_id])
@@ -140,7 +142,7 @@ class Extender(object):
                     end_position, self.d, self.pos_traverser)
                 areas.update(new_areas)
         areas.reverse_reversals()
-        logging.debug("Extending")
-        logging.debug(interval)
-        logging.debug(areas)
+        logging.warning("Extending")
+        logging.warning(interval)
+        logging.warning(areas)
         return areas
