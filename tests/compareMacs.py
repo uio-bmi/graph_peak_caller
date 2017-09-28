@@ -156,11 +156,14 @@ class MACSTests(object):
 
         # self.caller.get_q_values()
         self.caller.q_values.to_bed_graph(self.caller._q_value_track)
+        self._get_scores()
+        print(self.caller._q_value_track)
         self.assertPileupFilesEqual(self.caller._q_value_track,
                                     "lin_scores.bdg")
-        # self.caller.call_peaks()
-        # self._call_peaks()
-        # self.assertEqualBedFiles("final_peaks", "lin_peaks.bed")
+        self._call_peaks()
+        self.caller.call_peaks()
+
+        self.assertEqualBedFiles("final_peaks", "lin_peaks.bed")
 
     def neg_linear_to_graph_interval(self, lin_interval):
         start_offset = (-lin_interval.end) % self.node_size
@@ -305,8 +308,8 @@ class MACSTests(object):
         subprocess.check_output(command.split())
 
     def _get_scores(self, t="qpois"):
-        # command = "macs2 bdgcmp -t lin_sample_pileup.bdg -c lin_control_pileup.bdg -m ppois -o lin_scores.bdg"
-        command = "macs2 bdgcmp -t macstest_treat_pileup.bdg -c macstest_control_lambda.bdg  -m %s -o lin_scores.bdg" % t
+        command = "macs2 bdgcmp -t lin_sample_pileup.bdg -c lin_control_pileup.bdg -m %s -o lin_scores.bdg" % t
+        # command = "macs2 bdgcmp -t macstest_treat_pileup.bdg -c macstest_control_lambda.bdg  -m %s -o lin_scores.bdg" % t
         print(command)
         subprocess.check_output(command.split())
 
@@ -521,18 +524,18 @@ class MACSTests(object):
 
 
 def small_test(with_control=False):
-    return MACSTests(1000, 10, 10, read_length=10,
+    return MACSTests(1000, 10, 100, read_length=10,
                      fragment_length=30, with_control=with_control)
 
 
 def big_test(with_control=False):
-    return MACSTests(10000000, 1, 1, read_length=51,
+    return MACSTests(10000000, 10, 1, read_length=51,
                      fragment_length=120, with_control=with_control)
 
 
 if __name__ == "__main__":
     random.seed(100)
-    test = big_test(False)
+    test = small_test(False)
     test.test_sample_pileup()
     test.test_control_pileup()
     test.test_call_peaks()
