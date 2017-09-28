@@ -13,7 +13,7 @@ def run_with_gam(gam_file_name, vg_graph_file_name, limit_to_chromosomes=False):
     print(ob_graph.adj_list[68567])
 
     #print(ob_graph.blocks)
-    reads_intervals = vg_gam_file_to_interval_collection(None, gam_file_name, ob_graph, max_intervals=100000)
+    reads_intervals = vg_gam_file_to_interval_collection(None, gam_file_name, ob_graph, max_intervals=1000)
 
     experiment_info = callpeaks.ExperimentInfo(12000000, 103, 50)
 

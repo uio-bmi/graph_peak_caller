@@ -130,24 +130,24 @@ class ValuedIndexes(object):
         for i, vi in enumerate(vi_list):
             idxs = np.nonzero((all_idxs % 2) == i)[0]
             all_values = vi.all_values()
-            print("#", all_values)
+            #print("#", all_values)
             value_diffs = np.diff(all_values)
             values = np.zeros(all_idxs.shape)
             values[idxs[1:]] = value_diffs
             values[0] = all_values[0]
-            print("#", values.cumsum())
+            #print("#", values.cumsum())
             values_list.append(values.cumsum())
 
         values = np.array([values_list[0], values_list[1]])
         idxs = all_idxs // 2
-        print(values)
-        print(idxs)
+        #print(values)
+        #print(idxs)
         unique_idxs = np.append(np.nonzero(np.diff(idxs))[0], len(idxs)-1)
-        print(unique_idxs)
+        #print(unique_idxs)
         idxs = idxs[unique_idxs]
         values = values[:, unique_idxs]
-        print(values)
-        print(idxs)
+        #print(values)
+        #print(idxs)
         obj = cls(idxs[1:], np.transpose(values[:, 1:]), values[:, 0], vi_a.length)
         return obj
 
