@@ -1,7 +1,9 @@
-from offsetbasedgraph import IntervalCollection, DirectedInterval
-import offsetbasedgraph
+import logging
 import numpy as np
+
+from offsetbasedgraph import IntervalCollection, DirectedInterval
 import pyvg as vg
+import offsetbasedgraph
 from graph_peak_caller import get_shift_size_on_offset_based_graph
 from .control import ControlTrack
 from .sparsepileup import SparseControlSample, SparsePileup
@@ -221,12 +223,11 @@ class CallPeaks(object):
         self.final_track.to_bed_file(self.out_file_base_name + out_file)
 
     def create_sample_pileup(self, save_to_file=False):
+        logging.debug("In sample pileup")
         if self.verbose:
             print("Create sample pileup")
-        #alignments = IntervalCollection.from_file(
-        #    self.sample_file_name)
         alignments = self.sample_intervals
-
+        logging.debug(self.sample_intervals)
         extender = Extender(self.ob_graph, self.info.fragment_length)
         areas_list = (extender.extend_interval(interval)
                       for interval in alignments)

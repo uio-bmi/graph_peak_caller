@@ -1,9 +1,10 @@
+import logging
 from itertools import chain
 import numpy as np
-import offsetbasedgraph as obg
-from collections import defaultdict
-from .pileup import Pileup
 from scipy.stats import poisson
+from collections import defaultdict
+
+from .pileup import Pileup
 
 
 class ValuedIndexes(object):
@@ -216,6 +217,7 @@ class SparsePileup(Pileup):
 
     @classmethod
     def from_areas_collection(cls, graph, areas_list):
+        logging.debug(areas_list)
         starts_dict = defaultdict(list)
         ends_dict = defaultdict(list)
         for areas in areas_list:

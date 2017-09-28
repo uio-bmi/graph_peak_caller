@@ -126,9 +126,9 @@ class Pileup(object):
         [self.add_interval(interval) for interval in intervals]
 
     def add_interval(self, interval):
-        areas = Areas.from_interval(interval)
+        areas = Areas.from_interval(interval, self.graph)
         areas.reverse_reversals()
-        self.add_areas(areas)
+        self.add_areas(areas.areas)
 
     def add_area(self, block_id, start, end, value=1):
         count_array_block = self.__count_arrays[block_id]

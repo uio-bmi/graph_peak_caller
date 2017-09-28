@@ -86,6 +86,8 @@ class Extender(object):
         self.graph = graph
         self.pos_traverser = GraphTraverser(graph)
         self.neg_traverser = GraphTraverser(graph, -1)
+        logging.debug(self.pos_traverser)
+        logging.debug(self.neg_traverser)
         self.d = d
 
     def get_areas_from_point(self, point, length, traverser):
@@ -105,16 +107,22 @@ class Extender(object):
         logging.info("Extending interval: %s" % interval)
         interval.graph = self.graph
         extension_length = self.d - interval.length()
+        logging.debug(interval.length())
+        logging.debug(extension_length)
+        logging.debug(self.d)
         areas = Areas.from_interval(interval, self.graph)
         end_position = interval.end_position
         if interval.can_be_on_positive_strand():
+            logging.debug("POSITIVE")
             new_areas = self.get_areas_from_point(
                 end_position, extension_length, self.pos_traverser)
             logging.info("New areas: %s" % new_areas)
             areas.update(new_areas)
         if interval.can_be_on_negative_strand():
+            logging.debug("NEGATIVE")
             new_areas = self.get_areas_from_point(
                 end_position, extension_length, self.neg_traverser)
+            logging.info("New areas: %s" % new_areas)
             areas.update(new_areas)
 
         if local_direction == 0:
@@ -132,4 +140,7 @@ class Extender(object):
                     end_position, self.d, self.pos_traverser)
                 areas.update(new_areas)
         areas.reverse_reversals()
+        logging.debug("Extending")
+        logging.debug(interval)
+        logging.debug(areas)
         return areas
