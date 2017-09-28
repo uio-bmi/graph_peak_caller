@@ -94,7 +94,7 @@ class Shifter(object):
             length = point.offset + length
         visited = {}
         self.traverser.extend_from_block(
-            point.region_path_id, length, is_reverse, visited)
+            point.region_path_id, length, visited)
         visited = {node_id: min(self.graph.node_size(node_id), l)
                    for node_id, l in visited.items()}
         if is_reverse:

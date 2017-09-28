@@ -147,7 +147,7 @@ class CallPeaks(object):
             if update_saved_files:
                 self._sample_pileup.to_bed_graph(self._sample_track)
         else:
-            self._control_pileup(ratio)
+            self._control_pileup.scale(ratio)
             if update_saved_files:
                 self._control_pileup.to_bed_graph(self._control_track)
 
