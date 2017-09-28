@@ -1,6 +1,7 @@
 import cProfile
 import pstats
-from offsetbasedgraph import Graph, Block, Position, Interval
+from offsetbasedgraph import Graph, Block, Position,\
+    DirectedInterval
 from offsetbasedgraph.interval import IntervalCollection
 from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo
 from graph_peak_caller.pileup import Pileup
@@ -152,10 +153,15 @@ class MACSTests(object):
         # self.assertEqualBedFiles("final_peaks", "lin_peaks.bed")
 
     def linear_to_graph_interval(self, lin_interval):
-        start = lin_interval.start
-        end = lin_interval.end
-        start_rp = start//self.node_size
-        end_rp = (end-1)//self.node_size
+        tmp_start = lin_interval.start
+        tmp_end = lin_interval.end
+        start = tmp_start
+        end = tmp_end
+        if lin_interval.direction == -1:
+            start = -tmp_end
+            end = -tmp_start
+        start_rp = start//self.node_size + lin_interval.direction
+        end_rp = (end-1)//self.node_size + lin_interval.direction
         start_pos = Position(
             start_rp,
             start % self.node_size)
@@ -163,8 +169,12 @@ class MACSTests(object):
             end_rp,
             ((end-1) % self.node_size) + 1)
         region_paths = list(range(start_rp, end_rp+1))
-        return Interval(start_pos, end_pos, region_paths,
-                        direction=lin_interval.direction, graph=self.graph)
+        print(lin_interval)
+        interval = DirectedInterval(
+            start_pos, end_pos, region_paths,
+            direction=lin_interval.direction, graph=self.graph)
+        print(interval)
+        return interval
 
     def _convert_valued_interval(self, interval):
         interval.start += self.node_size*interval.node_id
@@ -273,7 +283,7 @@ class MACSTests(object):
             "Pileup in %s != pileup in %s" % (linear_file, graph_file)
 
     def _create_sample_pileup(self):
-        command = "macs2 pileup -i %s -o %s --extsize %s" % (
+        command = "macs2 pileup -i %s -o %s --extsize %s -f BED" % (
             "lin_intervals.bed", "lin_sample_pileup.bdg", self.fragment_length - 1)
         print(command)
         subprocess.check_output(command.split())
@@ -314,7 +324,7 @@ class MACSTests(object):
         f.close()
         print("Wrote to lin_intervals.bed")
         graph_intervals = IntervalCollection(self.graph_intervals)
-        graph_intervals.to_file("graph_intervals")
+        graph_intervals.to_file("graph_intervals", True)
 
         if self.with_control:
             f = open("lin_intervals_control.bed", "w")
@@ -327,22 +337,27 @@ class MACSTests(object):
         print("Wrote to graph_intervals")
 
     def create_linear_graph(self):
-        nodes = {i: Block(self.node_size) for i in range(self.n_nodes)}
+        nodes = {i+1: Block(self.node_size) for i in range(self.n_nodes)}
         adj_list = {i: [i+1] for i in range(self.n_nodes-1)}
         self.graph = Graph(nodes, adj_list)
         self.graph.to_file("lin_graph")
 
-    def _get_graph_interval(self, start, end, direction):
+    def _get_graph_interval(self, tmp_start, tmp_end, direction):
+        start = tmp_start
+        end = tmp_end
+        if direction == -1:
+            start = -tmp_end
+            end = -tmp_start
         start_rp = start//self.node_size
         end_rp = (end+1)//self.node_size
+        region_paths = list(range(start_rp, end_rp))
         start_pos = Position(
             start_rp,
             start % self.node_size)
         end_pos = Position(
             end_rp,
             (end % self.node_size) + 1)
-        region_paths = list(range(start_rp, end_rp+1))
-        return Interval(start_pos, end_pos, region_paths, direction=direction)
+        return DirectedInterval(start_pos, end_pos, region_paths, direction=direction)
 
     def create_pairs_around_point(self, point, n=100):
         intervals = []
@@ -351,12 +366,15 @@ class MACSTests(object):
             point = point+offset
             pos_start = point-self.fragment_length//2
             pos_end = pos_start+self.read_length
-            if pos_start > 0:
+            if pos_start > 0 and pos_end < self.genome_size:
                 intervals.append(SimpleInterval(pos_start, pos_end, 1))
+                assert pos_start >= 0 and pos_end >= 0
             neg_end = point+self.fragment_length//2
             neg_start = neg_end-self.read_length
-            if neg_end < self.genome_size:
+            if neg_end < self.genome_size and neg_start >= 0:
                 intervals.append(SimpleInterval(neg_start, neg_end, -1))
+                assert neg_start >= 0 and neg_end >= 0
+
         return intervals
 
     def create_random_linear_reads(self, n_reads, include_pairs=False):
@@ -395,17 +413,19 @@ class MACSTests(object):
 
     def create_intervals(self):
         self.linear_intervals = self.create_random_linear_reads(self.n_intervals, include_pairs=True)
+        assert all(i.start >= 0 and i.end >= 0 for i in self.linear_intervals)
         dummy_end = SimpleInterval(self.genome_size - self.read_length, self.genome_size, -1)
         self.linear_intervals.append(dummy_end)
         self.graph_intervals = [self.linear_to_graph_interval(i) for i in self.linear_intervals]
-        t = all(all(rp in self.graph.blocks for rp in read.region_paths) for read in self.graph_intervals)
-        assert t
+        assert all(i.start >= 0 and i.end >= 0 for i in self.linear_intervals)
+        t = all(all(abs(rp) in self.graph.blocks for rp in read.region_paths) for read in self.graph_intervals)
+        # print([i for i in self.graph_intervals if not all(abs(rp) in self.graph.blocks for rp in i.region_paths)])
+        # assert t
 
         self.n_intervals = len(self.linear_intervals)
         self.linear_intervals = sorted(self.linear_intervals, key = lambda x: (x.node_id, x.start))
         self.graph_intervals = sorted(self.graph_intervals, key = lambda x: (x.region_paths[0], x.start_position.offset))
         print("Created %d intervals " % self.n_intervals)
-
 
         if self.with_control:
             self.linear_intervals_control = self.create_random_linear_reads(self.n_intervals // 2, include_pairs=False)
@@ -483,7 +503,8 @@ class MACSTests(object):
 
 
 def small_test(with_control=False):
-    return MACSTests(1000, 1000, 100000, read_length=6, fragment_length=20, with_control=with_control)
+    return MACSTests(1000, 1, 10, read_length=10,
+                     fragment_length=30, with_control=with_control)
 
 
 def big_test(with_control=False):
@@ -493,11 +514,11 @@ def big_test(with_control=False):
 
 if __name__ == "__main__":
     random.seed(100)
-    test = big_test(False)
+    test = small_test(False)
     # test.test_call_peaks()
-    test.test_whole_pipeline()
+    test.test_sample_pileup()
+    # test.test_whole_pipeline()
     exit()
-
 
     caller = test.caller
     caller._control_pileup = Pileup.from_bed_graph(

@@ -224,7 +224,8 @@ class SparsePileup(Pileup):
                 ends_dict[rp].extend(areas.get_ends(rp))
         starts_dict = {rp: np.array(v) for rp, v in starts_dict.items()}
         ends_dict = {rp: np.array(v) for rp, v in ends_dict.items()}
-        return cls.from_starts_and_ends(graph, starts_dict, ends_dict, dtype=int)
+        return cls.from_starts_and_ends(graph, starts_dict,
+                                        ends_dict, dtype=int)
 
     @classmethod
     def from_starts_and_ends(cls, graph, starts, ends, dtype=bool):

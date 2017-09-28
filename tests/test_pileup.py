@@ -1,12 +1,13 @@
 import unittest
 from graph_peak_caller.pileup import Pileup, SmallIntervals
+
 from examples import *
 
 
 class TestPileup(unittest.TestCase):
     def test_create(self):
         pileup = Pileup(ob_graphs[0])
-        pileup.add_intervals(pileup_intervals)
+        pileup.add_intervals(directed_pileup_intervals)
         self.assertEqual(pileup, true_pileup)
 
     def test_to_file_from_file(self):

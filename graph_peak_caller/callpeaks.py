@@ -1,4 +1,4 @@
-from offsetbasedgraph import IntervalCollection
+from offsetbasedgraph import IntervalCollection, DirectedInterval
 import offsetbasedgraph
 import numpy as np
 import pyvg as vg
@@ -7,6 +7,9 @@ from .control import ControlTrack
 from .sparsepileup import SparseControlSample, SparsePileup
 from .bdgcmp import *
 from .extender import Extender
+
+
+IntervalCollection.interval_class = DirectedInterval
 
 
 def enable_filewrite(func):

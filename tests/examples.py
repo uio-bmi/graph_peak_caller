@@ -46,7 +46,13 @@ ob_graphs = [graph.get_offset_based_graph() for graph in vg_graphs]
 pileup_intervals = [offsetbasedgraph.Interval(5, 5, [0, 1]),
                     offsetbasedgraph.Interval(0, 10, [1]),
                     offsetbasedgraph.Interval(10, 15, [1])]
-for interval in pileup_intervals:
+
+directed_pileup_intervals = [
+    offsetbasedgraph.DirectedInterval(5, 5, [0, 1]),
+    offsetbasedgraph.DirectedInterval(10, 20, [-1], -1),
+    offsetbasedgraph.DirectedInterval(10, 15, [1])]
+
+for interval in pileup_intervals+directed_pileup_intervals:
     interval.graph = ob_graphs[0]
 
 true_counts = {node.id: np.zeros(node.n_basepairs, dtype="int32")
