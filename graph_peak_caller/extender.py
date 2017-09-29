@@ -30,18 +30,23 @@ class Areas(object):
     def __repr__(self):
         return repr(self.areas)
 
+    def join(self, areas):
+        pass
+
     @classmethod
     def from_interval(cls, interval, graph):
+        if len(interval.region_paths) == 1:
+            return cls(graph, {interval.region_paths[0]: [
+                interval.start_position.offset,
+                interval.end_position.offset]})
         areas = {}
-        for region_path in interval.region_paths:
-            start = 0
-            end = graph.node_size(region_path)
-            if region_path == interval.start_position.region_path_id:
-                start = interval.start_position.offset
-            if region_path == interval.end_position.region_path_id:
-                end = interval.end_position.offset
+        start_rp = interval.region_paths[0]
+        start_len = graph.node_size(start_rp)-interval.start_position.offset
+        areas[-start_rp] = [0, start_len]
+        areas[interval.end_position.region_path_id] = [0, interval.end_position.offset]
 
-            areas[region_path] = [start, end]
+        for region_path in interval.region_paths[1:-1]:
+            areas[region_path] = [0, graph.node_size(region_path)]
 
         return cls(graph, areas)
 
@@ -60,6 +65,7 @@ class Areas(object):
             if node_id not in self.areas:
                 self.areas[node_id] = startend
                 continue
+
             self.areas[node_id] = [
                 min(startend[0], self.areas[node_id][0]),
                 max(startend[1], self.areas[node_id][1])]
@@ -68,6 +74,7 @@ class Areas(object):
         neg_node_ids = [node_id for node_id in self.areas.keys()
                         if node_id < 0]
         for node_id in neg_node_ids:
+            
             startend = self.areas[node_id]
             l = self.graph.node_size(node_id)
             pos_coords = [l-pos for pos in reversed(startend)]
@@ -115,7 +122,7 @@ class Areas(object):
         return intervals
 
 
-class Extender(object):
+class OldExtender(object):
     def __init__(self, graph, d):
         self.graph = graph
         self.pos_traverser = GraphTraverser(graph)
@@ -135,22 +142,31 @@ class Extender(object):
         visited[point.region_path_id][0] = point.offset
         return Areas(self.graph, visited)
 
+    def get_areas_from_point_new(self, point, length, traverser):
+        inverse_start = self.graph.node_size(point.region_path_id)
+        remaining = length-inverse_start
+        if remaining < 0:
+            return Areas(self.graph, {point.node_id:
+                                      [point.offset, point.offset+length]})
+        visited = {-point.region_path_id: [0, inverse_start]}
+        for next_node in traverser.adj_list[point.region_path_id]:
+            traverser.extend_from_block(next_node, remaining, visited)
+        visited = {node_id: min(self.graph.node_size(node_id), l)
+                   for node_id, l in visited.items()}
+        visited = {node_id: [0, l] for node_id, l in visited.items()}
+        # visited[point.region_path_id][0] = point.offset
+        return Areas(self.graph, visited)
+
     def extend_interval(self, interval, local_direction=1):
         """Direction: +1 forward, 0 both"""
         assert local_direction in [-1, 0, 1]
-        logging.info("Extending interval: %s" % interval)
         interval.graph = self.graph
         extension_length = self.d - interval.length()
-        logging.debug(interval.length())
-        logging.debug(extension_length)
-        logging.debug(self.d)
         areas = Areas.from_interval(interval, self.graph)
         end_position = interval.end_position
         if interval.can_be_on_positive_strand():
-            logging.debug("POSITIVE")
             new_areas = self.get_areas_from_point(
                 end_position, extension_length, self.pos_traverser)
-            logging.info("New areas: %s" % new_areas)
             areas.update(new_areas)
         if interval.can_be_on_negative_strand():
             logging.debug("NEGATIVE")
@@ -178,3 +194,115 @@ class Extender(object):
         logging.warning(interval)
         logging.warning(areas)
         return areas
+
+
+class AreasBuilder(object):
+    def __init__(self, graph):
+        self.graph = graph
+        self.areas = {}
+
+    def update(self, new_areas):
+        """NB!: Only works if all intervals start at 0"""
+        for rp, startend in new_areas.items():
+            if rp not in self.areas:
+                self.areas[rp] = startend
+                continue
+            self.areas[rp][-1] = max(startend[-1], self.areas[rp][-1])
+
+    def reverse_reversals(self):
+        neg_rps = [rp for rp in self.areas if rp < 0]
+        for rp in neg_rps:
+            node_size = self.graph.node_size(rp)
+            pos_rp = -rp
+            if pos_rp not in self.areas:
+                self.areas[pos_rp] = [
+                    node_size-i for i in self.areas[rp][::-1]]
+            else:
+                mid = node_size-self.areas[rp][-1]
+                if self.areas[pos_rp][-1] > mid:
+                    self.areas[pos_rp] = [0, node_size]
+                else:
+                    self.areas[pos_rp] += [mid, node_size]
+            del self.areas[rp]
+
+    def filled_interval(self, interval, fill_pos=0, fill_neg=0):
+        start = max(interval.start_position.offset-fill_neg, 0)
+        end_size = self.graph.node_size(interval.end_position.region_path_id)
+        end = min(interval.end_position.offset+fill_pos,
+                  end_size)
+        neg_remain = max(0, fill_neg-interval.start_position.offset)
+        pos_remain = max(0, fill_pos-(end_size-interval.end_position.offset))
+
+        if len(interval.region_paths) == 1:
+            # Make sure it touches edge if possible
+            if start == 0:
+                self.areas[interval.region_paths[0]] = [start, end]
+            else:
+                self.areas[-interval.region_paths[0]] = [end_size-end, end_size-start]
+            return pos_remain, neg_remain
+        start_rp = interval.region_paths[0]
+        start_len = self.graph.node_size(start_rp) - start
+        self.areas[-start_rp] = [0, start_len]
+        self.areas[interval.end_position.region_path_id] = [0, end]
+
+        for region_path in interval.region_paths[1:-1]:
+            self.areas[region_path] = [0, self.graph.node_size(region_path)]
+        
+        return pos_remain, neg_remain
+
+
+class Extender(object):
+    def __init__(self, graph, length):
+        self.length = length
+        self.graph = graph
+        self.pos_traverser = GraphTraverser(graph, +1)
+        self.neg_traverser = GraphTraverser(graph, -1)
+
+    def get_areas_from_node(self, region_path, length, traverser):
+        logging.debug("########")
+        logging.debug(region_path)
+        logging.debug(length)
+        visited = {}
+        for next_node in traverser.adj_list[region_path]:
+            traverser.extend_from_block(next_node, length, visited)
+        visited = {node_id: min(self.graph.node_size(node_id), l)
+                   for node_id, l in visited.items()}
+        logging.debug(visited)
+        self.area_builder.update(
+             {node_id: [0, l] for node_id, l in visited.items()})
+
+    def extend_interval(self, interval, direction=1):
+        self.area_builder = AreasBuilder(self.graph)
+        logging.warning(interval.length())
+        pos_length = self.length-interval.length()
+        neg_length = self.length if direction == 0 else 0
+        pos_remain, neg_remain = self.area_builder.filled_interval(
+            interval, pos_length, neg_length)
+        logging.debug(pos_remain)
+        logging.debug(neg_remain)
+        logging.debug(self.area_builder.areas)
+        is_pos = interval.can_be_on_positive_strand()
+        is_neg = interval.can_be_on_negative_strand()
+        logging.debug(is_pos)
+        logging.debug(is_neg)
+        if pos_remain:
+            if is_pos:
+                self.get_areas_from_node(
+                    interval.end_position.region_path_id,
+                    pos_remain, self.pos_traverser)
+            if is_neg:
+                self.get_areas_from_node(
+                    interval.end_position.region_path_id,
+                    pos_remain, self.neg_traverser)
+        if neg_remain:
+            if is_pos:
+                self.get_areas_from_node(
+                    -interval.start_position.region_path_id,
+                    neg_remain, self.neg_traverser)
+            if is_neg:
+                self.get_areas_from_node(
+                    -interval.start_position.region_path_id,
+                    neg_remain, self.pos_traverser)
+
+        self.area_builder.reverse_reversals()
+        return Areas(self.graph, self.area_builder.areas)

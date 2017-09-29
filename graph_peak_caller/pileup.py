@@ -291,7 +291,8 @@ class Pileup(object):
                        include_partial_stubs=False, visited=None):
         intervals = []
         my_interval = cur_interval + [node_id]
-        non_cyclic_nodes = [node for node in self.graph.adj_list[node_id] if node_id not in visited] 
+        non_cyclic_nodes = [node for node in self.graph.adj_list[node_id]
+                            if node_id not in visited]
         for next_node in non_cyclic_nodes:
             if (next_node not in areas) or not areas[next_node] or areas[next_node][0] != 0:
                 continue
