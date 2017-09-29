@@ -1,12 +1,17 @@
-from offsetbasedgraph import IntervalCollection
-import offsetbasedgraph
+import logging
 import numpy as np
+
+from offsetbasedgraph import IntervalCollection, DirectedInterval
 import pyvg as vg
-from graph_peak_caller import Shifter
+import offsetbasedgraph
 from graph_peak_caller import get_shift_size_on_offset_based_graph
 from .control import ControlTrack
 from .sparsepileup import SparseControlSample, SparsePileup
 from .bdgcmp import *
+from .extender import Extender
+
+
+IntervalCollection.interval_class = DirectedInterval
 
 
 def enable_filewrite(func):
@@ -98,6 +103,7 @@ class CallPeaks(object):
         self.sample_intervals = self.filter_duplicates(self.sample_intervals)
 
         if self.control_file_name is not None:
+            print("################## SHOULD NOT BE HERE ###############")
             self.control_intervals = self.remove_alignments_not_in_graph(self.control_file_name, is_control=True)
             self.control_intervals = self.filter_duplicates(self.control_intervals, is_control=True)
 
@@ -183,6 +189,7 @@ class CallPeaks(object):
 
         tracks = control_track.generate_background_tracks()
         background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
+        logging.warning(background_value)
         pileup = control_track.combine_backgrounds(tracks, background_value)
 
         if save_to_file:
@@ -218,14 +225,13 @@ class CallPeaks(object):
         self.final_track.to_bed_file(self.out_file_base_name + out_file)
 
     def create_sample_pileup(self, save_to_file=False):
+        logging.debug("In sample pileup")
         if self.verbose:
             print("Create sample pileup")
-        #alignments = IntervalCollection.from_file(
-        #    self.sample_file_name)
         alignments = self.sample_intervals
-
-        shifter = Shifter(self.ob_graph, self.info.fragment_length)
-        areas_list = (shifter.extend_interval_fast(interval)
+        logging.debug(self.sample_intervals)
+        extender = Extender(self.ob_graph, self.info.fragment_length)
+        areas_list = (extender.extend_interval(interval)
                       for interval in alignments)
         pileup = SparsePileup.from_areas_collection(
             self.ob_graph, areas_list)

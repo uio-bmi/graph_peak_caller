@@ -1,6 +1,7 @@
 from itertools import chain
 import numpy as np
 import offsetbasedgraph as obg
+from .extender import Areas
 from collections import defaultdict
 # from .sparsepileup import ValuedIndexes, SparsePileup
 
@@ -125,16 +126,9 @@ class Pileup(object):
         [self.add_interval(interval) for interval in intervals]
 
     def add_interval(self, interval):
-        assert all(region_path in self.graph.blocks for
-                   region_path in interval.region_paths)
-        for i, region_path in enumerate(interval.region_paths):
-            start = 0
-            end = self.graph.node_size(region_path)
-            if i == 0:
-                start = interval.start_position.offset
-            if i == len(interval.region_paths)-1:
-                end = interval.end_position.offset
-            self.__count_arrays[region_path][start:end] += 1
+        areas = Areas.from_interval(interval, self.graph)
+        areas.reverse_reversals()
+        self.add_areas(areas.areas)
 
     def add_area(self, block_id, start, end, value=1):
         count_array_block = self.__count_arrays[block_id]
@@ -286,38 +280,41 @@ class Pileup(object):
                 if end == self.graph.node_size(node_id):
                     intervals.extend(
                         self._get_intervals(node_id, [start],
-                                            areas, include_partial_stubs))
+                                            areas, include_partial_stubs, []))
                 else:
                     intervals.append(
-                        obg.Interval(int(start), int(end), [node_id], graph=self.graph))
+                        obg.DirectedInterval(int(start), int(end),
+                                             [node_id], graph=self.graph))
         return intervals
 
     def _get_intervals(self, node_id, cur_interval, areas,
-                       include_partial_stubs=False):
+                       include_partial_stubs=False, visited=None):
         intervals = []
         my_interval = cur_interval + [node_id]
-        for next_node in self.graph.adj_list[node_id]:
+        non_cyclic_nodes = [node for node in self.graph.adj_list[node_id] if node_id not in visited] 
+        for next_node in non_cyclic_nodes:
             if (next_node not in areas) or not areas[next_node] or areas[next_node][0] != 0:
                 continue
             end = areas[next_node][1]
             if end == self.graph.node_size(next_node):
                 intervals.extend(
                     self._get_intervals(next_node, my_interval, areas,
-                                        include_partial_stubs))
+                                        include_partial_stubs,
+                                        visited+[node_id]))
                 continue
             else:
                 intervals.append(
-                    obg.Interval(
+                    obg.DirectedInterval(
                         int(my_interval[0]), int(end),
                         my_interval[1:]+[next_node],
                         graph=self.graph))
         f = all if include_partial_stubs else any
         if not f(next_node in areas and areas[next_node] and areas[next_node][0] == 0 for
-                 next_node in self.graph.adj_list[node_id]):
+                 next_node in non_cyclic_nodes):
             if include_partial_stubs:
-                assert self.graph.adj_list[node_id]
+                assert non_cyclic_nodes
             intervals.append(
-                obg.Interval(int(my_interval[0]), int(self.graph.node_size(node_id)),
+                obg.DirectedInterval(int(my_interval[0]), int(self.graph.node_size(node_id)),
                              my_interval[1:], graph=self.graph))
         return intervals
 
@@ -384,7 +381,7 @@ class SmallIntervals(object):
         for node_id, interval in self.end_interval_dict.items():
             intervals = self._get_intervals(node_id, [interval[0]])
             self.intervals.extend(
-                [obg.Interval(i[0], i[-1], i[1:-1], graph=self.graph)
+                [obg.DirectedInterval(i[0], i[-1], i[1:-1], graph=self.graph)
                  for i in intervals])
 
     def get_normal_intervals(self):
@@ -400,7 +397,7 @@ class SmallIntervals(object):
                         self.graph.reverse_adj_list[node_id]):
                     continue
                 real_intervals.append(
-                    Interval(start, end, [node_id], graph=self.graph))
+                    obg.DirectedInterval(start, end, [node_id], graph=self.graph))
         return real_intervals
 
     def filter_intervals(self):

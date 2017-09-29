@@ -1,6 +1,6 @@
 from .pileup import Pileup
 from .sparsepileup import SparsePileup
-from .shifter import Shifter
+from .extender import Extender
 from offsetbasedgraph.interval import IntervalCollection
 
 
@@ -14,10 +14,11 @@ class ControlTrack(object):
         self.background_pileups = []
 
     def _get_pileups(self, extensions):
-        shifters = [Shifter(self.graph, extension) for extension in extensions]
+        extenders = [Extender(self.graph, extension)
+                     for extension in extensions]
         areas_generator = ((
-            [shifter.extend_interval_fast(alignment, 0)
-             for shifter in shifters]
+            [extender.extend_interval(alignment, 0)
+             for extender in extenders]
             for alignment in self.intervals))
 
         pileups = [Pileup(self.graph) for _ in extensions]
