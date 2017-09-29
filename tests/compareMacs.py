@@ -529,13 +529,13 @@ def small_test(with_control=False):
 
 
 def big_test(with_control=False):
-    return MACSTests(10000000, 10, 1, read_length=51,
+    return MACSTests(1000000, 10, 100000, read_length=51,
                      fragment_length=120, with_control=with_control)
 
 
 if __name__ == "__main__":
     random.seed(100)
-    test = small_test(False)
+    test = big_test(False)
     test.test_sample_pileup()
     test.test_control_pileup()
     test.test_call_peaks()

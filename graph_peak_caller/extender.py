@@ -2,7 +2,7 @@ import logging
 
 from offsetbasedgraph.graphtraverser import GraphTraverser
 from offsetbasedgraph.interval import Position
-
+import offsetbasedgraph as obg
 # logging.basicConfig(level=logging.DEBUG)
 
 
@@ -81,6 +81,29 @@ class Areas(object):
     def get_ends(self, node_id):
         return [idx for i, idx in enumerate(self.areas[node_id])
                 if i % 2 == 1]
+
+    def to_intervals(self, include_partial_stubs):
+        f = all if include_partial_stubs else any
+        intervals = []
+        for node_id, startends in self.areas.items():
+            for i in range(len(startends)//2):
+                start = startends[2*i]
+                end = startends[2*i+1]
+                if start == 0:
+                    if f(prev_id in self.areas and self.areas[prev_id] and
+                         self.areas[prev_id][-1] == self.graph.node_size(prev_id)
+                         for prev_id in self.graph.reverse_adj_list[node_id]):
+                        continue
+                if end == self.graph.node_size(node_id):
+                    intervals.extend(
+                        self._get_intervals(
+                            node_id, [start],
+                            self.areas, include_partial_stubs))
+                else:
+                    intervals.append(
+                        obg.DirectedInterval(int(start), int(end),
+                                             [node_id], graph=self.graph))
+        return intervals
 
 
 class Extender(object):

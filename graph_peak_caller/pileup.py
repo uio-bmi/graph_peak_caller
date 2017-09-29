@@ -280,7 +280,7 @@ class Pileup(object):
                 if end == self.graph.node_size(node_id):
                     intervals.extend(
                         self._get_intervals(node_id, [start],
-                                            areas, include_partial_stubs))
+                                            areas, include_partial_stubs, []))
                 else:
                     intervals.append(
                         obg.DirectedInterval(int(start), int(end),
@@ -288,17 +288,19 @@ class Pileup(object):
         return intervals
 
     def _get_intervals(self, node_id, cur_interval, areas,
-                       include_partial_stubs=False):
+                       include_partial_stubs=False, visited=None):
         intervals = []
         my_interval = cur_interval + [node_id]
-        for next_node in self.graph.adj_list[node_id]:
+        non_cyclic_nodes = [node for node in self.graph.adj_list[node_id] if node_id not in visited] 
+        for next_node in non_cyclic_nodes:
             if (next_node not in areas) or not areas[next_node] or areas[next_node][0] != 0:
                 continue
             end = areas[next_node][1]
             if end == self.graph.node_size(next_node):
                 intervals.extend(
                     self._get_intervals(next_node, my_interval, areas,
-                                        include_partial_stubs))
+                                        include_partial_stubs,
+                                        visited+[node_id]))
                 continue
             else:
                 intervals.append(
@@ -308,9 +310,9 @@ class Pileup(object):
                         graph=self.graph))
         f = all if include_partial_stubs else any
         if not f(next_node in areas and areas[next_node] and areas[next_node][0] == 0 for
-                 next_node in self.graph.adj_list[node_id]):
+                 next_node in non_cyclic_nodes):
             if include_partial_stubs:
-                assert self.graph.adj_list[node_id]
+                assert non_cyclic_nodes
             intervals.append(
                 obg.DirectedInterval(int(my_interval[0]), int(self.graph.node_size(node_id)),
                              my_interval[1:], graph=self.graph))
