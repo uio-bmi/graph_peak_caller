@@ -66,19 +66,32 @@ class ExperimentInfo(object):
 
 
 class CallPeaks(object):
-    def __init__(self, graph, sample_file_name,
-                 control_file_name=None, experiment_info=None, verbose=False, out_file_base_name=""):
+    def __init__(self, graph, sample_intervals,
+                 control_intervals=None, experiment_info=None, \
+                 verbose=False, out_file_base_name="", has_control=True):
+        """
+        :param sample_intervals: Either an interval collection or file name
+        :param control_intervals: Either an interval collection or a file name
+        """
+
+        assert isinstance(sample_intervals, IntervalCollection) \
+               or isinstance(sample_intervals, str), \
+                "Samples intervals must be either interval collection or a file name"
+
+        assert isinstance(control_intervals, IntervalCollection) \
+               or isinstance(control_intervals, str), \
+                "control_intervals must be either interval collection or a file name"
+
         self.graph = graph
 
-        self.sample_file_name = sample_file_name
-        self.has_control = control_file_name is not None
-        self.control_file_name = control_file_name if self.has_control else sample_file_name
+        self.sample_intervals = sample_intervals
+        self.control_intervals = control_intervals
+        self.has_control = has_control
+
         self._p_value_track = "p_value_track"
         self._q_value_track = "q_value_track"
         self.info = experiment_info
         self.verbose = verbose
-        self.sample_intervals = []
-        self.control_intervals = []
         self._control_pileup = None
         self._sample_pileup = None
         self.out_file_base_name = out_file_base_name
@@ -88,7 +101,7 @@ class CallPeaks(object):
         self.preprocess()
         if self.info is None:
             self.info = ExperimentInfo.find_info(
-                self.ob_graph, self.sample_file_name, self.control_file_name)
+                self.ob_graph, self.sample_intervals, self.control_intervals)
         self.create_control()
         self.create_sample_pileup()
         self.scale_tracks()
@@ -99,15 +112,16 @@ class CallPeaks(object):
 
     def preprocess(self):
         print("Preprocess")
-        self.sample_intervals = self.remove_alignments_not_in_graph(self.sample_file_name)
-        self.sample_intervals = self.filter_duplicates(
-            self.sample_intervals,
-            self.control_file_name is not None)
+        self.sample_intervals = self.remove_alignments_not_in_graph(
+                                    self.sample_intervals)
+        self.sample_intervals = self.filter_duplicates_and_count_intervals(
+                                    self.sample_intervals, is_control=False)
 
-        if self.control_file_name is not None:
-            print("################## SHOULD NOT BE HERE ###############")
-            self.control_intervals = self.remove_alignments_not_in_graph(self.control_file_name, is_control=True)
-            self.control_intervals = self.filter_duplicates(self.control_intervals, is_control=True)
+        self.control_intervals = self.remove_alignments_not_in_graph(
+                                    self.control_intervals, is_control=True)
+        self.control_intervals = self.filter_duplicates_and_count_intervals(
+                                    self.control_intervals, is_control=True)
+
 
     @enable_filewrite
     def remove_alignments_not_in_graph(self, intervals, is_control=False):
@@ -116,7 +130,7 @@ class CallPeaks(object):
                 yield interval
 
     @enable_filewrite
-    def filter_duplicates(self, intervals, is_control=False):
+    def filter_duplicates_and_count_intervals(self, intervals, is_control=False):
         interval_hashes = {}
         n_duplicates = 0
         n_reads_left = 0
@@ -158,8 +172,6 @@ class CallPeaks(object):
             self._control_pileup.scale(ratio)
             if update_saved_files:
                 self._control_pileup.to_bed_graph(self._control_track)
-
-        #scale_down_tracks(ratio, self.sample_file_name, self.control_file_name)
 
     def find_info(self):
         genome_size = 0

@@ -17,11 +17,14 @@ def run_with_gam(gam_file_name, vg_graph_file_name,
     reads_intervals = vg_gam_file_to_interval_collection(
         None, gam_file_name, ob_graph, max_intervals=1000)
 
+    control_intervals = vg_gam_file_to_interval_collection(
+        None, gam_file_name, ob_graph, max_intervals=1000)
+
     experiment_info = callpeaks.ExperimentInfo(12000000, 103, 50)
 
     caller = callpeaks.CallPeaks(
-        ob_graph, reads_intervals, experiment_info=experiment_info,
-        out_file_base_name="real_data_")
+        ob_graph, reads_intervals, control_intervals, experiment_info=experiment_info,
+        out_file_base_name="real_data_", has_control=False)
     caller.run()
 
 
