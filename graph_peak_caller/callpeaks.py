@@ -100,7 +100,9 @@ class CallPeaks(object):
     def preprocess(self):
         print("Preprocess")
         self.sample_intervals = self.remove_alignments_not_in_graph(self.sample_file_name)
-        self.sample_intervals = self.filter_duplicates(self.sample_intervals)
+        self.sample_intervals = self.filter_duplicates(
+            self.sample_intervals,
+            not self.control_file_name is None)
 
         if self.control_file_name is not None:
             print("################## SHOULD NOT BE HERE ###############")

@@ -55,6 +55,15 @@ class Areas(object):
                 min(startend[0], self.areas[node_id][0]),
                 max(startend[1], self.areas[node_id][1])]
 
+    def robust_update(self, other):
+        for node_id, startend in other.areas.items():
+            if node_id not in self.areas:
+                self.areas[node_id] = startend
+                continue
+            self.areas[node_id] = [
+                min(startend[0], self.areas[node_id][0]),
+                max(startend[1], self.areas[node_id][1])]
+
     def reverse_reversals(self):
         neg_node_ids = [node_id for node_id in self.areas.keys()
                         if node_id < 0]
