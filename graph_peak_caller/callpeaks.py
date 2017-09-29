@@ -122,7 +122,6 @@ class CallPeaks(object):
         self.control_intervals = self.filter_duplicates_and_count_intervals(
                                     self.control_intervals, is_control=True)
 
-
     @enable_filewrite
     def remove_alignments_not_in_graph(self, intervals, is_control=False):
         for interval in self._get_intervals_in_ob_graph(intervals):
