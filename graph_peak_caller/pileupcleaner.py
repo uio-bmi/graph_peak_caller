@@ -28,7 +28,7 @@ class IntervalWithinBlock(obg.Interval):
         else:
             return self.graph.reverse_adj_list[-self.region_paths[0]]
 
-    def blocks_going_out_from(self, forward=True):
+    def blocks_going_out_from(self):
         if not self.is_at_end_of_block():
             return []
         else:
@@ -62,17 +62,19 @@ class PileupCleaner(object):
         self.pileup  = pileup
         self.graph = pileup.graph
         self.valued_areas = self.pileup.find_valued_areas(True)
+        self.non_valued_areas = self.pileup.find_valued_areas(False)
 
         self.intervals_at_start_of_block = defaultdict(list)
         self.intervals_at_end_of_block = defaultdict(list)
 
         self.intervals = []
 
-    def remove_short_areas(self, threshold):
-        self.intervals = self.find_trivial_intervals_within_blocks()
-        self.filter_on_length(threshold)
+    def remove_holes(self, threshold):
+        holes_intervals = self.find_trivial_intervals_within_blocks(self.non_valued_areas)
+
 
     def filter_on_length_and_return_pileup(self, threshold):
+        self.find_trivial_intervals_within_blocks(self.valued_areas)
         filtered_intervals = self.filter_on_length(threshold)
         return SparsePileup.from_intervals(self.graph, filtered_intervals)
 
@@ -81,13 +83,8 @@ class PileupCleaner(object):
         self._remove_short_intervals(threshold)
 
         while True:
-            print("=== Mergin forward with next ==")
-            if not self._merge_intervals_with_next_blocks(forward=True):
-                break
-
-        while True:
-            print("=== Mergin backward with next ==")
-            if not self._merge_intervals_with_next_blocks(forward=False):
+            print("=== Mergin with next ==")
+            if not self._merge_intervals_with_next_blocks():
                 break
 
         # Filter
@@ -105,15 +102,17 @@ class PileupCleaner(object):
     def get_long_intervals(self, length_threshold):
         pass
 
-    def find_trivial_intervals_within_blocks(self):
+    def find_trivial_intervals_within_blocks(self, areas):
         intervals = []
         id_counter = 0
-        for node in self.valued_areas:
+
+
+        for node in areas:
             #print("Node %d" % node)
             #print(self.valued_areas[node])
-            for i in range(0, len(self.valued_areas[node]) // 2):
-                start = int(self.valued_areas[node][i*2])
-                end = int(self.valued_areas[node][i*2+1])
+            for i in range(0, len(areas[node]) // 2):
+                start = int(areas[node][i*2])
+                end = int(areas[node][i*2+1])
                 #print("Start/end %d/%d" % (start, end))
                 interval = IntervalWithinBlock(id_counter, start, end, [node], self.graph)
 
@@ -131,11 +130,11 @@ class PileupCleaner(object):
                     not interval.is_at_beginning_of_block():
                 interval.removed = True
 
-    def _merge_single_interval_with_nexts(self, interval, forward=True):
+    def _merge_single_interval_with_nexts(self, interval):
         # Find candidates to merge
         merge_with_intervals = []
         #for next_block in self.graph.adj_list[interval.region_paths[-1]]:
-        for next_block in interval.blocks_going_out_from(forward=forward):
+        for next_block in interval.blocks_going_out_from():
             print("     Checking block %d" % next_block)
             for next_interval in self.intervals_at_start_of_block[next_block]:
                 print("    Merging with %s" % str(next_interval))
@@ -169,7 +168,7 @@ class PileupCleaner(object):
             return True
         return False
 
-    def _merge_intervals_with_next_blocks(self, forward=True):
+    def _merge_intervals_with_next_blocks(self):
         n_merged = 0
         for interval in self.intervals:
             print("  Mering interval %s" % str(interval))
@@ -179,7 +178,7 @@ class PileupCleaner(object):
             if not interval.is_at_end_of_block():
                 continue
 
-            merge_result = self._merge_single_interval_with_nexts(interval, forward=forward)
+            merge_result = self._merge_single_interval_with_nexts(interval)
             if merge_result:
                 n_merged += 1
 
@@ -197,16 +196,22 @@ class PileupCleaner(object):
                 self.intervals_at_start_of_block[interval.region_paths[0]].append(interval)
 
 
-    def create_neighbour_indices(self):
-        # Create two indices:
-        # 1) mapping from node id to intervals starting at node after
-        # 2) mapping from node id to inntervals
 
-        pass
+    def _get_inverse_valued_areas(self):
+        inverse = {}
+        for node_id in self.valued_areas:
+            inverse_areas = []
+            inverse_areas.append(0)
+            inverse_areas.append(self.valued_areas)
+            inverse_areas.append(self.graph.blocks[node_id].length())
 
-    def interval_touches_start_of_block(self, interval):
-        pass
+            if inverse_areas[0] == inverse_areas[1]:
+                inverse_areas = inverse_areas[2:]
 
-    def iterval_touces_end_of_block(self, interval):
-        pass
+            if inverse_areas[-2] == inverse_areas[-1]:
+                inverse_areas= inverse_areas[0:-2]
+
+            inverse[node_id] = inverse_areas
+
+        return inverse
 

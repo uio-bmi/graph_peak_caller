@@ -33,7 +33,7 @@ class TestPileupCleaner(unittest.TestCase):
     def test_find_trivial_intervals(self):
 
         cleaner = PileupCleaner(self.trivial_pileup)
-        trivial_intervals = cleaner.find_trivial_intervals_within_blocks()
+        trivial_intervals = cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
 
         self.assertEqual(len(trivial_intervals), 3)
 
@@ -85,7 +85,7 @@ class TestPileupCleaner(unittest.TestCase):
     def test_create_interval_indices(self):
         cleaner = PileupCleaner(self.trivial_pileup)
 
-        cleaner.find_trivial_intervals_within_blocks()
+        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
         cleaner.create_interval_indices()
 
 
@@ -96,7 +96,7 @@ class TestPileupCleaner(unittest.TestCase):
 
     def test_filter_on_length_trivial(self):
         cleaner = PileupCleaner(self.trivial_pileup)
-        cleaner.find_trivial_intervals_within_blocks()
+        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
         filtered = cleaner.filter_on_length(2)
 
         self.assertTrue(obg.Interval(0, 6, [1]) in filtered)
@@ -123,7 +123,7 @@ class TestPileupCleaner(unittest.TestCase):
         )
         self.trivial_pileup.threshold(1)
         cleaner = PileupCleaner(self.trivial_pileup)
-        cleaner.find_trivial_intervals_within_blocks()
+        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
         filtered = cleaner.filter_on_length(2)
         self.assertTrue(obg.Interval(3, 10, [3]) in filtered)
         self.assertTrue(obg.Interval(0, 3, [1, 2]) in filtered)
@@ -142,7 +142,7 @@ class TestPileupCleaner(unittest.TestCase):
         )
         self.trivial_pileup.threshold(1)
         cleaner = PileupCleaner(self.trivial_pileup)
-        cleaner.find_trivial_intervals_within_blocks()
+        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
         filtered = cleaner.filter_on_length(2)
         print(filtered)
         self.assertTrue(obg.Interval(4, 5, [1, 2, 3]) in filtered)
@@ -160,7 +160,7 @@ class TestPileupCleaner(unittest.TestCase):
         )
         pileup.threshold(1)
         cleaner = PileupCleaner(pileup)
-        cleaner.find_trivial_intervals_within_blocks()
+        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
         filtered = cleaner.filter_on_length(2)
         print("Filtered loop")
         print(filtered)
@@ -178,7 +178,7 @@ class TestPileupCleaner(unittest.TestCase):
         )
         pileup.threshold(1)
         cleaner = PileupCleaner(pileup)
-        cleaner.find_trivial_intervals_within_blocks()
+        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
         filtered = cleaner.filter_on_length(2)
         print("Filtered loop")
         print(filtered)
@@ -201,7 +201,7 @@ class TestPileupCleaner(unittest.TestCase):
         )
         pileup.threshold(1)
         cleaner = PileupCleaner(pileup)
-        cleaner.find_trivial_intervals_within_blocks()
+        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
         filtered = cleaner.filter_on_length(1)
         print("Filtered")
         print(filtered)
@@ -234,7 +234,7 @@ class TestPileupCleaner(unittest.TestCase):
         )
         pileup.threshold(1)
         cleaner = PileupCleaner(pileup)
-        cleaner.find_trivial_intervals_within_blocks()
+        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
         filtered = cleaner.filter_on_length(1)
         print(filtered)
         self.assertTrue(obg.Interval(0, 3, [2, 5]) in filtered)
@@ -243,6 +243,7 @@ class TestPileupCleaner(unittest.TestCase):
     def test_return_pileup(self):
         cleaner = PileupCleaner(self.trivial_pileup)
         cleaner.filter_on_length_and_return_pileup(3)
+
 
 if __name__ == "__main__":
     unittest.main()
