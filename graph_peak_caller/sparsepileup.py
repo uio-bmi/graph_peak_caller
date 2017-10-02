@@ -207,12 +207,12 @@ class SparsePileup(Pileup):
         [vi.scale(scale) for vi in self.data.values()]
 
     def fill_small_wholes(self, max_size):
-        super().fill_small_wholes(max_size)
-        #cleaner = PileupCleaner(self)
-        #small_holes = cleaner.get_small_holes(max_size)
-        #for interval in small_holes:
-        #    self.set_interval_value(interval, True)
-        #self.sanitize()
+        # super().fill_small_wholes(max_size)
+        cleaner = PileupCleaner(self)
+        small_holes = cleaner.get_small_holes(max_size)
+        for interval in small_holes:
+            self.set_interval_value(interval, True)
+        self.sanitize()
 
     def sanitize(self):
         for valued_indexes in self.data.values():
@@ -361,6 +361,9 @@ class SparsePileup(Pileup):
         intervals = self.areas_to_intervals(areas, include_partial_stubs=False)
         large_intervals = [interval for interval in intervals
                            if interval.length() >= min_size]
+        for i in [interval for interval in intervals
+                  if interval.length() < min_size]:
+            print(i)
         return self.from_intervals(self.graph, large_intervals)
         """
         cleaner = PileupCleaner(self)

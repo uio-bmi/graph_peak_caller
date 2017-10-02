@@ -13,7 +13,7 @@ from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo
 from graph_peak_caller.pileup import Pileup
 from graph_peak_caller.sparsepileup import SparsePileup
 
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.WARNING)
 
 
 class SimpleInterval(object):
@@ -244,7 +244,6 @@ class MACSTests(object):
         #for i in indices[0]:
         #    print(i)
 
-        print(indices)
         print("Pileup1")
         print(pileup1[indices])
         print("Pileup2")
@@ -464,7 +463,8 @@ class MACSTests(object):
         self.setup()
         caller = CallPeaks("lin_graph", "graph_intervals_filtered", "graph_intervals_filtered", has_control=False)
         caller.create_graph()
-        info = ExperimentInfo.find_info(caller.ob_graph, caller.sample_file_name, caller.control_file_name)
+        info = ExperimentInfo.find_info(
+            caller.ob_graph, caller.sample_file_name, caller.control_file_name)
         read_length_graph = info.read_length
         fragment_length_graph = info.fragment_length
 
