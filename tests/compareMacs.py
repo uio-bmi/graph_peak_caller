@@ -246,9 +246,9 @@ class MACSTests(object):
 
         print(indices)
         print("Pileup1")
-        print(pileup1)
+        print(pileup1[indices])
         print("Pileup2")
-        print(pileup2)
+        print(pileup2[indices])
         assert np.allclose(pileup1, pileup2)
 
     def _create_pileup(self, pileup_file, convert=False, limit=False,
@@ -317,7 +317,7 @@ class MACSTests(object):
     def _call_peaks(self):
         threshold = -np.log10(0.05)
         command = "macs2 bdgpeakcall -i lin_scores.bdg -c %s -l %s -g %s -o lin_peaks.bed" % (
-            threshold, self.fragment_length - 1, self.read_length)
+            threshold, self.info.fragment_length, self.read_length)
         print(command)
         subprocess.check_output(command.split())
 
@@ -530,12 +530,12 @@ def small_test(with_control=False):
 
 
 def big_test(with_control=False):
-    return MACSTests(10, 1000, 1000000, read_length=51,
+    return MACSTests(100, 10000, 100000, read_length=51,
                      fragment_length=120, with_control=with_control)
 
 
 if __name__ == "__main__":
-    random.seed(100)
+    random.seed(102)
     test = big_test(False)
     test.test_sample_pileup()
     test.test_control_pileup()
