@@ -4,6 +4,7 @@ import offsetbasedgraph as obg
 from .extender import Areas
 from collections import defaultdict
 
+
 class IntervalWithinBlock(obg.Interval):
     def __init__(self, id, start, end, region_paths, graph):
         #assert len(region_paths) == 1
@@ -71,11 +72,11 @@ class IntervalWithinBlock(obg.Interval):
         #print("         Returning %s" % str(interval))
         return interval
 
+
 class PileupCleaner(object):
 
-
     def __init__(self, pileup):
-        self.pileup  = pileup
+        self.pileup = pileup
         self.graph = pileup.graph
         self.valued_areas = self.pileup.find_valued_areas(True)
         self.non_valued_areas = self.pileup.find_valued_areas(False)
@@ -160,7 +161,6 @@ class PileupCleaner(object):
     def find_trivial_intervals_within_blocks(self, areas):
         intervals = []
         id_counter = 0
-
 
         for node in areas:
             ##print("Node %d" % node)
