@@ -269,13 +269,15 @@ class PileupCleaner(object):
                 continue
 
             if max_length and interval.length() > max_length:
-                print("Max length reached")
+                interval.has_been_expanded = True
+                #print("Max length reached")
                 continue
 
             merge_result = self._merge_single_interval_with_nexts(interval)
             if merge_result:
                 n_merged += 1
 
+        print("Merged %d intervals " % n_merged)
         if n_merged > 0:
             return True
 
