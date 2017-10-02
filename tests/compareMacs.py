@@ -13,7 +13,7 @@ from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo
 from graph_peak_caller.pileup import Pileup
 from graph_peak_caller.sparsepileup import SparsePileup
 
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.WARNING)
 
 
 class SimpleInterval(object):
@@ -245,7 +245,9 @@ class MACSTests(object):
         #    print(i)
 
         print("Pileup1")
+        print(pileup1[indices])
         print("Pileup2")
+        print(pileup2[indices])
         assert np.allclose(pileup1, pileup2)
 
     def _create_pileup(self, pileup_file, convert=False, limit=False,
@@ -314,7 +316,7 @@ class MACSTests(object):
     def _call_peaks(self):
         threshold = -np.log10(0.05)
         command = "macs2 bdgpeakcall -i lin_scores.bdg -c %s -l %s -g %s -o lin_peaks.bed" % (
-            threshold, self.fragment_length - 1, self.read_length)
+            threshold, self.info.fragment_length, self.read_length)
         print(command)
         subprocess.check_output(command.split())
 

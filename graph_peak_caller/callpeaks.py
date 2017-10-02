@@ -111,7 +111,6 @@ class CallPeaks(object):
         self.call_peaks(out_file)
 
     def preprocess(self):
-        print("Preprocess")
         self.sample_intervals = self.remove_alignments_not_in_graph(
                                     self.sample_intervals)
         self.sample_intervals = self.filter_duplicates_and_count_intervals(
@@ -137,7 +136,6 @@ class CallPeaks(object):
             hash = interval.hash()
             if hash in interval_hashes:
                 n_duplicates += 1
-                #print("Removing duplicate")
                 continue
 
             interval_hashes[hash] = True
@@ -226,8 +224,6 @@ class CallPeaks(object):
         print("Get p-values")
         self.p_values = get_p_value_track_from_pileups(
             self.ob_graph, self._control_pileup, self._sample_pileup)
-        #self.p_values.to_bed_graph(self._p_value_track)
-        print(self.p_values)
 
     def call_peaks(self, out_file="final_peaks", cutoff=0.05):
         print("Calling peaks")
