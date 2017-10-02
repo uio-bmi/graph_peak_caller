@@ -356,7 +356,7 @@ class SparsePileup(Pileup):
             valued_indexes.values = np.array([], dtype="bool")
 
     def remove_small_peaks(self, min_size):
-
+        """
         areas = self.find_valued_areas(True)
         intervals = self.areas_to_intervals(areas, include_partial_stubs=False)
         large_intervals = [interval for interval in intervals
@@ -367,7 +367,7 @@ class SparsePileup(Pileup):
         cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
         filtered_intervals = cleaner.filter_on_length(min_size)
         return self.from_intervals(self.graph, filtered_intervals)
-        """
+
     def update_max(self, other):
         for key, valued_indexes in self.data.items():
             self.data[key] = ValuedIndexes.maximum(
