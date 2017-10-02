@@ -5,7 +5,7 @@ from .extender import Areas
 from collections import defaultdict
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.ERROR)
 
 
 class IntervalWithinBlock(obg.Interval):
@@ -62,9 +62,7 @@ class IntervalWithinBlock(obg.Interval):
             direction = -1
         else:
             raise Exception("Cannot merge, trying to merge with non-connecting interval")
-        #print("         Dir: %d" % direction)
         if (self.direction and self.direction != direction) or (other.direction and other.direction != direction):
-            #print("      Not merging, conflicting direction")
             self.is_maximally_expanded = True
             return False
 
@@ -72,7 +70,6 @@ class IntervalWithinBlock(obg.Interval):
                                    self.region_paths + other.region_paths,
                                    self.graph)
         interval.direction = direction
-        #print("         Returning %s" % str(interval))
         return interval
 
 
@@ -115,7 +112,6 @@ class PileupCleaner(object):
         self._set_number_of_possible_expansions_for_intervals()
 
         while True:
-            #print("=== Merging with next ==")
             if not self._merge_intervals_with_next_blocks(max_size):
                 break
 
@@ -134,7 +130,6 @@ class PileupCleaner(object):
         self._remove_short_intervals(threshold)
 
         while True:
-            #print("=== Merging with next ==")
             if not self._merge_intervals_with_next_blocks(threshold):
                 break
 
@@ -158,7 +153,6 @@ class PileupCleaner(object):
             if interval.is_at_end_of_block():
                 interval.n_possible_expansions += len(interval.blocks_going_out_from())
 
-            #print("Possible expansions %d for %s" % (interval.n_possible_expansions, str(interval)))
 
     def get_long_intervals(self, length_threshold):
         pass
@@ -168,12 +162,9 @@ class PileupCleaner(object):
         id_counter = 0
 
         for node in areas:
-            ##print("Node %d" % node)
-            ##print(self.valued_areas[node])
             for i in range(0, len(areas[node]) // 2):
                 start = int(areas[node][i*2])
                 end = int(areas[node][i*2+1])
-                ##print("Start/end %d/%d" % (start, end))
                 interval = IntervalWithinBlock(id_counter, start, end, [node], self.graph)
 
                 intervals.append(interval)
@@ -206,14 +197,11 @@ class PileupCleaner(object):
         # Find candidates to merge
         merge_with_intervals = []
         for next_block in interval.blocks_going_out_from():
-            #print("     Checking block %d" % next_block)
             for next_interval in self.intervals_at_start_of_block[next_block]:
-                #print("    Merging with %s" % str(next_interval))
 
                 if self.has_interval_region_path_start(
                         interval,
                         next_interval.region_paths[0]):
-                    print("Loop detected")
                     interval.has_infinite_loop = True
                     continue
 
@@ -221,12 +209,9 @@ class PileupCleaner(object):
                     merge_with_intervals.append(next_interval)
 
         for next_block in interval.blocks_going_into():
-            #print("     Checking block %d" % next_block)
             for next_interval in self.intervals_at_end_of_block[next_block]:
-                #print("    Merging with (left) %s" % str(next_interval))
                 if self.has_interval_region_path_end(
                         interval, next_interval.region_paths[-1]):
-                    print("Loop detected")
                     interval.has_infinite_loop = True
                     continue
 
@@ -256,13 +241,9 @@ class PileupCleaner(object):
         i = 0
         length = len(self.intervals)
         for interval in self.intervals[0: length]:
-            if i % 1000 == 0:
-                print("Merging %d / %d" % (i, length))
             i += 1
 
-            #print("  Mering interval %s" % str(interval))
             if interval.deleted or interval.has_been_expanded:
-                #print("    Deleted or already expanded")
                 continue
 
             if not interval.is_at_end_of_block() and not interval.is_at_beginning_of_block():
@@ -270,14 +251,12 @@ class PileupCleaner(object):
 
             if max_length and interval.length() > max_length:
                 interval.has_been_expanded = True
-                #print("Max length reached")
                 continue
 
             merge_result = self._merge_single_interval_with_nexts(interval)
             if merge_result:
                 n_merged += 1
 
-        print("Merged %d intervals " % n_merged)
         if n_merged > 0:
             return True
 

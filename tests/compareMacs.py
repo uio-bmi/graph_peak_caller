@@ -244,11 +244,8 @@ class MACSTests(object):
         #for i in indices[0]:
         #    print(i)
 
-        print(indices)
         print("Pileup1")
-        print(pileup1)
         print("Pileup2")
-        print(pileup2)
         assert np.allclose(pileup1, pileup2)
 
     def _create_pileup(self, pileup_file, convert=False, limit=False,
@@ -464,7 +461,8 @@ class MACSTests(object):
         self.setup()
         caller = CallPeaks("lin_graph", "graph_intervals_filtered", "graph_intervals_filtered", has_control=False)
         caller.create_graph()
-        info = ExperimentInfo.find_info(caller.ob_graph, caller.sample_file_name, caller.control_file_name)
+        info = ExperimentInfo.find_info(
+            caller.ob_graph, caller.sample_file_name, caller.control_file_name)
         read_length_graph = info.read_length
         fragment_length_graph = info.fragment_length
 
@@ -530,12 +528,12 @@ def small_test(with_control=False):
 
 
 def big_test(with_control=False):
-    return MACSTests(10, 1000, 1000000, read_length=51,
+    return MACSTests(100, 10000, 100000, read_length=51,
                      fragment_length=120, with_control=with_control)
 
 
 if __name__ == "__main__":
-    random.seed(100)
+    random.seed(102)
     test = big_test(False)
     test.test_sample_pileup()
     test.test_control_pileup()
