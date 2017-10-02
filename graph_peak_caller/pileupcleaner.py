@@ -194,7 +194,7 @@ class PileupCleaner(object):
                 #print("    Merging with %s" % str(next_interval))
 
                 if next_interval.region_paths[0] in interval.region_paths:
-                    #print("Loop detected")
+                    print("Loop detected")
                     interval.has_infinite_loop = True
                     continue
 
@@ -207,7 +207,7 @@ class PileupCleaner(object):
             for next_interval in self.intervals_at_end_of_block[next_block]:
                 #print("    Merging with (left) %s" % str(next_interval))
                 if next_interval.region_paths[-1] in interval.region_paths:
-                    #print("Loop detected")
+                    print("Loop detected")
                     interval.has_infinite_loop = True
                     continue
 
@@ -228,7 +228,7 @@ class PileupCleaner(object):
                 self.intervals.append(new_interval)
                 n_new_intervals += 1
 
-        if n_new_intervals:
+        if n_new_intervals > 0:
             return True
         return False
 
@@ -246,11 +246,11 @@ class PileupCleaner(object):
                 #print("    Deleted or already expanded")
                 continue
 
-            if max_length and interval.length() > max_length:
-                print("Max length reached")
+            if not interval.is_at_end_of_block() and not interval.is_at_beginning_of_block():
                 continue
 
-            if not interval.is_at_end_of_block() and not interval.is_at_beginning_of_block():
+            if max_length and interval.length() > max_length:
+                print("Max length reached")
                 continue
 
             merge_result = self._merge_single_interval_with_nexts(interval)
