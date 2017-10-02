@@ -358,7 +358,8 @@ class SparsePileup(Pileup):
         return self.from_intervals(self.graph, large_intervals)
         """
         cleaner = PileupCleaner(self)
-        filtered_intervals = cleaner.filter_on_length_and_return_pileup(min_size)
+        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
+        filtered_intervals = cleaner.filter_on_length(min_size)
         return self.from_intervals(self.graph, filtered_intervals)
 
     def update_max(self, other):

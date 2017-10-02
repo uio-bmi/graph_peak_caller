@@ -103,11 +103,12 @@ class MACSTests(object):
         self.info.n_control_reads = self.n_intervals
         self.info.n_sample_reads = self.n_intervals
 
-        control_file_name = None
+        control_file_name = "graph_intervals"
         if self.with_control:
             control_file_name = "graph_intervals_control"
 
         self.caller = CallPeaks("lin_graph", "graph_intervals", control_file_name,
+                                has_control=self.with_control,
                                 experiment_info=self.info,
                                 verbose=True)
 
@@ -461,7 +462,7 @@ class MACSTests(object):
 
     def test_shift_estimation(self):
         self.setup()
-        caller = CallPeaks("lin_graph", "graph_intervals_filtered")
+        caller = CallPeaks("lin_graph", "graph_intervals_filtered", "graph_intervals_filtered", has_control=False)
         caller.create_graph()
         info = ExperimentInfo.find_info(caller.ob_graph, caller.sample_file_name, caller.control_file_name)
         read_length_graph = info.read_length
@@ -529,7 +530,7 @@ def small_test(with_control=False):
 
 
 def big_test(with_control=False):
-    return MACSTests(1000000, 10, 100000, read_length=51,
+    return MACSTests(10, 1000, 1000000, read_length=51,
                      fragment_length=120, with_control=with_control)
 
 
