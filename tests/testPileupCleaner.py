@@ -1,7 +1,10 @@
 import unittest
 from graph_peak_caller.sparsepileup import SparsePileup
 from graph_peak_caller.pileupcleaner import PileupCleaner,  IntervalWithinBlock
+from cyclic_graph import get_small_cyclic_graph, get_large_cyclic_graph,\
+    get_padded_cyclic_graph
 import offsetbasedgraph as obg
+
 
 class TestPileupCleaner(unittest.TestCase):
 
@@ -47,7 +50,6 @@ class TestPileupCleaner(unittest.TestCase):
         self.assertTrue(obg.Interval(5, 10, [1]) in holes)
         self.assertEqual(len(holes), 2)
 
-
     def test_find_maximally_expanded_holes_two_blocks(self):
         graph = obg.Graph({
                 1: obg.Block(10),
@@ -71,7 +73,6 @@ class TestPileupCleaner(unittest.TestCase):
         self.assertFalse(obg.Interval(5, 10, [1]) in holes)
         self.assertFalse(obg.Interval(1, 10, [2]) in holes)
 
-
     def test_find_maximally_expanded_holes_complex(self):
         graph = obg.Graph({
                 1: obg.Block(10),
@@ -86,6 +87,7 @@ class TestPileupCleaner(unittest.TestCase):
                 3: [4, 5]
             }
         )
+
         pileup =  SparsePileup.from_intervals(
             graph,
             [
@@ -356,6 +358,63 @@ class TestPileupCleaner(unittest.TestCase):
         self.assertTrue(obg.Interval(0, 3, [2, 5]) in filtered)
         self.assertFalse(obg.Interval(0, 3, [1, 5]) in filtered)
 
+
+class TestCyclicCleanup(unittest.TestCase):
+    def setUp(self):
+        self.small_graph = get_small_cyclic_graph()
+        self.large_graph = get_large_cyclic_graph()
+        self.padded_graph = get_padded_cyclic_graph()
+
+    def assertIntervalsGiveSamePileup(self, intervals, true_intervals):
+        if not intervals:
+            self.assertEqual(len(true_intervals), 0)
+
+        pileup = SparsePileup.from_intervals(
+            intervals[0].graph,
+            intervals)
+        pileup.threshold(1)
+        true_pileup = SparsePileup.from_intervals(
+            true_intervals[0].graph,
+            true_intervals)
+        true_pileup.threshold(1)
+        self.assertEqual(pileup, true_pileup)
+
+    def test_loop_with_surrounding(self):
+        start_intervals = [obg.Interval(
+            90, 100, [1, 2],
+            graph=self.padded_graph)]
+        pileup = SparsePileup.from_intervals(
+            self.padded_graph, start_intervals)
+        pileup.threshold(1)
+        cleaner = PileupCleaner(pileup)
+        intervals = cleaner.filter_on_length(400)
+        self.assertIntervalsGiveSamePileup(intervals, start_intervals)
+
+    def test_loop_with_surrounding_fail(self):
+        start_intervals = [obg.Interval(
+            90, 90, [1, 2],
+            graph=self.padded_graph)]
+        pileup = SparsePileup.from_intervals(
+            self.padded_graph, start_intervals)
+        pileup.threshold(1)
+        cleaner = PileupCleaner(pileup)
+        intervals = cleaner.filter_on_length(400)
+        self.assertEqual(len(intervals), 0)
+
+    def test_loop_with_start_and_end_intervals(self):
+        start_intervals = [
+            obg.Interval(
+                90, 10, [1, 2],
+                graph=self.padded_graph),
+            obg.Interval(
+                90, 100, [2],
+                graph=self.padded_graph)]
+        pileup = SparsePileup.from_intervals(
+            self.padded_graph, start_intervals)
+        pileup.threshold(1)
+        cleaner = PileupCleaner(pileup)
+        intervals = cleaner.filter_on_length(400)
+        self.assertEqual(intervals, [])
 
 
 if __name__ == "__main__":

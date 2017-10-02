@@ -3,6 +3,10 @@ import numpy as np
 import offsetbasedgraph as obg
 from .extender import Areas
 from collections import defaultdict
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
 
 class IntervalWithinBlock(obg.Interval):
     def __init__(self, id, start, end, region_paths, graph):
@@ -71,15 +75,15 @@ class IntervalWithinBlock(obg.Interval):
         #print("         Returning %s" % str(interval))
         return interval
 
+
 class PileupCleaner(object):
 
-
     def __init__(self, pileup):
-        self.pileup  = pileup
+        self.pileup = pileup
         self.graph = pileup.graph
         self.valued_areas = self.pileup.find_valued_areas(True)
+        logging.debug(self.valued_areas)
         self.non_valued_areas = self.pileup.find_valued_areas(False)
-
         self.intervals_at_start_of_block = defaultdict(list)
         self.intervals_at_end_of_block = defaultdict(list)
 
@@ -124,6 +128,8 @@ class PileupCleaner(object):
         return maximally_expanded
 
     def filter_on_length(self, threshold):
+        logging.debug("filter_on_length: %s", threshold)
+        self.find_trivial_intervals_within_blocks(self.valued_areas)
         self.create_interval_indices()
         self._remove_short_intervals(threshold)
 
@@ -161,7 +167,6 @@ class PileupCleaner(object):
         intervals = []
         id_counter = 0
 
-
         for node in areas:
             ##print("Node %d" % node)
             ##print(self.valued_areas[node])
@@ -185,6 +190,18 @@ class PileupCleaner(object):
                     not interval.is_at_beginning_of_block():
                 interval.removed = True
 
+    def has_interval_region_path_start(self, interval, region_path):
+        if region_path in interval.region_paths[1:]:
+            return False
+        return region_path == interval.region_paths[0] and \
+            interval.start_position.offset == 0
+
+    def has_interval_region_path_end(self, interval, region_path):
+        if region_path in interval.region_paths[:-1]:
+            return False
+        return region_path == interval.region_paths[-1] and \
+            interval.start_position.offset == self.graph.node_size(region_path)
+
     def _merge_single_interval_with_nexts(self, interval):
         # Find candidates to merge
         merge_with_intervals = []
@@ -193,7 +210,9 @@ class PileupCleaner(object):
             for next_interval in self.intervals_at_start_of_block[next_block]:
                 #print("    Merging with %s" % str(next_interval))
 
-                if next_interval.region_paths[0] in interval.region_paths:
+                if self.has_interval_region_path_start(
+                        interval,
+                        next_interval.region_paths[0]):
                     print("Loop detected")
                     interval.has_infinite_loop = True
                     continue
@@ -201,12 +220,12 @@ class PileupCleaner(object):
                 if not next_interval.deleted:
                     merge_with_intervals.append(next_interval)
 
-
         for next_block in interval.blocks_going_into():
             #print("     Checking block %d" % next_block)
             for next_interval in self.intervals_at_end_of_block[next_block]:
                 #print("    Merging with (left) %s" % str(next_interval))
-                if next_interval.region_paths[-1] in interval.region_paths:
+                if self.has_interval_region_path_end(
+                        interval, next_interval.region_paths[-1]):
                     print("Loop detected")
                     interval.has_infinite_loop = True
                     continue
@@ -266,10 +285,14 @@ class PileupCleaner(object):
 
     def create_interval_indices(self):
         # Create indices from interval id to touching blocks
+        logging.debug("create_interval_indices")
         for interval in self.intervals:
+            logging.debug("Testing: %s", interval)
             if interval.is_at_end_of_block():
+                logging.debug("End of Block: %s", interval)
                 self.intervals_at_end_of_block[interval.region_paths[-1]].append(interval)
             if interval.is_at_beginning_of_block():
+                logging.debug("Beggining of Block: %s", interval)
                 self.intervals_at_start_of_block[interval.region_paths[0]].append(interval)
 
 
