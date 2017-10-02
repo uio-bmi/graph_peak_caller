@@ -372,10 +372,11 @@ class TestCyclicCleanup(unittest.TestCase):
         pileup = SparsePileup.from_intervals(
             intervals[0].graph,
             intervals)
-
+        pileup.threshold(1)
         true_pileup = SparsePileup.from_intervals(
             true_intervals[0].graph,
             true_intervals)
+        true_pileup.threshold(1)
         self.assertEqual(pileup, true_pileup)
 
     def test_loop_with_surrounding(self):
@@ -384,9 +385,36 @@ class TestCyclicCleanup(unittest.TestCase):
             graph=self.padded_graph)]
         pileup = SparsePileup.from_intervals(
             self.padded_graph, start_intervals)
+        pileup.threshold(1)
         cleaner = PileupCleaner(pileup)
         intervals = cleaner.filter_on_length(400)
         self.assertIntervalsGiveSamePileup(intervals, start_intervals)
+
+    def test_loop_with_surrounding_fail(self):
+        start_intervals = [obg.Interval(
+            90, 90, [1, 2],
+            graph=self.padded_graph)]
+        pileup = SparsePileup.from_intervals(
+            self.padded_graph, start_intervals)
+        pileup.threshold(1)
+        cleaner = PileupCleaner(pileup)
+        intervals = cleaner.filter_on_length(400)
+        self.assertEqual(len(intervals), 0)
+
+    def test_loop_with_start_and_end_intervals(self):
+        start_intervals = [
+            obg.Interval(
+                90, 10, [1, 2],
+                graph=self.padded_graph),
+            obg.Interval(
+                90, 100, [2],
+                graph=self.padded_graph)]
+        pileup = SparsePileup.from_intervals(
+            self.padded_graph, start_intervals)
+        pileup.threshold(1)
+        cleaner = PileupCleaner(pileup)
+        intervals = cleaner.filter_on_length(400)
+        self.assertEqual(intervals, [])
 
 
 if __name__ == "__main__":

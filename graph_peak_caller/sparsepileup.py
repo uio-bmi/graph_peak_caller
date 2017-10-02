@@ -197,6 +197,12 @@ class SparsePileup(Pileup):
         self.data = {rp: ValuedIndexes.empty(graph.node_size(rp))
                      for rp in self.graph.blocks}
 
+    def __eq__(self, other):
+        for node_id, vi in other.data.items():
+            if self.data[node_id] != vi:
+                return False
+        return True
+
     def scale(self, scale):
         [vi.scale(scale) for vi in self.data.values()]
 
@@ -263,7 +269,7 @@ class SparsePileup(Pileup):
 
     def __str__(self):
         return "\n".join(
-            "%s: %s" % (node_id, valued_indexes.indexes)
+            "%s: %s, %s" % (node_id, valued_indexes.indexes, valued_indexes.values)
             for node_id, valued_indexes in self.data.items())
 
     __repr__ = __str__
