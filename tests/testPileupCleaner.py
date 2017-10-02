@@ -356,9 +356,6 @@ class TestPileupCleaner(unittest.TestCase):
         self.assertTrue(obg.Interval(0, 3, [2, 5]) in filtered)
         self.assertFalse(obg.Interval(0, 3, [1, 5]) in filtered)
 
-    def test_return_pileup(self):
-        cleaner = PileupCleaner(self.trivial_pileup)
-        cleaner.filter_on_length_and_return_pileup(3)
 
 
 if __name__ == "__main__":

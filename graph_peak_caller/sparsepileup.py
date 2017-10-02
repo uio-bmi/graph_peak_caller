@@ -3,8 +3,8 @@ from itertools import chain
 import numpy as np
 from scipy.stats import poisson
 from collections import defaultdict
-
 from .pileup import Pileup
+from .pileupcleaner import PileupCleaner
 
 
 class ValuedIndexes(object):
@@ -201,7 +201,11 @@ class SparsePileup(Pileup):
         [vi.scale(scale) for vi in self.data.values()]
 
     def fill_small_wholes(self, max_size):
-        super().fill_small_wholes(max_size)
+        #super().fill_small_wholes(max_size)
+        cleaner = PileupCleaner(self)
+        small_holes = cleaner.get_small_holes(max_size)
+        for interval in small_holes:
+            self.set_interval_value(interval, True)
         self.sanitize()
 
     def sanitize(self):
@@ -346,11 +350,16 @@ class SparsePileup(Pileup):
             valued_indexes.values = np.array([], dtype="bool")
 
     def remove_small_peaks(self, min_size):
+        """
         areas = self.find_valued_areas(True)
         intervals = self.areas_to_intervals(areas, include_partial_stubs=False)
         large_intervals = [interval for interval in intervals
                            if interval.length() >= min_size]
         return self.from_intervals(self.graph, large_intervals)
+        """
+        cleaner = PileupCleaner(self)
+        filtered_intervals = cleaner.filter_on_length_and_return_pileup(min_size)
+        return self.from_intervals(self.graph, filtered_intervals)
 
     def update_max(self, other):
         for key, valued_indexes in self.data.items():
