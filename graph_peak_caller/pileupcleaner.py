@@ -14,6 +14,9 @@ class IntervalWithinBlock(obg.Interval):
         self.has_infinite_loop = False
         self.has_been_expanded = False
         self.direction = False
+        self.is_maximally_expanded = False
+        self.n_possible_expansions = 0
+        self.n_expansions = 0
 
     def is_at_beginning_of_block(self):
         return self.start_position.offset == 0
@@ -26,7 +29,8 @@ class IntervalWithinBlock(obg.Interval):
         if not self.is_at_beginning_of_block():
             return []
         else:
-            return self.graph.reverse_adj_list[-self.region_paths[0]]
+            return list(np.abs(self.graph.reverse_adj_list[-self.region_paths[0]])) + \
+                    list(np.abs(self.graph.adj_list[-self.region_paths[0]]))
 
     def blocks_going_out_from(self):
         if not self.is_at_end_of_block():
@@ -36,23 +40,36 @@ class IntervalWithinBlock(obg.Interval):
             return self.graph.adj_list[end_rp] + \
                    list(np.abs(self.graph.reverse_adj_list[end_rp]))
 
+    def merge(self, other):
+        self.n_expansions += 1
+        #other.n_expansions += 1
+
+        # Check if we are merging on left or right side
+        if other.region_paths[0] in self.blocks_going_out_from():
+            return self.merge_right(other)
+        elif self.region_paths[0] in other.blocks_going_out_from():
+            return other.merge_right(self)
+        else:
+            raise Exception("Trying to merge intervals not connected")
+
     def merge_right(self, other):
-        direction = False
         if other.region_paths[0] in self.graph.adj_list[self.region_paths[-1]]:
             direction = 1
         elif -self.region_paths[-1] in self.graph.adj_list[-other.region_paths[0]]:
             direction = -1
         else:
-            raise Exception("Cannot merge")
-
-        if self.direction and self.direction != direction:
-            print("Not merging, conflicting direction")
+            raise Exception("Cannot merge, trying to merge with non-connecting interval")
+        print("         Dir: %d" % direction)
+        if (self.direction and self.direction != direction) or (other.direction and other.direction != direction):
+            print("      Not merging, conflicting direction")
+            self.is_maximally_expanded = True
             return False
 
         interval = IntervalWithinBlock(-1, self.start_position, other.end_position,
                                    self.region_paths + other.region_paths,
                                    self.graph)
         interval.direction = direction
+        print("         Returning %s" % str(interval))
         return interval
 
 class PileupCleaner(object):
@@ -69,9 +86,40 @@ class PileupCleaner(object):
 
         self.intervals = []
 
-    def remove_holes(self, threshold):
-        holes_intervals = self.find_trivial_intervals_within_blocks(self.non_valued_areas)
+    def remove_small_holes(self, threshold):
+        maximally_expanded_holes = self.find_maximally_expanded_holes()
+        filtered = []
+        for interval in maximally_expanded_holes:
+            if interval.length() <= threshold:
+                filtered.append(interval)
 
+        return filtered
+
+    def find_maximally_expanded_holes(self):
+        """
+        Algorithm:
+         - Expand every hole maximally
+         - In the end, only consider holes that have been maximally expanded
+         - These are either intervals has_been_expanded = False, OR
+           intervals that have been expanded fewer times than possible paths to expand
+            (latter meaning that it has been maximally expanded in one direction,
+            since it could not have been exdended further in that direction
+        """
+
+        self.intervals = self.find_trivial_intervals_within_blocks(self.non_valued_areas)
+        self.create_interval_indices()
+
+        self._set_number_of_possible_expansions_for_intervals()
+
+        self._merge_intervals_with_next_blocks()
+
+        maximally_expanded = []
+        for interval in self.intervals:
+            if not interval.has_been_expanded \
+                    or interval.n_expansions < interval.n_possible_expansions:
+                maximally_expanded.append(interval)
+
+        return maximally_expanded
 
     def filter_on_length_and_return_pileup(self, threshold):
         self.find_trivial_intervals_within_blocks(self.valued_areas)
@@ -83,7 +131,7 @@ class PileupCleaner(object):
         self._remove_short_intervals(threshold)
 
         while True:
-            print("=== Mergin with next ==")
+            print("=== Merging with next ==")
             if not self._merge_intervals_with_next_blocks():
                 break
 
@@ -98,6 +146,16 @@ class PileupCleaner(object):
 
         return filtered_intervals
 
+    def _set_number_of_possible_expansions_for_intervals(self):
+        for interval in self.intervals:
+            interval.n_possible_expansions = 0
+            if interval.is_at_beginning_of_block():
+                interval.n_possible_expansions += len(interval.blocks_going_into())
+
+            if interval.is_at_end_of_block():
+                interval.n_possible_expansions += len(interval.blocks_going_out_from())
+
+            print("Possible expansions %d for %s" % (interval.n_possible_expansions, str(interval)))
 
     def get_long_intervals(self, length_threshold):
         pass
@@ -133,13 +191,26 @@ class PileupCleaner(object):
     def _merge_single_interval_with_nexts(self, interval):
         # Find candidates to merge
         merge_with_intervals = []
-        #for next_block in self.graph.adj_list[interval.region_paths[-1]]:
         for next_block in interval.blocks_going_out_from():
             print("     Checking block %d" % next_block)
             for next_interval in self.intervals_at_start_of_block[next_block]:
                 print("    Merging with %s" % str(next_interval))
 
                 if next_interval.region_paths[0] == interval.region_paths[0]:
+                    print("Loop detected")
+                    interval.has_infinite_loop = True
+                    continue
+
+                if not next_interval.deleted:
+                    merge_with_intervals.append(next_interval)
+                else:
+                    print("    Deleted")
+
+        for next_block in interval.blocks_going_into():
+            print("     Checking block %d" % next_block)
+            for next_interval in self.intervals_at_end_of_block[next_block]:
+                print("    Merging with (left) %s" % str(next_interval))
+                if next_interval.region_paths[-1] == interval.region_paths[-1]:
                     print("Loop detected")
                     interval.has_infinite_loop = True
                     continue
@@ -158,7 +229,7 @@ class PileupCleaner(object):
         for other_interval in merge_with_intervals:
             #other_interval.deleted = True
 
-            new_interval = interval.merge_right(other_interval)
+            new_interval = interval.merge(other_interval)
             if new_interval:
                 new_interval.id = len(self.intervals)
                 self.intervals.append(new_interval)
@@ -173,9 +244,10 @@ class PileupCleaner(object):
         for interval in self.intervals:
             print("  Mering interval %s" % str(interval))
             if interval.deleted or interval.has_been_expanded:
+                print("    Deleted or already expanded")
                 continue
 
-            if not interval.is_at_end_of_block():
+            if not interval.is_at_end_of_block() and not interval.is_at_beginning_of_block():
                 continue
 
             merge_result = self._merge_single_interval_with_nexts(interval)

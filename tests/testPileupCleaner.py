@@ -30,6 +30,120 @@ class TestPileupCleaner(unittest.TestCase):
         )
         self.trivial_pileup.threshold(1)
 
+    def test_find_maximally_expanded_holes_one_block(self):
+        graph = obg.Graph({
+            1: obg.Block(10)
+        }, {})
+        pileup =  SparsePileup.from_intervals(
+            graph,
+            [
+                obg.Interval(4, 5, [1], graph)
+            ]
+        )
+        pileup.threshold(1)
+        cleaner = PileupCleaner(pileup)
+        holes = cleaner.find_maximally_expanded_holes()
+        self.assertTrue(obg.Interval(0, 4, [1]) in holes)
+        self.assertTrue(obg.Interval(5, 10, [1]) in holes)
+        self.assertEqual(len(holes), 2)
+
+
+    def test_find_maximally_expanded_holes_two_blocks(self):
+        graph = obg.Graph({
+                1: obg.Block(10),
+                2: obg.Block(10)
+            },
+            {
+                1: [2]
+            }
+        )
+        pileup =  SparsePileup.from_intervals(
+            graph,
+            [
+                obg.Interval(4, 5, [1], graph)
+            ]
+        )
+        pileup.threshold(1)
+        cleaner = PileupCleaner(pileup)
+        holes = cleaner.find_maximally_expanded_holes()
+        self.assertTrue(obg.Interval(0, 4, [1]) in holes)
+        self.assertTrue(obg.Interval(5, 10, [1, 2]) in holes)
+        self.assertFalse(obg.Interval(5, 10, [1]) in holes)
+        self.assertFalse(obg.Interval(1, 10, [2]) in holes)
+
+
+    def test_find_maximally_expanded_holes_complex(self):
+        graph = obg.Graph({
+                1: obg.Block(10),
+                2: obg.Block(10),
+                3: obg.Block(10),
+                4: obg.Block(10),
+                5: obg.Block(10)
+            },
+            {
+                1: [3],
+                2: [3],
+                3: [4, 5]
+            }
+        )
+        pileup =  SparsePileup.from_intervals(
+            graph,
+            [
+                obg.Interval(0, 5, [1], graph),
+                obg.Interval(5, 10, [2], graph),
+                obg.Interval(3, 6, [3], graph),
+                obg.Interval(5, 10, [4], graph),
+                obg.Interval(0, 5, [5], graph),
+            ]
+        )
+        pileup.threshold(1)
+        cleaner = PileupCleaner(pileup)
+        holes = cleaner.find_maximally_expanded_holes()
+        print(holes)
+        self.assertTrue(obg.Interval(0, 5, [2]) in holes)
+        self.assertTrue(obg.Interval(0, 3, [3]) in holes)
+        self.assertTrue(obg.Interval(6, 10, [3]) in holes)
+        self.assertTrue(obg.Interval(6, 5, [3, 4]) in holes)
+        self.assertFalse(obg.Interval(0, 5, [4]) in holes)
+        self.assertFalse(obg.Interval(5, 10, [1]) in holes)
+
+    def test_find_maximall_expanded_holes_cyclic(self):
+        graph = obg.Graph({
+                1: obg.Block(10),
+                2: obg.Block(10),
+                3: obg.Block(10),
+                4: obg.Block(10),
+                5: obg.Block(10)
+            },
+            {
+                1: [3],
+                2: [3],
+                3: [4, 5, 1],
+                -4: [2]
+            }
+        )
+        pileup =  SparsePileup.from_intervals(
+            graph,
+            [
+                obg.Interval(1, 5, [1], graph),
+                obg.Interval(0, 10, [2], graph),
+                obg.Interval(3, 6, [3], graph),
+                obg.Interval(5, 10, [4], graph),
+                obg.Interval(0, 5, [5], graph),
+            ]
+        )
+        pileup.threshold(1)
+        cleaner = PileupCleaner(pileup)
+        holes = cleaner.find_maximally_expanded_holes()
+        print(holes)
+        self.assertFalse(obg.Interval(0, 5, [2]) in holes)
+        self.assertTrue(obg.Interval(0, 3, [3]) in holes)
+        self.assertTrue(obg.Interval(6, 10, [3]) in holes)
+        self.assertTrue(obg.Interval(6, 5, [3, 4]) in holes)
+        self.assertTrue(obg.Interval(6, 1, [3, 1]) in holes)
+        self.assertTrue(obg.Interval(0, 5, [4]) in holes)
+        self.assertFalse(obg.Interval(5, 10, [1]) in holes)
+
     def test_find_trivial_intervals(self):
 
         cleaner = PileupCleaner(self.trivial_pileup)
@@ -54,7 +168,7 @@ class TestPileupCleaner(unittest.TestCase):
         print(self.graph.reverse_adj_list)
         self.assertTrue(interval.is_at_beginning_of_block())
         self.assertTrue(interval.is_at_end_of_block())
-        self.assertEqual(interval.blocks_going_into(), [-1])
+        self.assertEqual(interval.blocks_going_into(), [1])
         self.assertEqual(interval.blocks_going_out_from(), [3])
 
     def test_blocks_going_out_from_advanced(self):
@@ -196,7 +310,9 @@ class TestPileupCleaner(unittest.TestCase):
         pileup = SparsePileup.from_intervals(
             graph,
             [
-                obg.Interval(0, 3, [1, 2, 3])
+                obg.Interval(0, 3, [1]),
+                obg.Interval(0, 3, [2]),
+                obg.Interval(0, 3, [3])
             ]
         )
         pileup.threshold(1)
