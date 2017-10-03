@@ -241,6 +241,8 @@ class PileupCleaner(object):
         i = 0
         length = len(self.intervals)
         for interval in self.intervals[0: length]:
+            if i % 1000 == 0:
+                print("Merging interval %d / %d"  % (i, length)) 
             i += 1
 
             if interval.deleted or interval.has_been_expanded:

@@ -369,8 +369,6 @@ class SparsePileup(Pileup):
         cleaner = PileupCleaner(self)
         cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
         filtered_intervals = cleaner.filter_on_length(min_size)
-        print("== Filtered intervals ==")
-        print(filtered_intervals)
         pileup = self.from_intervals(self.graph, filtered_intervals)
         pileup.threshold(0.5)
         return pileup
