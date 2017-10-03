@@ -83,6 +83,8 @@ class PileupCleaner(object):
         self.non_valued_areas = self.pileup.find_valued_areas(False)
         self.intervals_at_start_of_block = defaultdict(list)
         self.intervals_at_end_of_block = defaultdict(list)
+        self._merged_intervals_counter = 0
+        self.finding_holes = False
 
         self.intervals = []
 
@@ -105,7 +107,7 @@ class PileupCleaner(object):
             (latter meaning that it has been maximally expanded in one direction,
             since it could not have been exdended further in that direction
         """
-
+        self.finding_holes = True
         self.intervals = self.find_trivial_intervals_within_blocks(self.non_valued_areas)
         self.create_interval_indices()
 
@@ -188,7 +190,7 @@ class PileupCleaner(object):
             interval.start_position.offset == 0
 
     def has_interval_region_path_end(self, interval, region_path):
-        if region_path in interval.region_paths[:-1]:
+        if region_path in interval.region_paths[:-1] and region_path != interval.region_paths[0]:
             return False
         return region_path == interval.region_paths[-1] and \
             interval.start_position.offset == self.graph.node_size(region_path)
@@ -197,22 +199,41 @@ class PileupCleaner(object):
         # Find candidates to merge
         merge_with_intervals = []
         for next_block in interval.blocks_going_out_from():
+            logging.debug("       Checking next block %d" % next_block)
             for next_interval in self.intervals_at_start_of_block[next_block]:
+
+                if next_interval.deleted:
+                    logging.debug("         Has already been expanded, skipping")
+                    continue
 
                 if self.has_interval_region_path_start(
                         interval,
-                        next_interval.region_paths[0]):
+                        next_interval.region_paths[0])  \
+                        or interval.contains(next_interval):
                     interval.has_infinite_loop = True
+                    interval.has_been_expanded = True
+                    logging.debug("       Loop detected")
+                    if interval.contains(next_interval):
+                        logging.debug("         %s contains %s" % (str(interval), str(next_interval)))
                     continue
 
                 if not next_interval.deleted:
                     merge_with_intervals.append(next_interval)
 
+
         for next_block in interval.blocks_going_into():
+            logging.debug("       Checking back block %d" % next_block)
             for next_interval in self.intervals_at_end_of_block[next_block]:
+                if next_interval.deleted:
+                    logging.debug("         Has already been expanded, skipping")
+                    continue
+
                 if self.has_interval_region_path_end(
-                        interval, next_interval.region_paths[-1]):
+                        interval, next_interval.region_paths[-1]) \
+                        or interval.contains(next_interval):
+                    interval.has_been_expanded = True
                     interval.has_infinite_loop = True
+                    logging.debug("        Loop detected (back)")
                     continue
 
                 if not next_interval.deleted:
@@ -225,11 +246,13 @@ class PileupCleaner(object):
         interval.has_been_expanded = True  # Delete original,  make new
         for other_interval in merge_with_intervals:
             #other_interval.deleted = True
-
+            logging.debug("         Merging with %s" % other_interval)
             new_interval = interval.merge(other_interval)
             if new_interval:
                 new_interval.id = len(self.intervals)
                 self.intervals.append(new_interval)
+                if not self.finding_holes:
+                    self.intervals_at_start_of_block[new_interval.region_paths[0]].append(new_interval)
                 n_new_intervals += 1
 
         if n_new_intervals > 0:
@@ -240,18 +263,47 @@ class PileupCleaner(object):
         n_merged = 0
         i = 0
         length = len(self.intervals)
-        for interval in self.intervals[0: length]:
+        for interval in self.intervals[self._merged_intervals_counter: length]:
             if i % 1000 == 0:
                 print("Merging interval %d / %d"  % (i, length)) 
             i += 1
+            self._merged_intervals_counter += 1
+            logging.debug("    Merging %s" % str(interval))
 
             if interval.deleted or interval.has_been_expanded:
+                logging.debug("       Already expanded, skipping")
                 continue
 
+            # Skip if interval is touching both start and end, and there are other intervals coming in at all starts and all ends
+            if interval.is_at_beginning_of_block() and interval.is_at_end_of_block():
+                all_in = True
+                for node_in in interval.blocks_going_into():
+                    if len(self.intervals_at_end_of_block[node_in]) == 0:
+                        all_in = False
+                        break
+
+                if len(interval.blocks_going_into()) == 0:
+                    all_in = False
+
+                all_out = True
+                for node_out in interval.blocks_going_out_from():
+                    if len(self.intervals_at_start_of_block[node_out]) == 0:
+                        all_out = False
+
+                if len(interval.blocks_going_out_from()) == 0:
+                    all_out = False
+
+                if all_in and all_out:
+                    logging.debug("        Skipping because inbetween others")
+                    interval.has_been_expanded = True
+                    continue
+
             if not interval.is_at_end_of_block() and not interval.is_at_beginning_of_block():
+                logging.debug("        Interval is not at start or end")
                 continue
 
             if max_length and interval.length() > max_length:
+                logging.debug("        Max length reached")
                 interval.has_been_expanded = True
                 continue
 

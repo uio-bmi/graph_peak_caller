@@ -327,6 +327,32 @@ class TestPileupCleaner(unittest.TestCase):
         self.assertTrue(obg.Interval(0, 3, [2, 3]) in filtered)
         self.assertFalse(obg.Interval(0, 3, [1, 2, 3]) in filtered)
 
+    def test_filter_on_length_long_interval(self):
+        long_graph = obg.Graph(
+            {
+                1: obg.Block(10),
+                2: obg.Block(10),
+                3: obg.Block(10),
+                4: obg.Block(10),
+                5: obg.Block(10),
+            },
+            {1: [2],
+             2: [3],
+             3: [4],
+             4: [5]}
+        )
+        pileup = SparsePileup.from_intervals(
+            long_graph,
+            [
+                obg.Interval(0, 10, [2, 3, 4]),
+            ]
+        )
+        pileup.threshold(1)
+        cleaner = PileupCleaner(pileup)
+        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
+        filtered = cleaner.filter_on_length(25)
+        self.assertTrue(obg.Interval(0, 10, [2, 3, 4]) in filtered)
+
     def test_filter_advanced_multi_directed(self):
         graph = obg.Graph(
             {
