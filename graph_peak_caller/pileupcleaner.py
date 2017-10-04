@@ -28,18 +28,30 @@ class IntervalWithinBlock(obg.Interval):
         return self.end_position.offset == \
                self.graph.blocks[self.end_position.region_path_id].length()
 
-    def blocks_going_into(self):
+    def blocks_going_into(self, limit_to_direction=False):
         if not self.is_at_beginning_of_block():
             return []
         else:
-            return list(np.abs(self.graph.reverse_adj_list[-self.region_paths[0]])) + \
+
+            if limit_to_direction == 1:
+                return self.graph.reverse_adj_list[-self.region_paths[0]]
+            elif limit_to_direction == -1:
+                return self.graph.adj_list[-self.region_paths[0]]
+            else:
+                return list(np.abs(self.graph.reverse_adj_list[-self.region_paths[0]])) + \
                     list(np.abs(self.graph.adj_list[-self.region_paths[0]]))
 
-    def blocks_going_out_from(self):
+    def blocks_going_out_from(self, limit_to_direction=False):
         if not self.is_at_end_of_block():
             return []
         else:
             end_rp = self.region_paths[-1]
+
+            if limit_to_direction == 1:
+                return self.graph.adj_list[end_rp]
+            elif limit_to_direction == -1:
+                return self.graph.reverse_adj_list[-end_rp]
+
             return self.graph.adj_list[end_rp] + \
                    list(np.abs(self.graph.reverse_adj_list[end_rp]))
 

@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import poisson
 from collections import defaultdict
 from .pileup import Pileup
-from .pileupcleaner import PileupCleaner
+from .pileupcleaner2 import PileupCleaner2
 
 
 class ValuedIndexes(object):
@@ -208,7 +208,7 @@ class SparsePileup(Pileup):
 
     def fill_small_wholes(self, max_size):
         # super().fill_small_wholes(max_size)
-        cleaner = PileupCleaner(self)
+        cleaner = PileupCleaner2(self)
         small_holes = cleaner.get_small_holes(max_size)
         for interval in small_holes:
             self.set_interval_value(interval, True)
@@ -366,7 +366,7 @@ class SparsePileup(Pileup):
             print(i)
         return self.from_intervals(self.graph, large_intervals)
         """
-        cleaner = PileupCleaner(self)
+        cleaner = PileupCleaner2(self)
         cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
         filtered_intervals = cleaner.filter_on_length(min_size)
         pileup = self.from_intervals(self.graph, filtered_intervals)
