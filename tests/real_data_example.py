@@ -1,14 +1,14 @@
 from graph_peak_caller import callpeaks
 import pyvg
 from pyvg.util import vg_gam_file_to_interval_collection
-
+import offsetbasedgraph as obg
 
 def run_with_gam(gam_file_name, vg_graph_file_name,
                  limit_to_chromosomes=False):
-    vg_graph = pyvg.Graph.create_from_file(vg_graph_file_name)
-    ob_graph = vg_graph.get_offset_based_graph()
-    ob_graph.to_file("obgraph")
-    # ob_graph = obg.Graph.from_file("obgraph")
+    #vg_graph = pyvg.Graph.create_from_file(vg_graph_file_name)
+    #ob_graph = vg_graph.get_offset_based_graph()
+    #ob_graph.to_file("obgraph")
+    ob_graph = obg.Graph.from_file("obgraph")
 
     print(ob_graph.adj_list[68566])
     print(ob_graph.adj_list[68567])

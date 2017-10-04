@@ -82,22 +82,25 @@ class PileupCleaner2(object):
         nodes = list(self.intervals_at_end_of_block)
         i = 0
         for node_id in nodes:
-            if i % 1000 == 0:
-                print("Merging node %d / %d" % (i, len(nodes)))
-            i += 1
             intervals = self.intervals_at_end_of_block[node_id]
-            logging.debug("   Merging for node %d" % node_id)
+            if i % 5000 == 0 or i < 200:
+                n_intervals = sum([len(i) for i in self.intervals_at_end_of_block.values()])
+                print("Merging node %d / %d (%d intervals, total %d)" % (i, len(nodes), len(intervals), n_intervals))
+            i += 1
+            logging.debug("   Merging for node %d " % (node_id))
             #print(intervals)
             for interval in intervals:
                 if interval.has_been_expanded:
                     logging.debug("   has been expanded, skipping")
                     continue
-                logging.debug("        Merging interval %s" % interval)
+                #logging.debug("        Merging interval %s" % interval)
                 did_merge = self._merge_interval_right(interval, direction=direction)
                 #print("intervals after merge")
                 #print(self.intervals_at_end_of_block[node_id])
+                self._remove_interval_from_end_indices(interval)
+                #if self._n_intervals_into_node(interval.region_paths[0]) == 0:
+                #           self._remove_interval_from_start_indices(interval)
                 if did_merge:
-                    self._remove_interval_from_end_indices(interval)
                     n_merged += 1
 
                 interval.has_been_expanded = True
@@ -109,14 +112,14 @@ class PileupCleaner2(object):
 
     def _merge_interval_right(self, interval, direction):
         outgoing_edges = interval.blocks_going_out_from(limit_to_direction=direction)
-        logging.debug("       Outgoing edges: %s " % str(outgoing_edges))
+        #logging.debug("       Outgoing edges: %s " % str(outgoing_edges))
         n_merged = 0
         for node in outgoing_edges:
-            logging.debug("           Checking node %d" % node)
+            #logging.debug("           Checking node %d" % node)
             touching_intervals = self.intervals_at_start_of_block[node]
-            logging.debug("            Found touching: %s" % str(touching_intervals))
+            #logging.debug("            Found touching: %s" % str(touching_intervals))
             for touching_interval in touching_intervals:
-                logging.debug("            Merging with %s" % str(touching_interval))
+                #logging.debug("            Merging with %s" % str(touching_interval))
                 if self.is_forward_merging_into_loop(interval, touching_interval):
                     logging.debug("              LOOP DETECTED")
                     interval.has_infinite_loop = True
@@ -161,7 +164,7 @@ class PileupCleaner2(object):
         self._remove_interval_from_start_indices(interval)
 
     def _remove_interval_from_start_indices(self, interval):
-        logging.debug("            Removing from start: %s" % str(interval))
+        #logging.debug("            Removing from start: %s" % str(interval))
         start_rp = interval.region_paths[0]
 
         if interval in self.intervals_at_start_of_block[start_rp]:
@@ -171,13 +174,13 @@ class PileupCleaner2(object):
         #    self.intervals_at_end_of_block[-start_rp].remove(interval)
 
     def _remove_interval_from_end_indices(self, interval):
-        logging.debug("            Removing from end %s" % str(interval))
+        #logging.debug("            Removing from end %s" % str(interval))
         end_rp = interval.region_paths[-1]
         if interval in self.intervals_at_end_of_block[end_rp]:
             self.intervals_at_end_of_block[end_rp].remove(interval)
             #print("Removed")
-        if interval in self.intervals_at_start_of_block[-end_rp]:
-            self.intervals_at_start_of_block[-end_rp].remove(interval)
+        #if interval in self.intervals_at_start_of_block[-end_rp]:
+        #    self.intervals_at_start_of_block[-end_rp].remove(interval)
             #print("Removed")
         #print(self.intervals_at_end_of_block[end_rp])
 
@@ -254,14 +257,14 @@ class PileupCleaner2(object):
         # Create indices from interval id to touching blocks
         logging.debug("create_interval_indices")
         for interval in self.intervals:
-            logging.debug("Testing: %s", interval)
+            #logging.debug("Testing: %s", interval)
             if interval.is_at_end_of_block():
-                logging.debug("End of Block: %s", interval)
+                #logging.debug("End of Block: %s", interval)
                 if interval not in self.intervals_at_end_of_block[interval.region_paths[-1]]:
                     self.intervals_at_end_of_block[interval.region_paths[-1]].append(interval)
                     #self.intervals_at_start_of_block[-interval.region_paths[-1]].append(interval)
             if interval.is_at_beginning_of_block():
-                logging.debug("Beginning of Block: %s", interval)
+                #logging.debug("Beginning of Block: %s", interval)
                 if interval not in self.intervals_at_start_of_block[interval.region_paths[0]]:
                     self.intervals_at_start_of_block[interval.region_paths[0]].append(interval)
                     #self.intervals_at_end_of_block[-interval.region_paths[0]].append(interval)
