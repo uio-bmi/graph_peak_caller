@@ -32,13 +32,34 @@ class PileupCleaner2(object):
 
         return self.get_intervals_from_indices_above_or_below_length(threshold, above=False)
 
-    def filter_on_length(self, threshold):
+    def filter_on_length(self, threshold, return_single_rp_intervals=False):
 
         self.intervals = self.find_trivial_intervals_within_blocks(self.valued_areas)
         self.create_interval_indices()
         self.merge_intervals_iteratively()
 
-        return self.get_intervals_from_indices_above_or_below_length(threshold, above=True)
+        filtered = self.get_intervals_from_indices_above_or_below_length(threshold, above=True)
+        if not return_single_rp_intervals:
+            return filtered
+
+        intervals = PileupCleaner2._intervals_to_trivial_intervals(filtered)
+        intervals = PileupCleaner2._remove_interval_duplicates(intervals)
+        return intervals
+
+    @staticmethod
+    def _remove_interval_duplicates(intervals):
+        index = {}
+
+        out = []
+        for interval in intervals:
+            if interval.length() == 0:
+                continue
+            hash = interval.hash(ignore_direction=True)
+            if hash not in index:
+                out.append(interval)
+            index[hash] = True
+
+        return out
 
 
     def get_intervals_from_indices_above_or_below_length(self, threshold, above=True):
@@ -80,6 +101,35 @@ class PileupCleaner2(object):
 
         return filtered
 
+    @staticmethod
+    def _intervals_to_trivial_intervals(intervals):
+        # Convert to only trivial intervals
+        trivial_intervals = []
+        for interval in intervals:
+            graph = interval.graph
+            rps = interval.region_paths
+            if len(rps) == 1:
+                trivial_intervals.append(interval)
+            else:
+                start_interval = obg.Interval(interval.start_position.offset, graph.node_size(rps[0]), [rps[0]], graph)
+                end_interval = obg.Interval(0, interval.end_position.offset, [rps[-1]], graph)
+                trivial_intervals.append(start_interval)
+                trivial_intervals.append(end_interval)
+
+                for rp in rps[1:-1]:
+                    trivial_intervals.append(obg.Interval(0, graph.node_size(rp), [rp], graph))
+
+        # Invert inverse
+        for i, interval in enumerate(trivial_intervals):
+            rp = interval.region_paths[0]
+            if rp < 0:
+                rp_size = graph.node_size(rp)
+                new_start = rp_size - interval.end_position.offset
+                new_end = rp_size - interval.start_position.offset
+                new_interval = obg.Interval(new_start, new_end, [-rp], interval.graph)
+                trivial_intervals[i] = new_interval
+
+        return trivial_intervals
 
     def merge_intervals_iteratively(self):
 
@@ -112,6 +162,7 @@ class PileupCleaner2(object):
                 #if self._n_intervals_into_node(interval.region_paths[0]) == 0:
                 #           self._remove_interval_from_start_indices(interval)
                 if did_merge:
+                    self._remove_interval_from_start_indices(interval)
                     self._remove_interval_from_end_indices(interval)
                     n_merged += 1
 
@@ -138,8 +189,10 @@ class PileupCleaner2(object):
                     print(" Warning: %d intervals checked" % n_intervals_checked)
 
                 logging.debug("            Merging with %s" % str(touching_interval))
-                if self.is_forward_merging_into_loop(interval, touching_interval) \
-                        or interval.contains_loop():
+                if interval == touching_interval or (interval.contains_position(touching_interval.end_position) and \
+                        (self.is_forward_merging_into_loop(interval, touching_interval) \
+                        or interval.contains_loop()) \
+                        or touching_interval.contains_loop()):
                     logging.debug("              LOOP DETECTED")
                     interval.has_infinite_loop = True
                     self._n_loops_detected += 1
@@ -374,3 +427,19 @@ class PileupCleaner2(object):
                 if interval not in self.intervals_at_start_of_block[interval.region_paths[0]]:
                     self.intervals_at_start_of_block[interval.region_paths[0]].append(interval)
                     #self.intervals_at_end_of_block[-interval.region_paths[0]].append(interval)
+
+        self.sanitize_indices()
+
+    def sanitize_indices(self):
+        # Remove intervals that are within other intervals
+        for index in [self.intervals_at_start_of_block, self.intervals_at_end_of_block]:
+            for node in index:
+                intervals = index[node]
+                for interval in intervals:
+                    for other_interval in intervals:
+                        if other_interval == interval:
+                            continue
+                        if other_interval.contains(interval):
+                            print("%s is contained in %s" % (str(interval), str(other_interval)))
+                            intervals.remove(interval)
+
