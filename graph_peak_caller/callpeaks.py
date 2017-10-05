@@ -228,6 +228,7 @@ class CallPeaks(object):
     def call_peaks(self, out_file="final_peaks", cutoff=0.05):
         print("Calling peaks")
         self.p_values.threshold(-np.log10(cutoff))
+        self.p_values.to_bed_file("pre_postprocess.bed")
         self.p_values.fill_small_wholes(self.info.read_length)
         self.final_track = self.p_values.remove_small_peaks(
             self.info.fragment_length)

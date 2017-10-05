@@ -5,7 +5,7 @@ from scipy.stats import poisson
 from collections import defaultdict
 from .pileup import Pileup
 from .pileupcleaner import PileupCleaner
-from .pileupcleaner2 import PeaksCleaner
+from .pileupcleaner2 import PeaksCleaner, HolesCleaner
 
 
 class ValuedIndexes(object):
@@ -209,10 +209,16 @@ class SparsePileup(Pileup):
 
     def fill_small_wholes(self, max_size):
         # super().fill_small_wholes(max_size)
-        cleaner = PileupCleaner(self)
-        small_holes = cleaner.get_small_holes(max_size)
-        for interval in small_holes:
-            self.set_interval_value(interval, True)
+        cleaner = HolesCleaner(self, max_size)
+        areas = cleaner.run()
+        print("###########################")
+        print(areas)
+        print("##########################")
+        for node_id in areas.areas:
+            starts = areas.get_starts(node_id)
+            ends = areas.get_ends(node_id)
+            for start,  end in zip(starts, ends):
+                self.data[node_id].set_interval_value(start, end, True)
         self.sanitize()
 
     def sanitize(self):
@@ -371,10 +377,11 @@ class SparsePileup(Pileup):
         cleaner = PeaksCleaner(self, min_size)
         # cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
         # filtered_intervals = cleaner.filter_on_length(min_size)
-        filtered_intervals = cleaner.run()
+        areas = cleaner.run()
         print("== Filtered intervals ==")
-        print(filtered_intervals)
-        pileup = self.from_intervals(self.graph, filtered_intervals)
+        print(areas)
+        pileup = self.from_areas_collection(self.graph, [areas])
+        # pileup = self.from_intervals(self.graph, filtered_intervals)
         pileup.threshold(0.5)
         return pileup
 
