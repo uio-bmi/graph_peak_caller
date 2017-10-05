@@ -5,21 +5,21 @@ from .extender import Areas
 from collections import defaultdict
 import logging
 
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.DEBUG)
 
 
 class IntervalWithinBlock(obg.Interval):
     def __init__(self, id, start, end, region_paths, graph):
         #assert len(region_paths) == 1
         super(IntervalWithinBlock, self).__init__(start, end, region_paths, graph)
-        self.id = id
+        #self.id = id
         self.deleted = False
         self.has_infinite_loop = False
         self.has_been_expanded = False
         self.direction = False
         self.is_maximally_expanded = False
-        self.n_possible_expansions = 0
-        self.n_expansions = 0
+        #self.n_possible_expansions = 0
+        #self.n_expansions = 0
 
     def is_at_beginning_of_block(self):
         return self.start_position.offset == 0
@@ -56,13 +56,13 @@ class IntervalWithinBlock(obg.Interval):
                    list(np.abs(self.graph.reverse_adj_list[end_rp]))
 
     def merge(self, other):
-        self.n_expansions += 1
+        #self.n_expansions += 1
         #other.n_expansions += 1
-
         # Check if we are merging on left or right side
         if other.region_paths[0] in self.blocks_going_out_from():
             return self.merge_right(other)
         elif self.region_paths[0] in other.blocks_going_out_from():
+            raise Exception("Not merging right")
             return other.merge_right(self)
         else:
             raise Exception("Trying to merge intervals not connected")
@@ -83,6 +83,20 @@ class IntervalWithinBlock(obg.Interval):
                                    self.graph)
         interval.direction = direction
         return interval
+
+    def contains_loop(self):
+        rps_visited = {}
+        for rp in self.region_paths[0:-1]:
+            if rp in rps_visited:
+                return True
+            rps_visited[rp] = True
+
+        end_rp = self.region_paths[-1]
+        start_rp = self.region_paths[0]
+        if len(self.region_paths) > 1 and start_rp == end_rp and self.end_position.offset > self.start_position.offset:
+            return True
+
+        return False
 
 
 class PileupCleaner(object):
