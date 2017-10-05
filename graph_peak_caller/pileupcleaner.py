@@ -5,7 +5,7 @@ from .extender import Areas
 from collections import defaultdict
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.ERROR)
 
 
 class IntervalWithinBlock(obg.Interval):
