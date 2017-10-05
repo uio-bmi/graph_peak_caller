@@ -13,7 +13,7 @@ from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo
 from graph_peak_caller.pileup import Pileup
 from graph_peak_caller.sparsepileup import SparsePileup
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.ERROR)
 
 
 class SimpleInterval(object):
@@ -525,7 +525,7 @@ class MACSTests(object):
 
 
 def small_test(with_control=False):
-    return MACSTests(1000, 10, 100, read_length=10,
+    return MACSTests(1000, 10, 1000, read_length=10,
                      fragment_length=30, with_control=with_control)
 
 

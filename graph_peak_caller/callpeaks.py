@@ -244,7 +244,9 @@ class CallPeaks(object):
                       for interval in alignments)
         pileup = SparsePileup.from_areas_collection(
             self.ob_graph, areas_list)
+        print("######################################")
         self._sample_track = self.out_file_base_name + "sample_track.bdg"
+        print("###################################")
         if save_to_file:
             pileup.to_bed_graph(self._sample_track)
             print("Saved sample pileup to " + self._sample_track)

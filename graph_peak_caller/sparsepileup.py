@@ -5,6 +5,7 @@ from scipy.stats import poisson
 from collections import defaultdict
 from .pileup import Pileup
 from .pileupcleaner import PileupCleaner
+from .pileupcleaner2 import PeaksCleaner
 
 
 class ValuedIndexes(object):
@@ -366,9 +367,11 @@ class SparsePileup(Pileup):
             print(i)
         return self.from_intervals(self.graph, large_intervals)
         """
-        cleaner = PileupCleaner(self)
-        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
-        filtered_intervals = cleaner.filter_on_length(min_size)
+        # cleaner = PileupCleaner(self)
+        cleaner = PeaksCleaner(self, min_size)
+        # cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
+        # filtered_intervals = cleaner.filter_on_length(min_size)
+        filtered_intervals = cleaner.run()
         print("== Filtered intervals ==")
         print(filtered_intervals)
         pileup = self.from_intervals(self.graph, filtered_intervals)
