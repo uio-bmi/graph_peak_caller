@@ -7,6 +7,37 @@ import logging
 
 logging.basicConfig(level=logging.ERROR)
 
+class IndexedList(object):
+    def __init__(self, *args, **kwargs):
+        super(IndexedList, self).__init__(*args, **kwargs)
+        self.index = {}
+        self.elements = {}
+        self.length = 0
+
+    def get_elements(self):
+        for key, val in self.elements.items():
+            if val:
+                yield val
+
+    def __len__(self):
+        return self.length
+        return len(list(self.get_elements()))
+
+    def append(self, element):
+        hash = element.hash(ignore_direction=True)
+        self.elements[hash] = element
+        self.length += 1
+
+    def remove(self, element):
+        self.elements[element.hash(ignore_direction=True)] = False
+        self.length -= 1
+
+    def __contains__(self, item):
+        hash = item.hash(ignore_direction=True)
+        if hash in self.elements:
+            if self.elements[hash]:
+                return True
+        return False
 
 class IntervalWithinBlock(obg.Interval):
     def __init__(self, id, start, end, region_paths, graph):

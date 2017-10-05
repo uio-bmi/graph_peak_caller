@@ -4,7 +4,7 @@ import offsetbasedgraph as obg
 from .extender import Areas
 from collections import defaultdict
 import logging
-from .pileupcleaner import IntervalWithinBlock
+from .pileupcleaner import IntervalWithinBlock, IndexedList
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -16,8 +16,8 @@ class PileupCleaner2(object):
         self.valued_areas = self.pileup.find_valued_areas(True)
         #logging.debug(self.valued_areas)
         self.non_valued_areas = self.pileup.find_valued_areas(False)
-        self.intervals_at_start_of_block = defaultdict(list)
-        self.intervals_at_end_of_block = defaultdict(list)
+        self.intervals_at_start_of_block = defaultdict(IndexedList)
+        self.intervals_at_end_of_block = defaultdict(IndexedList)
         self._merged_intervals_counter = 0
         self.finding_holes = False
         self._n_loops_detected = 0
@@ -85,14 +85,14 @@ class PileupCleaner2(object):
                 filtered.append(interval)
 
         for node, intervals in self.intervals_at_end_of_block.items():
-            for interval in intervals:
+            for interval in intervals.get_elements():
                 if above and (interval.length() >= threshold or interval.has_infinite_loop):
                     filtered.append(interval)
                 if not above and interval.length() < threshold:
                     filtered.append(interval)
 
         for node, intervals in self.intervals_at_start_of_block.items():
-            for interval in intervals:
+            for interval in intervals.get_elements():
                 if above and (interval.length() >= threshold or interval.has_infinite_loop):
                     filtered.append(interval)
                 if not above and interval.length() < threshold:
@@ -150,13 +150,13 @@ class PileupCleaner2(object):
         i = 0
         for node_id in nodes:
             intervals = self.intervals_at_end_of_block[node_id]
-            if i % 5 == 0 or i < 100:
+            if i % 20 == 0 or i < 30:
                 n_intervals = sum([len(i) for i in self.intervals_at_end_of_block.values()])
                 print("Merging node %d / %d (%d intervals, total %d, %d loops)" % \
                       (i, len(nodes), len(intervals), n_intervals, self._n_loops_detected))
             i += 1
             #logging.debug("   Merging for node %d " % (node_id))
-            for interval in intervals.copy():
+            for interval in list(intervals.get_elements()).copy():
                 if interval.has_been_expanded:
                     #logging.debug("   has been expanded, skipping")
                     continue
@@ -185,7 +185,7 @@ class PileupCleaner2(object):
             #logging.debug("           Checking node %d" % node)
             touching_intervals = self.intervals_at_start_of_block[node]
             #logging.debug("            Found touching: %s" % str(touching_intervals))
-            for touching_interval in touching_intervals:
+            for touching_interval in list(touching_intervals.get_elements()).copy():
                 n_intervals_checked += 1
                 if n_intervals_checked > 100:
                     print(" Warning: %d intervals checked" % n_intervals_checked)
@@ -221,22 +221,11 @@ class PileupCleaner2(object):
         n = 0
         nodes_in = self.graph.reverse_adj_list[-node_id]
         for node in nodes_in:
-            for interval_in in self.intervals_at_end_of_block[-node]:
+            for interval_in in self.intervals_at_end_of_block[-node].get_elements():
                 if not interval_in in ignore_intervals:
                     n += 1
         return n
 
-    def _merge_interval_left(self, interval, direction):
-        # Find all incoming edges, merge with intervals touching, update indices
-        incoming_nodes = interval.blocks_going_into(limit_to_direction=direction)
-        for node in incoming_nodes:
-            touching_intervals = self.intervals_at_end_of_block[node]
-            for touching_interval in touching_intervals:
-                merged_interval = interval.merge(touching_interval)
-                self._add_indices_for_interval(merged_interval)
-
-        # Remove interval from start index. We do not want to expand it left again
-        self._remove_interval_from_start_indices(interval)
 
     def _remove_interval_from_start_indices(self, interval):
         start_rp = interval.region_paths[0]
@@ -412,8 +401,8 @@ class PileupCleaner2(object):
         for index in [self.intervals_at_start_of_block, self.intervals_at_end_of_block]:
             for node in index:
                 intervals = index[node]
-                for interval in intervals:
-                    for other_interval in intervals:
+                for interval in intervals.get_elements():
+                    for other_interval in intervals.get_elements():
                         if other_interval == interval:
                             continue
                         if other_interval.contains(interval):

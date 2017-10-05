@@ -15,10 +15,10 @@ def run_with_gam(gam_file_name, vg_graph_file_name,
 
     # print(ob_graph.blocks)
     reads_intervals = vg_gam_file_to_interval_collection(
-        None, gam_file_name, ob_graph, max_intervals=60000)
+        None, gam_file_name, ob_graph, max_intervals=2000)
 
     control_intervals = vg_gam_file_to_interval_collection(
-        None, gam_file_name, ob_graph, max_intervals=60000)
+        None, gam_file_name, ob_graph, max_intervals=2000)
 
     experiment_info = callpeaks.ExperimentInfo(12000000, 103, 50)
 

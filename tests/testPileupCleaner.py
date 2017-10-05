@@ -772,7 +772,7 @@ class TestPileupCleaner2(unittest.TestCase):
         self.assertTrue(obg.Interval(0, 3, [1, 2, -2, -1]) in filtered)
         self.assertFalse(obg.Interval(0, 3, [1, 2, -2, -1, 1, 2]) in filtered)
 
-    def test_double_loop_to_self_two_blocks(self):
+    def _test_double_loop_to_self_two_blocks(self):
         graph = obg.Graph(
             {1: obg.Block(3),
              2: obg.Block(3)},
