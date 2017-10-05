@@ -870,35 +870,6 @@ class TestPileupCleaner2OnRandomGraphs(unittest.TestCase):
 
         self.interval = obg.Interval(start_offset, end_offset, rps, self.graph)
 
-    def assertIntervalsGiveSamePileup(self, intervals, true_intervals):
-        if not intervals:
-            self.assertEqual(len(true_intervals), 0)
-        print(" === Assert pileups equal ==")
-        print(intervals)
-        pileup = SparsePileup.from_intervals(
-            intervals[0].graph,
-            intervals)
-        pileup.threshold(1)
-
-        true_intervals_trivial = PileupCleaner2._intervals_to_trivial_intervals(true_intervals)
-        true_pileup = SparsePileup.from_intervals(
-            true_intervals[0].graph,
-            true_intervals_trivial)
-        true_pileup.threshold(1)
-        print("Pileup")
-        print(pileup)
-        print("True pileup")
-        print(true_pileup)
-        self.assertEqual(pileup, true_pileup)
-
-    def assert_interval_contained_in_intervals(self, interval, intervals):
-        contained = False
-        for other in intervals:
-            if other.contains(interval):
-                contained = True
-
-        self.assertTrue(contained, "%s not in filtered" % str(interval))
-
     def assert_intervals_cover_same_areas(self, interval_set1, interval_set2):
         trivial1 = PileupCleaner2._intervals_to_trivial_intervals(interval_set1)
         trivial2 = PileupCleaner2._intervals_to_trivial_intervals(interval_set2)
@@ -909,7 +880,7 @@ class TestPileupCleaner2OnRandomGraphs(unittest.TestCase):
         print(unique2)
         self.assertEqual(len(unique1), len(unique2))
 
-    def get_trivial_intervals(self):
+    def test_get_trivial_intervals(self):
         graph = obg.Graph(
             {1: obg.Block(3),
              2: obg.Block(3)},
