@@ -1,5 +1,8 @@
 from .extender import AreasBuilder, Areas
 import offsetbasedgraph as obg
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class Cleaner(object):
@@ -44,7 +47,8 @@ class Cleaner(object):
     def run(self):
         self.other_adj_list = self.graph.reverse_adj_list
         for adj_list in [self.graph.adj_list, self.graph.reverse_adj_list]:
-            print("Running dir")
+            logging.info("Running dir")
+            logging.debug("Running dir")
             self.cur_adj_list = adj_list
             self.directed_run(adj_list)
             self.other_adj_list = self.cur_adj_list
@@ -54,8 +58,8 @@ class Cleaner(object):
     def directed_run(self, adj_list):
         node_lists = self.get_init_nodes()
         assert all(node_list[0] in self.ends_dict for node_list in node_lists)
-        print(node_lists)
         while node_lists:
+            logging.info("N lists: %s", len(node_lists))
             new_list = []
             for node_list in node_lists:
                 extensions = self.extend_node_list(node_list)
@@ -85,10 +89,10 @@ class Cleaner(object):
 
     def save(self, node_list):
         print("Saving", node_list)
+        # logging.info("Saving", node_list)
         areas = {node_id: [0, self.starts_dict[node_id]]
                  for node_id in node_list[1:]}
         areas.update({-node_list[0]: [0, self.starts_dict[-node_list[0]]]})
-        print(areas)
         self.areas_builder.update(areas)
 
     def finalize(self):
@@ -111,7 +115,6 @@ class Cleaner(object):
             else:
                 areas[-node_id].append(self.graph.node_size(node_id)-startend[1])
                 areas[-node_id].append(self.graph.node_size(node_id))
-        print("Finalized", areas)
         self.areas = Areas(self.graph, areas)
 
 
@@ -130,29 +133,15 @@ class PeaksCleaner(Cleaner):
             return False
         return end-start >= self.threshold
 
-    def save_old(self, node_list):
-        print("Saving: ", node_list)
-        start = self.graph.node_size(node_list[0])-self.ends_dict[node_list[0]]
-        end = self.starts_dict[node_list[-1]]
-        interval = obg.DirectedInterval(
-            start, end, node_list, graph=self.graph)
-        print(interval)
-        self.intervals.append(interval)
-
     def handle_node_list(self, node_list, extensions):
         assert node_list[0] in self.ends_dict
-        print("Handling: ", node_list)
         if node_list[-1] in node_list[1:-1]:  # Loop
-            print("Loop")
             self.save(node_list)
             return False
         if extensions:
-            print("Extending")
             return True
         length = self.get_length(node_list)
-        print("Checking length:", length)
         if length >= self.threshold:
-            print("Saving")
             self.save(node_list)
 
         return False
@@ -162,14 +151,12 @@ class HolesCleaner(Cleaner):
     def handle_node_list(self, node_list, extensions):
         assert node_list[0] in self.ends_dict
         if node_list[-1] in node_list[1:-1]:
-            print("##### LOOP")
             return False
         length = self.get_length(node_list)
         if length > self.threshold:
             return False
         if len(extensions) == len(self.cur_adj_list[node_list[-1]]):
             return True
-        print(node_list[-1], extensions, self.cur_adj_list[node_list[-1]])
         self.save(node_list)
         return True
 

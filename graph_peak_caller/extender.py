@@ -1,5 +1,5 @@
 import logging
-
+from collections import defaultdict
 from offsetbasedgraph.graphtraverser import GraphTraverser
 from offsetbasedgraph.interval import Position
 import offsetbasedgraph as obg
@@ -262,7 +262,7 @@ class Extender(object):
         logging.debug("########")
         logging.debug(region_path)
         logging.debug(length)
-        visited = {}
+        visited = defaultdict(int)
         for next_node in traverser.adj_list[region_path]:
             traverser.extend_from_block(next_node, length, visited)
         visited = {node_id: min(self.graph.node_size(node_id), l)

@@ -211,9 +211,6 @@ class SparsePileup(Pileup):
         # super().fill_small_wholes(max_size)
         cleaner = HolesCleaner(self, max_size)
         areas = cleaner.run()
-        print("###########################")
-        print(areas)
-        print("##########################")
         for node_id in areas.areas:
             starts = areas.get_starts(node_id)
             ends = areas.get_ends(node_id)
@@ -346,6 +343,23 @@ class SparsePileup(Pileup):
             self.data[region_path].set_interval_value(
                 start, end, value)
 
+    @classmethod
+    def from_bed_file(cls, graph, filename):
+        f = open(filename, "r")
+        starts = defaultdict(list)
+        ends = defaultdict(list)
+        for line in f:
+            if line.startswith("track"):
+                continue
+
+            data = line.split()
+            block_id = int(data[0])
+            starts[block_id].append(int(data[1]))
+            ends[block_id].append(int(data[2]))
+        starts = {block_id: np.array(start_list) for block_id, start_list in starts.items() if start_list}
+        ends = {block_id: np.array(ends_list) for block_id, ends_list in ends.items() if ends_list}
+        return cls.from_starts_and_ends(graph, starts, ends)
+
     def to_bed_file(self, filename):
         f = open(filename, "w")
         areas = self.find_valued_areas(True)
@@ -378,8 +392,6 @@ class SparsePileup(Pileup):
         # cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
         # filtered_intervals = cleaner.filter_on_length(min_size)
         areas = cleaner.run()
-        print("== Filtered intervals ==")
-        print(areas)
         pileup = self.from_areas_collection(self.graph, [areas])
         # pileup = self.from_intervals(self.graph, filtered_intervals)
         pileup.threshold(0.5)

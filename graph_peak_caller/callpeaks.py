@@ -102,7 +102,7 @@ class CallPeaks(object):
         if self.info is None:
             self.info = ExperimentInfo.find_info(
                 self.ob_graph, self.sample_intervals, self.control_intervals)
-        self.create_control()
+        self.create_control(True)
         self.create_sample_pileup()
         self.scale_tracks()
         self.get_score()
