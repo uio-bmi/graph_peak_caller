@@ -15,9 +15,12 @@ class IndexedList(object):
         self.length = 0
 
     def get_elements(self):
+        return list(self.elements.values())
+        out = []
         for key, val in self.elements.items():
             if val:
-                yield val
+                out.append(val)
+        return out
 
     def __len__(self):
         return self.length
@@ -29,7 +32,8 @@ class IndexedList(object):
         self.length += 1
 
     def remove(self, element):
-        self.elements[element.hash(ignore_direction=True)] = False
+        #self.elements[element.hash(ignore_direction=True)] = False
+        del self.elements[element.hash(ignore_direction=True)]
         self.length -= 1
 
     def __contains__(self, item):

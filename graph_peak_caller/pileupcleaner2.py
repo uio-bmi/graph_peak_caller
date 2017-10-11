@@ -156,10 +156,14 @@ class PileupCleaner2(object):
                       (i, len(nodes), len(intervals), n_intervals, self._n_loops_detected))
             i += 1
             #logging.debug("   Merging for node %d " % (node_id))
+            j = 0
             for interval in list(intervals.get_elements()).copy():
                 if interval.has_been_expanded:
                     #logging.debug("   has been expanded, skipping")
                     continue
+                if i % 20 == 0 and j % 5 == 0:
+                    print("  Merging with next #%d" % j)
+                j += 1
                 #logging.debug("      Merging interval %s" % interval)
                 did_merge = self._merge_interval_right(interval, direction=direction)
                 if did_merge:
@@ -217,13 +221,16 @@ class PileupCleaner2(object):
         #logging.debug("              No merging")
         return False
 
-    def _n_intervals_into_node(self, node_id, ignore_intervals=[]):
+    def _n_intervals_into_node(self, node_id, ignore_intervals=[], max_count = 1):
         n = 0
         nodes_in = self.graph.reverse_adj_list[-node_id]
         for node in nodes_in:
             for interval_in in self.intervals_at_end_of_block[-node].get_elements():
-                if not interval_in in ignore_intervals:
+                if interval_in.hash() != ignore_intervals[0].hash() \
+                    and interval_in.hash() != ignore_intervals[1].hash():
                     n += 1
+                    if n >= max_count:
+                        return n
         return n
 
 
