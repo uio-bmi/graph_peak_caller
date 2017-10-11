@@ -525,12 +525,12 @@ class MACSTests(object):
 
 
 def small_test(with_control=False):
-    return MACSTests(1000, 10, 1000, read_length=10,
-                     fragment_length=30, with_control=with_control)
+    return MACSTests(100, 2, 10000, read_length=10,
+                     fragment_length=100, with_control=with_control)
 
 
 def big_test(with_control=False):
-    return MACSTests(100, 1000, 100000, read_length=51,
+    return MACSTests(100, 100, 100000, read_length=51,
                      fragment_length=120, with_control=with_control)
 
 
@@ -539,7 +539,7 @@ if __name__ == "__main__":
     test = big_test(False)
     test.test_sample_pileup()
     test.test_control_pileup()
-    test.test_call_peaks()
+    # test.test_call_peaks()
     # test.test_whole_pipeline()
     exit()
 

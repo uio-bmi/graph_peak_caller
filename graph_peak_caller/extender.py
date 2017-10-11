@@ -2,6 +2,7 @@ import logging
 from collections import defaultdict
 from offsetbasedgraph.graphtraverser import GraphTraverser
 from offsetbasedgraph.interval import Position
+from .areas import BinaryContinousAreas
 import offsetbasedgraph as obg
 # logging.basicConfig(level=logging.DEBUG)
 
@@ -279,7 +280,7 @@ class Extender(object):
         #      {node_id: [0, l] for node_id, l in visited.items()})
 
     def extend_interval(self, interval, direction=1):
-        self.area_builder = AreasBuilder(self.graph)
+        self.area_builder = BinaryContinousAreas(self.graph)
         logging.warning(interval.length())
         pos_length = self.length-interval.length()
         neg_length = self.length if direction == 0 else 0
@@ -287,7 +288,6 @@ class Extender(object):
             interval, pos_length, neg_length)
         logging.debug(pos_remain)
         logging.debug(neg_remain)
-        logging.debug(self.area_builder.areas)
         is_pos = interval.can_be_on_positive_strand()
         is_neg = interval.can_be_on_negative_strand()
         logging.debug(is_pos)
