@@ -29,7 +29,7 @@ class ControlTrack(object):
             count += 1
             for extender, valued_areas in zip(extenders, valued_areas_list):
                 valued_areas.add_binary_areas(
-                    extender.extend_interval(alignment))
+                    extender.extend_interval(alignment, 0))
 
         pileups = [SparsePileup.from_valued_areas(self.graph, valued_areas) for
                    valued_area in valued_areas_list]
