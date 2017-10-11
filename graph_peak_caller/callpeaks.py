@@ -102,7 +102,7 @@ class CallPeaks(object):
         if self.info is None:
             self.info = ExperimentInfo.find_info(
                 self.ob_graph, self.sample_intervals, self.control_intervals)
-        self.create_control()
+        self.create_control(True)
         self.create_sample_pileup()
         self.scale_tracks()
         self.get_score()
@@ -228,6 +228,7 @@ class CallPeaks(object):
     def call_peaks(self, out_file="final_peaks", cutoff=0.05):
         print("Calling peaks")
         self.p_values.threshold(-np.log10(cutoff))
+        self.p_values.to_bed_file("pre_postprocess.bed")
         self.p_values.fill_small_wholes(self.info.read_length)
         self.final_track = self.p_values.remove_small_peaks(
             self.info.fragment_length)
@@ -244,7 +245,9 @@ class CallPeaks(object):
                       for interval in alignments)
         pileup = SparsePileup.from_areas_collection(
             self.ob_graph, areas_list)
+        print("######################################")
         self._sample_track = self.out_file_base_name + "sample_track.bdg"
+        print("###################################")
         if save_to_file:
             pileup.to_bed_graph(self._sample_track)
             print("Saved sample pileup to " + self._sample_track)
