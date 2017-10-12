@@ -270,8 +270,7 @@ class PileupCleaner(object):
             if interval.is_at_end_of_block():
                 self.intervals_at_end_of_block[interval.region_paths[-1]].append(interval)
             if interval.is_at_beginning_of_block():
-                logging.debug("Beggining of Block: %s", interval)
-                self.intervals_at_start_of_block[interval.region_paths[0]].append(interval)
+                elf.intervals_at_start_of_block[interval.region_paths[0]].append(interval)
 
 
     # Delete
