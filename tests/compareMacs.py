@@ -7,7 +7,7 @@ import numpy as np
 import logging
 
 from offsetbasedgraph import Graph, Block, Position,\
-    DirectedInterval
+    DirectedInterval, GraphWithReversals
 from offsetbasedgraph.interval import IntervalCollection
 from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo
 from graph_peak_caller.pileup import Pileup
@@ -360,7 +360,7 @@ class MACSTests(object):
     def create_linear_graph(self):
         nodes = {i+1: Block(self.node_size) for i in range(self.n_nodes)}
         adj_list = {i: [i+1] for i in range(1, self.n_nodes)}
-        self.graph = Graph(nodes, adj_list)
+        self.graph = GraphWithReversals(nodes, adj_list)
         self.graph.to_file("lin_graph")
 
     def _get_graph_interval(self, tmp_start, tmp_end, direction):
@@ -525,8 +525,8 @@ class MACSTests(object):
 
 
 def small_test(with_control=False):
-    return MACSTests(1000, 10, 1000, read_length=10,
-                     fragment_length=30, with_control=with_control)
+    return MACSTests(100, 2, 10000, read_length=10,
+                     fragment_length=100, with_control=with_control)
 
 
 def big_test(with_control=False):
@@ -540,7 +540,6 @@ if __name__ == "__main__":
     test.test_sample_pileup()
     test.test_control_pileup()
     test.test_call_peaks()
-    # test.test_whole_pipeline()
     exit()
 
     caller = test.caller

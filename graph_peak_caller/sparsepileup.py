@@ -244,6 +244,32 @@ class SparsePileup(Pileup):
                                         ends_dict, dtype=int)
 
     @classmethod
+    def from_valued_areas(cls, graph, valued_areas):
+        pileup = cls(graph)
+        for rp in graph.blocks:
+            indexes, values = starts_and_ends_to_sparse_pileup(
+                valued_areas.get_starts_array(rp),
+                valued_areas.get_ends_array(rp))
+            if not indexes.size:
+                continue
+            start_value = 0
+            length = graph.blocks[rp].length()
+            if indexes[0] == 0:
+                start_value = values[0]
+                indexes = indexes[1:]
+                values = values[1:]
+
+            if len(indexes) > 0:
+                if indexes[-1] == length:
+                    indexes = indexes[:-1]
+                    values = values[:-1]
+
+            pileup.data[rp] = ValuedIndexes(
+                indexes, values, start_value, length)
+
+        return pileup
+
+    @classmethod
     def from_starts_and_ends(cls, graph, starts, ends, dtype=bool):
         pileup = cls(graph)
         for rp in starts:
@@ -548,19 +574,8 @@ def starts_and_ends_to_sparse_pileup(starts, ends):
 
     pileup_encoded_positions = np.concatenate((coded_starts, coded_ends))
     pileup_encoded_positions.sort()
-    #print("Sorted positions")
-    #print(pileup_encoded_positions)
-
     event_codes = (pileup_encoded_positions % 8) - 4  # Containing -1s and 1s
-    #print("Decoded positions")
-    #print(event_codes)
-
     pileup_values = np.add.accumulate(event_codes)
-    #print("Accumulation")
-    #print(pileup_values)
-    #print("Pileup positions")
     pileup_positions = pileup_encoded_positions // 8
-    #print(pileup_positions)
-
     return filter_pileup_duplicated_position(pileup_positions, pileup_values)
 

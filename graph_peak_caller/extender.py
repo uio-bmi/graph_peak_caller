@@ -2,6 +2,7 @@ import logging
 from collections import defaultdict
 from offsetbasedgraph.graphtraverser import GraphTraverser
 from offsetbasedgraph.interval import Position
+from .areas import BinaryContinousAreas
 import offsetbasedgraph as obg
 # logging.basicConfig(level=logging.DEBUG)
 
@@ -257,14 +258,21 @@ class Extender(object):
         visited = defaultdict(int)
         for next_node in traverser.adj_list[region_path]:
             traverser.extend_from_block(next_node, length, visited)
-        visited = {node_id: min(self.graph.node_size(node_id), l)
-                   for node_id, l in visited.items()}
-        logging.debug(visited)
-        self.area_builder.update(
-             {node_id: [0, l] for node_id, l in visited.items()})
+
+        for node_id, l in visited.items():
+            if l >= self.graph.node_size(node_id):
+                self.area_builder.add_full(node_id)
+            else:
+                self.area_builder.add_start(node_id, l)
+
+        # visited = {node_id: min(self.graph.node_size(node_id), l)
+        #            for node_id, l in visited.items()}
+        # logging.debug(visited)
+        # self.area_builder.update(
+        #      {node_id: [0, l] for node_id, l in visited.items()})
 
     def extend_interval(self, interval, direction=1):
-        self.area_builder = AreasBuilder(self.graph)
+        self.area_builder = BinaryContinousAreas(self.graph)
         logging.warning(interval.length())
         pos_length = self.length-interval.length()
         neg_length = self.length if direction == 0 else 0
@@ -272,7 +280,6 @@ class Extender(object):
             interval, pos_length, neg_length)
         logging.debug(pos_remain)
         logging.debug(neg_remain)
-        logging.debug(self.area_builder.areas)
         is_pos = interval.can_be_on_positive_strand()
         is_neg = interval.can_be_on_negative_strand()
         logging.debug(is_pos)
@@ -296,5 +303,7 @@ class Extender(object):
                     -interval.start_position.region_path_id,
                     neg_remain, self.pos_traverser)
 
-        self.area_builder.reverse_reversals()
-        return Areas(self.graph, self.area_builder.areas)
+        self.area_builder.sanitize()
+        # self.area_builder.reverse_reversals()
+        return self.area_builder
+# Areas(self.graph, self.area_builder.areas)
