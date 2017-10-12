@@ -273,7 +273,7 @@ class SparsePileup(Pileup):
 
     def __str__(self):
         return "\n".join(
-            "%s: %s, %s" % (node_id, valued_indexes.indexes, valued_indexes.values)
+            "%s: %s, %s, %d" % (node_id, valued_indexes.indexes, valued_indexes.values, valued_indexes.start_value)
             for node_id, valued_indexes in self.data.items())
 
     __repr__ = __str__
@@ -514,6 +514,14 @@ def intervals_to_start_and_ends(graph, intervals):
                 start = interval.start_position.offset
             if i == len(interval.region_paths)-1:
                 end = interval.end_position.offset
+
+            if region_path < 0:
+                new_start = graph.node_size(region_path) - end
+                new_end = graph.node_size(region_path) - start
+                start = new_start
+                end = new_end
+
+                region_path = -region_path
 
             starts[region_path].append(start)
             ends[region_path].append(end)

@@ -6,369 +6,12 @@ from graph_peak_caller.pileupcleaner2 import PeaksCleaner, HolesCleaner
 from cyclic_graph import get_small_cyclic_graph, get_large_cyclic_graph,\
     get_padded_cyclic_graph
 import offsetbasedgraph as obg
+from random import randrange, seed
 
-
-class TestPileupCleaner(object):
-
-    def setUp(self):
-        self.graph = obg.Graph(
-            {1: obg.Block(10),
-             2: obg.Block(10),
-             3: obg.Block(10),
-             4: obg.Block(10)}
-            ,
-            {1: [2, 4],
-             2: [3],
-             4: [3]
-             }
-        )
-        #self.trivial_pileup = SparsePileup(self.graph)
-
-        self.trivial_pileup = SparsePileup.from_intervals(
-            self.graph,
-            [
-            obg.Interval(0, 5, [1]),
-            obg.Interval(3, 5, [2]),
-            obg.Interval(3, 10, [3]),
-            obg.Interval(4, 6, [1])
-            ]
-        )
-        self.trivial_pileup.threshold(1)
-
-    def test_find_maximally_expanded_holes_one_block(self):
-        graph = obg.Graph({
-            1: obg.Block(10)
-        }, {})
-        pileup =  SparsePileup.from_intervals(
-            graph,
-            [
-                obg.Interval(4, 5, [1], graph)
-            ]
-        )
-        pileup.threshold(1)
-        cleaner = PileupCleaner(pileup)
-        holes = cleaner.find_maximally_expanded_holes()
-        self.assertTrue(obg.Interval(0, 4, [1]) in holes)
-        self.assertTrue(obg.Interval(5, 10, [1]) in holes)
-        self.assertEqual(len(holes), 2)
-
-    def test_find_maximally_expanded_holes_two_blocks(self):
-        graph = obg.Graph({
-                1: obg.Block(10),
-                2: obg.Block(10)
-            },
-            {
-                1: [2]
-            }
-        )
-        pileup =  SparsePileup.from_intervals(
-            graph,
-            [
-                obg.Interval(4, 5, [1], graph)
-            ]
-        )
-        pileup.threshold(1)
-        cleaner = PileupCleaner(pileup)
-        holes = cleaner.find_maximally_expanded_holes()
-        self.assertTrue(obg.Interval(0, 4, [1]) in holes)
-        self.assertTrue(obg.Interval(5, 10, [1, 2]) in holes)
-        self.assertFalse(obg.Interval(5, 10, [1]) in holes)
-        self.assertFalse(obg.Interval(1, 10, [2]) in holes)
-
-    def test_find_maximally_expanded_holes_complex(self):
-        graph = obg.Graph({
-                1: obg.Block(10),
-                2: obg.Block(10),
-                3: obg.Block(10),
-                4: obg.Block(10),
-                5: obg.Block(10)
-            },
-            {
-                1: [3],
-                2: [3],
-                3: [4, 5]
-            }
-        )
-
-        pileup =  SparsePileup.from_intervals(
-            graph,
-            [
-                obg.Interval(0, 5, [1], graph),
-                obg.Interval(5, 10, [2], graph),
-                obg.Interval(3, 6, [3], graph),
-                obg.Interval(5, 10, [4], graph),
-                obg.Interval(0, 5, [5], graph),
-            ]
-        )
-        pileup.threshold(1)
-        cleaner = PileupCleaner(pileup)
-        holes = cleaner.find_maximally_expanded_holes()
-        print(holes)
-        self.assertTrue(obg.Interval(0, 5, [2]) in holes)
-        self.assertTrue(obg.Interval(0, 3, [3]) in holes)
-        self.assertTrue(obg.Interval(6, 10, [3]) in holes)
-        self.assertTrue(obg.Interval(6, 5, [3, 4]) in holes)
-        self.assertFalse(obg.Interval(0, 5, [4]) in holes)
-        self.assertFalse(obg.Interval(5, 10, [1]) in holes)
-
-    def test_find_maximall_expanded_holes_cyclic(self):
-        graph = obg.Graph({
-                1: obg.Block(10),
-                2: obg.Block(10),
-                3: obg.Block(10),
-                4: obg.Block(10),
-                5: obg.Block(10)
-            },
-            {
-                1: [3],
-                2: [3],
-                3: [4, 5, 1],
-                -4: [2]
-            }
-        )
-        pileup =  SparsePileup.from_intervals(
-            graph,
-            [
-                obg.Interval(1, 5, [1], graph),
-                obg.Interval(0, 10, [2], graph),
-                obg.Interval(3, 6, [3], graph),
-                obg.Interval(5, 10, [4], graph),
-                obg.Interval(0, 5, [5], graph),
-            ]
-        )
-        pileup.threshold(1)
-        cleaner = PileupCleaner(pileup)
-        holes = cleaner.find_maximally_expanded_holes()
-        print(holes)
-        self.assertFalse(obg.Interval(0, 5, [2]) in holes)
-        self.assertTrue(obg.Interval(0, 3, [3]) in holes)
-        self.assertTrue(obg.Interval(6, 10, [3]) in holes)
-        self.assertTrue(obg.Interval(6, 5, [3, 4]) in holes)
-        self.assertTrue(obg.Interval(6, 1, [3, 1]) in holes)
-        self.assertTrue(obg.Interval(0, 5, [4]) in holes)
-        self.assertFalse(obg.Interval(5, 10, [1]) in holes)
-
-    def test_find_trivial_intervals(self):
-
-        cleaner = PileupCleaner(self.trivial_pileup)
-        trivial_intervals = cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
-
-        self.assertEqual(len(trivial_intervals), 3)
-
-        self.assertTrue(obg.Interval(0, 6, [1]) in trivial_intervals)
-        self.assertTrue(obg.Interval(3, 5, [2]) in trivial_intervals)
-        self.assertTrue(obg.Interval(3, 10, [3]) in trivial_intervals)
-
-    def test_IntervalWithinBlock(self):
-
-        interval = IntervalWithinBlock(-1, 0, 5, [1], self.graph)
-        self.assertTrue(interval.is_at_beginning_of_block())
-        self.assertFalse(interval.is_at_end_of_block())
-        self.assertTrue(len(interval.blocks_going_into()) == 0)
-        self.assertTrue(len(interval.blocks_going_out_from()) == 0)
-
-        interval = IntervalWithinBlock(-1, 0, 10, [2], self.graph)
-        print(" === CASE === ")
-        print(self.graph.reverse_adj_list)
-        self.assertTrue(interval.is_at_beginning_of_block())
-        self.assertTrue(interval.is_at_end_of_block())
-        self.assertEqual(interval.blocks_going_into(), [1])
-        self.assertEqual(interval.blocks_going_out_from(), [3])
-
-    def test_blocks_going_out_from_advanced(self):
-        graph = obg.Graph(
-            {1: obg.Block(1),
-             2: obg.Block(1),
-             3: obg.Block(1)
-            },
-            {
-                1: [2],
-                -3: [-1]
-            }
-        )
-        print("== test_blocks_going_out_from_advanced ==")
-        print(graph.adj_list)
-        print(graph.reverse_adj_list)
-        interval = IntervalWithinBlock(1, 0, 1, [1], graph)
-        self.assertTrue(interval.blocks_going_out_from(), [1, 3])
-
-
-    def test_merge_right(self):
-        interval = IntervalWithinBlock(1, 5, 10, [1], self.graph)
-        interval2 = IntervalWithinBlock(2, 0, 5, [2], self.graph)
-
-        merged = interval.merge_right(interval2)
-        self.assertEqual(merged, obg.Interval(5, 5, [1, 2], self.graph))
-
-    def test_create_interval_indices(self):
-        cleaner = PileupCleaner(self.trivial_pileup)
-
-        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
-        cleaner.create_interval_indices()
-
-
-        index = cleaner.intervals_at_start_of_block
-        print(index)
-        self.assertTrue(1 in index)
-        self.assertTrue(index[1] == [obg.Interval(0, 6, [1])])
-
-    def test_filter_on_length_trivial(self):
-        cleaner = PileupCleaner(self.trivial_pileup)
-        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
-        filtered = cleaner.filter_on_length(2)
-
-        self.assertTrue(obg.Interval(0, 6, [1]) in filtered)
-        self.assertTrue(obg.Interval(3, 5, [2]) in filtered)
-        self.assertTrue(obg.Interval(3, 10, [3]) in filtered)
-
-        filtered = cleaner.filter_on_length(3)
-        self.assertTrue(obg.Interval(0, 6, [1]) in filtered)
-        self.assertTrue(obg.Interval(3, 10, [3]) in filtered)
-
-
-        filtered = cleaner.filter_on_length(6)
-        self.assertTrue(obg.Interval(3, 10, [3]) in filtered)
-
-    def test_filter_on_length_interval_touching_end(self):
-        self.trivial_pileup = SparsePileup.from_intervals(
-            self.graph,
-            [
-            obg.Interval(0, 10, [1]),
-            obg.Interval(0, 3, [2]),
-            obg.Interval(3, 10, [3]),
-            obg.Interval(0, 3, [4])
-            ]
-        )
-        self.trivial_pileup.threshold(1)
-        cleaner = PileupCleaner(self.trivial_pileup)
-        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
-        filtered = cleaner.filter_on_length(5)
-        self.assertTrue(obg.Interval(3, 10, [3]) in filtered)
-        self.assertTrue(obg.Interval(0, 3, [1, 2]) in filtered)
-        self.assertTrue(obg.Interval(0, 3, [1, 4]) in filtered)
-        #self.assertEqual(len(filtered), 3)
-
-    def test_filter_on_length_interval_spanning_multiple_rps(self):
-        self.trivial_pileup = SparsePileup.from_intervals(
-            self.graph,
-            [
-            obg.Interval(4, 10, [1]),
-            obg.Interval(0, 10, [2]),
-            obg.Interval(0, 5, [3]),
-            obg.Interval(0, 10, [4])
-            ]
-        )
-        self.trivial_pileup.threshold(1)
-        cleaner = PileupCleaner(self.trivial_pileup)
-        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
-        filtered = cleaner.filter_on_length(16)
-        print(filtered)
-        self.assertTrue(obg.Interval(4, 5, [1, 2, 3]) in filtered)
-        self.assertTrue(obg.Interval(4, 5, [1, 4, 3]) in filtered)
-        #self.assertEqual(len(filtered), 2)
-
-    def test_filter_on_length_simple_loop(self):
-        loop_graph = obg.Graph({1: obg.Block(10)},
-                               {1: [1]})
-        pileup = SparsePileup.from_intervals(
-            loop_graph,
-            [
-                obg.Interval(0, 10, [1])
-            ]
-        )
-        pileup.threshold(1)
-        cleaner = PileupCleaner(pileup)
-        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
-        filtered = cleaner.filter_on_length(2)
-        print("Filtered loop")
-        print(filtered)
-        self.assertEqual(filtered, [obg.Interval(0, 10, [1])])
-
-
-    def test_filter_on_length_simple_loop(self):
-        loop_graph = obg.Graph({1: obg.Block(10)},
-                               {1: [1]})
-        pileup = SparsePileup.from_intervals(
-            loop_graph,
-            [
-                obg.Interval(0, 10, [1])
-            ]
-        )
-        pileup.threshold(1)
-        cleaner = PileupCleaner(pileup)
-        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
-        filtered = cleaner.filter_on_length(2)
-        print("Filtered loop")
-        print(filtered)
-        self.assertEqual(filtered, [obg.Interval(0, 10, [1])])
-
-    def test_filter_multi_directed(self):
-        graph = obg.Graph(
-            {1: obg.Block(3),
-             2: obg.Block(3),
-             3: obg.Block(3),
-             },
-            {2: [3],
-            -2: [-1]}
-        )
-        pileup = SparsePileup.from_intervals(
-            graph,
-            [
-                obg.Interval(0, 3, [1]),
-                obg.Interval(0, 3, [2]),
-                obg.Interval(0, 3, [3])
-            ]
-        )
-        pileup.threshold(1)
-        cleaner = PileupCleaner(pileup)
-        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
-        filtered = cleaner.filter_on_length(4)
-        print("Filtered")
-        print(filtered)
-        self.assertTrue(obg.Interval(0, 3, [1, 2]) in filtered)
-        self.assertTrue(obg.Interval(0, 3, [2, 3]) in filtered)
-        self.assertFalse(obg.Interval(0, 3, [1, 2, 3]) in filtered)
-
-    def test_filter_advanced_multi_directed(self):
-        graph = obg.Graph(
-            {
-                1: obg.Block(10),
-                2: obg.Block(10),
-                3: obg.Block(10),
-                4: obg.Block(10),
-                5: obg.Block(10)
-            },
-            {
-                1: [2, 4],
-                2: [3],
-                -1: [-3],
-                -5: [-2]
-            }
-        )
-        pileup = SparsePileup.from_intervals(
-            graph,
-            [
-                obg.Interval(0, 10, [1, 2, 3]),
-                obg.Interval(0, 3, [5])
-            ]
-        )
-        pileup.threshold(1)
-        cleaner = PileupCleaner(pileup)
-        cleaner.find_trivial_intervals_within_blocks(cleaner.valued_areas)
-        filtered = cleaner.filter_on_length(11)
-        print(filtered)
-        self.assertTrue(obg.Interval(0, 3, [2, 5]) in filtered)
-        self.assertFalse(obg.Interval(0, 3, [1, 5]) in filtered)
-
-
-class TestCyclicCleanup(unittest.TestCase):
-    def setUp(self):
-        self.small_graph = get_small_cyclic_graph()
-        self.large_graph = get_large_cyclic_graph()
-        self.padded_graph = get_padded_cyclic_graph()
-
+class CleanupTester(unittest.TestCase):
     def assertIntervalsGiveSamePileup(self, areas, true_intervals):
         if not areas.areas:
+            print(areas)
             self.assertEqual(len(true_intervals), 0)
 
         pileup = SparsePileup.from_areas_collection(
@@ -379,7 +22,23 @@ class TestCyclicCleanup(unittest.TestCase):
             true_intervals[0].graph,
             true_intervals)
         true_pileup.threshold(1)
+
+        print("Pileup from areas")
+        print(pileup)
+        print("Pileup from intervals")
+        print(true_pileup)
+
+
         self.assertEqual(pileup, true_pileup)
+
+
+class TestCyclicCleanup(CleanupTester):
+    def setUp(self):
+        self.small_graph = get_small_cyclic_graph()
+        self.large_graph = get_large_cyclic_graph()
+        self.padded_graph = get_padded_cyclic_graph()
+
+
 
     def test_loop_with_surrounding(self):
         start_intervals = [obg.Interval(
@@ -485,6 +144,161 @@ class TestExhaustiveCleaner(unittest.TestCase):
         nodes = {i: obg.Block(10) for i in range(1, 11)}
         edges = {i: [i+1, i+6] for i in range(1, 6)}
         self.graph = obg.GraphWithReversals(nodes, edges)
+
+
+class TestCleanerOnRandomGraphs(CleanupTester):
+    def setUp(self):
+        from collections import defaultdict
+
+        self.n_blocks = 3 #  5
+        self.n_edges = self.n_blocks + 3 # +2
+        blocks = {}
+        blocks_list = []
+        for i in range(1, self.n_blocks + 1):
+            blocks[i] = obg.Block(3)
+            blocks_list.append(i)
+
+        # Random edges
+        edge_dict = defaultdict(list)
+        for i in range(0, self.n_edges):
+            start = blocks_list[randrange(0, len(blocks_list))]
+            end = blocks_list[randrange(0, len(blocks_list))]
+
+            if randrange(0, 2) == 1:
+                start = -start
+
+            if randrange(0, 2) == 1:
+                end = -end
+
+            if end == start or end == -start:
+                continue
+
+            if end not in edge_dict[start]:
+                edge_dict[start].append(end)
+
+        self.graph = obg.Graph(blocks, edge_dict)
+        print(self.graph)
+
+    def setUpRandomIntervals(self, with_hole=False):
+         # Create random interval
+        start_rp = randrange(1, self.n_blocks + 1)
+        start_offset = randrange(0, 3)
+        end_offset = max(randrange(0, 3), start_offset + 1)
+        rps = [start_rp]
+        prev_rp = start_rp
+        for i in range(0, self.n_blocks):
+            edges = self.graph.adj_list[prev_rp]
+            if len(edges) == 0:
+                break
+            rp = edges[randrange(0, len(edges))]
+            prev_rp = rp
+            if rp in rps:
+                break
+
+            rps.append(rp)
+
+        self.intervals = [obg.Interval(start_offset, end_offset, rps, self.graph)]
+
+        if with_hole:
+            # Split interval at random position
+            split_rp = randrange(0, len(rps))
+            if split_rp > 0:
+                split_pos = randrange(0, 2)
+            else:
+                split_pos = start_offset + 1
+
+            split_end = split_pos
+            first_interval_rps = rps[0:split_rp + 1]
+            if split_pos == 0:
+                first_interval_rps = first_interval_rps[0:split_rp]
+                split_end = 2
+
+            start_interval = obg.Interval(start_offset, split_end, first_interval_rps, self.graph)
+            end_interval = obg.Interval(split_pos, end_offset, rps[split_rp:], self.graph)
+            self.intervals = [start_interval, end_interval]
+            hole_rps = [first_interval_rps[-1]]
+            hole_end = split_pos
+            if rps[split_rp] != hole_rps[0]:
+                hole_rps.append(rps[split_rp])
+
+            if hole_end == 0:
+                hole_end = 3
+                hole_rps = hole_rps[:-1]
+
+            self.hole_interval = obg.Interval(split_end, hole_end, hole_rps, self.graph)
+            if start_interval.contains(self.hole_interval) or end_interval.contains(self.hole_interval) \
+                    or start_interval.contains(self.hole_interval.get_reverse()) \
+                    or end_interval.contains(self.hole_interval.get_reverse()):
+                self.hole_interval = obg.Interval(0, 0, [1], self.graph)  # Use empty hole
+
+            self.intervals_without_holes = [obg.Interval(start_offset, end_offset, rps, self.graph)]
+
+    def test_filter_intervals(self):
+        seed(1)
+        for i in range(0, 100):
+            print(" ======== TEst case =======")
+            self.setUp()
+            self.setUpRandomIntervals()
+            #print(self.graph)
+            print(self.intervals)
+            pileup = SparsePileup.from_intervals(
+            self.graph, self.intervals)
+            pileup.threshold(1)
+            cleaner = PeaksCleaner(pileup, 1)
+            areas = cleaner.run()
+            print("Areas")
+            print(areas)
+            self.assertIntervalsGiveSamePileup(areas, self.intervals)
+
+    def test_fill_holes(self):
+        seed(1)
+        n_cases_checked = 0
+        for i in range(0, 200):
+            print(" ======== TEst case =======")
+            self.setUp()
+            self.setUpRandomIntervals(True)
+
+            if self.hole_interval.length() == 0:
+                continue
+
+            if self.intervals[0].length() == 0 or self.intervals[1].length() == 0:
+                continue
+
+            n_cases_checked += 1
+
+            print(self.graph)
+            print(self.intervals)
+            pileup = SparsePileup.from_intervals(
+            self.graph, self.intervals)
+            pileup.threshold(1)
+            cleaner = HolesCleaner(pileup, 1)
+            areas = cleaner.run()
+            """
+            print("--Intervals with hole")
+            print(self.intervals)
+            print("--Intervals without holes")
+            print(self.intervals_without_holes)
+            print("--Hole interval")
+            print(self.hole_interval)
+            print("--Areas")
+            print(areas)
+            """
+
+            holes_found = areas.to_simple_intervals()
+            correct_holes = [self.hole_interval]
+            for hole in correct_holes:
+                self.assertTrue(hole in holes_found or hole.get_reverse() in holes_found)
+
+            for hole in holes_found:
+                self.assertTrue(hole.length() <= 1)
+
+
+            #pileup_correct = SparsePileup.from_intervals(self.graph, self.intervals_without_holes)
+            #print(pileup_correct)
+            #self.assertIntervalsGiveSamePileup(areas, [self.hole_interval])
+
+        print("Checked %d cases" % n_cases_checked)
+
 
 if __name__ == "__main__":
     unittest.main()

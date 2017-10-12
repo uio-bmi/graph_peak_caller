@@ -99,27 +99,19 @@ class Areas(object):
                 if i % 2 == 1]
 
     def to_intervals(self, include_partial_stubs):
-        f = all if include_partial_stubs else any
+        raise NotImplementedError()
+
+    def to_simple_intervals(self):
         intervals = []
-        for node_id, startends in self.areas.items():
-            for i in range(len(startends)//2):
-                start = startends[2*i]
-                end = startends[2*i+1]
-                if start == 0:
-                    if f(prev_id in self.areas and self.areas[prev_id] and
-                         self.areas[prev_id][-1] == self.graph.node_size(prev_id)
-                         for prev_id in self.graph.reverse_adj_list[node_id]):
-                        continue
-                if end == self.graph.node_size(node_id):
-                    intervals.extend(
-                        self._get_intervals(
-                            node_id, [start],
-                            self.areas, include_partial_stubs))
-                else:
-                    intervals.append(
-                        obg.DirectedInterval(int(start), int(end),
-                                             [node_id], graph=self.graph))
+        for node, area in self.areas.items():
+            for i in range(0, len(area) // 2):
+                start = int(area[i*2])
+                end = int(area[i*2+1])
+                interval = obg.Interval(start, end, [node], self.graph)
+                intervals.append(interval)
+
         return intervals
+
 
 
 class OldExtender(object):

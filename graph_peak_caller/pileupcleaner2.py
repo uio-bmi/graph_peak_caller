@@ -17,6 +17,8 @@ class Cleaner(object):
     def get_starts_and_ends_dict(self, areas):
         self.starts_dict = {}
         self.ends_dict = {}
+        logging.debug("Areas")
+        logging.debug(areas)
         for node, startends in areas.items():
             if not startends:
                 continue
@@ -27,6 +29,11 @@ class Cleaner(object):
             if startends[-1] == self.graph.node_size(node):
                 self.starts_dict[-node] = int(self.graph.node_size(node)-startends[-2])
                 self.ends_dict[node] = int(self.graph.node_size(node)-startends[-2])
+
+        logging.debug("Start dict")
+        logging.debug(self.starts_dict)
+        logging.debug("Ends dict")
+        logging.debug(self.ends_dict)
 
     def is_end_included(self, node_id):
         pass
@@ -47,8 +54,6 @@ class Cleaner(object):
     def run(self):
         self.other_adj_list = self.graph.reverse_adj_list
         for adj_list in [self.graph.adj_list, self.graph.reverse_adj_list]:
-            logging.info("Running dir")
-            logging.debug("Running dir")
             self.cur_adj_list = adj_list
             self.directed_run(adj_list)
             self.other_adj_list = self.cur_adj_list
@@ -96,6 +101,7 @@ class Cleaner(object):
         self.areas_builder.update(areas)
 
     def finalize(self):
+        logging.debug("== Finalize ==")
         areas = {}
         for node_id, startends in self.areas.items():
             new_start_ends = []
@@ -171,5 +177,8 @@ class HolesCleaner(Cleaner):
 
     def _check_internal_interval(self, node_id, start, end):
         if start == 0 or end == self.graph.node_size(node_id):
+            logging.debug("   Return false")
             return False
-        return end-start <= self.threshold
+        keep = end-start <= self.threshold
+        logging.debug(" Check result: %d" % (keep))
+        return keep

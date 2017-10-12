@@ -5,7 +5,7 @@ from .extender import Areas
 from collections import defaultdict
 import logging
 
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.DEBUG)
 
 
 class IntervalWithinBlock(obg.Interval):
@@ -266,11 +266,8 @@ class PileupCleaner(object):
 
     def create_interval_indices(self):
         # Create indices from interval id to touching blocks
-        logging.debug("create_interval_indices")
         for interval in self.intervals:
-            logging.debug("Testing: %s", interval)
             if interval.is_at_end_of_block():
-                logging.debug("End of Block: %s", interval)
                 self.intervals_at_end_of_block[interval.region_paths[-1]].append(interval)
             if interval.is_at_beginning_of_block():
                 logging.debug("Beggining of Block: %s", interval)
