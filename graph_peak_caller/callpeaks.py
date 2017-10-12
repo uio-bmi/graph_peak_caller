@@ -9,7 +9,7 @@ from .control import ControlTrack
 from .sparsepileup import SparseControlSample, SparsePileup
 from .bdgcmp import *
 from .extender import Extender
-
+from .areas import ValuedAreas
 
 IntervalCollection.interval_class = DirectedInterval
 
@@ -241,13 +241,14 @@ class CallPeaks(object):
         alignments = self.sample_intervals
         logging.debug(self.sample_intervals)
         extender = Extender(self.ob_graph, self.info.fragment_length)
+        valued_areas = ValuedAreas(self.ob_graph)
         areas_list = (extender.extend_interval(interval)
                       for interval in alignments)
-        pileup = SparsePileup.from_areas_collection(
-            self.ob_graph, areas_list)
-        print("######################################")
+        for area in areas_list:
+            valued_areas.add_binary_areas(area)
+        pileup = SparsePileup.from_valued_areas(
+            self.ob_graph, valued_areas)
         self._sample_track = self.out_file_base_name + "sample_track.bdg"
-        print("###################################")
         if save_to_file:
             pileup.to_bed_graph(self._sample_track)
             print("Saved sample pileup to " + self._sample_track)

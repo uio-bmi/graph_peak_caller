@@ -4,6 +4,7 @@ import numpy as np
 from .pileup import Pileup
 from .sparsepileup import SparsePileup
 from .extender import Extender
+from .areas import ValuedAreas
 from offsetbasedgraph.interval import IntervalCollection
 
 
@@ -19,39 +20,22 @@ class ControlTrack(object):
     def _get_pileups(self, extensions):
         extenders = [Extender(self.graph, extension)
                      for extension in extensions]
-        areas_generator = ((
-            [extender.extend_interval(alignment, 0)
-             for extender in extenders]
-            for alignment in self.intervals))
-
-        pileups = [Pileup(self.graph) for _ in extensions]
-
-        areas_lists = [[] for _ in extensions]
+        valued_areas_list = [ValuedAreas(self.graph) for
+                             _ in extensions]
         count = 0
-        starts_dict_list = [defaultdict(list) for extender in extenders]
-        ends_dict_list = [defaultdict(list) for extender in extenders]
-        for areas in areas_generator:
+        for alignment in self.intervals:
             if count % 1000 == 0:
                 print("#", count)
             count += 1
-            for i in range(0, len(areas)):
-                for node_id in areas[i].areas:
-                    starts_dict_list[i][node_id].extend(areas[i].get_starts(node_id))
-                    ends_dict_list[i][node_id].extend(areas[i].get_ends(node_id))
-                    # areas_lists[i].append(areas[i])
-                # pileups[i].add_areas(areas[i])
-        # pileups = [SparsePileup.from_areas_collection(self.graph, areas)
-        starts_dict_list = [{node_id: np.array(starts) for node_id, starts in starts_dict.items()}
-                            for starts_dict in starts_dict_list]
+            for extender, valued_areas in zip(extenders, valued_areas_list):
+                valued_areas.add_binary_areas(
+                    extender.extend_interval(alignment, 0))
 
-        ends_dict_list = [{node_id: np.array(ends) for node_id, ends in ends_dict.items()}
-                            for ends_dict in ends_dict_list]
-        
-        pileups = [SparsePileup.from_starts_and_ends(self.graph, starts_dict, ends_dict)
-                   for starts_dict, ends_dict in zip(starts_dict_list, ends_dict_list)]
+        pileups = [SparsePileup.from_valued_areas(self.graph, valued_areas) for
+                   valued_area in valued_areas_list]
 
-        for i in range(0, len(pileups)):
-            pileups[i].scale(self.fragment_length/(extensions[i]*2))
+        for pileup, extension in zip(pileups, extensions):
+            pileup.scale(self.fragment_length/(extension*2))
 
         return pileups
 
