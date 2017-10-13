@@ -20,15 +20,19 @@ class ValuedIndexes(object):
 
     def __eq__(self, other):
         if np.any(self.values != other.values):
+            print("VALUES")
             return False
         if np.any(self.indexes != other.indexes):
+            print("INDEXES")
             return False
 
         if isinstance(self.start_value, np.ndarray):
             if np.any(self.start_value != other.start_value):
+                print("START VALUE")
                 return False
         else:
             if self.start_value != other.start_value:
+                print("START VALUE")
                 return False
         return self.length == other.length
 
@@ -38,6 +42,29 @@ class ValuedIndexes(object):
             self.start_value, self.length)
 
     __repr__ = __str__
+
+    def sum(self):
+        lengths = np.diff(self.all_idxs())
+        return lengths*self.all_values()
+
+    def get_subset(self, start, end):
+        assert start >= 0
+        assert end <= self.length
+        if not self.indexes.size:
+            return ValuedIndexes(self.start_value, np.array([], dtype="int"),
+                                 np.array([]), end-start)
+        length = end-start
+        indexes = self.indexes-start
+        is_in_subset = np.logical_and(indexes > 0, indexes < length)
+        subset_range = np.nonzero(is_in_subset)[0]
+        subset_indexes = indexes[subset_range]
+        subset_values = self.values[subset_range]
+        if subset_range[0] == 0:
+            start_value = self.start_value
+        else:
+            start_value = self.values[subset_range[0]-1]
+        return self.__class__(start_value, subset_indexes,
+                              subset_values, length)
 
     def scale(self, scale):
         self.values = self.values*scale

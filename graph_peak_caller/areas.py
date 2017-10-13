@@ -81,6 +81,9 @@ class BinaryContinousAreas(Areas):
 
         return pos_remain, neg_remain
 
+    def get_node_ids(self):
+        return self.full_areas.keys() + self.starts.keys() + self.internal_intervals.keys()
+
 
 class ValuedAreas(Areas):
     def __init__(self, graph):
