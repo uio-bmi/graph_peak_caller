@@ -4,6 +4,7 @@ from offsetbasedgraph.graphtraverser import GraphTraverser
 from offsetbasedgraph.interval import Position
 from .areas import BinaryContinousAreas
 import offsetbasedgraph as obg
+import numpy as np
 # logging.basicConfig(level=logging.DEBUG)
 
 
@@ -60,6 +61,32 @@ class Areas(object):
             self.areas[node_id] = [
                 min(startend[0], self.areas[node_id][0]),
                 max(startend[1], self.areas[node_id][1])]
+
+    def _add_nontrivial_areas_for_node(self, node_id, starts_and_ends):
+        raise NotImplementedError("Nontrivial addition not supported")
+
+    def add_areas_for_node(self, node_id, starts_and_ends):
+        print("  adding area to subgraph %d, %s" % (node_id, starts_and_ends))
+        if node_id not in self.areas:
+            self.areas[node_id] = starts_and_ends
+        else:
+            current = self.areas[node_id]
+            if len(current) > 2 or len(starts_and_ends) > 2:
+                return self._add_nontrivial_areas_for_node(node_id, starts_and_ends)
+
+            if current[1] < starts_and_ends[0]:
+                new = np.append(current, starts_and_ends)
+            elif current[0] > starts_and_ends[1]:
+                new = np.append(starts_and_ends, current)
+            else:
+                # todo
+                print("Error")
+                print(current)
+                print(starts_and_ends)
+                raise NotImplementedError("Case where new start equals old end is not implemented")
+
+            assert len(new) == 4
+            self.areas[node_id] = new
 
     def robust_update(self, other):
         for node_id, startend in other.areas.items():
