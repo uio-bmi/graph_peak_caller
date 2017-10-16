@@ -9,8 +9,8 @@ from .control import ControlTrack
 from .sparsepileup import SparseControlSample, SparsePileup
 from .bdgcmp import *
 from .extender import Extender
-from .areas import ValuedAreas
-
+from .areas import ValuedAreas, BinaryContinousAreas
+from .peakscores import ScoredPeak
 IntervalCollection.interval_class = DirectedInterval
 
 
@@ -227,19 +227,30 @@ class CallPeaks(object):
 
     def call_peaks(self, out_file="final_peaks", cutoff=0.05):
         print("Calling peaks")
-        self.p_values.threshold(-np.log10(cutoff))
-        self.p_values.to_bed_file("pre_postprocess.bed")
-        self.p_values.fill_small_wholes(self.info.read_length)
-        self.final_track = self.p_values.remove_small_peaks(
+        self.peaks = self.p_values.threshold_copy(-np.log10(cutoff))
+        # self.p_values.threshold(-np.log10(cutoff))
+        self.peaks.to_bed_file("pre_postprocess.bed")
+        self.peaks.fill_small_wholes(self.info.read_length)
+        self.final_track = self.peaks.remove_small_peaks(
             self.info.fragment_length)
         print("Final track")
         for node, values in self.final_track.find_valued_areas(1).items():
             if len(values) > 0:
                 print("%d, %s" % (node, values))
 
-        #print(str(self.final_track.find_valued_areas(1)))
         peaks_as_subgraphs = self.final_track.to_subgraphs()
-        peaks_as_subgraphs.to_file("peaks_as_subgraphs")
+        peaks_as_subgraphs.to_file(
+            self.out_file_base_name + "peaks_as_subgraphs")
+
+        binary_peaks = (BinaryContinousAreas.from_old_areas(peak) for peak in
+                        peaks_as_subgraphs)
+        scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, self.p_values)
+                        for peak in binary_peaks)
+        max_paths = [scored_peak.get_max_path() for
+                     scored_peak in scored_peaks]
+        IntervalCollection(max_paths).to_text_file(
+            self.out_file_base_name + "max_paths")
+
         print("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
         self.final_track.to_bed_file(self.out_file_base_name + out_file)
 

@@ -21,7 +21,7 @@ def run_with_gam(gam_file_name, vg_graph_file_name,
 
     # print(ob_graph.blocks)
     reads_intervals = vg_gam_file_to_interval_collection(
-         None, gam_file_name, ob_graph, max_intervals=10000)
+         None, gam_file_name, ob_graph, max_intervals=20000)
 
     # reads_intervals.to_file("test_obg_intervals")
     # exit()
@@ -29,7 +29,7 @@ def run_with_gam(gam_file_name, vg_graph_file_name,
     #reads_intervals = IntervalCollection.from_file("test_obg_intervals", graph=ob_graph)
     #control_intervals = IntervalCollection.from_file("test_obg_intervals", graph=ob_graph)
     control_intervals = vg_gam_file_to_interval_collection(
-         None, gam_file_name, ob_graph, max_intervals=10000)
+         None, gam_file_name, ob_graph, max_intervals=20000)
 
     experiment_info = callpeaks.ExperimentInfo(12000000, 103, 50)
     caller = callpeaks.CallPeaks(
