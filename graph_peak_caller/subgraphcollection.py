@@ -21,7 +21,7 @@ class ConnectedAreas(Areas):
                 print("  Checking in node %d" % node)
                 if node in self.areas:
                     # Check for anything at start of node
-                    if self.areas[node] [-1] == 0:
+                    if self.areas[node][0] == 0:
                         return True
 
                 elif -node in self.areas:
@@ -30,17 +30,21 @@ class ConnectedAreas(Areas):
                         return True
 
         if end == self.graph.node_size(other_node):
+            print("   End")
             for node in graph.adj_list[other_node] + graph.reverse_adj_list[other_node]:
+                print("   Found edge to %d" % node)
                 if node in self.areas:
+                    print("    %d in self.areas")
                     if self.areas[node][0] == 0:
                         return True
                 elif -node in self.areas:
                     if self.areas[-node][-1] == graph.node_size(node):
                         return True
 
+        return False
+
     def to_file_line(self):
         text = ""
-
 
     def __add__(self, other):
         # Adds another connected area to this one

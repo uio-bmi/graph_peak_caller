@@ -17,6 +17,34 @@ class Tester(unittest.TestCase):
             2: [3]
         })
 
+        self.reversed_simple_graph = Graph({
+            1: Block(3),
+            2: Block(3),
+            3: Block(3)
+        },
+            {
+                -2: [-1],
+                -3: [-2]
+            }
+        )
+        self.simple_graphs = [self.simple_graph, self.reversed_simple_graph]
+
+        self.graph2 = Graph({
+            1: Block(3),
+            2: Block(3)
+        },
+        {
+            -2: [1],
+        })
+
+        self.graph3 = Graph({
+            1: Block(3),
+            2: Block(3)
+        },
+        {
+            2: [-1]
+        })
+
         areas = {
             2: np.array([0, 3])
         }
@@ -27,91 +55,96 @@ class Tester(unittest.TestCase):
 class TestSubGraphCollection(Tester):
 
     def test_add_single_area(self):
-        collection = SubgraphCollection(self.simple_graph)
-        collection.add_area(1, 2, 3)
 
-        self.assertEqual(len(collection.subgraphs), 1)
-        self.assertTrue(1 in collection.subgraphs[0].areas)
-        self.assertTrue(np.all(np.array([2, 3]) == collection.subgraphs[0].areas[1]))
+        for graph in self.simple_graphs:
+            collection = SubgraphCollection(graph)
+            collection.add_area(1, 2, 3)
+
+            self.assertEqual(len(collection.subgraphs), 1)
+            self.assertTrue(1 in collection.subgraphs[0].areas)
+            self.assertTrue(np.all(np.array([2, 3]) == collection.subgraphs[0].areas[1]))
 
     def test_add_two_disjoint_areas(self):
-        collection = SubgraphCollection(self.simple_graph)
-        collection.add_area(1, 1, 2)
-        collection.add_area(2, 2, 3)
+        for graph in self.simple_graphs:
+            collection = SubgraphCollection(graph)
+            collection.add_area(1, 1, 2)
+            collection.add_area(2, 2, 3)
 
-        self.assertEqual(len(collection.subgraphs), 2)
-        self.assertTrue(1 in collection.subgraphs[0].areas)
-        self.assertTrue(2 in collection.subgraphs[1].areas)
-        self.assertTrue(np.all(np.array([1, 2]) == collection.subgraphs[0].areas[1]))
-        self.assertTrue(np.all(np.array([2, 3]) == collection.subgraphs[1].areas[2]))
+            self.assertEqual(len(collection.subgraphs), 2)
+            self.assertTrue(1 in collection.subgraphs[0].areas)
+            self.assertTrue(2 in collection.subgraphs[1].areas)
+            self.assertTrue(np.all(np.array([1, 2]) == collection.subgraphs[0].areas[1]))
+            self.assertTrue(np.all(np.array([2, 3]) == collection.subgraphs[1].areas[2]))
 
     def test_add_two_connected_areas(self):
-        print(self.simple_graph.adj_list)
-        print(self.simple_graph.reverse_adj_list)
-        collection = SubgraphCollection(self.simple_graph)
-        collection.add_area(1, 2, 3)
-        collection.add_area(2, 0, 3)
+        for graph in self.simple_graphs:
+            collection = SubgraphCollection(graph)
+            collection.add_area(1, 2, 3)
+            collection.add_area(2, 0, 3)
 
-        self.assertTrue(len(collection.subgraphs), 1)
-        areas = collection.subgraphs[0].areas
-        self.assertTrue(np.all(areas[1] == [2, 3]))
-        self.assertTrue(np.all(areas[2] == [0, 3]))
+            self.assertTrue(len(collection.subgraphs), 1)
+            areas = collection.subgraphs[0].areas
+            self.assertTrue(np.all(areas[1] == [2, 3]))
+            self.assertTrue(np.all(areas[2] == [0, 3]))
 
     def test_two_subgraphs_where_one_is_connected(self):
-        collection = SubgraphCollection(self.simple_graph)
-        collection.add_area(1, 2, 3)
-        collection.add_area(2, 0, 2)
-        collection.add_area(3, 1, 2)
+        for graph in self.simple_graphs:
+            collection = SubgraphCollection(graph)
+            collection.add_area(1, 2, 3)
+            collection.add_area(2, 0, 2)
+            collection.add_area(3, 1, 2)
 
-        self.assertTrue(len(collection.subgraphs), 2)
-        areas = collection.subgraphs[0].areas
-        self.assertTrue(np.all(areas[1] == [2, 3]))
-        self.assertTrue(np.all(areas[2] == [0, 2]))
+            self.assertTrue(len(collection.subgraphs), 2)
+            areas = collection.subgraphs[0].areas
+            self.assertTrue(np.all(areas[1] == [2, 3]))
+            self.assertTrue(np.all(areas[2] == [0, 2]))
 
-        areas = collection.subgraphs[1].areas
-        self.assertTrue(np.all(areas[3] == [1, 2]))
+            areas = collection.subgraphs[1].areas
+            self.assertTrue(np.all(areas[3] == [1, 2]))
 
     def test_subgraphs_with_loop(self):
-        collection = SubgraphCollection(self.simple_graph)
-        collection.add_area(1, 2, 3)
-        collection.add_area(2, 0, 2)
-        collection.add_area(3, 1, 2)
-        collection.add_area(1, 0, 1)
+        for graph in self.simple_graphs:
+            collection = SubgraphCollection(graph)
+            collection.add_area(1, 2, 3)
+            collection.add_area(2, 0, 2)
+            collection.add_area(3, 1, 2)
+            collection.add_area(1, 0, 1)
 
-        self.assertTrue(len(collection.subgraphs), 3)
-        areas = collection.subgraphs[0].areas
-        print(areas[1])
-        self.assertTrue(np.all(areas[1] == [2, 3]))
-        self.assertTrue(np.all(areas[2] == [0, 2]))
+            self.assertTrue(len(collection.subgraphs), 3)
+            areas = collection.subgraphs[0].areas
+            self.assertTrue(np.all(areas[1] == [2, 3]))
+            self.assertTrue(np.all(areas[2] == [0, 2]))
 
-        areas = collection.subgraphs[1].areas
-        self.assertTrue(np.all(areas[3] == [1, 2]))
+            areas = collection.subgraphs[1].areas
+            self.assertTrue(np.all(areas[3] == [1, 2]))
 
-        areas = collection.subgraphs[2].areas
-        self.assertTrue(np.all(areas[1] == [0, 1]))
+            areas = collection.subgraphs[2].areas
+            self.assertTrue(np.all(areas[1] == [0, 1]))
 
     def test_subgraphs_multiple(self):
-        collection = SubgraphCollection(self.simple_graph)
-        collection.add_area(1, 0, 3)
-        collection.add_area(3, 0, 3)
-        collection.add_area(2, 0, 3)
 
-        self.assertTrue(len(collection.subgraphs), 1)
-        areas = collection.subgraphs[0].areas
-        self.assertTrue(np.all(areas[1] == [0, 3]))
-        self.assertTrue(np.all(areas[2] == [0, 3]))
-        self.assertTrue(np.all(areas[3] == [0, 3]))
+        for graph in self.simple_graphs:
+            collection = SubgraphCollection(graph)
+            collection.add_area(1, 0, 3)
+            collection.add_area(3, 0, 3)
+            collection.add_area(2, 0, 3)
+
+            self.assertTrue(len(collection.subgraphs), 1)
+            areas = collection.subgraphs[0].areas
+            self.assertTrue(np.all(areas[1] == [0, 3]))
+            self.assertTrue(np.all(areas[2] == [0, 3]))
+            self.assertTrue(np.all(areas[3] == [0, 3]))
 
     def test_create_subgraph_from_pileup(self):
-
-        intervals = [Interval(0, 3, [1, 2, 3], self.simple_graph)]
-        pileup = SparsePileup.from_intervals(self.simple_graph, intervals)
-        collection = SubgraphCollection.from_pileup(self.simple_graph, pileup)
-        self.assertTrue(len(collection.subgraphs), 1)
-        areas = collection.subgraphs[0].areas
-        self.assertTrue(np.all(areas[1] == [0, 3]))
-        self.assertTrue(np.all(areas[2] == [0, 3]))
-        self.assertTrue(np.all(areas[3] == [0, 3]))
+        for graph in self.simple_graphs:
+            intervals = [Interval(0, 3, [1, 2, 3], graph)]
+            pileup = SparsePileup.from_intervals(graph, intervals)
+            collection = SubgraphCollection.from_pileup(graph, pileup)
+            self.assertTrue(len(collection.subgraphs), 1)
+            areas = collection.subgraphs[0].areas
+            self.assertTrue(np.all(areas[1] == [0, 3]))
+            self.assertTrue(np.all(areas[2] == [0, 3]))
+            self.assertTrue(np.all(areas[3] == [0, 3]))
 
 
 
@@ -128,6 +161,28 @@ class TestConnectedAreas(Tester):
 
         self.assertFalse(self.middle_left_area.touches_area(3, 0, 3))
         self.assertTrue(self.middle_left_area.touches_area(1, 0, 3))
+
+    def test_connected_area_touches_nontrivial_edges(self):
+        collection = SubgraphCollection(self.graph2)
+        collection.add_area(1, 0, 1)
+        collection.add_area(2, 0, 1)
+
+        self.assertTrue(len(collection.subgraphs), 1)
+        areas = collection.subgraphs[0].areas
+        print(areas)
+        self.assertTrue(np.all(areas[1] == [0, 1]))
+        self.assertTrue(np.all(areas[2] == [0, 1]))
+
+    def test_connected_area_touches_nontrivial_edges2(self):
+        collection = SubgraphCollection(self.graph3)
+        collection.add_area(1, 2, 3)
+        collection.add_area(2, 2, 3)
+
+        self.assertTrue(len(collection.subgraphs), 1)
+        areas = collection.subgraphs[0].areas
+        print(areas)
+        self.assertTrue(np.all(areas[1] == [2, 3]))
+        self.assertTrue(np.all(areas[2] == [2, 3]))
 
 if __name__ == "__main__":
     unittest.main()
