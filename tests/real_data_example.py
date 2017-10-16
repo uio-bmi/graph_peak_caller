@@ -1,3 +1,6 @@
+import logging
+logging.basicConfig(level=logging.ERROR)
+
 from graph_peak_caller import callpeaks
 from offsetbasedgraph import IntervalCollection
 import offsetbasedgraph as obg
@@ -17,16 +20,16 @@ def run_with_gam(gam_file_name, vg_graph_file_name,
     print(ob_graph.adj_list[68567])
 
     # print(ob_graph.blocks)
-    # reads_intervals = vg_gam_file_to_interval_collection(
-    #     None, gam_file_name, ob_graph, max_intervals=1000000)
+    reads_intervals = vg_gam_file_to_interval_collection(
+         None, gam_file_name, ob_graph, max_intervals=10000)
 
     # reads_intervals.to_file("test_obg_intervals")
     # exit()
-    IntervalCollection.interval_class = obg.DirectedInterval
-    reads_intervals = IntervalCollection.from_file("test_obg_intervals", graph=ob_graph)
-    control_intervals = IntervalCollection.from_file("test_obg_intervals", graph=ob_graph)
-    # control_intervals = vg_gam_file_to_interval_collection(
-    #     None, gam_file_name, ob_graph, max_intervals=1000000)
+    #IntervalCollection.interval_class = obg.DirectedInterval
+    #reads_intervals = IntervalCollection.from_file("test_obg_intervals", graph=ob_graph)
+    #control_intervals = IntervalCollection.from_file("test_obg_intervals", graph=ob_graph)
+    control_intervals = vg_gam_file_to_interval_collection(
+         None, gam_file_name, ob_graph, max_intervals=10000)
 
     experiment_info = callpeaks.ExperimentInfo(12000000, 103, 50)
     

@@ -3,6 +3,7 @@ from graph_peak_caller.subgraphcollection import SubgraphCollection, ConnectedAr
 from graph_peak_caller.extender import Areas
 from offsetbasedgraph import Graph, Block, Interval, Position
 import numpy as np
+from graph_peak_caller.sparsepileup import SparsePileup
 
 class Tester(unittest.TestCase):
     def setUp(self):
@@ -45,6 +46,8 @@ class TestSubGraphCollection(Tester):
         self.assertTrue(np.all(np.array([2, 3]) == collection.subgraphs[1].areas[2]))
 
     def test_add_two_connected_areas(self):
+        print(self.simple_graph.adj_list)
+        print(self.simple_graph.reverse_adj_list)
         collection = SubgraphCollection(self.simple_graph)
         collection.add_area(1, 2, 3)
         collection.add_area(2, 0, 3)
@@ -75,11 +78,17 @@ class TestSubGraphCollection(Tester):
         collection.add_area(3, 1, 2)
         collection.add_area(1, 0, 1)
 
-        self.assertTrue(len(collection.subgraphs), 2)
+        self.assertTrue(len(collection.subgraphs), 3)
         areas = collection.subgraphs[0].areas
         print(areas[1])
-        self.assertTrue(np.all(areas[1] == [0, 1, 2, 3]))
+        self.assertTrue(np.all(areas[1] == [2, 3]))
         self.assertTrue(np.all(areas[2] == [0, 2]))
+
+        areas = collection.subgraphs[1].areas
+        self.assertTrue(np.all(areas[3] == [1, 2]))
+
+        areas = collection.subgraphs[2].areas
+        self.assertTrue(np.all(areas[1] == [0, 1]))
 
     def test_subgraphs_multiple(self):
         collection = SubgraphCollection(self.simple_graph)
@@ -93,7 +102,16 @@ class TestSubGraphCollection(Tester):
         self.assertTrue(np.all(areas[2] == [0, 3]))
         self.assertTrue(np.all(areas[3] == [0, 3]))
 
+    def test_create_subgraph_from_pileup(self):
 
+        intervals = [Interval(0, 3, [1, 2, 3], self.simple_graph)]
+        pileup = SparsePileup.from_intervals(self.simple_graph, intervals)
+        collection = SubgraphCollection.from_pileup(self.simple_graph, pileup)
+        self.assertTrue(len(collection.subgraphs), 1)
+        areas = collection.subgraphs[0].areas
+        self.assertTrue(np.all(areas[1] == [0, 3]))
+        self.assertTrue(np.all(areas[2] == [0, 3]))
+        self.assertTrue(np.all(areas[3] == [0, 3]))
 
 
 
@@ -101,14 +119,15 @@ class TestConnectedAreas(Tester):
 
     def test_connected_area_touches(self):
 
-        self.assertTrue(self.middle_areas.touches_node(1))
-        self.assertTrue(self.middle_areas.touches_node(3))
+        self.assertTrue(self.middle_areas.touches_area(1, 0, 3))
+        self.assertTrue(self.middle_areas.touches_area(3, 0, 3))
+        self.assertTrue(self.middle_areas.touches_area(3, 0, 2))
 
-        self.assertFalse(self.middle_closed_area.touches_node(3))
-        self.assertFalse(self.middle_closed_area.touches_node(1))
+        self.assertFalse(self.middle_closed_area.touches_area(3, 0, 3))
+        self.assertFalse(self.middle_closed_area.touches_area(1, 0, 3))
 
-        self.assertFalse(self.middle_left_area.touches_node(3))
-        self.assertTrue(self.middle_left_area.touches_node(1))
+        self.assertFalse(self.middle_left_area.touches_area(3, 0, 3))
+        self.assertTrue(self.middle_left_area.touches_area(1, 0, 3))
 
 if __name__ == "__main__":
     unittest.main()
