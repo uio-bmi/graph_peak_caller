@@ -38,28 +38,6 @@ class ConnectedAreas(Areas):
                     if self.areas[-node][-1] == graph.node_size(node):
                         return True
 
-        return False
-
-
-            #raise Exception("Checking whether connected areas touching a node id it already contains")
-        if start == 0 or end == self.graph.node_size(other_node):
-
-            """
-            for node, starts_and_ends in self.areas.items():
-                if starts_and_ends[-1] == self.graph.node_size(node):
-                    if other_node in self.graph.adj_list[node]:
-                        return True
-                    elif -node in self.graph.reverse_adj_list[-other_node]:
-                        return True
-                if starts_and_ends[0] == 0:
-                    if node in self.graph.adj_list[other_node]:
-                        return True
-                    elif -other_node in self.graph.reverse_adj_list[-node]:
-                        return True
-            """
-        return False
-
-
     def to_file_line(self):
         text = ""
 
