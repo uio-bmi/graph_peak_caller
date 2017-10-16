@@ -140,6 +140,48 @@ class Areas(object):
 
         return intervals
 
+    def _is_end_position(self, node, offset):
+        if offset < self.graph.node_size(node):
+            return True
+        graph = self.graph
+        for in_node in graph.adj_list[node] + graph.reverse_adj_list[node]:
+            print("   Found edge to %d" % in_node)
+            if in_node in self.areas:
+                print("    %d in self.areas")
+                if self.areas[in_node][0] == 0:
+                    return False
+            elif -in_node in self.areas:
+                if self.areas[-in_node][-1] == graph.node_size(in_node):
+                    return False
+
+        return True
+
+    def _is_start_position(self, node, offset):
+        if offset > 0:
+            return True
+
+        graph = self.graph
+        for in_node in graph.adj_list[-node] + graph.reverse_adj_list[-node]:
+            if in_node in self.areas:
+                if self.areas[in_node][0] == 0:
+                    return False
+
+            elif -in_node in self.areas:
+                if self.areas[-in_node][-1] == graph.node_size(in_node):
+                    return False
+
+        return True
+
+    def get_start_positions(self):
+        positions = []
+        for node, starts_and_ends in self.areas:
+            if starts_and_ends[0] > 0:
+                positions.append(obg.Position(node, starts_and_ends[0]))
+
+
+
+    def get_end_positions(self):
+        pass
 
 
 class OldExtender(object):

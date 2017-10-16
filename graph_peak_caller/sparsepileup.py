@@ -444,33 +444,6 @@ class SparsePileup(Pileup):
         self.is_written = True
         return filename
 
-    def _is_start_position(self, node, offset):
-        if offset > 0:
-            return True
-
-        for other_node, starts_and_ends in self.areas.items():
-            if other_node == node:
-                continue
-
-            if starts_and_ends[-1] < self.graph.node_size(other_node):
-                continue
-
-            if other_node in self.adj_list[-node]:
-                pass
-
-    def get_start_positions(self):
-        positions = []
-        for node, starts_and_ends in self.areas:
-            if starts_and_ends[0] > 0:
-                positions.append(obg.Position(node, starts_and_ends[0]))
-
-
-
-    def get_end_positions(self):
-        pass
-
-
-
 
 class SparseControlSample(SparsePileup):
     def get_p_dict(self):
