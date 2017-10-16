@@ -37,10 +37,26 @@ class TestScoredPeak(unittest.TestCase):
             -1: ValuedIndexes(np.array([1, 3]), np.array([16, 18]), 14, 5)
             }
 
+        self.peak2 = BinaryContinousAreas(self.graph)
+        self.peak2.add_full(2)
+        self.peak2.add_start(-3, 7)
+        self.peak2.add_full(4)
+        self.peak2.add_start(5, 5)
+
+        self.scores2 = {
+            2: ValuedIndexes(indexes, values+20, 20, 10),
+            -3: ValuedIndexes(np.array([1, 3, 5]), np.array([34, 36, 38]), 32, 7),
+            4: ValuedIndexes(indexes, values+40, 40, 10),
+            5: ValuedIndexes(np.array([2, 4]), np.array([52, 54]), 50, 5),
+            }
+
         self.scored_peak = ScoredPeak(self.peak, self.scores)
+        self.scored_peak2 = ScoredPeak(self.peak2, self.scores2)
         self.max_path = obg.DirectedInterval(
             5, 5, [1, 3, -4, 5],
             graph=self.graph)
+        self.max_path2 = obg.DirectedInterval(
+            3, 5, [3, -4, 5], graph=self.graph)
 
     def test_from_peak_and_pileup(self):
         scored_peak = ScoredPeak.from_peak_and_pileup(
@@ -50,6 +66,11 @@ class TestScoredPeak(unittest.TestCase):
     def test_get_max_path(self):
         max_path = self.scored_peak.get_max_path()
         self.assertEqual(max_path, self.max_path)
+
+    def test_get_max_path_two_starts(self):
+        max_path = self.scored_peak2.get_max_path()
+        self.assertEqual(max_path, self.max_path2)
+
 
 if __name__ == "__main__":
     unittest.main()
