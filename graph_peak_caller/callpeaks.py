@@ -232,8 +232,15 @@ class CallPeaks(object):
         self.p_values.fill_small_wholes(self.info.read_length)
         self.final_track = self.p_values.remove_small_peaks(
             self.info.fragment_length)
-        peaks_as_subgraphs = self.p_values.to_subgraphs()
-        print("Number of subgraphs: %d" % len(peaks_as_subgraphs))
+        print("Final track")
+        for node, values in self.final_track.find_valued_areas(1).items():
+            if len(values) > 0:
+                print("%d, %s" % (node, values))
+
+        #print(str(self.final_track.find_valued_areas(1)))
+        peaks_as_subgraphs = self.final_track.to_subgraphs()
+        peaks_as_subgraphs.to_file("peaks_as_subgraphs")
+        print("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
         self.final_track.to_bed_file(self.out_file_base_name + out_file)
 
     def create_sample_pileup(self, save_to_file=False):

@@ -8,7 +8,6 @@ class ConnectedAreas(Areas):
 
     def touches_area(self, other_node, start, end):
         graph = self.graph
-        print("Checking touching for %d, %d, %d" % (other_node, start, end))
 
         if start > 0 and end < graph.node_size(other_node):
             if other_node not in self.areas:
@@ -23,9 +22,6 @@ class ConnectedAreas(Areas):
                 return True
 
         return False
-
-    def to_file_line(self):
-        text = ""
 
     def __add__(self, other):
         # Adds another connected area to this one
@@ -71,11 +67,9 @@ class SubgraphCollection(object):
         assert end <= self.graph.node_size(node_id)
 
         touching_subgraphs = self._subgraphs_touching_area(node_id, start, end)
-        print("Adding %d, %d, %d" % (node_id, start, end))
-        print("Touching subgraphs")
-        print(touching_subgraphs)
 
         if len(touching_subgraphs) == 0:
+            print("Creating new subgraph for %d, %d, %d" % (node_id, start, end))
             new_subgraph = ConnectedAreas(self.graph, {node_id: np.array([start, end])})
             self.subgraphs.append(new_subgraph)
         elif len(touching_subgraphs) == 1:
@@ -89,8 +83,8 @@ class SubgraphCollection(object):
 
             new_subgraph.add_areas_for_node(node_id, np.array([start, end]))
 
-
-
-
-
-
+    def to_file(self, file_name):
+        f = open(file_name, "w")
+        lines = (subgraph.to_file_line() for subgraph in self.subgraphs)
+        f.writelines(lines)
+        f.close()

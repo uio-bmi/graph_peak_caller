@@ -140,14 +140,19 @@ class Areas(object):
 
         return intervals
 
+    def _is_start_or_end_position(self, node, position_offset):
+        if self._is_end_position(node, position_offset) \
+                or self._is_start_position(node, position_offset):
+            return True
+
+        return False
+
     def _is_end_position(self, node, offset):
         if offset < self.graph.node_size(node):
             return True
         graph = self.graph
         for in_node in graph.adj_list[node] + graph.reverse_adj_list[node]:
-            print("   Found edge to %d" % in_node)
             if in_node in self.areas:
-                print("    %d in self.areas")
                 if self.areas[in_node][0] == 0:
                     return False
             elif -in_node in self.areas:
@@ -172,17 +177,27 @@ class Areas(object):
 
         return True
 
-    def get_start_positions(self):
+    def get_start_and_end_positions(self):
         positions = []
-        for node, starts_and_ends in self.areas:
-            if starts_and_ends[0] > 0:
-                positions.append(obg.Position(node, starts_and_ends[0]))
+        for node, starts_and_ends in self.areas.items():
+            n_starts_ends = len(starts_and_ends)
+            for start in starts_and_ends[range(0, n_starts_ends, 2)]:
+                if self._is_start_position(node, start):
+                    positions.append(obg.Position(node, start))
 
+            for end in starts_and_ends[range(1, n_starts_ends, 2)]:
+                if self._is_end_position(node, end):
+                    positions.append(obg.Position(node, end-1))  # Correct to non-inclusive end, since this may be interpreted as a start
 
+        return positions
 
-    def get_end_positions(self):
-        pass
+    def get_all_included_nodes(self):
+        return self.areas.keys()
 
+    def to_file_line(self):
+        start_ends = ','.join([str(position) for position in self.get_start_and_end_positions()])
+        nodes = ','.join([str(node) for node in self.get_all_included_nodes()])
+        return "%s\t%s\n" % (start_ends, nodes)
 
 class OldExtender(object):
     def __init__(self, graph, d):

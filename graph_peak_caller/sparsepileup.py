@@ -301,7 +301,7 @@ class SparsePileup(Pileup):
     def to_subgraphs(self):
         # Returns a list of areas which each is a subgraph
         collection = SubgraphCollection.from_pileup(self.graph, self)
-        return collection.subgraphs
+        return collection
 
     def __str__(self):
         return "\n".join(

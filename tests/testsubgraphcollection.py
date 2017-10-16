@@ -146,7 +146,12 @@ class TestSubGraphCollection(Tester):
             self.assertTrue(np.all(areas[2] == [0, 3]))
             self.assertTrue(np.all(areas[3] == [0, 3]))
 
-
+    def test_to_file(self):
+        collection = SubgraphCollection(self.simple_graph)
+        collection.add_area(1, 1, 3)
+        collection.add_area(3, 0, 3)
+        collection.add_area(2, 0, 2)
+        collection.to_file("subgraphcollection.test.tmp")
 
 class TestConnectedAreas(Tester):
 
