@@ -2,8 +2,6 @@ from .extender import AreasBuilder, Areas
 import offsetbasedgraph as obg
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
-
 
 class Cleaner(object):
     def __init__(self, pileup, threshold):

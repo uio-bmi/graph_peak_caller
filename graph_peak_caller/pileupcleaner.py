@@ -5,8 +5,6 @@ from .extender import Areas
 from collections import defaultdict
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
-
 
 class IntervalWithinBlock(obg.Interval):
     def __init__(self, id, start, end, region_paths, graph):
