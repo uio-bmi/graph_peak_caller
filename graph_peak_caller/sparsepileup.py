@@ -10,6 +10,7 @@ from .pileupcleaner2 import PeaksCleaner, HolesCleaner
 
 class ValuedIndexes(object):
     def __init__(self, indexes, values, start_value, length):
+        assert indexes.size == values.size
         self.values = values
         self.indexes = indexes
         self.start_value = start_value
@@ -20,19 +21,15 @@ class ValuedIndexes(object):
 
     def __eq__(self, other):
         if np.any(self.values != other.values):
-            print("VALUES")
             return False
         if np.any(self.indexes != other.indexes):
-            print("INDEXES")
             return False
 
         if isinstance(self.start_value, np.ndarray):
             if np.any(self.start_value != other.start_value):
-                print("START VALUE")
                 return False
         else:
             if self.start_value != other.start_value:
-                print("START VALUE")
                 return False
         return self.length == other.length
 
@@ -45,7 +42,7 @@ class ValuedIndexes(object):
 
     def sum(self):
         lengths = np.diff(self.all_idxs())
-        return lengths*self.all_values()
+        return np.sum(lengths*self.all_values())
 
     def get_subset(self, start, end):
         assert start >= 0
@@ -63,8 +60,9 @@ class ValuedIndexes(object):
             start_value = self.start_value
         else:
             start_value = self.values[subset_range[0]-1]
-        return self.__class__(start_value, subset_indexes,
-                              subset_values, length)
+        return self.__class__(subset_indexes,
+                              subset_values, start_value,
+                              length)
 
     def scale(self, scale):
         self.values = self.values*scale
@@ -159,24 +157,17 @@ class ValuedIndexes(object):
         for i, vi in enumerate(vi_list):
             idxs = np.nonzero((all_idxs % 2) == i)[0]
             all_values = vi.all_values()
-            #print("#", all_values)
             value_diffs = np.diff(all_values)
             values = np.zeros(all_idxs.shape)
             values[idxs[1:]] = value_diffs
             values[0] = all_values[0]
-            #print("#", values.cumsum())
             values_list.append(values.cumsum())
 
         values = np.array([values_list[0], values_list[1]])
         idxs = all_idxs // 2
-        #print(values)
-        #print(idxs)
         unique_idxs = np.append(np.nonzero(np.diff(idxs))[0], len(idxs)-1)
-        #print(unique_idxs)
         idxs = idxs[unique_idxs]
         values = values[:, unique_idxs]
-        #print(values)
-        #print(idxs)
         obj = cls(idxs[1:], np.transpose(values[:, 1:]), values[:, 0], vi_a.length)
         return obj
 
@@ -474,15 +465,12 @@ class SparseControlSample(SparsePileup):
             start = 0
             val = valued_indexes.start_value
             for start, end, val in valued_indexes:
-                # sval = str(val)
                 if val[1] not in p_value_dict[val[0]]:
                     p_value_dict[val[0]][val[1]] = -np.log10(
                         1 - poisson.cdf(val[1],
                                         val[0]))
                 p = p_value_dict[val[0]][val[1]]
                 count_dict[p] += end-start
-        # for key, v in p_value_dict.items():
-        #    print("%s: %s" % (key, v.keys()))
 
         self.p_value_dict = p_value_dict
         self.count_dict = count_dict
