@@ -15,6 +15,10 @@ class ConnectedAreas(Areas):
                 return False
 
         if start == 0:
+            if not self._is_start_position(other_node, start):
+               return True
+
+            """
             print("  Start is 0")
             # Check nodes in
             for node in graph.adj_list[-other_node] + graph.reverse_adj_list[-other_node]:
@@ -28,8 +32,12 @@ class ConnectedAreas(Areas):
                     # Check for anything at end of node
                     if self.areas[-node][-1] == graph.node_size(node):
                         return True
+            """
 
         if end == self.graph.node_size(other_node):
+            if not self._is_end_position(other_node, end):
+                return True
+            """
             print("   End")
             for node in graph.adj_list[other_node] + graph.reverse_adj_list[other_node]:
                 print("   Found edge to %d" % node)
@@ -40,7 +48,7 @@ class ConnectedAreas(Areas):
                 elif -node in self.areas:
                     if self.areas[-node][-1] == graph.node_size(node):
                         return True
-
+            """
         return False
 
     def to_file_line(self):
