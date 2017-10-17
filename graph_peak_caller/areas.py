@@ -19,6 +19,14 @@ class BinaryContinousAreas(Areas):
         internal_str = "Internsals: %s" % self.internal_intervals
         return "\n".join((full_str, start_str, internal_str))
 
+    __repr__ = __str__
+
+    def __eq__(self, other):
+        if self.full_areas != other.full_areas:
+            return False
+        if self.starts != other.starts:
+            return False
+        return self.internal_intervals == other.internal_intervals
 
     def add_full(self, node_id):
         self.full_areas[abs(node_id)] = 1
