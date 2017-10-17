@@ -1,6 +1,6 @@
 from .extender import Areas
 import numpy as np
-from offsetbasedgraph import Position
+
 
 class ConnectedAreas(Areas):
     def __init__(self, graph, areas=None):
@@ -28,6 +28,7 @@ class ConnectedAreas(Areas):
         for node_id, starts_and_ends in other.areas.items():
             self.add_areas_for_node(node_id, starts_and_ends)
         return self
+
 
 class SubgraphCollection(object):
 
@@ -61,6 +62,9 @@ class SubgraphCollection(object):
 
         return touching_subgraphs
 
+    def __iter__(self):
+        return iter(self.subgraphs)
+
     def add_area(self, node_id, start, end):
         assert node_id in self.graph.blocks
         assert start >= 0 and start < end
@@ -69,7 +73,6 @@ class SubgraphCollection(object):
         touching_subgraphs = self._subgraphs_touching_area(node_id, start, end)
 
         if len(touching_subgraphs) == 0:
-            print("Creating new subgraph for %d, %d, %d" % (node_id, start, end))
             new_subgraph = ConnectedAreas(self.graph, {node_id: np.array([start, end])})
             self.subgraphs.append(new_subgraph)
         elif len(touching_subgraphs) == 1:

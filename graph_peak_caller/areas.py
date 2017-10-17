@@ -13,6 +13,13 @@ class BinaryContinousAreas(Areas):
         self.starts = defaultdict(int)
         self.internal_intervals = {}
 
+    def __str__(self):
+        full_str = "Full: %s" % ",".join(str(node_id) for node_id in self.full_areas)
+        start_str = "Start: %s" % ", ".join("(%s,%s)" % (node_id, idx) for node_id, idx in self.starts.items())
+        internal_str = "Internsals: %s" % self.internal_intervals
+        return "\n".join((full_str, start_str, internal_str))
+
+
     def add_full(self, node_id):
         self.full_areas[abs(node_id)] = 1
 
@@ -21,6 +28,20 @@ class BinaryContinousAreas(Areas):
 
     def add_internal(self, node_id, start, end):
         self.internal_intervals[node_id] = [start, end]
+
+    def add(self, node_id, start, end):
+        node_size = self.graph.node_size(node_id)
+        if start == 0 and end == node_size:
+            self.add_full(node_id)
+        elif start == 0:
+            self.add_start(node_id, end)
+        elif end == node_size:
+            self.add_start(-node_id, node_size-start)
+        else:
+            if node_id < 0:
+                start, end = node_size-end, node_size-start
+                node_id = -node_id
+            self.add_internal(node_id, start, end)
 
     def join_starts_and_ends(self):
         negative_node_ids = [node_id for node_id in self.starts if
@@ -83,6 +104,17 @@ class BinaryContinousAreas(Areas):
 
     def get_node_ids(self):
         return self.full_areas.keys() + self.starts.keys() + self.internal_intervals.keys()
+
+    @classmethod
+    def from_old_areas(cls, areas):
+        binary_connected_areas = cls(areas.graph)
+        for node_id in areas.areas:
+            starts = areas.get_starts(node_id)
+            ends = areas.get_ends(node_id)
+            for start, end in zip(starts, ends):
+                binary_connected_areas.add(node_id, start, end)
+
+        return binary_connected_areas
 
 
 class ValuedAreas(Areas):

@@ -9,8 +9,8 @@ from .control import ControlTrack
 from .sparsepileup import SparseControlSample, SparsePileup
 from .bdgcmp import *
 from .extender import Extender
-from .areas import ValuedAreas
-
+from .areas import ValuedAreas, BinaryContinousAreas
+from .peakscores import ScoredPeak
 IntervalCollection.interval_class = DirectedInterval
 
 
@@ -187,7 +187,7 @@ class CallPeaks(object):
             if self.verbose:
                 print("Graph already created")
 
-    def create_control(self, save_to_file=False):
+    def create_control(self, save_to_file=True):
         if self.verbose:
             print("Creating control")
         extensions = [self.info.fragment_length, 2500, 5000] if self.has_control else [5000]
@@ -219,31 +219,39 @@ class CallPeaks(object):
         sparse_pileup.get_scores()
         self.p_values = sparse_pileup
         self.q_values = sparse_pileup
+        self.q_values.to_bed_graph(self.out_file_base_name + "q_values.bdg")
 
     def get_p_values(self):
         print("Get p-values")
         self.p_values = get_p_value_track_from_pileups(
             self.ob_graph, self._control_pileup, self._sample_pileup)
 
-    def call_peaks(self, out_file="final_peaks", cutoff=0.05):
+    def call_peaks(self, out_file="final_peaks.bed", cutoff=0.05):
         print("Calling peaks")
-        self.p_values.threshold(-np.log10(cutoff))
-        self.p_values.to_bed_file("pre_postprocess.bed")
-        self.p_values.fill_small_wholes(self.info.read_length)
-        self.final_track = self.p_values.remove_small_peaks(
+        self.peaks = self.p_values.threshold_copy(-np.log10(cutoff))
+        # self.p_values.threshold(-np.log10(cutoff))
+        self.peaks.to_bed_file("pre_postprocess.bed")
+        self.peaks.fill_small_wholes(self.info.read_length)
+        self.final_track = self.peaks.remove_small_peaks(
             self.info.fragment_length)
         print("Final track")
-        for node, values in self.final_track.find_valued_areas(1).items():
-            if len(values) > 0:
-                print("%d, %s" % (node, values))
-
-        #print(str(self.final_track.find_valued_areas(1)))
         peaks_as_subgraphs = self.final_track.to_subgraphs()
-        peaks_as_subgraphs.to_file("peaks_as_subgraphs")
+        peaks_as_subgraphs.to_file(
+            self.out_file_base_name + "peaks_as_subgraphs")
+
+        binary_peaks = (BinaryContinousAreas.from_old_areas(peak) for peak in
+                        peaks_as_subgraphs)
+        scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, self.p_values)
+                        for peak in binary_peaks)
+        max_paths = [scored_peak.get_max_path() for
+                     scored_peak in scored_peaks]
+        IntervalCollection(max_paths).to_text_file(
+            self.out_file_base_name + "max_paths")
+        self.max_paths = max_paths
         print("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
         self.final_track.to_bed_file(self.out_file_base_name + out_file)
 
-    def create_sample_pileup(self, save_to_file=False):
+    def create_sample_pileup(self, save_to_file=True):
         logging.debug("In sample pileup")
         if self.verbose:
             print("Create sample pileup")

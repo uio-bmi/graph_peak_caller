@@ -9,9 +9,12 @@ from .pileupcleaner2 import PeaksCleaner, HolesCleaner
 from .subgraphcollection import SubgraphCollection
 import offsetbasedgraph as obg
 
+
 class ValuedIndexes(object):
     def __init__(self, indexes, values, start_value, length):
-        assert indexes.size == values.size
+        assert type(indexes) == np.ndarray
+        assert type(values) == np.ndarray
+        # assert indexes.size == values.size
         self.values = values
         self.indexes = indexes
         self.start_value = start_value
@@ -49,18 +52,26 @@ class ValuedIndexes(object):
         assert start >= 0
         assert end <= self.length
         if not self.indexes.size:
-            return ValuedIndexes(self.start_value, np.array([], dtype="int"),
-                                 np.array([]), end-start)
+            return ValuedIndexes(np.array([], dtype="int"),
+                                 np.array([]), self.start_value,
+                                 end-start)
         length = end-start
         indexes = self.indexes-start
         is_in_subset = np.logical_and(indexes > 0, indexes < length)
         subset_range = np.nonzero(is_in_subset)[0]
+        if not subset_range.size:
+            return self.__class__(np.array([], dtype="int"),
+                                  np.array([]),
+                                  self.start_value,
+                                  length)
+
         subset_indexes = indexes[subset_range]
         subset_values = self.values[subset_range]
+
         if subset_range[0] == 0:
             start_value = self.start_value
         else:
-            start_value = self.values[subset_range[0]-1]
+            start_value = self.values[subset_range[0] - 1]
         return self.__class__(subset_indexes,
                               subset_values, start_value,
                               length)
@@ -82,8 +93,8 @@ class ValuedIndexes(object):
             self.values = np.array([])
             self.indexes = np.array([], dtype="int")
         else:
-            self.indexes = self.__tmp_starts[1:]
-            self.values = self.__tmp_values[1:]
+            self.indexes = np.array(self.__tmp_starts[1:])
+            self.values = np.array(self.__tmp_values[1:])
         self.__tmp_values = []
         self.__tmp_starts = []
         self.__tmp_end = 0
@@ -96,6 +107,14 @@ class ValuedIndexes(object):
             self.values[idx] = value
 
         assert end == self.length or np.any(self.indexes == end)
+
+    def threshold_copy(self, cutoff):
+        new_vi = self.__class__(np.copy(self.indexes),
+                                self.values >= cutoff,
+                                self.start_value >= cutoff,
+                                self.length)
+        new_vi.sanitize()
+        return new_vi
 
     def threshold(self, cutoff):
         self.values = self.values >= cutoff
@@ -328,6 +347,14 @@ class SparsePileup(Pileup):
 
     __repr__ = __str__
 
+    def threshold_copy(self, cutoff):
+        new_data = {node_id: vi.threshold_copy(cutoff)
+                    for node_id, vi in self.data.items()}
+
+        pileup = self.__class__(self.graph)
+        pileup.data = new_data
+        return pileup
+
     def threshold(self, cutoff):
         for valued_indexes in self.data.values():
             valued_indexes.threshold(cutoff)
@@ -472,9 +499,9 @@ class SparseControlSample(SparsePileup):
             val = valued_indexes.start_value
             for start, end, val in valued_indexes:
                 if val[1] not in p_value_dict[val[0]]:
-                    p_value_dict[val[0]][val[1]] = -np.log10(
-                        1 - poisson.cdf(val[1],
-                                        val[0]))
+                    pre_val = poisson.cdf(val[1], val[0])
+                    p_val = 1 - pre_val
+                    p_value_dict[val[0]][val[1]] = -np.log10(p_val)
                 p = p_value_dict[val[0]][val[1]]
                 count_dict[p] += end-start
 

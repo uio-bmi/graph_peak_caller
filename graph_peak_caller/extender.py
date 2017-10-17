@@ -66,7 +66,6 @@ class Areas(object):
         raise NotImplementedError("Nontrivial addition not supported")
 
     def add_areas_for_node(self, node_id, starts_and_ends):
-        print("  adding area to subgraph %d, %s" % (node_id, starts_and_ends))
         if node_id not in self.areas:
             self.areas[node_id] = starts_and_ends
         else:
