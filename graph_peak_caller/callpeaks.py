@@ -235,10 +235,6 @@ class CallPeaks(object):
         self.final_track = self.peaks.remove_small_peaks(
             self.info.fragment_length)
         print("Final track")
-        for node, values in self.final_track.find_valued_areas(1).items():
-            if len(values) > 0:
-                print("%d, %s" % (node, values))
-
         peaks_as_subgraphs = self.final_track.to_subgraphs()
         peaks_as_subgraphs.to_file(
             self.out_file_base_name + "peaks_as_subgraphs")
@@ -251,7 +247,7 @@ class CallPeaks(object):
                      scored_peak in scored_peaks]
         IntervalCollection(max_paths).to_text_file(
             self.out_file_base_name + "max_paths")
-
+        self.max_paths = max_paths
         print("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
         self.final_track.to_bed_file(self.out_file_base_name + out_file)
 

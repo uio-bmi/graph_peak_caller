@@ -46,14 +46,7 @@ class ValuedIndexes(object):
 
     def sum(self):
         lengths = np.diff(self.all_idxs())
-        try:
-            return np.sum(lengths*self.all_values())
-        except:
-            print(self)
-            print(self.all_idxs())
-            print(self.all_values())
-            print(lengths)
-            raise
+        return np.sum(lengths*self.all_values())
 
     def get_subset(self, start, end):
         assert start >= 0
@@ -477,11 +470,6 @@ class SparsePileup(Pileup):
         pileup.threshold(0.5)
         return pileup
 
-    def post_process(self):
-        subgraphs = self.to_subgraphs()
-        
-
-
     def update_max(self, other):
         for key, valued_indexes in self.data.items():
             self.data[key] = ValuedIndexes.maximum(
@@ -513,7 +501,6 @@ class SparseControlSample(SparsePileup):
                 if val[1] not in p_value_dict[val[0]]:
                     pre_val = poisson.cdf(val[1], val[0])
                     p_val = 1 - pre_val
-                    print(val, pre_val, p_val)
                     p_value_dict[val[0]][val[1]] = -np.log10(p_val)
                 p = p_value_dict[val[0]][val[1]]
                 count_dict[p] += end-start
