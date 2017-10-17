@@ -2,7 +2,8 @@ import unittest
 import logging
 
 from collections import defaultdict
-from graph_peak_caller.extender import Extender, Areas
+from graph_peak_caller.extender import Extender
+from graph_peak_caller.areas import BinaryContinousAreas
 from offsetbasedgraph import Block, GraphWithReversals,\
     DirectedInterval, Position
 logging.getLogger("extender").setLevel("DEBUG")
@@ -40,18 +41,22 @@ class TestExtender(unittest.TestCase):
 
     def test_extend(self):
         areas = self.extender.extend_interval(pos_interval)
-        true_areas = Areas(graph, {2: [8, 20],
-                                   3: [0, 8],
-                                   1: [12, 20]})
-
+        true_areas = BinaryContinousAreas(graph)
+        true_areas.add_start(-2, 12)
+        true_areas.add_start(3, 8)
+        true_areas.add_start(-1, 8)
         self.assertEqual(areas, true_areas)
 
     def test_extend_reverse(self):
         areas = self.extender.extend_interval(neg_interval)
-        true_areas = Areas(graph, {2: [0, 18],
-                                   3: [0, 2],
-                                   1: [18, 20]})
-
+        true_areas = BinaryContinousAreas(graph)
+        true_areas.add_start(2, 18)
+        true_areas.add_start(3, 2)
+        true_areas.add_start(-1, 2)
+#         true_areas = Areas(graph, {2: [0, 18],
+#                                    3: [0, 2],
+#                                    1: [18, 20]})
+# 
         self.assertEqual(areas, true_areas)
 
     def test_extend_cyclic(self):
@@ -59,7 +64,12 @@ class TestExtender(unittest.TestCase):
         interval = DirectedInterval(70, 90, [1], graph=graph)
         extender = Extender(graph, 40)
         areas = extender.extend_interval(interval)
-        self.assertEqual(areas, Areas(graph, {1: [0, 10, 70, 100]}))
+        true_areas = BinaryContinousAreas(graph)
+        true_areas.add_start(1, 10)
+        true_areas.add_start(-1, 30)
+
+        self.assertEqual(areas, true_areas)
+        # Areas(graph, {1: [0, 10, 70, 100]}))
 
     def test_extend_large_cyclic(self):
         logging.debug("CYCLIC")
@@ -67,8 +77,13 @@ class TestExtender(unittest.TestCase):
         interval = DirectedInterval(90, 10, [1, 2], graph=graph)
         extender = Extender(graph, 40)
         areas = extender.extend_interval(interval)
-        self.assertEqual(areas, Areas(graph, {1: [0, 10, 90, 100],
-                                              2: [0, 20]}))
+        true_areas = BinaryContinousAreas(graph)
+        true_areas.add_start(1, 10)
+        true_areas.add_start(-1, 10)
+        true_areas.add_start(2, 20)
+        self.assertEqual(areas, true_areas)
+                         #Areas(graph, {1: [0, 10, 90, 100],
+                         #                    2: [0, 20]}))
 
     def _test_areas_from_point_pos(self):
         traverser = self.extender.pos_traverser
