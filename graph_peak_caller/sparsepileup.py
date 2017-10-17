@@ -12,6 +12,8 @@ import offsetbasedgraph as obg
 
 class ValuedIndexes(object):
     def __init__(self, indexes, values, start_value, length):
+        assert type(indexes) == np.ndarray
+        assert type(values) == np.ndarray
         # assert indexes.size == values.size
         self.values = values
         self.indexes = indexes
@@ -98,8 +100,8 @@ class ValuedIndexes(object):
             self.values = np.array([])
             self.indexes = np.array([], dtype="int")
         else:
-            self.indexes = self.__tmp_starts[1:]
-            self.values = self.__tmp_values[1:]
+            self.indexes = np.array(self.__tmp_starts[1:])
+            self.values = np.array(self.__tmp_values[1:])
         self.__tmp_values = []
         self.__tmp_starts = []
         self.__tmp_end = 0
@@ -509,9 +511,10 @@ class SparseControlSample(SparsePileup):
             val = valued_indexes.start_value
             for start, end, val in valued_indexes:
                 if val[1] not in p_value_dict[val[0]]:
-                    p_value_dict[val[0]][val[1]] = -np.log10(
-                        1 - poisson.cdf(val[1],
-                                        val[0]))
+                    pre_val = poisson.cdf(val[1], val[0])
+                    p_val = 1 - pre_val
+                    print(val, pre_val, p_val)
+                    p_value_dict[val[0]][val[1]] = -np.log10(p_val)
                 p = p_value_dict[val[0]][val[1]]
                 count_dict[p] += end-start
 

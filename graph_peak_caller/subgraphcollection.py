@@ -73,7 +73,6 @@ class SubgraphCollection(object):
         touching_subgraphs = self._subgraphs_touching_area(node_id, start, end)
 
         if len(touching_subgraphs) == 0:
-            print("Creating new subgraph for %d, %d, %d" % (node_id, start, end))
             new_subgraph = ConnectedAreas(self.graph, {node_id: np.array([start, end])})
             self.subgraphs.append(new_subgraph)
         elif len(touching_subgraphs) == 1:

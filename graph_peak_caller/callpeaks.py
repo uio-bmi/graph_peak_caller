@@ -187,7 +187,7 @@ class CallPeaks(object):
             if self.verbose:
                 print("Graph already created")
 
-    def create_control(self, save_to_file=False):
+    def create_control(self, save_to_file=True):
         if self.verbose:
             print("Creating control")
         extensions = [self.info.fragment_length, 2500, 5000] if self.has_control else [5000]
@@ -219,13 +219,14 @@ class CallPeaks(object):
         sparse_pileup.get_scores()
         self.p_values = sparse_pileup
         self.q_values = sparse_pileup
+        self.q_values.to_bed_graph(self.out_file_base_name + "q_values.bdg")
 
     def get_p_values(self):
         print("Get p-values")
         self.p_values = get_p_value_track_from_pileups(
             self.ob_graph, self._control_pileup, self._sample_pileup)
 
-    def call_peaks(self, out_file="final_peaks", cutoff=0.05):
+    def call_peaks(self, out_file="final_peaks.bed", cutoff=0.05):
         print("Calling peaks")
         self.peaks = self.p_values.threshold_copy(-np.log10(cutoff))
         # self.p_values.threshold(-np.log10(cutoff))
@@ -254,7 +255,7 @@ class CallPeaks(object):
         print("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
         self.final_track.to_bed_file(self.out_file_base_name + out_file)
 
-    def create_sample_pileup(self, save_to_file=False):
+    def create_sample_pileup(self, save_to_file=True):
         logging.debug("In sample pileup")
         if self.verbose:
             print("Create sample pileup")

@@ -13,6 +13,13 @@ class BinaryContinousAreas(Areas):
         self.starts = defaultdict(int)
         self.internal_intervals = {}
 
+    def __str__(self):
+        full_str = "Full: %s" % ",".join(str(node_id) for node_id in self.full_areas)
+        start_str = "Start: %s" % ", ".join("(%s,%s)" % (node_id, idx) for node_id, idx in self.starts.items())
+        internal_str = "Internsals: %s" % self.internal_intervals
+        return "\n".join((full_str, start_str, internal_str))
+
+
     def add_full(self, node_id):
         self.full_areas[abs(node_id)] = 1
 

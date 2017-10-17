@@ -8,6 +8,19 @@ import pyvg
 from pyvg.util import vg_gam_file_to_interval_collection
 
 
+import traceback
+import warnings
+import sys
+
+def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
+
+    log = file if hasattr(file, 'write') else sys.stderr
+    traceback.print_stack(file=log)
+    log.write(warnings.formatwarning(message, category, filename, lineno, line))
+
+warnings.showwarning = warn_with_traceback
+
+
 def run_with_gam(gam_file_name, vg_graph_file_name,
                  limit_to_chromosomes=False):
     # logging.basicConfig(level=logging.error)
