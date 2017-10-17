@@ -258,18 +258,17 @@ class Extender(object):
     def __init__(self, graph, length):
         self.length = length
         self.graph = graph
-        self.pos_traverser = GraphTraverser(graph, {}, +1)
-        self.neg_traverser = GraphTraverser(graph, {}, -1)
+        self.pos_traverser = GraphTraverser(graph, defaultdict(int), +1)
+        self.neg_traverser = GraphTraverser(graph, defaultdict(int), -1)
 
     def get_areas_from_node(self, region_path, length, traverser):
         logging.debug("########")
         logging.debug(region_path)
         logging.debug(length)
-        visited = None
+        visited = defaultdict(int)
         for next_node in traverser.adj_list[region_path]:
-            traverser.extend_from_block(next_node, length)
+            traverser.extend_from_block(next_node, length, visited)
 
-        visited = traverser.visited
         for node_id, l in visited.items():
             if l >= self.graph.node_size(node_id):
                 self.area_builder.add_full(node_id)

@@ -56,7 +56,9 @@ class TestExtender(unittest.TestCase):
 #         true_areas = Areas(graph, {2: [0, 18],
 #                                    3: [0, 2],
 #                                    1: [18, 20]})
-# 
+#
+        print(areas)
+        print(true_areas)
         self.assertEqual(areas, true_areas)
 
     def test_extend_cyclic(self):
