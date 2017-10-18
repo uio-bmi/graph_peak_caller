@@ -265,10 +265,10 @@ class Extender(object):
         logging.debug("########")
         logging.debug(region_path)
         logging.debug(length)
-        visited = defaultdict(int)
         for next_node in traverser.adj_list[region_path]:
-            traverser.extend_from_block(next_node, length, visited)
+            traverser.extend_from_block(next_node, length)
 
+        visited = traverser.visited
         for node_id, l in visited.items():
             if l >= self.graph.node_size(node_id):
                 self.area_builder.add_full(node_id)
