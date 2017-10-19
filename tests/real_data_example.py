@@ -25,10 +25,10 @@ def run_with_gam(gam_file_name, vg_graph_file_name,
                  limit_to_chromosomes=False):
     # logging.basicConfig(level=logging.error)
 
-    #vg_graph = pyvg.Graph.create_from_file(vg_graph_file_name)
-    #ob_graph = vg_graph.get_offset_based_graph()
-    #ob_graph.to_file("obgraph")
-    ob_graph = obg.GraphWithReversals.from_file("obgraph")
+    vg_graph = pyvg.Graph.create_from_file(vg_graph_file_name)
+    ob_graph = vg_graph.get_offset_based_graph()
+    ob_graph.to_file("obgraph")
+    #ob_graph = obg.GraphWithReversals.from_file("obgraph")
     graph_size = sum(block.length() for block in ob_graph.blocks.values())
 
     print(ob_graph.adj_list[68566])
