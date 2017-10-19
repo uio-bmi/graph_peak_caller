@@ -26,7 +26,7 @@ def run_with_gam(gam_file_name, vg_graph_file_name,
     # logging.basicConfig(level=logging.error)
     vg_graph = pyvg.Graph.create_from_file(vg_graph_file_name)
     ob_graph = vg_graph.get_offset_based_graph()
-    ob_graph.to_file("obgraph")
+    #ob_graph.to_file("obgraph")
     # ob_graph = obg.GraphWithReversals.from_file("obgraph")
 
     print(ob_graph.adj_list[68566])
@@ -34,7 +34,7 @@ def run_with_gam(gam_file_name, vg_graph_file_name,
 
     # print(ob_graph.blocks)
     reads_intervals = vg_gam_file_to_interval_collection(
-         None, gam_file_name, ob_graph, max_intervals=20000)
+         None, gam_file_name, ob_graph, max_intervals=False)
 
     # reads_intervals.to_file("test_obg_intervals")
     # exit()
@@ -42,7 +42,7 @@ def run_with_gam(gam_file_name, vg_graph_file_name,
     #reads_intervals = IntervalCollection.from_file("test_obg_intervals", graph=ob_graph)
     #control_intervals = IntervalCollection.from_file("test_obg_intervals", graph=ob_graph)
     control_intervals = vg_gam_file_to_interval_collection(
-         None, gam_file_name, ob_graph, max_intervals=20000)
+         None, gam_file_name, ob_graph, max_intervals=False)
 
     experiment_info = callpeaks.ExperimentInfo(12000000, 103, 50)
     caller = callpeaks.CallPeaks(
