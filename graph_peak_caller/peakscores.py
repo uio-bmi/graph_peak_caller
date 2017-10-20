@@ -68,7 +68,12 @@ class ScoredPeak(object):
 
     @staticmethod
     def __clean_sums(sums):
-        max_finite_value = max(s for s in sums.values() if s != np.inf)
+        values = [s for s in sums.values() if s != np.inf]
+        if len(values) > 0:
+            max_finite_value = max(values)
+        else:
+            max_finite_value = 100
+
         for node_id, sum_value in sums.items():
             if sum_value == np.inf:
                 sums[node_id] = max_finite_value+1

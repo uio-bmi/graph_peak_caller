@@ -1,0 +1,4 @@
+
+
+
+vg filter -r 0.9 -fu -s 2 -o 0 -q 15 --defray-ends 999 -x cactus-mhc.xg ENCFF000WVQ.gam > ENCFF000WVQ_filtered.gam &

@@ -31,9 +31,6 @@ def run_with_gam(gam_file_name, vg_graph_file_name,
     #ob_graph = obg.GraphWithReversals.from_file("obgraph")
     graph_size = sum(block.length() for block in ob_graph.blocks.values())
 
-    print(ob_graph.adj_list[68566])
-    print(ob_graph.adj_list[68567])
-
     # print(ob_graph.blocks)
     reads_intervals = vg_gam_file_to_interval_collection(
          None, gam_file_name, ob_graph)
@@ -52,9 +49,23 @@ def run_with_gam(gam_file_name, vg_graph_file_name,
     sequences = [retriever.get_interval_sequence(max_path)
                  for max_path in caller.max_paths]
     f = open("real_data_sequences", "w")
+    i = 0
     for seq in sequences:
-        f.write(seq + "\n")
+        f.write(">peak" + str(i) + "\n" + seq + "\n")
+        i += 1
+
+def peak_sequences_to_fasta(vg_graph_file_name, peaks_file_name, fasta_file_name):
+    sequence_retriever = SequenceRetriever.from_vg_graph(vg_graph_file_name)
+    peaks = open(peaks_file_name)
+    fasta_file = open(fasta_file_name, "w")
+    for line in peaks.read():
+        l = line.split()
+        node = int(l[0])
+        start = int(l[1])
+        end = int(l[2])
+        sequence = sequence_retriever.get_sequence_on_directed_node()
+
 
 if __name__ == "__main__":
     dm_folder = "../graph_peak_caller/dm_test_data/"
-    cProfile.run('run_with_gam("ENCFF291CUA.gam", "cactus-mhc.json")')
+    cProfile.run('run_with_gam("ENCFF000WVQ_filtered.gam", "cactus-mhc.json")')
