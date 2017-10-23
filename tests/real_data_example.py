@@ -68,4 +68,5 @@ def peak_sequences_to_fasta(vg_graph_file_name, peaks_file_name, fasta_file_name
 
 if __name__ == "__main__":
     dm_folder = "../graph_peak_caller/dm_test_data/"
-    cProfile.run('run_with_gam("ENCFF000WVQ_filtered.gam", "cactus-mhc.json")')
+    #cProfile.run('run_with_gam("ENCFF000WVQ_filtered.gam", "cactus-mhc.json")')
+    cProfile.run('run_with_gam("ENCFF001HNI_filtered_q30.gam", "cactus-mhc.json")')
