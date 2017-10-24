@@ -17,6 +17,12 @@ class ControlTrack(object):
         self.extensions = extensions
         self.background_pileups = []
 
+    def get_control_track(self, info):
+        base_value = info.n_control_reads*info.fragment_length/info.genome_size
+        tracks = self.generate_background_tracks()
+        self.scale_pileups(tracks, base_value)
+        return self.combine_backgrounds(tracks, base_value)
+
     def _get_pileups(self, extensions):
         extenders = [Extender(self.graph, extension)
                      for extension in extensions]
@@ -39,16 +45,13 @@ class ControlTrack(object):
 
         return pileups
 
+    def scale_pileups(self, pileups, base_value):
+        for pileup in pileups:
+            pileup.scale(pileup.mean()/base_value)
+
     def generate_background_tracks(self):
         extensions = [ext//2 for ext in self.extensions]
         return self._get_pileups(extensions)
-
-    def _combine_backgrounds(self, background_pileups, base_value):
-        pileup = Pileup(self.graph)
-        pileup.init_value(base_value)
-        for new_pileup in background_pileups:
-            pileup.update_max(new_pileup)
-        return pileup
 
     def combine_backgrounds(self, background_pileups, base_value):
         max_pileup = background_pileups[0]

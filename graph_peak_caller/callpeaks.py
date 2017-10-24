@@ -155,7 +155,8 @@ class CallPeaks(object):
                 yield False
 
     def scale_tracks(self, update_saved_files=False):
-        print("Scaling tracks to ratio: %d / %d" % (self.info.n_sample_reads, self.info.n_control_reads))
+        print("Scaling tracks to ratio: %d / %d" % (self.info.n_sample_reads,
+                                                    self.info.n_control_reads))
         ratio = self.info.n_sample_reads/self.info.n_control_reads
 
         if self.info.n_sample_reads == self.info.n_control_reads:
@@ -197,11 +198,10 @@ class CallPeaks(object):
             self.info.fragment_length, extensions)
 
         print("N control reads: %d" % self.info.n_control_reads)
-
-        tracks = control_track.generate_background_tracks()
-        background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
-        logging.warning(background_value)
-        pileup = control_track.combine_backgrounds(tracks, background_value)
+        pileup = control_track.get_control_track(self.info)
+        # tracks = control_track.generate_background_tracks()
+        # background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
+        # pileup = control_track.combine_backgrounds(tracks, background_value)
 
         if save_to_file:
             self._control_track = self.out_file_base_name + "control_track.bdg"
