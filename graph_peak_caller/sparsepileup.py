@@ -48,6 +48,10 @@ class ValuedIndexes(object):
         lengths = np.diff(self.all_idxs())
         return np.sum(lengths*self.all_values())
 
+    def mean(self):
+        graph_size = np.sum([self.graph.node_size(b) for b in self.graph.blocks])
+        return self.sum() / graph_size
+
     def get_subset(self, start, end):
         assert start >= 0
         assert end <= self.length

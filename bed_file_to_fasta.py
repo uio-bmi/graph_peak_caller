@@ -20,5 +20,5 @@ def bed_to_fasta(filename, outfile_name=None):
 
 
 if __name__ == "__main__":
-    bed_to_fasta("/home/knut/Data/ENCODE_peaks/MACS/ENCSR000AHD_MCF-7_CTCF_peaks.narrowPeak",
+    bed_to_fasta("ENCFF155DHA.bed",
                  "test_fasta.fa")
