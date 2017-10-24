@@ -21,7 +21,7 @@ def warn_with_traceback(message, category, filename, lineno, file=None, line=Non
 warnings.showwarning = warn_with_traceback
 
 
-def run_with_gam(gam_file_name, vg_graph_file_name,
+def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
                  limit_to_chromosomes=False):
     # logging.basicConfig(level=logging.error)
 
@@ -36,13 +36,13 @@ def run_with_gam(gam_file_name, vg_graph_file_name,
          None, gam_file_name, ob_graph)
 
     control_intervals = vg_gam_file_to_interval_collection(
-         None, gam_file_name, ob_graph)
+         None, gam_control_file, ob_graph)
 
     experiment_info = callpeaks.ExperimentInfo(graph_size, 103, 50)
     caller = callpeaks.CallPeaks(
         ob_graph, reads_intervals, control_intervals,
         experiment_info=experiment_info,
-        out_file_base_name="real_data_", has_control=False)
+        out_file_base_name="real_data_", has_control=True)
     caller.verbose = True
     caller.run()
     retriever = SequenceRetriever.from_vg_graph("cactus-mhc.vg")
@@ -68,4 +68,5 @@ def peak_sequences_to_fasta(vg_graph_file_name, peaks_file_name, fasta_file_name
 
 if __name__ == "__main__":
     dm_folder = "../graph_peak_caller/dm_test_data/"
-    cProfile.run('run_with_gam("ENCFF000WVQ_filtered.gam", "cactus-mhc.json")')
+    #cProfile.run('run_with_gam("ENCFF000WVQ_filtered.gam", "cactus-mhc.json")')
+    cProfile.run('run_with_gam("ENCFF001HNI_filtered_q30.gam", "ENCFF001HNS_filtered_q30.gam", "cactus-mhc.json")')

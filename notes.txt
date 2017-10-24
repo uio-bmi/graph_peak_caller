@@ -2,3 +2,11 @@
 
 
 vg filter -r 0.9 -fu -s 2 -o 0 -q 15 --defray-ends 999 -x cactus-mhc.xg ENCFF000WVQ.gam > ENCFF000WVQ_filtered.gam &
+
+
+Sjekke:
+    - Antall peaks funnet med signifikant motif match
+    - Antall like peaks funnet (basert på et krav for likhet)
+        - Antall peaks funnet av den ene og ikke den andre
+    - IDR mellom replikater
+
