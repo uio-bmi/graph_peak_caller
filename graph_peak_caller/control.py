@@ -18,8 +18,9 @@ class ControlTrack(object):
         self.background_pileups = []
 
     def get_control_track(self, info):
-        base_value = info.n_control_reads*info.fragment_length/info.genome_size
         tracks = self.generate_background_tracks()
+
+        base_value = info.n_control_reads*info.fragment_length/info.genome_size
         self.scale_pileups(tracks, base_value)
         return self.combine_backgrounds(tracks, base_value)
 
@@ -46,6 +47,7 @@ class ControlTrack(object):
         return pileups
 
     def scale_pileups(self, pileups, base_value):
+        print("Base value: %.10f" % base_value)
         for pileup in pileups:
             pileup.scale(pileup.mean()/base_value)
 

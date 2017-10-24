@@ -246,8 +246,9 @@ class SparsePileup(Pileup):
         return np.sum([values.sum() for node, values in self.data.items()])
 
     def mean(self):
-        graph_size = np.sum([self.graph.node_size(b) for b in self.graph.blocks])
-        return self.sum() / graph_size
+        graph_size = sum([self.graph.node_size(b) for b in self.graph.blocks])
+        mean = self.sum() / graph_size
+        return mean
 
     def scale(self, scale):
         [vi.scale(scale) for vi in self.data.values()]
