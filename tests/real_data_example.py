@@ -36,8 +36,7 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
          None, gam_file_name, ob_graph, max_intervals=False)
 
     control_intervals = vg_gam_file_to_interval_collection(
-         None, gam_control_file, ob_graph, max_intervals=False)'' \
-                                                               ''
+         None, gam_control_file, ob_graph, max_intervals=False)
 
     experiment_info = callpeaks.ExperimentInfo(graph_size, 103, 50)
     caller = callpeaks.CallPeaks(
