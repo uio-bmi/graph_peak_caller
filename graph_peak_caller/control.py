@@ -17,10 +17,8 @@ class ControlTrack(object):
         self.extensions = extensions
         self.background_pileups = []
 
-    def get_control_track(self, info):
+    def get_control_track(self, base_value):
         tracks = self.generate_background_tracks()
-
-        base_value = info.n_control_reads*info.fragment_length/info.genome_size
         self.scale_pileups(tracks, base_value)
         return self.combine_backgrounds(tracks, base_value)
 
@@ -41,15 +39,12 @@ class ControlTrack(object):
         pileups = [SparsePileup.from_valued_areas(self.graph, valued_areas) for
                    valued_area in valued_areas_list]
 
-        for pileup, extension in zip(pileups, extensions):
-            pileup.scale(self.fragment_length/(extension*2))
-
         return pileups
 
     def scale_pileups(self, pileups, base_value):
         print("Base value: %.10f" % base_value)
         for pileup in pileups:
-            pileup.scale(pileup.mean()/base_value)
+            pileup.scale(base_value/pileup.mean())
 
     def generate_background_tracks(self):
         extensions = [ext//2 for ext in self.extensions]

@@ -102,9 +102,9 @@ class CallPeaks(object):
         if self.info is None:
             self.info = ExperimentInfo.find_info(
                 self.ob_graph, self.sample_intervals, self.control_intervals)
-        self.create_control(True)
         self.create_sample_pileup()
-        self.scale_tracks()
+        self.create_control(True)
+        # self.scale_tracks()
         self.get_score()
         # self.get_p_values()
         # self.get_q_values()
@@ -198,7 +198,7 @@ class CallPeaks(object):
             self.info.fragment_length, extensions)
 
         print("N control reads: %d" % self.info.n_control_reads)
-        pileup = control_track.get_control_track(self.info)
+        pileup = control_track.get_control_track(self._sample_pileup.mean())
         # tracks = control_track.generate_background_tracks()
         # background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
         # pileup = control_track.combine_backgrounds(tracks, background_value)
