@@ -48,10 +48,6 @@ class ValuedIndexes(object):
         lengths = np.diff(self.all_idxs())
         return np.sum(lengths*self.all_values())
 
-    def mean(self):
-        graph_size = np.sum([self.graph.node_size(b) for b in self.graph.blocks])
-        return self.sum() / graph_size
-
     def get_subset(self, start, end):
         assert start >= 0
         assert end <= self.length
@@ -245,6 +241,13 @@ class SparsePileup(Pileup):
             if self.data[node_id] != vi:
                 return False
         return True
+
+    def sum(self):
+        return np.sum([values.sum() for node, values in self.data.items()])
+
+    def mean(self):
+        graph_size = np.sum([self.graph.node_size(b) for b in self.graph.blocks])
+        return self.sum() / graph_size
 
     def scale(self, scale):
         [vi.scale(scale) for vi in self.data.values()]
