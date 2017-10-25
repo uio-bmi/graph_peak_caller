@@ -15,12 +15,13 @@ def create_linear_peaks_from_bed(linear_sequence_fasta_file, peaks_bed_file,
     traverser = GraphTraverserUsingSequence(ob_graph, search_sequence, sequence_retriever)
     traverser.search_from_node(start_node)
     linear_path_interval = traverser.get_interval_found()
+    print("Length")
     print(linear_path_interval.length())
     print(linear_path_interval.region_paths[0])
     print(linear_path_interval.start_position)
     print(linear_path_interval.end_position)
 
-    return
+
     linear_peaks = PeakCollection.create_from_linear_intervals_in_bed_file(
                         obg_graph_file_name,
                         linear_path_interval,
@@ -28,7 +29,7 @@ def create_linear_peaks_from_bed(linear_sequence_fasta_file, peaks_bed_file,
                         graph_start_offset,
                         graph_end_offset)
 
-    linear_peaks.to_file("linear_peaks")
+    linear_peaks.to_file("linear_peaks", text_file=True)
 
 create_linear_peaks_from_bed("mhc_cleaned2.fa", "../ENCFF155DHA.bed", "cactus-mhc.obg", "cactus-mhc.vg", 225518, 28510119, 33480577)
 

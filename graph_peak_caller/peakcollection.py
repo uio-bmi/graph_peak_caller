@@ -12,15 +12,17 @@ class PeakCollection(IntervalCollection):
                         ob_graph, linear_path_interval, bed_file_name, graph_start_offset, graph_end_offset):
         peaks = BedTool(bed_file_name)
         intervals_on_graph = []
+        i = 0
         for peak in peaks:
             start = peak.start - graph_start_offset
             end = peak.end - graph_start_offset
-            if peak.start < graph_start_offset or peak.end > graph_end_offset:
+            if peak.chrom != "chr6" or peak.start < graph_start_offset or peak.end > graph_end_offset:
                 continue
-            print(start, end)
-            print("linear interval")
+            #print("Peak  %i" % (i))
+            i += 1
+            #if i > 10:
+            #    break
             linear_interval = linear_path_interval.get_subinterval(start, end)
-            print("Linear interval")
             intervals_on_graph.append(linear_interval)
 
         return cls(intervals_on_graph)
