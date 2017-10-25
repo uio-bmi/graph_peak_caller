@@ -36,8 +36,7 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
          None, gam_file_name, ob_graph, max_intervals=False)
 
     control_intervals = vg_gam_file_to_interval_collection(
-         None, gam_control_file, ob_graph, max_intervals=False)'' \
-                                                               ''
+         None, gam_control_file, ob_graph, max_intervals=False)
 
     experiment_info = callpeaks.ExperimentInfo(graph_size, 103, 50)
     caller = callpeaks.CallPeaks(
@@ -70,4 +69,4 @@ def peak_sequences_to_fasta(vg_graph_file_name, peaks_file_name, fasta_file_name
 if __name__ == "__main__":
     dm_folder = "../graph_peak_caller/dm_test_data/"
     #cProfile.run('run_with_gam("ENCFF000WVQ_filtered.gam", "cactus-mhc.json")')
-    cProfile.run('run_with_gam("ENCFF001HNI_filtered_q30.gam", "ENCFF001HNS_filtered_q30.gam", "cactus-mhc.json")')
+    cProfile.run('run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")')
