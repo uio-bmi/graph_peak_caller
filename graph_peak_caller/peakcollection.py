@@ -34,6 +34,14 @@ class PeakCollection(IntervalCollection):
 
         return False
 
+    def get_similiar_intervals(self, interval, allowed_mismatches):
+        similar = []
+        for i in self.intervals:
+            if i.is_approx_equal(interval, allowed_mismatches):
+                similar.append(i)
+
+        return similar
+
     def get_identical_intervals(self, other_peak_collection):
         identical_intervals = []
         for interval in self.intervals:
