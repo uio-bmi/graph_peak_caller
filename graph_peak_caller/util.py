@@ -3,6 +3,8 @@ import pyBigWig
 import numpy as np
 import pybedtools
 from pybedtools import BedTool
+from offsetbasedgraph import IntervalCollection
+from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
 
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
@@ -52,6 +54,15 @@ def bed_intervals_to_graph(obg_graph, linear_path_interval, bed_file_name, graph
         intervals_on_graph.append(linear_path_interval.get_subinterval(start, end))
 
     return intervals_on_graph
+
+def fasta_sequence_to_linear_path_through_graph(linear_sequence_fasta_file, sequence_retriever, ob_graph, start_node):
+    search_sequence = open(linear_sequence_fasta_file).read()
+    print("Length of search sequence: %d" % len(search_sequence))
+    traverser = GraphTraverserUsingSequence(ob_graph, search_sequence, sequence_retriever)
+    traverser.search_from_node(start_node)
+    linear_path_interval = traverser.get_interval_found()
+    #IntervalCollection([linear_path_interval]).to_file("linear_path", text_file=True)
+    return linear_path_interval
 
 if __name__ == "__main__":
     values = get_average_signal_values_within_peaks("../data/sample1_signal_1.bigwig", "../data/sample1_peaks_1.bed")

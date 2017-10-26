@@ -6,7 +6,7 @@ from .sparsepileup import SparsePileup
 from .extender import Extender
 from .areas import ValuedAreas
 from offsetbasedgraph.interval import IntervalCollection
-
+import logging
 
 class ControlTrack(object):
 
@@ -17,7 +17,12 @@ class ControlTrack(object):
         self.extensions = extensions
         self.background_pileups = []
 
-    def get_control_track(self, base_value):
+    def get_control_track(self, base_value, ignore_extensions=False):
+
+        if ignore_extensions:
+            logging.warning("Ignoring extension. Creating control only with base_value")
+            return SparsePileup.from_base_value(self.graph, base_value)
+
         tracks = self.generate_background_tracks()
         self.scale_pileups(tracks, base_value)
         return self.combine_backgrounds(tracks, base_value)
@@ -51,6 +56,7 @@ class ControlTrack(object):
         return self._get_pileups(extensions)
 
     def combine_backgrounds(self, background_pileups, base_value):
+
         max_pileup = background_pileups[0]
         for pileup in background_pileups[1:]:
             max_pileup.update_max(pileup)
