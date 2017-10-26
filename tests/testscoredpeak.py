@@ -53,7 +53,7 @@ class TestScoredPeak(unittest.TestCase):
             3: ValuedIndexes(np.array([], dtype="int"), np.array([]), 30, 10),
             4: ValuedIndexes(np.array([], dtype="int"), np.array([]), 40, 10),
             5: ValuedIndexes(np.array([], dtype="int"), np.array([]), 50, 5),
-            -1: ValuedIndexes(np.array([], dtype="int"), np.array([]), 14, 5)
+            -1: ValuedIndexes(np.array([], dtype="int"), np.array([]), 10, 5)
             }
 
         self.peak2 = BinaryContinousAreas(self.graph)
@@ -86,6 +86,8 @@ class TestScoredPeak(unittest.TestCase):
     def test_from_peak_and_pileup_flat(self):
         scored_peak = ScoredPeak.from_peak_and_pileup(
             self.peak, self.flat_pileup)
+        print(scored_peak)
+        print(self.flat_scored_peak)
         self.assertEqual(scored_peak, self.flat_scored_peak)
 
     def test_get_max_path(self):
