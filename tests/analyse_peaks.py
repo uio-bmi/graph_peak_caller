@@ -5,8 +5,10 @@ from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
 from pyvg.sequences import SequenceRetriever
 from pybedtools import BedTool
 from pyvg.util import vg_gam_file_to_interval_collection, vg_gam_file_to_interval_list
+from graph_peak_caller.util import get_linear_paths_in_graph
 from offsetbasedgraph import IntervalCollection
 import pyvg
+from collections import defaultdict
 
 def create_linear_peaks_from_bed(linear_sequence_fasta_file, peaks_bed_file,
                                  obg_graph_file_name, vg_graph_file_name, start_node,
@@ -119,8 +121,9 @@ class PeaksComparer(object):
 class AlignmentsAnalyser(object):
     def __init__(self, vg_graph, vg_gam_file_name, ob_graph, linear_path_interval_file_name):
         self.graph = ob_graph
+        self.vg_graph = vg_graph
         print("Reading reads")
-        self.reads = vg_gam_file_to_interval_list(vg_graph, vg_gam_file_name, ob_graph, max_intervals=5000)
+        self.reads = vg_gam_file_to_interval_list(vg_graph, vg_gam_file_name, ob_graph, max_intervals=10000)
         print("Number of reads: %d" % len(self.reads))
 
         self.linear_path = IntervalCollection.create_list_from_file(linear_path_interval_file_name, self.graph).intervals[0]
@@ -145,6 +148,26 @@ class AlignmentsAnalyser(object):
         print("N intersects: %d" % n_intersects)
         print("N not on path: %d" % n_not_on_path)
 
+    def count_alignments_on_linear_paths(self):
+        paths = get_linear_paths_in_graph(self.graph, self.vg_graph)
+        hits = defaultdict(int)
+
+        i = 0
+        for read in self.reads:
+
+            for path in paths:
+                #if path.contains_in_order_any_direction(read):
+                if path.contains(read):
+                    hits[path.name] += 1
+
+            if i % 100 == 0:
+                print("#%d" % i)
+            i += 1
+
+        print("N reads: %d" % i)
+        for name, hit in hits.items():
+            print("%s: %d " % (name, hit))
+
 
 
 sequence_retriever = SequenceRetriever.from_vg_graph("cactus-mhc.vg")
@@ -153,8 +176,8 @@ vg_graph = vg_graph = pyvg.Graph.create_from_file("cactus-mhc.json")
 
 
 
-comparer = PeaksComparer(ob_graph, sequence_retriever, "linear_path", "linear_peaks", "real_data_max_paths")
-comparer.check_similarity()
+#comparer = PeaksComparer(ob_graph, sequence_retriever, "linear_path", "linear_peaks", "real_data_max_paths")
+#comparer.check_similarity()
 #comparer.check_overlap_with_linear_path()
 #peaks = comparer.get_peaks_not_on_linear_path()
 #comparer.peaks_to_fasta(peaks)
@@ -163,7 +186,9 @@ comparer.check_similarity()
 #comparer.peaks_to_fasta(peaks, "alone_linear.peaks")
 
 
-#analyser = AlignmentsAnalyser(vg_graph, "ENCFF001HNI_filtered_q60.gam", ob_graph, "linear_path")
+#analyser = AlignmentsAnalyser(vg_graph, "ENCFF001HNI_filtered_q60.gam", ob_graph, "linear_path")  # sample reads
+analyser = AlignmentsAnalyser(vg_graph, "ENCFF001HNS_filtered_q60.gam", ob_graph, "linear_path")  # Control reads
+analyser.count_alignments_on_linear_paths()
 #analyser.count_alignments_on_linear_path()
 
 #compare_linear_and_graph_peaks(ob_graph, "linear_peaks", "real_data_max_paths")
