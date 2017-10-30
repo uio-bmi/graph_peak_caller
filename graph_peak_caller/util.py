@@ -5,7 +5,7 @@ import pybedtools
 from pybedtools import BedTool
 from offsetbasedgraph import IntervalCollection
 from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
-
+import offsetbasedgraph as obg
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 
@@ -63,6 +63,24 @@ def fasta_sequence_to_linear_path_through_graph(linear_sequence_fasta_file, sequ
     linear_path_interval = traverser.get_interval_found()
     #IntervalCollection([linear_path_interval]).to_file("linear_path", text_file=True)
     return linear_path_interval
+
+
+def get_linear_paths_in_graph(ob_graph, vg_graph, write_to_file_name=None):
+    intervals = []
+    for path in vg_graph.paths:
+        #print(path.__dict__.keys())
+        print(path.name)
+        obg_interval = path.to_obg(ob_graph=ob_graph)
+        print(obg_interval.length())
+        obg_interval.name = path.name
+        intervals.append(obg_interval)
+
+    if write_to_file_name is not None:
+        collection = obg.IntervalCollection(intervals)
+        collection.to_file(write_to_file_name, text_file=True)
+
+    return intervals
+
 
 if __name__ == "__main__":
     values = get_average_signal_values_within_peaks("../data/sample1_signal_1.bigwig", "../data/sample1_peaks_1.bed")
