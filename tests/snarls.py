@@ -1,4 +1,9 @@
-from graph_peak_caller.snarls import build_snarl_structure_from_vg_snarls
+from graph_peak_caller.snarls import SnarlGraphBuilder
+from offsetbasedgraph import Graph
 
+graph = Graph.from_file("cactus-mhc.obg")
+builder = SnarlGraphBuilder.from_vg_snarls(graph, "snarls.pb")
+builder.build_snarl_graphs()
 
-build_snarl_structure_from_vg_snarls("snarls.pb")
+#for snarl in builder.snarls:
+#    print(snarl)
