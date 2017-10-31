@@ -7,22 +7,25 @@ from offsetbasedgraph.graphtraverser import GraphTravserserBetweenNodes
 
 class SnarlGraph(Graph):
 
-    def __init__(self, blocks, edges, id, parent=None, children=[]):
+    def __init__(self, blocks, edges, id=None, parent=None, children=[]):
         super(SnarlGraph, self).__init__(blocks, edges)
 
         self.parent = parent
         self.children = children  # Simple snarls (not yet created as SnarlGraphs)
-        print("%d children" % len(self.children))
+        #print("%d children" % len(self.children))
         self.id = id
         self.create_children()
 
     def create_children(self):
-        print("Creating for children")
+        print("Creating for children from %s" % self.id)
         for child in self.children:
             print("    Child: %d, %s" % (child.id, child))
-            child_graph = SnarlGraph.create_from_simple_snarl(child, self)
 
-            print("Found subgraph:")
+            child_graph = SnarlGraph.create_from_simple_snarl(child, self)
+            print("      created child_graph")
+            self.blocks[child.id] = child_graph
+
+            print("        Found subgraph:")
             print(child_graph)
 
             for node_id in child_graph.blocks.keys():
@@ -44,18 +47,23 @@ class SnarlGraph(Graph):
                 if -node_id in self.reverse_adj_list:
                     del self.reverse_adj_list[-node_id]
 
+                if node_id in self.adj_list[child.start]:
+                    self.adj_list[child.start].remove(node_id)
+
+                if -node_id in self.reverse_adj_list[-child.end]:
+                    self.reverse_adj_list[-child.end].remove(-node_id)
 
             # add new edges
-            self.adj_list[child.start] = [child.id]
+            self.adj_list[child.start].append(child.id)
             self.reverse_adj_list[-child.id] = [-child.start]
 
             self.adj_list[child.id] = [child.end]
-            self.reverse_adj_list[-child.end] = [-child.id]
+            self.reverse_adj_list[-child.end].append(-child.id)
 
     @classmethod
     def create_from_simple_snarl(cls, simple_snarl, parent_snarl_graph):
         traverser = GraphTravserserBetweenNodes(parent_snarl_graph)
-        subgraph = traverser.get_greedy_subgraph_between_nodes(simple_snarl.start, simple_snarl.end)
+        subgraph = traverser.get_greedy_subgraph_between_nodes(simple_snarl.start, simple_snarl.end, include_start_and_end=False)
         return SnarlGraph(subgraph.blocks, subgraph.adj_list, simple_snarl.id, parent_snarl_graph, simple_snarl.children)
 
     def length(self):
@@ -63,12 +71,12 @@ class SnarlGraph(Graph):
 
 
 class SimpleSnarl():
-    def __init__(self, start, end, id, parent=None):
+    def __init__(self, start, end, id, parent=None, children=[]):
         self.start = start
         self.end = end
         self.id = id
         self.parent = parent
-        self.children = []
+        self.children = children
 
     def add_child(self, child):
         self.children.append(child)
