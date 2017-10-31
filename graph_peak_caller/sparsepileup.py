@@ -48,6 +48,9 @@ class ValuedIndexes(object):
         lengths = np.diff(self.all_idxs())
         return np.sum(lengths*self.all_values())
 
+    def mean(self):
+        return self.sum()/self.length
+
     def get_subset(self, start, end):
         assert start >= 0
         assert end <= self.length
