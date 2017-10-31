@@ -14,11 +14,26 @@ class SnarlGraph(Graph):
         pass
 
 
-def build_snarlgraphs_from_vg_snarls(vg_snarls_file_name):
-    snarls = Snarls.from_vg_snarls_file(vg_snarls_file_name)
+class SimpleSnarl():
+    def __init__(self, start, end, id, parent=None):
+        self.start = start
+        self.end = end
+        self.id = id
+        self.parent = parent
+        
 
-    for snarl in snarls:
-        if hasattr(snarl, "parent"):
-            print(snarl)
+class SnarlGraphBuilder():
+
+    def __init__(self, graph, snarls):
+        self.snarls = snarls
+
+    @classmethod
+    def from_vg_snarls(cls, vg_snarls_file_name):
+
+        snarls = Snarls.from_vg_snarls_file(vg_snarls_file_name)
+
+        for snarl in snarls:
+            if hasattr(snarl, "parent"):
+                print(snarl)
 
 
