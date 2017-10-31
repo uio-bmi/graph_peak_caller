@@ -1,6 +1,7 @@
 from offsetbasedgraph import Graph
+from pyvg import Snarls
 
-class Snarl(Graph):
+class SnarlGraph(Graph):
 
     def __init__(blocks, edges):
         pass
@@ -12,4 +13,12 @@ class Snarl(Graph):
     def length(self):
         pass
 
-    
+
+def build_snarlgraphs_from_vg_snarls(vg_snarls_file_name):
+    snarls = Snarls.from_vg_snarls_file(vg_snarls_file_name)
+
+    for snarl in snarls:
+        if hasattr(snarl, "parent"):
+            print(snarl)
+
+

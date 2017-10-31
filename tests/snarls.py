@@ -1,0 +1,4 @@
+from graph_peak_caller.snarls import build_snarl_structure_from_vg_snarls
+
+
+build_snarl_structure_from_vg_snarls("snarls.pb")
