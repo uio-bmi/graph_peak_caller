@@ -245,6 +245,12 @@ class SparsePileup(Pileup):
                 return False
         return True
 
+    @classmethod
+    def from_base_value(cls, graph, base_value):
+        pileup = cls(graph)
+        pileup.update_max_value(base_value)
+        return pileup
+
     def sum(self):
         return np.sum([values.sum() for node, values in self.data.items()])
 

@@ -2,7 +2,10 @@ import sys
 import pyBigWig
 import numpy as np
 import pybedtools
-
+from pybedtools import BedTool
+from offsetbasedgraph import IntervalCollection
+from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
+import offsetbasedgraph as obg
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 
@@ -41,6 +44,42 @@ def longest_segment(file_name):
             longest = end - start
 
     print(longest)
+
+def bed_intervals_to_graph(obg_graph, linear_path_interval, bed_file_name, graph_start_offset):
+    peaks = BedTool(bed_file_name)
+    intervals_on_graph = []
+    for peak in peaks:
+        start = peak.start - graph_start_offset
+        end = peak.end - graph_start_offset
+        intervals_on_graph.append(linear_path_interval.get_subinterval(start, end))
+
+    return intervals_on_graph
+
+def fasta_sequence_to_linear_path_through_graph(linear_sequence_fasta_file, sequence_retriever, ob_graph, start_node):
+    search_sequence = open(linear_sequence_fasta_file).read()
+    print("Length of search sequence: %d" % len(search_sequence))
+    traverser = GraphTraverserUsingSequence(ob_graph, search_sequence, sequence_retriever)
+    traverser.search_from_node(start_node)
+    linear_path_interval = traverser.get_interval_found()
+    #IntervalCollection([linear_path_interval]).to_file("linear_path", text_file=True)
+    return linear_path_interval
+
+
+def get_linear_paths_in_graph(ob_graph, vg_graph, write_to_file_name=None):
+    intervals = []
+    for path in vg_graph.paths:
+        #print(path.__dict__.keys())
+        print(path.name)
+        obg_interval = path.to_obg(ob_graph=ob_graph)
+        print(obg_interval.length())
+        obg_interval.name = path.name
+        intervals.append(obg_interval)
+
+    if write_to_file_name is not None:
+        collection = obg.IntervalCollection(intervals)
+        collection.to_file(write_to_file_name, text_file=True)
+
+    return intervals
 
 
 if __name__ == "__main__":

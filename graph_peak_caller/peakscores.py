@@ -79,6 +79,12 @@ class ScoredPeak(object):
                 sums[node_id] = max_finite_value+1
 
     def get_max_path(self):
+
+        # Handle peaks that are on one node
+        if len(self._peak.internal_intervals) > 0:
+            node, start_end = list(self._peak.intervals.items())[0]
+            return obg.DirectedInterval(start_end[0], start_end[1], [node], graph=self._graph)
+
         sums = {node_id: float(vi.sum()) for node_id, vi
                 in self._scores.items()}
         self.__clean_sums(sums)

@@ -347,10 +347,8 @@ class Pileup(object):
         areas = self.find_valued_areas(False)
         intervals = self.areas_to_intervals(areas, True)
         # print(intervals)
-        logging.warning(intervals)
         intervals = [interval for interval in intervals if
                      interval.length() <= max_size]
-        logging.warning(intervals)
         print(intervals)
         for interval in intervals:
             self.set_interval_value(interval, True)

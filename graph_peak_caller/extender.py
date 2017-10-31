@@ -280,7 +280,6 @@ class Extender(object):
 
     def extend_interval(self, interval, direction=1):
         self.area_builder = BinaryContinousAreas(self.graph)
-        logging.warning(interval.length())
         pos_length = self.length-interval.length()
         neg_length = self.length if direction == 0 else 0
         pos_remain, neg_remain = self.area_builder.filled_interval(
