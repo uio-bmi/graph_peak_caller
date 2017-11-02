@@ -3,31 +3,20 @@ from offsetbasedgraph import Graph
 from offsetbasedgraph.graphtraverser import GraphTravserserBetweenNodes
 import pyvg
 import sys
+from graph_peak_caller.snarls import SnarlGraph
 
 #vg_graph = pyvg.Graph.create_from_file("haplo1kg50-mhc.json")
 #ob_graph = vg_graph.get_offset_based_graph()
 #ob_graph.to_file("haplo1kg50-mhc.obg")
 graph = Graph.from_file("haplo1kg50-mhc.obg")
 
-print(graph.adj_list[153])
-print(graph.adj_list[485900])
-print(graph.reverse_adj_list[-485900])
-
-#assert 598821 in graph.blocks
-
 #traverser = GraphTravserserBetweenNodes(graph)
 #subgraph = traverser.get_snarl_subgraph(153, 485900, include_start_and_end=True, print_debug=True)
 #sys.exit()
 
-#subgraph = traverser.get_greedy_subgraph_between_nodes(26577, 26579)
-#print(subgraph)
-#subgraph = traverser.get_greedy_subgraph_between_nodes(26571, 492107, print_debug=True)
-#print(subgraph)
-#sys.exit()
 
-#subgraph = traverser.get_greedy_subgraph_between_nodes(485840, 598821)
-#subgraph = traverser.get_greedy_subgraph_between_nodes(485838, 485850)
-#print(subgraph)
+#snarlgraph = SnarlGraph.from_file("haplo1kg50-mhc.snarlgraph")
+#print(snarlgraph.blocks.keys())
 #sys.exit()
 
 print("N blocks: %d" % len(graph.blocks))
@@ -90,6 +79,7 @@ print("N snarls in snarlgraph: %d" % counter)
 count_blocks(snarlgraph)
 print("N blocks in snarlgraph: %d" % counter_blocks)
 
+snarlgraph.to_file("haplo1kg50-mhc.snarlgraph")
 
 #for snarl in builder.snarls:
 #    print(snarl)
