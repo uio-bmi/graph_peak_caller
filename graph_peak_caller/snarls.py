@@ -13,6 +13,7 @@ class SnarlGraph(obg.GraphWithReversals):
         self._end_node = end_node
         super(SnarlGraph, self).__init__(blocks, edges)
         self._get_linear_start_and_end_pos()
+        self._get_linear_mapped_node_intervals()
 
     def get_next_nodes(self, node_id):
         if node_id not in self._edges:
@@ -61,23 +62,54 @@ class SnarlGraph(obg.GraphWithReversals):
     def _get_linear_start_and_end_pos(self):
         self._forward_length_dict = self._create_path_length_dict()
         self._back_length_dict = self._create_path_length_dict(False)
+        print(self._forward_length_dict)
+        print(self._back_length_dict)
+
+    def _get_linear_mapped_node_intervals(self):
+        self.linear_node_intervals = {}
+        for node_id in self._blocks:
+            start_length = self._forward_length_dict[node_id]
+            path_length = start_length + self._back_length_dict[-node_id] + self.node_size(node_id)
+            scale_factor = self.length()/path_length
+            print(node_id, path_length, start_length, scale_factor)
+            self.linear_node_intervals[node_id] = (
+                start_length * scale_factor,
+                (start_length+self.node_size(node_id))*scale_factor)
 
     def get_distance_dicts(self):
         starts_dict, ends_dict = {}, {}
         for node_id, block in self._blocks.items():
             # TODO: Also get reverse distances
+            start, end = self.linear_node_intervals[node_id]
             if isinstance(block, obg.Block):
-                starts_dict[node_id] = self._forward_length_dict[node_id]
-                ends_dict[node_id] = self._back_length_dict[-node_id]
+                print("B: ", node_id, start, end)
+                starts_dict[node_id] = start
+                ends_dict[node_id] = end
             else:
                 sub_starts_dict, sub_ends_dict = block.get_distance_dicts()
+                print("#", node_id, start)
+                print(sub_ends_dict)
                 starts_dict.update(
-                    {n_id: self._forward_length_dict[node_id]+dist
+                    {n_id: start+dist
                      for n_id, dist in sub_starts_dict.items()})
-                ends_dict.update({n_id: self._back_length_dict[-node_id]+dist
+                ends_dict.update({n_id: start + dist
                                   for n_id, dist in sub_ends_dict.items()})
 
         return starts_dict, ends_dict
+
+    def find_node_ids(self, offset):
+        sub_nodes = [node_id for node_id, interval
+                     in self.linear_node_intervals.items()
+                     if interval[0] < offset and interval[1] > offset]
+        positions = []
+        for node_id in sub_nodes:
+            if isinstance(self._blocks[node_id],
+                          obg.Block):
+                positions.append(node_id)
+            else:
+                positions.extend(self._blocks[node_id].find_node_ids())
+
+        return positions
 
 
 class SimpleSnarl():
@@ -86,7 +118,7 @@ class SimpleSnarl():
         self.end = end
         self.id = id
         self.parent = parent
-        
+
 
 class SnarlGraphBuilder():
 
