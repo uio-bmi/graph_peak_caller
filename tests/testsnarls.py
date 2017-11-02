@@ -19,7 +19,8 @@ class SnarlsTests(unittest.TestCase):
         self.simple_snarls = \
             {
                 10: SimpleSnarl(1, 4, 10),
-                11: SimpleSnarl(5, 8, 11)
+                11: SimpleSnarl(5, 8, 11),
+                12: SimpleSnarl(4, 5, 12)
             }
 
 class TestSnarlGraphBuilder(SnarlsTests):
@@ -94,7 +95,99 @@ class TestSnarlGraphBuilder(SnarlsTests):
         print("Snarlgraph")
         print(snarlgraph)
 
+        correct_snarl_graph = SnarlGraph(
+            {
+                11: Block(3),
+                12: Block(3),
+                1: Block(3),
+                10: Block(3),
+                20: SnarlGraph(
+                    {
+                        3: Block(3),
+                        21: SnarlGraph(
+                            {
+                                4: Block(3),
+                                5: Block(3)
+                            },
+                            {}
+                        ),
+                        22: SnarlGraph(
+                            {
+                                7: Block(3),
+                                8: Block(3)
+                            },
+                            {}
+                        ),
+                        2: Block(3),
+                        6: Block(3),
+                        9: Block(3),
+                    },
+                    {
+                        3: [21],
+                        2: [22],
+                        21: [6],
+                        22: [9]
+                    }
+                )
+            },
+            {
+                11: [1],
+                1: [20],
+                20: [10],
+                10: [12]
+            }
+        )
 
+        print("Snarlgraph")
+        print(snarlgraph)
+
+        self.assertEqual(correct_snarl_graph, snarlgraph)
+
+    def _test_multiple_snarls_same_nodes(self):
+
+        graph = Graph(
+            {i: Block(3) for i in range(1, 7)},
+            {
+                1: [2, 4],
+                2: [3],
+                3: [6],
+                4: [5],
+                5: [6]
+            })
+
+        snarls = {
+            10: SimpleSnarl(1, 3, 10),
+            11: SimpleSnarl(1, 5, 11),
+        }
+
+        builder = SnarlGraphBuilder(graph, snarls)
+        snarlgraph = builder.build_snarl_graphs()
+
+        correct_snarl_graph = SnarlGraph(
+            {
+                1: Block(3),
+                10: SnarlGraph(
+                    {
+                        2: Block(3)
+                    }, {}
+                ),
+                11: SnarlGraph(
+                    {
+                        4: Block(3)
+                    }, {}
+                ),
+                4: Block(3),
+                5: Block(3),
+            },
+            {
+                1: [10, 11],
+                10: [3],
+                11: [5],
+                3: [6],
+                5: [6]
+            })
+
+        self.assertEqual(correct_snarl_graph, snarlgraph)
 
 
 
