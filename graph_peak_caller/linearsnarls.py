@@ -1,6 +1,7 @@
 import numpy as np
 from .snarls import SnarlGraph
 from .sparsepileup import SparsePileup, ValuedIndexes
+from .util import sparse_maximum
 
 def create_control(graph, snarls, reads, extension_sizes):
     snarl_graph = SnarlGraph(graph, snarls)
@@ -126,7 +127,11 @@ class LinearPileup(object):
 
 
     def maximum(self, other):
-        pass
+        indices, values = sparse_maximum(self.indices, self.values,
+                                         other.indices, other.values,
+                                         max(self.values[-1], other.values[-1]) + 1)
+        self.indices = indices
+        self.values = values
 
     def threshold(self, value):
         self.values = np.maximum(self.values, value)

@@ -81,6 +81,66 @@ def get_linear_paths_in_graph(ob_graph, vg_graph, write_to_file_name=None):
 
     return intervals
 
+def sparse_maximum(indices1, values1, indices2, values2, genome_size):
+
+    if indices1[0] != 0:
+        np.insert(indices1, 0, 0)
+        np.insert(values1, 0, 0)
+
+    if indices2[0] != 0:
+        np.insert(indices2, 0, 0)
+        np.insert(values2, 0, 0)
+
+    indices1 = np.insert(indices1, len(indices1), genome_size)
+    indices2 = np.insert(indices2, len(indices2), genome_size)
+
+
+    a = indices1[:-1]*2
+    b = indices2[:-1]*2+1
+    all_idxs = np.concatenate([a, b])
+    all_idxs.sort()
+    vi_list = [values1, values2]
+    values_list = []
+    for i, vals in enumerate(vi_list):
+        idxs = np.nonzero((all_idxs % 2) == i)[0]
+        all_values = vals
+        print("Idx: %s" % idxs)
+        print("Values %i: %s" % (i, all_values))
+        value_diffs = np.diff(all_values)
+        print("Diffs: %s" % value_diffs)
+        values = np.zeros(all_idxs.shape)
+        values[idxs[1:]] = value_diffs
+        values[idxs[0]] = all_values[0]
+        print("  values after diffs: %s" % values)
+        values_list.append(values.cumsum())
+    print("Values list:")
+    print(values_list)
+    values = np.maximum(values_list[0], values_list[1])
+    idxs = all_idxs // 2
+    empty_ends = np.nonzero(np.diff(idxs) == 0)[0]
+    max_values = np.maximum(values[empty_ends], values[empty_ends+1])
+    values[empty_ends+1] = max_values
+    values[empty_ends] = max_values
+
+    indices = idxs
+    values = values
+
+    indices, values = sanitize_indices_and_values(indices, values)
+    return indices, values
+
+def sanitize_indices_and_values(indices, values):
+
+    new_indices = []
+    new_values = []
+
+    prev = None
+    for i, index in enumerate(indices):
+        if values[i] != prev:
+            new_indices.append(index)
+            new_values.append(values[i])
+        prev = values[i]
+
+    return new_indices, new_values
 
 if __name__ == "__main__":
     values = get_average_signal_values_within_peaks("../data/sample1_signal_1.bigwig", "../data/sample1_peaks_1.bed")
