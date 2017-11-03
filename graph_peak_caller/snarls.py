@@ -75,23 +75,22 @@ class SnarlGraph(obg.GraphWithReversals):
             self.adj_list[child.id] = [child.end]
             self.reverse_adj_list[-child.end].append(-child.id)
 
-    def _delete_edges_to_and_from_node(self, node_id):
-        if -node_id in self.reverse_adj_list:
-            for other in self.reverse_adj_list[-node_id]:
-                self._delete_edge(-other, -node_id)
-
-        if node_id in self.reverse_adj_list:
-            for other in self.reverse_adj_list[node_id]:
-                self._delete_edge(-other, node_id)
-
+    def _remove_edges(self, node_id):
         if node_id in self.adj_list:
+            edges = self.adj_list[node_id]
+            for edge in edges:
+                self.reverse_adj_list[-edge].remove(-node_id)
             del self.adj_list[node_id]
+        if -node_id in self.reverse_adj_list:
+            edges = self.reverse_adj_list[-node_id]
+            for edge in edges:
+                self.adj_list[-edge].remove(node_id)
             del self.reverse_adj_list[-node_id]
 
-        if -node_id in self.adj_list:
-            del self.adj_list[-node_id]
-            del self.reverse_adj_list[node_id]
-
+    def _delete_edges_to_and_from_node(self, node_id):
+        self._remove_edges(node_id)
+        self._remove_edges(-node_id)
+        return
 
     def _delete_edge(self, from_node, to_node):
         if to_node in self.adj_list[from_node]:
@@ -140,7 +139,10 @@ class SnarlGraph(obg.GraphWithReversals):
         print("-----------------------", forward)
         print(self._start_node, self._end_node)
         print(self.blocks.keys())
-        print(self.adj_list)
+        if forward:
+            print(self.adj_list)
+        else:
+            print(self.reverse_adj_list)
         if forward:
             start_node = self._start_node
             end_node = self._end_node

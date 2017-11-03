@@ -38,7 +38,11 @@ class TestSnarlGraphBuilder(SnarlsTests):
                      2: Block(3),
                      3: Block(3)
                  },
-                 {}
+                 {
+                     1: [2, 3],
+                     2: [4],
+                     3: [4]
+                 }, start_node=1, end_node=4
              ),
              4:  Block(3),
              5:  Block(3),
@@ -47,7 +51,11 @@ class TestSnarlGraphBuilder(SnarlsTests):
                      6: Block(3),
                      7: Block(3)
                  },
-                 {}
+                 {
+                     5: [6, 7],
+                     6: [8],
+                     7: [8]
+                 }, start_node=5, end_node=8
              ),
              8: Block(3)
              },
@@ -59,7 +67,9 @@ class TestSnarlGraphBuilder(SnarlsTests):
                 21: [8],
                 9: [1],  # Dummy nodes added by snarlgraphbuilder
                 8: [10]   # Dummy nodes added by snarlgraphbuilder
-            }
+            },
+            start_node=9,
+            end_node=10
         )
         print("Final graph")
 
@@ -114,14 +124,26 @@ class TestSnarlGraphBuilder(SnarlsTests):
                                 4: Block(3),
                                 5: Block(3)
                             },
-                            {}
+                            {
+                                3: [4, 5],
+                                4: [6],
+                                5: [6]
+                            },
+                            start_node=3,
+                            end_node=6
                         ),
                         22: SnarlGraph(
                             {
                                 7: Block(3),
                                 8: Block(3)
                             },
-                            {}
+                            {
+                                2: [7, 8],
+                                7: [9],
+                                8: [9]
+                            },
+                            start_node=2,
+                            end_node=9
                         ),
                         2: Block(3),
                         6: Block(3),
@@ -131,8 +153,13 @@ class TestSnarlGraphBuilder(SnarlsTests):
                         3: [21],
                         2: [22],
                         21: [6],
-                        22: [9]
-                    }
+                        22: [9],
+                        1: [2, 3],
+                        6: [10],
+                        9: [10]
+                    },
+                    start_node=1,
+                    end_node=10
                 )
             },
             {
@@ -141,8 +168,10 @@ class TestSnarlGraphBuilder(SnarlsTests):
                 20: [10],
                 10: [12],
                 13: [11],  # Dummy
-                12: [14]   # Dummy
-            }
+                12: [14],   # Dummy
+            },
+            start_node=13,
+            end_node=14
         )
 
         print("Snarlgraph")
