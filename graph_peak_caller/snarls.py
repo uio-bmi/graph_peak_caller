@@ -94,7 +94,6 @@ class SnarlGraph(obg.GraphWithReversals):
             for other in self.reverse_adj_list[node_id]:
                 self._delete_edge(-other, node_id)
 
-
     def _delete_edge(self, from_node, to_node):
         if to_node in self.adj_list[from_node]:
             self.adj_list[from_node].remove(to_node)
@@ -127,6 +126,7 @@ class SnarlGraph(obg.GraphWithReversals):
         if self._length is not None:
             return self._length
         self._length = self._get_longest_path_length()
+        print("Getting length for edges:", sum(len(e) for e in self.adj_list.values()))
         assert self._length > 0, str(self.blocks) + str(self.adj_list)
         return self._length
 
@@ -135,8 +135,9 @@ class SnarlGraph(obg.GraphWithReversals):
         return memo[self._end_node]
 
     def _create_path_length_dict(self, forward=True):
-
+        print("-----------------------", forward)
         print(self.blocks.keys())
+        print(self.adj_list)
         if forward:
             start_node = self._start_node
             end_node = self._end_node
@@ -146,21 +147,25 @@ class SnarlGraph(obg.GraphWithReversals):
             end_node = -self._start_node
             next_node_func = self.get_previous_nodes
 
-        stack = deque([(start_node, 0)])
+        stack = deque([(start_node, 0, 0)])
         memo = defaultdict(int)
+        cur_path = []
         while stack:
-            node_id, dist = stack.pop()
-            for next_node in next_node_func(node_id):
-                if memo[next_node] > dist:
+            node_id, dist, n = stack.pop()
+            del cur_path[n:]
+            cur_path.append(node_id)
+            next_nodes = next_node_func(node_id)
+            for next_node in next_nodes:
+                if next_node in cur_path:
+                    print("CYCLE")
+                    continue
+                if memo[next_node] >= dist and dist > 0:
                     continue
                 memo[next_node] = dist
                 if next_node == end_node:
                     continue
-                assert next_node != start_node
-                assert next_node != -end_node
-                assert next_node != -start_node
                 new_dist = dist + self.node_size(next_node)
-                stack.append((next_node, new_dist))
+                stack.append((next_node, new_dist, n+1))
 
         return memo
 
