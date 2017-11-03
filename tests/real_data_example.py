@@ -39,8 +39,8 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
 
     builder = SnarlGraphBuilder.from_vg_snarls(ob_graph.copy(), "haplo1kg50-mhc.snarls")
     snarlgraph = builder.build_snarl_graphs()
-    snarlgraph._create_distance_dicts()
-    
+    #snarlgraph._create_distance_dicts()
+
     #snarlgraph.to_file("haplo1kg50-mhc.snarlgraph")
     #snarlgraph = SnarlGraph.from_file("haplo1kg50-mhc.snarlgraph")
 
