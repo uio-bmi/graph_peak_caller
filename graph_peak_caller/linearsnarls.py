@@ -19,12 +19,12 @@ def create_control(graph, snarl_graph, reads, extension_sizes):
 
     max_pileup = LinearPileup([], [], snarl_graph)
     for extension in extension_sizes:
-        linear_pileup = mapped_reads.extend(extension)
+        extended_reads = mapped_reads.extend()
+        linear_pileup = LinearPileup.create_from_starts_and_ends(
+                extended_reads.starts, extended_reads.ends)
         max_pileup = max_pileup.max(linear_pileup)
 
     max_pileup.threshold(average_value)
-
-
     valued_indexes = max_pileup.to_valued_indexes()
     graph_pileup = SparsePileup(graph)
     graph_pileup.data = valued_indexes
@@ -111,20 +111,3 @@ class LinearPileup(object):
 
     def threshold(self, value):
         self.values = np.maximum(self.values, value)
-
-
-class LinearIntervalCollection(object):
-
-    def __init__(self, starts, ends):
-        self.starts = starts
-        self.ends = ends
-
-    def extend(self, extension_size):
-        extended_starts = (self.starts + self.ends)/2 - extension_size
-        extended_ends = (self.starts + self.ends)/2 + extension_size
-        linear_pileup = LinearPileup.create_from_starts_and_ends(
-                extended_starts, extended_ends)
-        return linear_pileup
-
-    def n_basepairs_covered(self):
-        return np.sum(self.ends - self.starts)
