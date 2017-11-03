@@ -1,8 +1,10 @@
 import numpy as np
+from collections import defaultdict
 from .snarls import SnarlGraph
 from .sparsepileup import SparsePileup, starts_and_ends_to_sparse_pileup
 from .snarlmaps import LinearSnarlMap
 from .util import sparse_maximum, sanitize_indices_and_values
+from .eventsorter import EventSorter
 
 
 def create_control(graph, snarls, reads, extension_sizes):
@@ -26,25 +28,6 @@ def create_control(graph, snarls, reads, extension_sizes):
     graph_pileup.data = valued_indexes
     return graph_pileup
 
-
-class EventSorter(object):
-    def __init__(self, index_lists, values_list, names=None):
-        if names is not None:
-            [setattr(name.upper(), i) for i, name in enumerate(names)]
-
-        n_types = len(index_lists)
-        coded_index_list = [np.array(index_list)*n_types + r 
-                            for r in range(n_types)]
-
-        coded_indices = np.ravel(coded_index_list)
-        sorted_args = np.argsort(coded_indices)
-        coded_indices = coded_indices[sorted_args]
-        self.indices = coded_indices//n_types
-        self.codes = coded_indices % n_types
-        self.values = np.array(values_list, dtype="obj").ravel()[sorted_args]
-
-    def __iter__(self):
-        return zip(self.coded_indices, self.codes, self.values)
 
 
 class UnmappedIndices(object):
@@ -75,21 +58,22 @@ class LinearPileup(object):
         return vi_dict
 
     def get_event_sorter(self, linear_map):
-        node_start_values = [node_id for node_id in self._snarl_graph.blocks]
+        node_start_values = [node_id for node_id in linear_map._graph.blocks]
         node_end_values = node_start_values[:]
         node_starts_idxs = [linear_map.get_node_start(node_id)
                             for node_id in node_start_values]
         node_end_idxs = [linear_map.get_node_end(node_id)
                          for node_id in node_end_values]
-        idxs = [self.indices, node_starts_idxs, node_end_idxs]
-        values = [self.values, node_start_values, node_end_values]
-        event_sorter = EventSorter(idxs, values, names=["PILEUP_CHANGE",
+        idxs = [node_end_idxs, self.indices, node_starts_idxs]
+        values = [node_end_values, self.values, node_start_values]
+        event_sorter = EventSorter(idxs, values, names=["NODE_END",
+                                                        "PILEUP_CHANGE",
                                                         "NODE_START",
-                                                        "NODE_END"])
+                                                        ])
         return event_sorter
 
     def from_event_sorter(self, event_sorter):
-        unmapped_indices = {}
+        unmapped_indices = defaultdict(UnmappedIndices)
         cur_nodes = set([])
         cur_index = 0
         cur_value = 0
