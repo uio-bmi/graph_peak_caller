@@ -13,7 +13,7 @@ from graph_peak_caller.areas import BinaryContinousAreas
 from graph_peak_caller.peakscores import ScoredPeak
 import offsetbasedgraph as obg
 from graph_peak_caller.snarls import SnarlGraph, SnarlGraphBuilder
-
+from graph_peak_caller.snarlmaps import LinearSnarlMap
 import traceback
 import warnings
 import sys
@@ -39,6 +39,8 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
 
     builder = SnarlGraphBuilder.from_vg_snarls(ob_graph.copy(), "haplo1kg50-mhc.snarls")
     snarlgraph = builder.build_snarl_graphs()
+    linear_map = LinearSnarlMap(snarlgraph, ob_graph)
+    linear_map.to_file("linear_map")
     #snarlgraph._create_distance_dicts()
 
     #snarlgraph.to_file("haplo1kg50-mhc.snarlgraph")
@@ -62,7 +64,7 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
         ob_graph, reads_intervals, control_intervals,
         experiment_info=experiment_info,
         out_file_base_name="real_data_", has_control=True,
-        snarlgraph=snarlgraph)
+        linear_map=linear_map)
     caller.verbose = True
     caller.run()
     retriever = SequenceRetriever.from_vg_graph("cactus-mhc.vg")

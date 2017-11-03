@@ -70,13 +70,13 @@ class CallPeaks(object):
     def __init__(self, graph, sample_intervals,
                  control_intervals=None, experiment_info=None, \
                  verbose=False, out_file_base_name="", has_control=True,
-                 snarlgraph=None):
+                 linear_map=None):
         """
         :param sample_intervals: Either an interval collection or file name
         :param control_intervals: Either an interval collection or a file name
         """
 
-        assert snarlgraph is not None, "Snarlgraph cannot be None"
+        assert linear_map is not None, "LinearMap cannot be None"
 
         assert isinstance(sample_intervals, IntervalCollection) \
                or isinstance(sample_intervals, str), \
@@ -91,7 +91,7 @@ class CallPeaks(object):
         self.sample_intervals = sample_intervals
         self.control_intervals = control_intervals
         self.has_control = has_control
-        self.snarlgraph = snarlgraph
+        self.linear_map = linear_map
 
         self._p_value_track = "p_value_track"
         self._q_value_track = "q_value_track"
@@ -197,7 +197,7 @@ class CallPeaks(object):
         logging.info("Creating control track")
 
         extensions = [self.info.fragment_length, 2500, 5000] if self.has_control else [5000]
-        control_pileup = linearsnarls.create_control(self.graph, self.snarlgraph, self.control_intervals, extensions)
+        control_pileup = linearsnarls.create_control(self.linear_map, self.control_intervals, extensions)
 
         #control_track = ControlTrack(
         #    self.ob_graph, self.control_intervals,

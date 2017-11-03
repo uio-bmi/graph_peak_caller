@@ -1,18 +1,14 @@
 import numpy as np
 from collections import defaultdict
-from .snarls import SnarlGraph
 from .sparsepileup import SparsePileup, starts_and_ends_to_sparse_pileup
-from .snarlmaps import LinearSnarlMap
 from .util import sparse_maximum, sanitize_indices_and_values
 from .eventsorter import EventSorter
 
 
-def create_control(graph, snarl_graph, reads, extension_sizes):
+def create_control(linear_map, reads, extension_sizes):
     """
     :param snarl_graph: Hierarchical snarl graph
     """
-    linear_map = LinearSnarlMap(snarl_graph, graph)
-
     linear_size = linear_map._length
     mapped_reads = linear_map.map_interval_collection(reads)
     average_value = mapped_reads.n_basepairs_covered() / linear_size
@@ -26,7 +22,7 @@ def create_control(graph, snarl_graph, reads, extension_sizes):
 
     max_pileup.threshold(average_value)
     valued_indexes = max_pileup.to_valued_indexes(linear_map)
-    graph_pileup = SparsePileup(graph)
+    graph_pileup = SparsePileup(linear_map._graph)
     graph_pileup.data = valued_indexes
     return graph_pileup
 

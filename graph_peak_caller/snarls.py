@@ -9,7 +9,8 @@ from pyvg import Snarls
 
 class SnarlGraph(obg.GraphWithReversals):
 
-    def __init__(self, blocks, edges, id=None, parent=None, children=[], start_node=None, end_node=None):
+    def __init__(self, blocks, edges, id=None, parent=None,
+                 children=[], start_node=None, end_node=None):
         super(SnarlGraph, self).__init__(blocks, edges)
 
         for child in children:
@@ -20,6 +21,7 @@ class SnarlGraph(obg.GraphWithReversals):
         self.children = children
         self.id = id
         self.create_children()
+
         self._length = None
 
     def get_next_nodes(self, node_id):
@@ -42,12 +44,14 @@ class SnarlGraph(obg.GraphWithReversals):
             if self.id == "top_level" and i % 1000 == 0:
                 logging.info("Snarl %s of %s" % (i, n_childs))
             assert child.id != self.id, "Child ID %d equal as parent" % child.id
-            child_blocks, child_graph = SnarlGraph.create_from_simple_snarl(child, self)
+            child_blocks, child_graph = SnarlGraph.create_from_simple_snarl(
+                child, self)
 
             if len(child_blocks) == 0:
                 continue
 
             self.blocks[child.id] = child_graph
+
             for node_id in child_blocks.keys():
                 if node_id == child.start or node_id == child.end:
                     continue
@@ -136,50 +140,59 @@ class SnarlGraph(obg.GraphWithReversals):
             next_node_func = self.get_previous_nodes
 
         stack = deque([(start_node, 0, 0)])
-        memo = defaultdict(int)
-        cur_path = []
+        memo = {}
         while stack:
             node_id, dist, n = stack.pop()
             next_nodes = next_node_func(node_id)
             for next_node in next_nodes:
-                if memo[next_node] >= dist:
-                    if dist > 0:
-                        continue
-                else:
-                    memo[next_node] = dist
+                if next_node in memo and memo[next_node] >= dist:
+                    continue
+                memo[next_node] = dist
                 if next_node == end_node:
                     continue
-                assert next_node != start_node
-                assert next_node != -end_node
-                assert next_node != -start_node
                 new_dist = dist + self.node_size(next_node)
                 stack.append((next_node, new_dist, n+1))
 
         return memo
 
     def get_linear_node_intervals(self):
+        if self.id == "top_level":
+            print("?", self.adj_list[1], self.reverse_adj_list[-1])
+
         linear_node_intervals = {}
         forward_length_dict = self._create_path_length_dict()
         back_length_dict = self._create_path_length_dict(False)
         for node_id in self.blocks:
-            if node_id in forward_length_dict:
+            if (node_id in forward_length_dict) and (-node_id in back_length_dict):
                 start_length = forward_length_dict[node_id]
                 end_length = back_length_dict[-node_id]
-            else:
+            elif (-node_id in forward_length_dict) and (node_id in back_length_dict):
                 # Use reverse node
                 start_length = forward_length_dict[-node_id]
                 end_length = back_length_dict[node_id]
+            else:
+                print("######ID", self.id, node_id)
+                print(self.adj_list[node_id], self.adj_list[-node_id])
+                print(self.reverse_adj_list[-node_id],
+                      self.reverse_adj_list[node_id])
+                print(self._start_node, self._end_node)
+                raise Exception()
 
             path_length = start_length + end_length + self.node_size(node_id)
-            scale_factor = self.length()/path_length
-            if scale_factor >= 1:
+            scale_factor = self.length() / path_length
+            if scale_factor < 1:
+                print("######ID", self.id)
                 print("%s, %s, %s, %s, %s" % (start_length, end_length, self.node_size(node_id),
                                                           self.length(), node_id))
-                for node_id in self.blocks:
-                    print(node_id, self.blocks[node_id].length())
-                    print(forward_length_dict)
-                    print(back_length_dict)
-                    print(self.adj_list)
+                print(self.adj_list[node_id], self.adj_list[-node_id])
+                print(self.reverse_adj_list[-node_id],
+                      self.reverse_adj_list[node_id])
+                print(self._start_node, self._end_node)
+                # for node_id in self.blocks:
+                #     print(node_id, self.blocks[node_id].length())
+                # print(forward_length_dict)
+                # print(back_length_dict)
+                # print(self.adj_list)
                 raise Exception("Low scale factor")
 
             linear_node_intervals[node_id] = (
@@ -257,7 +270,8 @@ class SimpleSnarl():
         self.parent = parent_id
 
     def __str__(self):
-        return "Snarl(%d, %d, id=%d, parent=%s)" % (self.start, self.end, self.id, self.parent)
+        return "Snarl(%d, %d, id=%d, parent=%s)" % (
+            self.start, self.end, self.id, self.parent)
 
     def __repr__(self):
         return self.__str__()
@@ -269,12 +283,14 @@ class SimpleSnarl():
 
 class SnarlGraphBuilder:
 
-    def __init__(self, graph, snarls):
+    def __init__(self, graph, snarls, id_counter=0):
         self.graph = graph
         self.snarls = snarls  # dict of snarls, id: SimpleSnarls
+        self.id_counter = id_counter
 
     def build_snarl_graphs(self):
-        top_level_snarls = [snarl for snarl in self.snarls.values() if snarl.parent is None]
+        top_level_snarls = [snarl for snarl in self.snarls.values()
+                            if snarl.parent is None]
 
         # Find all snarls with 0 nodes
         n_zero_nodes = 0
@@ -286,20 +302,21 @@ class SnarlGraphBuilder:
                 n_zero_nodes += 1
 
         # Add dummy start and end to graph
-        new_start = self.graph.max_block_id() + 1
+        new_start = self.id_counter
         new_end = new_start + 1
 
+        print("STARTS")
+        print("?", self.graph.adj_list[1], self.graph.reverse_adj_list[-1])
         for block in self.graph.get_first_blocks():
+            print(block)
             self.graph._add_edge(new_start, block)
-
+        print("?", self.graph.adj_list[1], self.graph.reverse_adj_list[-1])
+        print("ENDS")
         for block in self.graph.get_last_blocks():
+            print(block)
             self.graph._add_edge(block, new_end)
 
-        #self.graph.blocks[new_start] = obg.Block(0)
-        #self.graph.blocks[new_end] = obg.Block(0)
-
         logging.info("%d snarls with 0 nodes" % n_zero_nodes)
-
         logging.info("%d top level" % len(top_level_snarls))
         logging.info("%d snarls total" % len(self.snarls))
 
@@ -324,7 +341,6 @@ class SnarlGraphBuilder:
         for snarl in snarls:
 
             assert snarl.start.backward == snarl.end.backward
-
             start = snarl.start.node_id
             end = snarl.end.node_id
 
@@ -358,4 +374,4 @@ class SnarlGraphBuilder:
                         logging.warning("Found with parent that is missing")
                         logging.warning(snarl)
 
-        return cls(graph, simple_snarls)
+        return cls(graph, simple_snarls, id_counter)
