@@ -1,3 +1,4 @@
+import pickle
 import numpy as np
 from .sparsepileup import ValuedIndexes
 from .linearintervals import LinearIntervalCollection
@@ -5,9 +6,8 @@ from .linearintervals import LinearIntervalCollection
 
 class LinearSnarlMap(object):
     def __init__(self, snarl_graph, graph):
-        self._snarl_graph = snarl_graph
         self._graph = graph
-        self._length = self._snarl_graph.length()
+        self._length = snarl_graph.length()
         self._linear_node_starts, self._linear_node_ends = snarl_graph.get_distance_dicts()
 
     def get_node_start(self, node_id):
@@ -65,3 +65,15 @@ class LinearSnarlMap(object):
             starts.append(start)
             ends.append(end)
         return LinearIntervalCollection(starts, ends)
+
+    def to_file(self, file_name):
+        with open("%s" % file_name, "wb") as f:
+            pickle.dump(self, f)
+
+    @classmethod
+    def from_file(cls, file_name):
+        with open("%s" % file_name, "rb") as f:
+            obj = pickle.loads(f.read())
+            assert isinstance(obj, cls)
+            return obj
+
