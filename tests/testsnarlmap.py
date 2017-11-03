@@ -49,13 +49,16 @@ class TestSnarlMap(unittest.TestCase):
         unmapped_indices = {node_id: UnmappedIndices(
             idxs, [values[idx] for idx in idxs])
                             for node_id, idxs in unmapped_indices.items()}
-        
+
         vis = {3: (np.array(all_indices)*31/20, np.array(list(range(7)))),
                5: (np.array([0, 5]), np.array([0, 1])),
-               12: ((np.array(all_indices[2:])-10)*21/20, np.array(list(range(2, 7)))),
-               13: ((np.array(all_indices[2:])-10, np.array(list(range(2, 7)))))}
+               12: ((np.array(all_indices[2:])-10)*21/20,
+                    np.array(list(range(2, 7)))),
+               13: ((np.array(all_indices[2:])-10,
+                     np.array(list(range(2, 7)))))}
         vis = {node_id: ValuedIndexes(
-            val[0][1:], val[1][1:], val[1][0], graph.node_size(node_id))
+            val[0][1:].astype("int"), val[1][1:],
+            val[1][0], graph.node_size(node_id))
                for node_id, val in vis.items()}
         mapped_vis = self.snarl_map.to_graph_pileup(unmapped_indices)
         self.assertEqual(mapped_vis, vis)
@@ -70,10 +73,13 @@ class TestLinearPileupMap(TestSnarlMap):
 
         vis = {3: (np.array(all_indices)*31/20, np.array(list(range(7)))),
                5: (np.array([0, 5]), np.array([0, 1])),
-               12: ((np.array(all_indices[2:])-10)*21/20, np.array(list(range(2, 7)))),
-               13: ((np.array(all_indices[2:])-10, np.array(list(range(2, 7)))))}
+               12: ((np.array(all_indices[2:])-10)*21/20,
+                    np.array(list(range(2, 7)))),
+               13: ((np.array(all_indices[2:])-10,
+                     np.array(list(range(2, 7)))))}
         vis = {node_id: ValuedIndexes(
-            val[0][1:], val[1][1:], val[1][0], graph.node_size(node_id))
+            val[0][1:].astype("int"), val[1][1:], val[1][0],
+            graph.node_size(node_id))
                for node_id, val in vis.items()}
         mapped_vis = linear_pileup.to_valued_indexes(self.snarl_map)
         for node_id in mapped_vis:

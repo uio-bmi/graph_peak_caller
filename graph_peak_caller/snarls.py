@@ -106,9 +106,15 @@ class SnarlGraph(obg.GraphWithReversals):
         return memo[self._end_node]
 
     def _create_path_length_dict(self, forward=True):
-        start_node = self._start_node if forward else -self._end_node
-        end_node = self._end_node if forward else -self._start_node
-        next_node_func = self.get_next_nodes if forward else self.get_previous_nodes
+        if forward:
+            start_node = self._start_node
+            end_node = self._end_node
+            next_node_func = self.get_next_nodes
+        else:
+            start_node = -self._end_node
+            end_node = -self._start_node
+            next_node_func = self.get_previous_nodes
+
         stack = deque([(start_node, 0)])
         memo = defaultdict(int)
         while stack:
@@ -127,8 +133,6 @@ class SnarlGraph(obg.GraphWithReversals):
     def _get_linear_start_and_end_pos(self):
         self._forward_length_dict = self._create_path_length_dict()
         self._back_length_dict = self._create_path_length_dict(False)
-        print(self._forward_length_dict)
-        print(self._back_length_dict)
 
     def _get_linear_mapped_node_intervals(self):
         self.linear_node_intervals = {}
