@@ -39,7 +39,8 @@ class SnarlGraph(obg.GraphWithReversals):
         return self.reverse_adj_list[node_id]
 
     def node_size(self, node_id):
-        return self._blocks[abs(node_id)].length()
+        length = self._blocks[abs(node_id)].length()
+        assert length > 0
 
     def create_children(self):
         for child in self.children:
