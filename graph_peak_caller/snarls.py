@@ -27,9 +27,6 @@ class SnarlGraph(obg.GraphWithReversals):
 
     def _create_distance_dicts(self):
         self._get_linear_start_and_end_pos()
-
-        print("Init snarl with blocks: %s, edge: %s, start/end: %s/%s" % (blocks, edges, start_node, end_node))
-
         self._get_linear_mapped_node_intervals()
 
     def get_next_nodes(self, node_id):
@@ -96,10 +93,6 @@ class SnarlGraph(obg.GraphWithReversals):
         traverser = GraphTravserserBetweenNodes(parent_snarl_graph)
         subgraph = traverser.get_snarl_subgraph(
             simple_snarl.start, simple_snarl.end, include_start_and_end=False)
-
-        print("Simple snarl")
-        print(simple_snarl)
-        print(subgraph)
 
         return subgraph.blocks, SnarlGraph(
             subgraph.blocks, subgraph.adj_list, simple_snarl.id,

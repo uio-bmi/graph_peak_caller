@@ -37,10 +37,12 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
     ob_graph = vg_graph.get_offset_based_graph()
     ob_graph.to_file("obgraph")
 
-    builder = SnarlGraphBuilder.from_vg_snarls(ob_graph, "haplo1kg50-mhc.snarls")
+    builder = SnarlGraphBuilder.from_vg_snarls(ob_graph.copy(), "haplo1kg50-mhc.snarls")
     snarlgraph = builder.build_snarl_graphs()
-    snarlgraph.to_file("haplo1kg50-mhc.snarlgraph")
-    snarlgraph = SnarlGraph.from_file("haplo1kg50-mhc.snarlgraph")
+    snarlgraph._create_distance_dicts()
+    
+    #snarlgraph.to_file("haplo1kg50-mhc.snarlgraph")
+    #snarlgraph = SnarlGraph.from_file("haplo1kg50-mhc.snarlgraph")
 
     #ob_graph = obg.GraphWithReversals.from_file("obgraph")
     graph_size = sum(block.length() for block in ob_graph.blocks.values())

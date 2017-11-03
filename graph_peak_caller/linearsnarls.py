@@ -11,7 +11,7 @@ def create_control(graph, snarl_graph, reads, extension_sizes):
     """
     :param snarl_graph: Hierarchical snarl graph
     """
-    linear_map = LinearSnarlMap(snarl_graph)
+    linear_map = LinearSnarlMap(snarl_graph, graph)
 
     linear_size = linear_map._length
     mapped_reads = linear_map.map_interval_collection(reads)
