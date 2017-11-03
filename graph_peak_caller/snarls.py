@@ -181,19 +181,7 @@ class SnarlGraph(obg.GraphWithReversals):
             path_length = start_length + end_length + self.node_size(node_id)
             scale_factor = self.length() / path_length
             if scale_factor < 1:
-                print("######ID", self.id)
-                print("%s, %s, %s, %s, %s" % (start_length, end_length, self.node_size(node_id),
-                                                          self.length(), node_id))
-                print(self.adj_list[node_id], self.adj_list[-node_id])
-                print(self.reverse_adj_list[-node_id],
-                      self.reverse_adj_list[node_id])
-                print(self._start_node, self._end_node)
-                # for node_id in self.blocks:
-                #     print(node_id, self.blocks[node_id].length())
-                # print(forward_length_dict)
-                # print(back_length_dict)
-                # print(self.adj_list)
-                raise Exception("Low scale factor")
+                raise Exception()
 
             linear_node_intervals[node_id] = (
                 start_length * scale_factor,
