@@ -1,5 +1,6 @@
 import numpy as np
 from .sparsepileup import ValuedIndexes
+from .linearintervals import LinearIntervalCollection
 
 
 class LinearSnarlMap(object):
@@ -16,7 +17,8 @@ class LinearSnarlMap(object):
         return self._linear_node_ends[node_id]
 
     def get_scale_and_offset(self, node_id):
-        linear_length = self.get_node_end(node_id) - self.get_node_start(node_id)
+        linear_length = self.get_node_end(node_id) \
+                        - self.get_node_start(node_id)
         node_length = self._graph.node_size(node_id)
         scale = linear_length/node_length
         offset = self.get_node_start(node_id)
