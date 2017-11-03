@@ -21,6 +21,8 @@ class SnarlGraph(obg.GraphWithReversals):
         self.id = id
         self.create_children()
         self._length = None
+        logging.info("Init snarl graph %s, %s" % (start_node, end_node))
+        self._create_distance_dicts()
 
     def _create_distance_dicts(self):
         self._get_linear_start_and_end_pos()
@@ -48,6 +50,8 @@ class SnarlGraph(obg.GraphWithReversals):
             self.blocks[child.id] = child_graph
 
             for node_id in child_blocks.keys():
+                if node_id == 2:
+                    print("Deleting edges to/from %d" % node_id)
 
                 if node_id == child.start or node_id == child.end:
                     continue
@@ -68,12 +72,26 @@ class SnarlGraph(obg.GraphWithReversals):
 
     def _delete_edges_to_and_from_node(self, node_id):
         if node_id in self.adj_list:
+            if node_id == 2:
+                print("Deleted")
             del self.adj_list[node_id]
             del self.reverse_adj_list[-node_id]
 
         if -node_id in self.adj_list:
+            if node_id == 2:
+                print("Deleted")
+
             del self.adj_list[-node_id]
             del self.reverse_adj_list[node_id]
+
+        if -node_id in self.reverse_adj_list:
+            for other in self.reverse_adj_list[-node_id]:
+                self._delete_edge(-other, -node_id)
+
+        if node_id in self.reverse_adj_list:
+            for other in self.reverse_adj_list[node_id]:
+                self._delete_edge(-other, node_id)
+
 
     def _delete_edge(self, from_node, to_node):
         if to_node in self.adj_list[from_node]:
@@ -110,6 +128,8 @@ class SnarlGraph(obg.GraphWithReversals):
         return memo[self._end_node]
 
     def _create_path_length_dict(self, forward=True):
+
+        print(self.blocks.keys())
         if forward:
             start_node = self._start_node
             end_node = self._end_node
