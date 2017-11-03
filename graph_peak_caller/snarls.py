@@ -21,14 +21,6 @@ class SnarlGraph(obg.GraphWithReversals):
         self.id = id
         self.create_children()
         self._length = None
-        print("Init snarl graph %s, %s" % (start_node, end_node))
-        self._create_distance_dicts()
-
-    def _create_distance_dicts(self):
-        print("Creating distance dict for %s" % self.id)
-        print(self)
-        self._get_linear_start_and_end_pos()
-        self._get_linear_mapped_node_intervals()
 
     def get_next_nodes(self, node_id):
         if node_id not in self.adj_list:
@@ -56,9 +48,6 @@ class SnarlGraph(obg.GraphWithReversals):
 
             self.blocks[child.id] = child_graph
             for node_id in child_blocks.keys():
-                if node_id == 2:
-                    print("Deleting edges to/from %d" % node_id)
-
                 if node_id == child.start or node_id == child.end:
                     continue
 
@@ -170,32 +159,33 @@ class SnarlGraph(obg.GraphWithReversals):
 
         return memo
 
-    def _get_linear_start_and_end_pos(self):
-        self._forward_length_dict = self._create_path_length_dict()
-        self._back_length_dict = self._create_path_length_dict(False)
-
-    def _get_linear_mapped_node_intervals(self):
-        self.linear_node_intervals = {}
+    def get_linear_node_intervals(self):
+        linear_node_intervals = {}
+        forward_length_dict = self._create_path_length_dict()
+        back_length_dict = self._create_path_length_dict(False)
         for node_id in self.blocks:
-            if node_id in self._forward_length_dict:
-                start_length = self._forward_length_dict[node_id]
-                end_length = self._back_length_dict[-node_id]
+            if node_id in forward_length_dict:
+                start_length = forward_length_dict[node_id]
+                end_length = back_length_dict[-node_id]
             else:
                 # Use reverse node
-                start_length = self._forward_length_dict[-node_id]
-                end_length = self._back_length_dict[node_id]
+                start_length = forward_length_dict[-node_id]
+                end_length = back_length_dict[node_id]
 
             path_length = start_length + end_length + self.node_size(node_id)
             scale_factor = self.length()/path_length
-            self.linear_node_intervals[node_id] = (
+            linear_node_intervals[node_id] = (
                 start_length * scale_factor,
                 (start_length+self.node_size(node_id))*scale_factor)
 
+        return linear_node_intervals
+
     def get_distance_dicts(self):
         starts_dict, ends_dict = {}, {}
+        linear_node_intervals = self.get_linear_node_intervals()
         for node_id, block in self.blocks.items():
             # TODO: Also get reverse distances
-            start, end = self.linear_node_intervals[node_id]
+            start, end = linear_node_intervals[node_id]
             if isinstance(block, obg.Block):
                 starts_dict[node_id] = start
                 ends_dict[node_id] = end
@@ -206,7 +196,8 @@ class SnarlGraph(obg.GraphWithReversals):
                      for n_id, dist in sub_starts_dict.items()})
                 ends_dict.update({n_id: start + dist
                                   for n_id, dist in sub_ends_dict.items()})
-
+        for node_id in starts_dict.keys():
+            assert starts_dict[node_id] != ends_dict[node_id]
         return starts_dict, ends_dict
 
     def find_node_ids(self, offset):
