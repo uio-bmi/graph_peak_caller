@@ -175,6 +175,7 @@ class SnarlGraph(obg.GraphWithReversals):
 
             path_length = start_length + end_length + self.node_size(node_id)
             scale_factor = self.length()/path_length
+            assert scale_factor >= 1
             linear_node_intervals[node_id] = (
                 start_length * scale_factor,
                 (start_length+self.node_size(node_id))*scale_factor)
