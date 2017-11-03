@@ -1,8 +1,8 @@
 import numpy as np
 from .snarls import SnarlGraph
-from .sparsepileup import SparsePileup
-from .util import sparse_maximum
+from .sparsepileup import SparsePileup, starts_and_ends_to_sparse_pileup
 from .snarlmaps import LinearSnarlMap
+from .util import sparse_maximum, sanitize_indices_and_values
 
 
 def create_control(graph, snarls, reads, extension_sizes):
@@ -58,27 +58,15 @@ class UnmappedIndices(object):
 
 
 class LinearPileup(object):
-    def __init__(self, indices, values, snarl_graph=None):
-        self._snarl_graph = snarl_graph
+    def __init__(self, indices, values):
         self.indices = indices
         self.values = values
 
-    def from_starts_and_ends(self, startends):
-        n = len(startends)
-        self.starts = np.empty(n, dtype="int")
-        self.ends = np.empty(n, dtype="int")
-        for i, startend in enumerate(startends):
-            self.starts[i] = startend[0]
-            self.ends[i] = startend[1]
-
     @classmethod
-    def create_from_starts_and_ends(cls, starts, ends, snarl_graph=None):
-        indices = np.zeros(len(starts)*2)
-        values = np.zeros(len(starts)*2)
-        indices[0:len(indices):2] = starts
-        indices[1:len(indices):2] = ends
-        values[0:len(indices):2] = 1
-        return LinearPileup(indices, values, snarl_graph=snarl_graph)
+    def create_from_starts_and_ends(cls, starts, ends):
+        indices, values = starts_and_ends_to_sparse_pileup(starts, ends)
+        indices, values = sanitize_indices_and_values(indices, values)
+        return LinearPileup(indices, values)
 
     def to_valued_indexes(self, linear_map):
         event_sorter = self.get_event_sorter()
