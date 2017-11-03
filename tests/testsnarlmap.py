@@ -82,10 +82,6 @@ class TestLinearPileupMap(TestSnarlMap):
             graph.node_size(node_id))
                for node_id, val in vis.items()}
         mapped_vis = linear_pileup.to_valued_indexes(self.snarl_map)
-        for node_id in mapped_vis:
-            print(mapped_vis[node_id])
-            print(vis[node_id])
-            print("-----------------")
         self.assertEqual(mapped_vis, vis)
 
 
