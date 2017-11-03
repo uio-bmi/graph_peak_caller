@@ -65,6 +65,8 @@ class LinearPileup(object):
                             for node_id in node_start_values]
         node_end_idxs = [linear_map.get_node_end(node_id)
                          for node_id in node_end_values]
+        for start_idx, end_idx in zip(node_starts_idxs, node_end_idxs):
+            assert start_idx < end_idx
         idxs = [node_end_idxs, self.indices, node_starts_idxs]
         values = [node_end_values, self.values, node_start_values]
         event_sorter = EventSorter(idxs, values, names=["NODE_END",

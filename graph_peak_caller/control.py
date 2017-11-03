@@ -8,6 +8,7 @@ from .areas import ValuedAreas
 from offsetbasedgraph.interval import IntervalCollection
 import logging
 
+
 class ControlTrack(object):
 
     def __init__(self, graph, intervals, fragment_length, extensions):
