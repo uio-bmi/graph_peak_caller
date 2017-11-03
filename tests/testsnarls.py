@@ -2,6 +2,7 @@ import unittest
 from offsetbasedgraph import Graph, Block
 from graph_peak_caller.snarls import SimpleSnarl, SnarlGraphBuilder, SnarlGraph
 
+
 class SnarlsTests(unittest.TestCase):
     def setUp(self):
         self.simple_graph = Graph(
