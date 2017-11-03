@@ -21,7 +21,7 @@ class SnarlGraph(obg.GraphWithReversals):
         self.id = id
         self.create_children()
         self._length = None
-        logging.info("Init snarl graph %s, %s" % (start_node, end_node))
+        print("Init snarl graph %s, %s" % (start_node, end_node))
         self._create_distance_dicts()
 
     def _create_distance_dicts(self):
@@ -150,6 +150,7 @@ class SnarlGraph(obg.GraphWithReversals):
         memo = defaultdict(int)
         while stack:
             node_id, dist = stack.pop()
+            print("   Path length, node id %d" % node_id)
             for next_node in next_node_func(node_id):
                 if memo[next_node] > dist:
                     continue
