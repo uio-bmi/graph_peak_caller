@@ -1,7 +1,10 @@
+import numpy as np
 import unittest
 import offsetbasedgraph as obg
 from test_snarls import snarl_graph1, snarl_graph2
+from graph_peak_caller.linearsnarls import UnmappedIndices
 from graph_peak_caller.snarlmaps import LinearSnarlMap
+from graph_peak_caller.sparsepileup import ValuedIndexes
 
 graph = obg.GraphWithReversals(
     {3: obg.Block(20), 5: obg.Block(10),
@@ -34,6 +37,28 @@ class TestSnarlMap(unittest.TestCase):
         self.assertEqual(mapped_interval, (self.linear_positions[0],
                                            self.linear_positions[2]), [5, 12])
 
+    def test_to_graph_pileup(self):
+        """[0, 5, 10, 15, 20, 25, 30]"""
+        all_indices = [0, 5, 10, 15, 20, 25, 30]
+        values = {idx: i for i, idx in enumerate(all_indices)}
+        unmapped_indices = {3: all_indices[:],
+                            5: [0, 5],
+                            12: all_indices[2:],
+                            13: all_indices[2:]}
+
+        unmapped_indices = {node_id: UnmappedIndices(
+            idxs, [values[idx] for idx in idxs])
+                            for node_id, idxs in unmapped_indices.items()}
+        
+        vis = {3: (np.array(all_indices)*31/20, np.array(list(range(7)))),
+               5: (np.array([0, 5]), np.array([0, 1])),
+               12: ((np.array(all_indices[2:])-10)*21/20, np.array(list(range(2, 7)))),
+               13: ((np.array(all_indices[2:])-10, np.array(list(range(2, 7)))))}
+        vis = {node_id: ValuedIndexes(
+            val[0][1:], val[1][1:], val[1][0], graph.node_size(node_id))
+               for node_id, val in vis.items()}
+        mapped_vis = self.snarl_map.to_graph_pileup(unmapped_indices)
+        self.assertEqual(mapped_vis, vis)
 
 if __name__ == "__main__":
     unittest.main()

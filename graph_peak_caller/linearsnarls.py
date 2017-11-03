@@ -48,9 +48,9 @@ class EventSorter(object):
 
 
 class UnmappedIndices(object):
-    def __init__(self):
-        self.indices = []
-        self.values = []
+    def __init__(self, indices=None, values=None):
+        self.indices = [] if indices is None else indices
+        self.values = [] if values is None else values
 
     def add_indexvalue(self, index, value):
         self.indices.append(index)
@@ -69,7 +69,7 @@ class LinearPileup(object):
         return LinearPileup(indices, values)
 
     def to_valued_indexes(self, linear_map):
-        event_sorter = self.get_event_sorter()
+        event_sorter = self.get_event_sorter(linear_map)
         unmapped_indices = self.from_event_sorter(event_sorter)
         vi_dict = linear_map.to_graph_pileup(unmapped_indices)
         return vi_dict
