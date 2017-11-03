@@ -122,8 +122,8 @@ class SnarlGraph(obg.GraphWithReversals):
     def length(self):
         if self._length is not None:
             return self._length
-        assert self._length > 0, str(self.blocks)
         self._length = self._get_longest_path_length()
+        assert self._length > 0, str(self.blocks) + str(self.adj_list)
         return self._length
 
     def _get_longest_path_length(self):
