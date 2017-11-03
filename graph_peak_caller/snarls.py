@@ -180,6 +180,7 @@ class SnarlGraph(obg.GraphWithReversals):
                     print(forward_length_dict)
                     print(back_length_dict)
                     print(self.adj_list)
+                raise Exception("Low scale factor")
 
             linear_node_intervals[node_id] = (
                 start_length * scale_factor,
