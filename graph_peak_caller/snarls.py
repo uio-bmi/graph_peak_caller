@@ -42,7 +42,10 @@ class SnarlGraph(obg.GraphWithReversals):
         return length
 
     def create_children(self):
-        for child in self.children:
+        n_childs = len(self.children)
+        for i, child in enumerate(self.children):
+            if self.id == "top_level":
+                print("Snarl %s of %s" % (i, n_childs))
             assert child.id != self.id, "Child ID %d equal as parent" % child.id
             child_blocks, child_graph = SnarlGraph.create_from_simple_snarl(child, self)
 
@@ -50,7 +53,6 @@ class SnarlGraph(obg.GraphWithReversals):
                 continue
 
             self.blocks[child.id] = child_graph
-
             for node_id in child_blocks.keys():
                 if node_id == 2:
                     print("Deleting edges to/from %d" % node_id)
@@ -78,6 +80,7 @@ class SnarlGraph(obg.GraphWithReversals):
             for edge in edges:
                 self.reverse_adj_list[-edge].remove(-node_id)
             del self.adj_list[node_id]
+
         if -node_id in self.reverse_adj_list:
             edges = self.reverse_adj_list[-node_id]
             for edge in edges:
@@ -121,8 +124,6 @@ class SnarlGraph(obg.GraphWithReversals):
         if self._length is not None:
             return self._length
         self._length = self._get_longest_path_length()
-        print("Getting length for edges:", sum(len(e) for e in self.adj_list.values()))
-        assert self._length > 0, str(self.blocks) + str(self.adj_list)
         return self._length
 
     def _get_longest_path_length(self):
@@ -130,13 +131,6 @@ class SnarlGraph(obg.GraphWithReversals):
         return memo[self._end_node]
 
     def _create_path_length_dict(self, forward=True):
-        print("-----------------------", forward)
-        print(self._start_node, self._end_node)
-        print(self.blocks.keys())
-        if forward:
-            print(self.adj_list)
-        else:
-            print(self.reverse_adj_list)
         if forward:
             start_node = self._start_node
             end_node = self._end_node

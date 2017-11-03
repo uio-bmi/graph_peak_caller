@@ -4,8 +4,8 @@ import numpy as np
 class LinearIntervalCollection(object):
 
     def __init__(self, starts, ends):
-        self.starts = starts
-        self.ends = ends
+        self.starts = np.array(starts)
+        self.ends = np.array(ends)
 
     def extend(self, extension_size):
         extended_starts = (self.starts + self.ends)/2 - extension_size
