@@ -5,6 +5,29 @@ import offsetbasedgraph as obg
 data_folder = "graph_peak_caller/dm_test_data/"
 
 
+from graph_peak_caller.util import sparse_maximum, sanitize_indices_and_values
+import numpy as np
+import sys
+
+#indices, values = sanitize_indices_and_values(np.array([1, 1, 4, 4]), np.array([4, 4, 2, 2]))
+#print(indices)
+#print(values)
+#sys.exit()
+
+
+indices1 = np.array([0, 4])
+values1 = np.array([0, 3])
+indices2 = np.array([0, 4])
+values2 = np.array([1, 2])
+
+
+max_indices, max_values = sparse_maximum(indices1, values1, indices2, values2, 10)
+print(max_indices)
+print(max_values)
+
+
+
+
 def create_graphs():
     pyvg.util.vg_to_offsetbasedgraphs_per_chromosome(
         data_folder + "x.json", data_folder + "obg")
@@ -23,14 +46,15 @@ def translate_intervals(interval_file, limimt_to_chromosome=None):
 
 
 if __name__ == "__main__":
+    pass
     #create_graphs()
-    chromosome = "chr2R"
+    #chromosome = "chr2R"
     #translate_intervals("reads3.json", chromosome)
 
-    obg = obg.Graph.from_file(data_folder+"obg%s.tmp" % chromosome)
-    caller = CallPeaks(data_folder + "obg%s.tmp" % chromosome,
-                       data_folder + "intervals_" + chromosome, verbose=True)
-    caller.run()
+    #obg = obg.Graph.from_file(data_folder+"obg%s.tmp" % chromosome)
+    #caller = CallPeaks(data_folder + "obg%s.tmp" % chromosome,
+    #                   data_folder + "intervals_" + chromosome, verbose=True)
+    #caller.run()
 
     #caller.create_graph()
     #

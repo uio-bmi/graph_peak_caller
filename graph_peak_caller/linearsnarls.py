@@ -1,14 +1,25 @@
 import numpy as np
+from .snarls import SnarlGraph
+from .sparsepileup import SparsePileup, ValuedIndexes
+from .util import sparse_maximum
 
-def create_control(graph, snarls, reads, d):
+def create_control(graph, snarls, reads, extension_sizes):
     snarl_graph = SnarlGraph(graph, snarls)
     linear_map = LinearSnarlMap(snarl_graph)
-    mapped_reads = (linear_map.map_graph_interval(read)
-                    for read in reads)
-    extended_reads = (((start+end)/2-d, start+end/2+d) for start, end in
-                      mapped_reads)
-    linear_pileup = LinearPileup.from_starts_and_ends(extended_reads)
-    valued_indexes = linear_pileup.to_valued_indexes()
+
+    linear_size = linear_map._length
+    mapped_reads = linear_map.map_interval_collection(reads)
+    average_value = mapped_reads.n_basepairs_covered() / linear_size
+
+    max_pileup = LinearPileup([], [], snarl_graph)
+    for extension in extension_sizes:
+        linear_pileup = mapped_reads.extend(extension)
+        max_pileup = max_pileup.max(linear_pileup)
+
+    max_pileup.threshold(average_value)
+
+
+    valued_indexes = max_pileup.to_valued_indexes()
     graph_pileup = SparsePileup(graph)
     graph_pileup.data = valued_indexes
     return graph_pileup
@@ -44,8 +55,10 @@ class UnmappedIndices(object):
 
 
 class LinearPileup(object):
-    def __init__(self, snarl_graph):
+    def __init__(self, indices, values, snarl_graph=None):
         self._snarl_graph = snarl_graph
+        self.indices = indices
+        self.values = values
 
     def from_starts_and_ends(self, startends):
         n = len(startends)
@@ -54,6 +67,15 @@ class LinearPileup(object):
         for i, startend in enumerate(startends):
             self.starts[i] = startend[0]
             self.ends[i] = startend[1]
+
+    @classmethod
+    def create_from_starts_and_ends(cls, starts, ends, snarl_graph=None):
+        indices = np.zeros(len(starts)*2)
+        values = np.zeros(len(starts)*2)
+        indices[0:len(indices):2] = starts
+        indices[1:len(indices):2] = ends
+        values[0:len(indices):2] = 1
+        return LinearPileup(indices, values, snarl_graph=snarl_graph)
 
     def to_valued_indexes(self, linear_map):
         event_sorter = self.get_event_sorter()
@@ -105,6 +127,34 @@ class LinearPileup(object):
                 [node.append((idx, value)) for node in cur_nodes]
 
 
+    def maximum(self, other):
+        indices, values = sparse_maximum(self.indices, self.values,
+                                         other.indices, other.values,
+                                         max(self.values[-1], other.values[-1]) + 1)
+        self.indices = indices
+        self.values = values
+
+    def threshold(self, value):
+        self.values = np.maximum(self.values, value)
+
+
+class LinearIntervalCollection(object):
+
+    def __init__(self, starts, ends):
+        self.starts = starts
+        self.ends = ends
+
+    def extend(self, extension_size):
+        extended_starts = (self.starts + self.ends)/2 - extension_size
+        extended_ends = (self.starts + self.ends)/2 + extension_size
+        linear_pileup = LinearPileup.create_from_starts_and_ends(
+                extended_starts, extended_ends)
+        return linear_pileup
+
+    def n_basepairs_covered(self):
+        return np.sum(self.ends - self.starts)
+
+
 class LinearSnarlMap(object):
     def __init__(self, snarl_graph):
         self._snarl_graph = snarl_graph
@@ -148,3 +198,14 @@ class LinearSnarlMap(object):
     @classmethod
     def from_snarl_graph(cls, snarl_graph):
         return cls(snarl_graph)
+
+    def map_interval_collection(self, interval_collection):
+        starts = []
+        ends = []
+        for interval in interval_collection:
+            start, end = self.map_graph_interval(interval)
+            starts.append(start)
+            ends.append(end)
+
+        return LinearIntervalCollection(starts, ends)
+
