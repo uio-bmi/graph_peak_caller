@@ -12,7 +12,7 @@ snarl_graph1 = SnarlGraph(
     {12: Block(20), 13: Block(21)},
     {11: [12, 13], 12: [14], 13: [14]},
     start_node=11, end_node=14)
-
+snarl_graph1._create_distance_dicts()
 
 """
    3   -
@@ -23,6 +23,8 @@ snarl_graph2 = SnarlGraph(
     {2: snarl_graph1, 5: Block(10), 3: Block(20)},
     {1: [3, 5], 5: [2], 2: [4], 3: [4]},
     start_node=1, end_node=4)
+
+snarl_graph2._create_distance_dicts()
 
 
 class TestSnarlGraph(unittest.TestCase):

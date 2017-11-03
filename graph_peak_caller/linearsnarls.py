@@ -31,7 +31,6 @@ def create_control(graph, snarl_graph, reads, extension_sizes):
     return graph_pileup
 
 
-
 class UnmappedIndices(object):
     def __init__(self, indices=None, values=None):
         self.indices = [] if indices is None else indices
