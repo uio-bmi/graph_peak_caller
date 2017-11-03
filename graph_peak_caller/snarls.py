@@ -21,6 +21,7 @@ class SnarlGraph(obg.GraphWithReversals):
         self.create_children()
         self._get_linear_start_and_end_pos()
         self._get_linear_mapped_node_intervals()
+        self._length = None
 
     def get_next_nodes(self, node_id):
         if node_id not in self._edges:
@@ -246,6 +247,7 @@ class SnarlGraphBuilder:
     @classmethod
     #@filecache(24*60*60)
     def from_vg_snarls(cls, graph, vg_snarls_file_name):
+        logging.info("Building snarlgraph from vg graph")
         snarls = Snarls.from_vg_snarls_file(vg_snarls_file_name).snarls
         start_end_mapping = {}
         simple_snarls = {}

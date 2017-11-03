@@ -12,6 +12,7 @@ from graph_peak_caller.subgraphcollection import SubgraphCollection
 from graph_peak_caller.areas import BinaryContinousAreas
 from graph_peak_caller.peakscores import ScoredPeak
 import offsetbasedgraph as obg
+from graph_peak_caller.snarls import SnarlGraph, SnarlGraphBuilder
 
 import traceback
 import warnings
@@ -35,6 +36,12 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
     vg_graph = pyvg.Graph.create_from_file(vg_graph_file_name)
     ob_graph = vg_graph.get_offset_based_graph()
     ob_graph.to_file("obgraph")
+
+    builder = SnarlGraphBuilder.from_vg_snarls(ob_graph, "haplo1kg50-mhc.snarls")
+    snarlgraph = builder.build_snarl_graphs()
+    snarlgraph.to_file("haplo1kg50-mhc.snarlgraph")
+    snarlgraph = SnarlGraph.from_file("haplo1kg50-mhc.snarlgraph")
+
     #ob_graph = obg.GraphWithReversals.from_file("obgraph")
     graph_size = sum(block.length() for block in ob_graph.blocks.values())
     logging.info("Graph size: %d" % graph_size)
@@ -42,17 +49,18 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
 
     # print(ob_graph.blocks)
     reads_intervals = vg_gam_file_to_interval_collection(
-         None, gam_file_name, ob_graph, max_intervals=False)
+         None, gam_file_name, ob_graph, max_intervals=1000)
 
     control_intervals = vg_gam_file_to_interval_collection(
-         None, gam_control_file, ob_graph, max_intervals=False)
+         None, gam_control_file, ob_graph, max_intervals=1000)
 
     #experiment_info = callpeaks.ExperimentInfo(graph_size, 103, 50)
     experiment_info = callpeaks.ExperimentInfo(graph_size, 135, 36)
     caller = callpeaks.CallPeaks(
         ob_graph, reads_intervals, control_intervals,
         experiment_info=experiment_info,
-        out_file_base_name="real_data_", has_control=True)
+        out_file_base_name="real_data_", has_control=True,
+        snarlgraph=snarlgraph)
     caller.verbose = True
     caller.run()
     retriever = SequenceRetriever.from_vg_graph("cactus-mhc.vg")
@@ -95,9 +103,12 @@ def peak_sequences_to_fasta(vg_graph_file_name, peaks_file_name, fasta_file_name
         sequence = sequence_retriever.get_sequence_on_directed_node()
 
 
+
+
 if __name__ == "__main__":
     dm_folder = "../graph_peak_caller/dm_test_data/"
     #cProfile.run('run_with_gam("ENCFF000WVQ_filtered.gam", "cactus-mhc.json")')
     #cProfile.run('run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")')
     #run_from_max_paths_step()
-    run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")
+    #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")
+    run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "haplo1kg50-mhc.json")

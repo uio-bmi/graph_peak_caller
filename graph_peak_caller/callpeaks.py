@@ -11,6 +11,7 @@ from .bdgcmp import *
 from .extender import Extender
 from .areas import ValuedAreas, BinaryContinousAreas
 from .peakscores import ScoredPeak
+from . import linearsnarls
 IntervalCollection.interval_class = DirectedInterval
 
 
@@ -68,11 +69,14 @@ class ExperimentInfo(object):
 class CallPeaks(object):
     def __init__(self, graph, sample_intervals,
                  control_intervals=None, experiment_info=None, \
-                 verbose=False, out_file_base_name="", has_control=True):
+                 verbose=False, out_file_base_name="", has_control=True,
+                 snarlgraph=None):
         """
         :param sample_intervals: Either an interval collection or file name
         :param control_intervals: Either an interval collection or a file name
         """
+
+        assert snarlgraph is not None, "Snarlgraph cannot be None"
 
         assert isinstance(sample_intervals, IntervalCollection) \
                or isinstance(sample_intervals, str), \
@@ -87,6 +91,7 @@ class CallPeaks(object):
         self.sample_intervals = sample_intervals
         self.control_intervals = control_intervals
         self.has_control = has_control
+        self.snarlgraph = snarlgraph
 
         self._p_value_track = "p_value_track"
         self._q_value_track = "q_value_track"
@@ -189,26 +194,24 @@ class CallPeaks(object):
                 print("Graph already created")
 
     def create_control(self, save_to_file=True):
-        if self.verbose:
-            print("Creating control")
+        logging.info("Creating control track")
+
         extensions = [self.info.fragment_length, 2500, 5000] if self.has_control else [5000]
+        control_pileup = linearsnarls.create_control(self.graph, self.snarlgraph, self.control_intervals, extensions)
 
-        control_track = ControlTrack(
-            self.ob_graph, self.control_intervals,
-            self.info.fragment_length, extensions)
+        #control_track = ControlTrack(
+        #    self.ob_graph, self.control_intervals,
+        #    self.info.fragment_length, extensions)
+        #pileup = control_track.get_control_track(self._sample_pileup.mean())
 
-        print("N control reads: %d" % self.info.n_control_reads)
-        pileup = control_track.get_control_track(self._sample_pileup.mean())
-        # tracks = control_track.generate_background_tracks()
-        # background_value = self.info.n_control_reads*self.info.fragment_length/self.info.genome_size
-        # pileup = control_track.combine_backgrounds(tracks, background_value)
+        logging.info("Number of control reads: %d" % self.info.n_control_reads)
 
         if save_to_file:
             self._control_track = self.out_file_base_name + "control_track.bdg"
-            pileup.to_bed_graph(self._control_track)
+            control_pileup.to_bed_graph(self._control_track)
             print("Saved control pileup to " + self._control_track)
 
-        self._control_pileup = pileup
+        self._control_pileup = control_pileup
 
     def get_q_values(self):
         get_q_values_track_from_p_values(self.p_values)
