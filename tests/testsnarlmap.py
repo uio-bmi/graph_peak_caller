@@ -1,7 +1,7 @@
 import numpy as np
 import unittest
 import offsetbasedgraph as obg
-from test_snarls import snarl_graph1, snarl_graph2
+from test_snarls import snarl_graph2
 from graph_peak_caller.linearsnarls import UnmappedIndices, LinearPileup
 from graph_peak_caller.snarlmaps import LinearSnarlMap
 from graph_peak_caller.sparsepileup import ValuedIndexes

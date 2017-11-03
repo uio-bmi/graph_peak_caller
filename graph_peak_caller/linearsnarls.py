@@ -100,12 +100,14 @@ class LinearPileup(object):
                 else:
                     cur_nodes.remove(event[1])
             else:
-                [node.append((idx, value)) for node in cur_nodes]
+                [node.append((idx, value))
+                 for node in cur_nodes]
 
     def maximum(self, other):
         indices, values = sparse_maximum(self.indices, self.values,
                                          other.indices, other.values,
-                                         max(self.values[-1], other.values[-1]) + 1)
+                                         max(self.values[-1],
+                                             other.values[-1]) + 1)
         self.indices = indices
         self.values = values
 
