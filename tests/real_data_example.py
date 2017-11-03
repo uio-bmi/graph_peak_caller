@@ -36,6 +36,8 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
     vg_graph = pyvg.Graph.create_from_file(vg_graph_file_name)
     ob_graph = vg_graph.get_offset_based_graph()
     ob_graph.to_file("obgraph")
+    #print(ob_graph.node_size(701))
+    #return
 
     builder = SnarlGraphBuilder.from_vg_snarls(ob_graph.copy(), "haplo1kg50-mhc.snarls")
     snarlgraph = builder.build_snarl_graphs()
