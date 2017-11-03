@@ -21,10 +21,12 @@ class SnarlGraph(obg.GraphWithReversals):
         self.id = id
         self.create_children()
         self._length = None
-        logging.info("Init snarl graph %s, %s" % (start_node, end_node))
+        print("Init snarl graph %s, %s" % (start_node, end_node))
         self._create_distance_dicts()
 
     def _create_distance_dicts(self):
+        print("Creating distance dict for %s" % self.id)
+        print(self)
         self._get_linear_start_and_end_pos()
         self._get_linear_mapped_node_intervals()
 
@@ -95,6 +97,9 @@ class SnarlGraph(obg.GraphWithReversals):
     def _delete_edge(self, from_node, to_node):
         if to_node in self.adj_list[from_node]:
             self.adj_list[from_node].remove(to_node)
+
+        if -from_node in self.reverse_adj_list[-to_node]:
+            self.reverse_adj_list[-to_node].remove(-from_node)
 
     def _sanitize_graph(self):
         # Check that all edges goes to blocks that exists
