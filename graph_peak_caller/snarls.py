@@ -140,16 +140,13 @@ class SnarlGraph(obg.GraphWithReversals):
         cur_path = []
         while stack:
             node_id, dist, n = stack.pop()
-            # del cur_path[n:]
-            # cur_path.append(node_id)
             next_nodes = next_node_func(node_id)
             for next_node in next_nodes:
-                # if next_node in cur_path:
-                #    print("CYCLE")
-                #    continue
-                if memo[next_node] >= dist and dist > 0:
-                    continue
-                memo[next_node] = dist
+                if memo[next_node] >= dist:
+                    if dist > 0:
+                        continue
+                else:
+                    memo[next_node] = dist
                 if next_node == end_node:
                     continue
                 assert next_node != start_node
@@ -175,8 +172,15 @@ class SnarlGraph(obg.GraphWithReversals):
 
             path_length = start_length + end_length + self.node_size(node_id)
             scale_factor = self.length()/path_length
-            assert scale_factor >= 1, "%s, %s, %s, %s, %s" % (start_length, end_length, self.node_size(node_id),
-                                                          self.length(), node_id)
+            if scale_factor >= 1:
+                print("%s, %s, %s, %s, %s" % (start_length, end_length, self.node_size(node_id),
+                                                          self.length(), node_id))
+                for node_id in self.blocks:
+                    print(node_id, self.blocks[node_id].length())
+                    print(forward_length_dict)
+                    print(back_length_dict)
+                    print(self.adj_list)
+
             linear_node_intervals[node_id] = (
                 start_length * scale_factor,
                 (start_length+self.node_size(node_id))*scale_factor)
