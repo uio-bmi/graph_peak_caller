@@ -23,9 +23,11 @@ class SnarlGraph(obg.GraphWithReversals):
         self._edges = self.adj_list
         self._blocks = self.blocks
         self._length = None
+        self._length = None
+
+    def _create_distance_dicts(self):
         self._get_linear_start_and_end_pos()
         self._get_linear_mapped_node_intervals()
-        self._length = None
 
     def get_next_nodes(self, node_id):
         if node_id not in self._edges:
