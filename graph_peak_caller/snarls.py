@@ -23,8 +23,11 @@ class SnarlGraph(obg.GraphWithReversals):
         self._edges = self.adj_list
         self._blocks = self.blocks
         self._length = None
-        self._get_linear_start_and_end_pos()
-        self._get_linear_mapped_node_intervals()
+        #self._get_linear_start_and_end_pos()
+
+        print("Init snarl with blocks: %s, edge: %s, start/end: %s/%s" % (blocks, edges, start_node, end_node))
+
+        #self._get_linear_mapped_node_intervals()
         self._length = None
 
     def get_next_nodes(self, node_id):
@@ -91,10 +94,18 @@ class SnarlGraph(obg.GraphWithReversals):
         traverser = GraphTravserserBetweenNodes(parent_snarl_graph)
         subgraph = traverser.get_snarl_subgraph(
             simple_snarl.start, simple_snarl.end, include_start_and_end=False)
+
+        print("Simple snarl")
+        print(simple_snarl)
+        print(subgraph)
+
         return subgraph.blocks, SnarlGraph(
             subgraph.blocks, subgraph.adj_list, simple_snarl.id,
             parent=parent_snarl_graph,
-            children=simple_snarl.children)
+            children=simple_snarl.children,
+            start_node=simple_snarl.start,
+            end_node=simple_snarl.end
+        )
 
     def length(self):
         if self._length is not None:
@@ -240,12 +251,30 @@ class SnarlGraphBuilder:
             if end in self.graph.adj_list[start]:
                 n_zero_nodes += 1
 
+        # Add dummy start and end to graph
+        new_start = self.graph.max_block_id() + 1
+        new_end = new_start + 1
+
+        for block in self.graph.get_first_blocks():
+            self.graph._add_edge(new_start, block)
+
+        for block in self.graph.get_last_blocks():
+            self.graph._add_edge(block, new_end)
+
+        #self.graph.blocks[new_start] = obg.Block(0)
+        #self.graph.blocks[new_end] = obg.Block(0)
+
         logging.info("%d snarls with 0 nodes" % n_zero_nodes)
 
         logging.info("%d top level" % len(top_level_snarls))
         logging.info("%d snarls total" % len(self.snarls))
 
-        whole_graph_snarl = SnarlGraph(self.graph.blocks, self.graph.adj_list, "top_level", None, top_level_snarls)
+        whole_graph_snarl = SnarlGraph(self.graph.blocks,
+                                       self.graph.adj_list,
+                                       "top_level", parent=None,
+                                       children=top_level_snarls,
+                                       start_node=new_start,
+                                       end_node=new_end)
         return whole_graph_snarl
 
     @classmethod

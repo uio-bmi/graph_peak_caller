@@ -19,9 +19,9 @@ class SnarlsTests(unittest.TestCase):
 
         self.simple_snarls = \
             {
-                10: SimpleSnarl(1, 4, 10),
-                11: SimpleSnarl(5, 8, 11),
-                12: SimpleSnarl(4, 5, 12)
+                20: SimpleSnarl(1, 4, 20),
+                21: SimpleSnarl(5, 8, 21),
+                22: SimpleSnarl(4, 5, 22)
             }
 
 class TestSnarlGraphBuilder(SnarlsTests):
@@ -33,7 +33,7 @@ class TestSnarlGraphBuilder(SnarlsTests):
 
         correct_snarl_graph = SnarlGraph(
             {1: Block(3),
-             10: SnarlGraph(
+             20: SnarlGraph(
                  {
                      2: Block(3),
                      3: Block(3)
@@ -42,7 +42,7 @@ class TestSnarlGraphBuilder(SnarlsTests):
              ),
              4:  Block(3),
              5:  Block(3),
-             11: SnarlGraph(
+             21: SnarlGraph(
                  {
                      6: Block(3),
                      7: Block(3)
@@ -52,17 +52,21 @@ class TestSnarlGraphBuilder(SnarlsTests):
              8: Block(3)
              },
             {
-                1: [10],
-                10: [4],
+                1: [20],
+                20: [4],
                 4: [5],
-                5: [11],
-                11: [8]
+                5: [21],
+                21: [8],
+                9: [1],  # Dummy nodes added by snarlgraphbuilder
+                8: [10]   # Dummy nodes added by snarlgraphbuilder
             }
         )
+        print("Final graph")
+
+        print(graph)
 
         self.assertEqual(correct_snarl_graph, graph)
 
-        print(graph)
 
     def test_hierarchical(self):
         graph = Graph(
@@ -135,7 +139,9 @@ class TestSnarlGraphBuilder(SnarlsTests):
                 11: [1],
                 1: [20],
                 20: [10],
-                10: [12]
+                10: [12],
+                13: [11],  # Dummy
+                12: [14]   # Dummy
             }
         )
 
