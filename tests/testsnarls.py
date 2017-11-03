@@ -178,7 +178,7 @@ class TestSnarlGraphBuilder(SnarlsTests):
         print(snarlgraph)
 
         self.assertEqual(correct_snarl_graph, snarlgraph)
-        
+
 
 if __name__ == "__main__":
     unittest.main()

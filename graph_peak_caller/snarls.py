@@ -21,12 +21,12 @@ class SnarlGraph(obg.GraphWithReversals):
         self.id = id
         self.create_children()
         self._length = None
-        print("Init snarl graph %s, %s" % (start_node, end_node))
+        #print("Init snarl graph %s, %s" % (start_node, end_node))
         self._create_distance_dicts()
 
     def _create_distance_dicts(self):
-        print("Creating distance dict for %s" % self.id)
-        print(self)
+        #print("Creating distance dict for %s" % self.id)
+        #print(self)
         self._get_linear_start_and_end_pos()
         self._get_linear_mapped_node_intervals()
 
@@ -44,7 +44,7 @@ class SnarlGraph(obg.GraphWithReversals):
         return length
 
     def create_children(self):
-        print("Creating children for %s" % self.id)
+        #print("Creating children for %s" % self.id)
         for child in self.children:
             assert child.id != self.id, "Child ID %d equal as parent" % child.id
             child_blocks, child_graph = SnarlGraph.create_from_simple_snarl(child, self)
@@ -55,9 +55,6 @@ class SnarlGraph(obg.GraphWithReversals):
             self.blocks[child.id] = child_graph
 
             for node_id in child_blocks.keys():
-                if node_id == 2:
-                    print("Deleting edges to/from %d" % node_id)
-
                 if node_id == child.start or node_id == child.end:
                     continue
 
@@ -127,7 +124,6 @@ class SnarlGraph(obg.GraphWithReversals):
         if self._length is not None:
             return self._length
         self._length = self._get_longest_path_length()
-        print("Getting length for edges:", sum(len(e) for e in self.adj_list.values()))
         assert self._length > 0, str(self.blocks) + str(self.adj_list)
         return self._length
 
@@ -136,13 +132,13 @@ class SnarlGraph(obg.GraphWithReversals):
         return memo[self._end_node]
 
     def _create_path_length_dict(self, forward=True):
-        print("-----------------------", forward)
-        print(self._start_node, self._end_node)
-        print(self.blocks.keys())
-        if forward:
-            print(self.adj_list)
-        else:
-            print(self.reverse_adj_list)
+        #print("-----------------------", forward)
+        #print(self._start_node, self._end_node)
+        #print(self.blocks.keys())
+        #if forward:
+        #    print(self.adj_list)
+        #else:
+        #    print(self.reverse_adj_list)
         if forward:
             start_node = self._start_node
             end_node = self._end_node
