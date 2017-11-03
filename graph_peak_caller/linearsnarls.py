@@ -14,7 +14,7 @@ def create_control(graph, snarls, reads, d):
     return graph_pileup
 
 
-class EventSorter(self):
+class EventSorter(object):
     def __init__(self, index_lists, values_list, names=None):
         if names is not None:
             [setattr(name.upper(), i) for i, name in enumerate(names)]
@@ -55,9 +55,10 @@ class LinearPileup(object):
             self.starts[i] = startend[0]
             self.ends[i] = startend[1]
 
-    def to_valued_indexes(self):
+    def to_valued_indexes(self, linear_map):
         event_sorter = self.get_event_sorter()
-        vi_dict = self.from_event_sorter()
+        unmapped_indices = self.from_event_sorter(event_sorter)
+        vi_dict = linear_map.to_graph_pileup(unmapped_indices)
         return vi_dict
 
     def get_event_sorter(self, linear_map):
