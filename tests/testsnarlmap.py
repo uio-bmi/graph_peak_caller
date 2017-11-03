@@ -21,7 +21,7 @@ class TestSnarlMap(unittest.TestCase):
                                 obg.Position(13, 4)]
 
         self.linear_positions = [4, 31/20*4, 10+21/20*4, 14]
-        self.linear_positions = [int(p) for p in self.linear_positions]
+        self.linear_positions = [p for p in self.linear_positions]
         self.graph_interval = obg.DirectedInterval(self.graph_positions[0],
                                                    self.graph_positions[2])
 

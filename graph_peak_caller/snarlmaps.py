@@ -42,7 +42,7 @@ class LinearSnarlMap(object):
         node_start = self._linear_node_starts[position.region_path_id]
         node_end = self._linear_node_ends[position.region_path_id]
         scale = (node_end-node_start)/self._graph.node_size(position.region_path_id)
-        return int(node_start + scale*position.offset)
+        return node_start + scale*position.offset
 
     @classmethod
     def from_snarl_graph(cls, snarl_graph):
