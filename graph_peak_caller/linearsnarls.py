@@ -17,15 +17,15 @@ def create_control(graph, snarl_graph, reads, extension_sizes):
     mapped_reads = linear_map.map_interval_collection(reads)
     average_value = mapped_reads.n_basepairs_covered() / linear_size
 
-    max_pileup = LinearPileup([], [])
+    max_pileup = LinearPileup([0], [0])
     for extension in extension_sizes:
         extended_reads = mapped_reads.extend(extension)
         linear_pileup = LinearPileup.create_from_starts_and_ends(
                 extended_reads.starts, extended_reads.ends)
-        max_pileup = max_pileup.max(linear_pileup)
+        max_pileup.maximum(linear_pileup)
 
     max_pileup.threshold(average_value)
-    valued_indexes = max_pileup.to_valued_indexes()
+    valued_indexes = max_pileup.to_valued_indexes(linear_map)
     graph_pileup = SparsePileup(graph)
     graph_pileup.data = valued_indexes
     return graph_pileup
@@ -88,7 +88,13 @@ class LinearPileup(object):
                 cur_value = value
                 cur_index = index
             elif code == event_sorter.NODE_END:
-                cur_nodes.remove(value)
+                try:
+                    cur_nodes.remove(value)
+                except:
+                    mask= event_sorter.values== value
+                    print(event_sorter.indices[mask])
+                    print(event_sorter.codes[mask])
+                    raise
         return unmapped_indices
 
     def to_graph_pileup(self):
@@ -104,6 +110,8 @@ class LinearPileup(object):
                  for node in cur_nodes]
 
     def maximum(self, other):
+
+        #print(self.values)
         indices, values = sparse_maximum(self.indices, self.values,
                                          other.indices, other.values,
                                          max(self.values[-1],

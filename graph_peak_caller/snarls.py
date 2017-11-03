@@ -47,8 +47,8 @@ class SnarlGraph(obg.GraphWithReversals):
 
         n_childs = len(self.children)
         for i, child in enumerate(self.children):
-            if self.id == "top_level":
-                print("Snarl %s of %s" % (i, n_childs))
+            if self.id == "top_level" and i % 1000 == 0:
+                logging.info("Snarl %s of %s" % (i, n_childs))
             assert child.id != self.id, "Child ID %d equal as parent" % child.id
             child_blocks, child_graph = SnarlGraph.create_from_simple_snarl(child, self)
 

@@ -105,17 +105,17 @@ def sparse_maximum(indices1, values1, indices2, values2, genome_size):
     for i, vals in enumerate(vi_list):
         idxs = np.nonzero((all_idxs % 2) == i)[0]
         all_values = vals
-        print("Idx: %s" % idxs)
-        print("Values %i: %s" % (i, all_values))
+        #print("Idx: %s" % idxs)
+        #print("Values %i: %s" % (i, all_values))
         value_diffs = np.diff(all_values)
-        print("Diffs: %s" % value_diffs)
+        #print("Diffs: %s" % value_diffs)
         values = np.zeros(all_idxs.shape)
         values[idxs[1:]] = value_diffs
         values[idxs[0]] = all_values[0]
-        print("  values after diffs: %s" % values)
+        #print("  values after diffs: %s" % values)
         values_list.append(values.cumsum())
-    print("Values list:")
-    print(values_list)
+    #print("Values list:")
+    #print(values_list)
     values = np.maximum(values_list[0], values_list[1])
     idxs = all_idxs // 2
     empty_ends = np.nonzero(np.diff(idxs) == 0)[0]
