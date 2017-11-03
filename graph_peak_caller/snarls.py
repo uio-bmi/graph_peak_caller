@@ -23,11 +23,11 @@ class SnarlGraph(obg.GraphWithReversals):
         self._edges = self.adj_list
         self._blocks = self.blocks
         self._length = None
-        #self._get_linear_start_and_end_pos()
+        self._get_linear_start_and_end_pos()
 
         print("Init snarl with blocks: %s, edge: %s, start/end: %s/%s" % (blocks, edges, start_node, end_node))
 
-        #self._get_linear_mapped_node_intervals()
+        self._get_linear_mapped_node_intervals()
         self._length = None
 
     def get_next_nodes(self, node_id):
