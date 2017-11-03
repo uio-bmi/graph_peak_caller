@@ -178,56 +178,7 @@ class TestSnarlGraphBuilder(SnarlsTests):
         print(snarlgraph)
 
         self.assertEqual(correct_snarl_graph, snarlgraph)
-
-    def _test_multiple_snarls_same_nodes(self):
-
-        graph = Graph(
-            {i: Block(3) for i in range(1, 7)},
-            {
-                1: [2, 4],
-                2: [3],
-                3: [6],
-                4: [5],
-                5: [6]
-            })
-
-        snarls = {
-            10: SimpleSnarl(1, 3, 10),
-            11: SimpleSnarl(1, 5, 11),
-        }
-
-        builder = SnarlGraphBuilder(graph, snarls)
-        snarlgraph = builder.build_snarl_graphs()
-
-        correct_snarl_graph = SnarlGraph(
-            {
-                1: Block(3),
-                10: SnarlGraph(
-                    {
-                        2: Block(3)
-                    }, {}
-                ),
-                11: SnarlGraph(
-                    {
-                        4: Block(3)
-                    }, {}
-                ),
-                4: Block(3),
-                5: Block(3),
-            },
-            {
-                1: [10, 11],
-                10: [3],
-                11: [5],
-                3: [6],
-                5: [6]
-            })
-
-        self.assertEqual(correct_snarl_graph, snarlgraph)
-
-
-
-
+        
 
 if __name__ == "__main__":
     unittest.main()
