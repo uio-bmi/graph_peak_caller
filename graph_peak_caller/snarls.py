@@ -25,6 +25,8 @@ class SnarlGraph(obg.GraphWithReversals):
         self._create_distance_dicts()
 
     def _create_distance_dicts(self):
+        print("Creating distance dict for %s" % self.id)
+        print(self)
         self._get_linear_start_and_end_pos()
         self._get_linear_mapped_node_intervals()
 
@@ -42,6 +44,7 @@ class SnarlGraph(obg.GraphWithReversals):
         return length
 
     def create_children(self):
+        print("Creating children for %s" % self.id)
         for child in self.children:
             assert child.id != self.id, "Child ID %d equal as parent" % child.id
             child_blocks, child_graph = SnarlGraph.create_from_simple_snarl(child, self)
@@ -73,19 +76,6 @@ class SnarlGraph(obg.GraphWithReversals):
             self.reverse_adj_list[-child.end].append(-child.id)
 
     def _delete_edges_to_and_from_node(self, node_id):
-        if node_id in self.adj_list:
-            if node_id == 2:
-                print("Deleted")
-            del self.adj_list[node_id]
-            del self.reverse_adj_list[-node_id]
-
-        if -node_id in self.adj_list:
-            if node_id == 2:
-                print("Deleted")
-
-            del self.adj_list[-node_id]
-            del self.reverse_adj_list[node_id]
-
         if -node_id in self.reverse_adj_list:
             for other in self.reverse_adj_list[-node_id]:
                 self._delete_edge(-other, -node_id)
@@ -94,10 +84,21 @@ class SnarlGraph(obg.GraphWithReversals):
             for other in self.reverse_adj_list[node_id]:
                 self._delete_edge(-other, node_id)
 
+        if node_id in self.adj_list:
+            del self.adj_list[node_id]
+            del self.reverse_adj_list[-node_id]
+
+        if -node_id in self.adj_list:
+            del self.adj_list[-node_id]
+            del self.reverse_adj_list[node_id]
+
 
     def _delete_edge(self, from_node, to_node):
         if to_node in self.adj_list[from_node]:
             self.adj_list[from_node].remove(to_node)
+
+        if -from_node in self.reverse_adj_list[-to_node]:
+            self.reverse_adj_list[-to_node].remove(-from_node)
 
     def _sanitize_graph(self):
         # Check that all edges goes to blocks that exists
@@ -127,7 +128,8 @@ class SnarlGraph(obg.GraphWithReversals):
         if self._length is not None:
             return self._length
         self._length = self._get_longest_path_length()
-        assert self._length > 0, str(self.blocks)
+        print("Getting length for edges:", sum(len(e) for e in self.adj_list.values()))
+        assert self._length > 0, str(self.blocks) + str(self.adj_list)
         return self._length
 
     def _get_longest_path_length(self):
@@ -135,8 +137,10 @@ class SnarlGraph(obg.GraphWithReversals):
         return memo[self._end_node]
 
     def _create_path_length_dict(self, forward=True):
-
+        print("-----------------------", forward)
+        print(self._start_node, self._end_node)
         print(self.blocks.keys())
+        print(self.adj_list)
         if forward:
             start_node = self._start_node
             end_node = self._end_node
@@ -146,13 +150,19 @@ class SnarlGraph(obg.GraphWithReversals):
             end_node = -self._start_node
             next_node_func = self.get_previous_nodes
 
-        stack = deque([(start_node, 0)])
+        stack = deque([(start_node, 0, 0)])
         memo = defaultdict(int)
+        cur_path = []
         while stack:
-            node_id, dist = stack.pop()
-            print("   Path length, node id %d" % node_id)
-            for next_node in next_node_func(node_id):
-                if memo[next_node] > dist:
+            node_id, dist, n = stack.pop()
+            # del cur_path[n:]
+            # cur_path.append(node_id)
+            next_nodes = next_node_func(node_id)
+            for next_node in next_nodes:
+                # if next_node in cur_path:
+                #    print("CYCLE")
+                #    continue
+                if memo[next_node] >= dist and dist > 0:
                     continue
                 memo[next_node] = dist
                 if next_node == end_node:
@@ -161,7 +171,7 @@ class SnarlGraph(obg.GraphWithReversals):
                 assert next_node != -end_node
                 assert next_node != -start_node
                 new_dist = dist + self.node_size(next_node)
-                stack.append((next_node, new_dist))
+                stack.append((next_node, new_dist, n+1))
 
         return memo
 
