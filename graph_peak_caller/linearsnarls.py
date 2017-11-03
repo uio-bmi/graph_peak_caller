@@ -1,8 +1,11 @@
 import numpy as np
+from collections import defaultdict
 from .snarls import SnarlGraph
-from .sparsepileup import SparsePileup, ValuedIndexes
+from .sparsepileup import SparsePileup, starts_and_ends_to_sparse_pileup
+from .snarlmaps import LinearSnarlMap
 from .util import sparse_maximum, sanitize_indices_and_values
-from .sparsepileup import starts_and_ends_to_sparse_pileup
+from .eventsorter import EventSorter
+
 
 def create_control(graph, snarl_graph, reads, extension_sizes):
     """
@@ -28,29 +31,11 @@ def create_control(graph, snarl_graph, reads, extension_sizes):
     return graph_pileup
 
 
-class EventSorter(object):
-    def __init__(self, index_lists, values_list, names=None):
-        if names is not None:
-            [setattr(name.upper(), i) for i, name in enumerate(names)]
-
-        n_types = len(index_lists)
-        coded_index_list = [np.array(index_list)*n_types + r for r in
-                            range(n_types)]
-        coded_indices = np.ravel(coded_index_list)
-        sorted_args = np.argsort(coded_indices)
-        coded_indices = coded_indices[sorted_args]
-        self.indices = coded_indices//n_types
-        self.codes = coded_indices % n_types
-        self.values = np.array(values_list, dtype="obj").ravel()[sorted_args]
-
-    def __iter__(self):
-        return zip(self.coded_indices, self.codes, self.values)
-
 
 class UnmappedIndices(object):
-    def __init__(self):
-        self.indices = []
-        self.values = []
+    def __init__(self, indices=None, values=None):
+        self.indices = [] if indices is None else indices
+        self.values = [] if values is None else values
 
     def add_indexvalue(self, index, value):
         self.indices.append(index)
@@ -69,27 +54,28 @@ class LinearPileup(object):
         return LinearPileup(indices, values)
 
     def to_valued_indexes(self, linear_map):
-        event_sorter = self.get_event_sorter()
+        event_sorter = self.get_event_sorter(linear_map)
         unmapped_indices = self.from_event_sorter(event_sorter)
         vi_dict = linear_map.to_graph_pileup(unmapped_indices)
         return vi_dict
 
     def get_event_sorter(self, linear_map):
-        node_start_values = [node_id for node_id in self._snarl_graph.blocks]
+        node_start_values = [node_id for node_id in linear_map._graph.blocks]
         node_end_values = node_start_values[:]
         node_starts_idxs = [linear_map.get_node_start(node_id)
                             for node_id in node_start_values]
         node_end_idxs = [linear_map.get_node_end(node_id)
                          for node_id in node_end_values]
-        idxs = [self.indices, node_starts_idxs, node_end_idxs]
-        values = [self.values, node_start_values, node_end_values]
-        event_sorter = EventSorter(idxs, values, names=["PILEUP_CHANGE",
+        idxs = [node_end_idxs, self.indices, node_starts_idxs]
+        values = [node_end_values, self.values, node_start_values]
+        event_sorter = EventSorter(idxs, values, names=["NODE_END",
+                                                        "PILEUP_CHANGE",
                                                         "NODE_START",
-                                                        "NODE_END"])
+                                                        ])
         return event_sorter
 
     def from_event_sorter(self, event_sorter):
-        unmapped_indices = {}
+        unmapped_indices = defaultdict(UnmappedIndices)
         cur_nodes = set([])
         cur_index = 0
         cur_value = 0
@@ -117,7 +103,6 @@ class LinearPileup(object):
             else:
                 [node.append((idx, value)) for node in cur_nodes]
 
-
     def maximum(self, other):
         indices, values = sparse_maximum(self.indices, self.values,
                                          other.indices, other.values,
@@ -144,59 +129,3 @@ class LinearIntervalCollection(object):
 
     def n_basepairs_covered(self):
         return np.sum(self.ends - self.starts)
-
-
-class LinearSnarlMap(object):
-    def __init__(self, snarl_graph):
-        self._snarl_graph = snarl_graph
-        self._length = self._snarl_graph.length()
-        self._linear_node_starts, self._linear_node_ends = snarl_graph.get_distance_dicts()
-
-    def get_node_start(self, node_id):
-        return self._linear_node_starts[node_id]
-
-    def get_node_end(self, node_id):
-        return self._linear_node_ends[node_id]
-
-    def get_scale_and_offset(self, node_id):
-        linear_length = self._linear_node_ends(node_id) - self._linear_node_starts(node_id)
-        node_length = self._snarl_graph.node_size(node_id)
-        scale = linear_length/node_length
-        offset = self._linear_node_starts(node_id)
-        return scale, offset
-
-    def to_graph_pileup(self, unmapped_indices_dict):
-        vi_dict = {}
-        for node_id, unmapped_indices in unmapped_indices_dict.items():
-            scale, offset = self.get_scale_and_offset(node_id)
-            new_idxs = (np.array(unmapped_indices.indices)-offset)*scale
-            new_idxs[0] = min(0, new_idxs[0])
-            vi = ValuedIndexes(new_idxs[1:], np.array(unmapped_indices.values)[1:],
-                               unmapped_indices.values[0], self._snarl_graph.node_size(node_id))
-            vi_dict[node_id] = vi
-
-    def map_graph_interval(self, interval):
-        start_pos = self.graph_position_to_linear(interval.start_position)
-        end_pos = self.graph_position_to_linear(interval.end_position)
-        return start_pos, end_pos
-
-    def graph_position_to_linear(self, position):
-        node_start = self._linear_node_starts[position.region_path_id]
-        node_end = self._linear_node_ends[position.region_path_id]
-        scale = (node_end-node_start)/self.node_sizes(position.node_id)
-        return int(node_start + scale*position.offset)
-
-    @classmethod
-    def from_snarl_graph(cls, snarl_graph):
-        return cls(snarl_graph)
-
-    def map_interval_collection(self, interval_collection):
-        starts = []
-        ends = []
-        for interval in interval_collection:
-            start, end = self.map_graph_interval(interval)
-            starts.append(start)
-            ends.append(end)
-
-        return LinearIntervalCollection(starts, ends)
-

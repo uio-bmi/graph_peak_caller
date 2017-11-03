@@ -81,6 +81,7 @@ def get_linear_paths_in_graph(ob_graph, vg_graph, write_to_file_name=None):
 
     return intervals
 
+
 def sparse_maximum(indices1, values1, indices2, values2, genome_size):
 
     if indices1[0] != 0:

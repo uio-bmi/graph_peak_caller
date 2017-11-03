@@ -9,16 +9,20 @@ from pyvg import Snarls
 
 class SnarlGraph(obg.GraphWithReversals):
 
-    def __init__(self, blocks, edges, id=None, parent=None, children=[]):
+    def __init__(self, blocks, edges, id=None, parent=None, children=[], start_node=None, end_node=None):
         super(SnarlGraph, self).__init__(blocks, edges)
 
         for child in children:
             assert child.id != id, "Child id %d = self.id %d" % (child.id, id)
-
+        self._start_node = start_node
+        self._end_node = end_node
         self.parent = parent
         self.children = children
         self.id = id
         self.create_children()
+        self._edges = self.adj_list
+        self._blocks = self.blocks
+        self._length = None
         self._get_linear_start_and_end_pos()
         self._get_linear_mapped_node_intervals()
         self._length = None
