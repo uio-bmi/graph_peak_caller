@@ -7,8 +7,10 @@ from .util import sparse_maximum, sanitize_indices_and_values
 from .eventsorter import EventSorter
 
 
-def create_control(graph, snarls, reads, extension_sizes):
-    snarl_graph = SnarlGraph(graph, snarls)
+def create_control(graph, snarl_graph, reads, extension_sizes):
+    """
+    :param snarl_graph: Hierarchical snarl graph
+    """
     linear_map = LinearSnarlMap(snarl_graph)
 
     linear_size = linear_map._length
