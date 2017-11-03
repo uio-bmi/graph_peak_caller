@@ -109,7 +109,11 @@ class SnarlGraph(obg.GraphWithReversals):
     def create_from_simple_snarl(cls, simple_snarl, parent_snarl_graph):
         traverser = GraphTravserserBetweenNodes(parent_snarl_graph)
         subgraph = traverser.get_snarl_subgraph(
-            simple_snarl.start, simple_snarl.end, include_start_and_end=False)
+            simple_snarl.start, simple_snarl.end, include_start_and_end=True)
+
+        # Remove start and end blocks (keep edges)
+        del subgraph.blocks[simple_snarl.start]
+        del subgraph.blocks[simple_snarl.end]
 
         return subgraph.blocks, SnarlGraph(
             subgraph.blocks, subgraph.adj_list, simple_snarl.id,
