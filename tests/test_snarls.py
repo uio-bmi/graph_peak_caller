@@ -11,7 +11,7 @@ from offsetbasedgraph import Block
 snarl_graph1 = SnarlGraph(
     {12: Block(20), 13: Block(21)},
     {11: [12, 13], 12: [14], 13: [14]},
-    11, 14)
+    start_node=11, end_node=14)
 
 
 """
@@ -22,7 +22,7 @@ snarl_graph1 = SnarlGraph(
 snarl_graph2 = SnarlGraph(
     {2: snarl_graph1, 5: Block(10), 3: Block(20)},
     {1: [3, 5], 5: [2], 2: [4], 3: [4]},
-    1, 4)
+    start_node=1, end_node=4)
 
 
 class TestSnarlGraph(unittest.TestCase):
@@ -44,7 +44,6 @@ class TestSnarlGraph(unittest.TestCase):
         self.assertEqual(starts_dict, true_starts)
         self.assertEqual(ends_dict, true_ends)
 
-    def test_find_node
 
 if __name__ == "__main__":
     unittest.main()
