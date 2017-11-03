@@ -17,9 +17,9 @@ def create_control(graph, snarl_graph, reads, extension_sizes):
     mapped_reads = linear_map.map_interval_collection(reads)
     average_value = mapped_reads.n_basepairs_covered() / linear_size
 
-    max_pileup = LinearPileup([], [], snarl_graph)
+    max_pileup = LinearPileup([], [])
     for extension in extension_sizes:
-        extended_reads = mapped_reads.extend()
+        extended_reads = mapped_reads.extend(extension)
         linear_pileup = LinearPileup.create_from_starts_and_ends(
                 extended_reads.starts, extended_reads.ends)
         max_pileup = max_pileup.max(linear_pileup)

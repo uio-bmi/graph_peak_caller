@@ -36,6 +36,7 @@ class SnarlGraph(obg.GraphWithReversals):
         return length
 
     def create_children(self):
+
         n_childs = len(self.children)
         for i, child in enumerate(self.children):
             if self.id == "top_level":
