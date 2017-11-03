@@ -89,10 +89,10 @@ class LinearPileup(object):
                 try:
                     cur_nodes.remove(value)
                 except:
-                    mask= event_sorter.values== value
-                    print(event_sorter.indices[mask])
-                    print(event_sorter.codes[mask])
+                    print(value)
                     raise
+            else:
+                raise Exception("Coding Error")
         return unmapped_indices
 
     def to_graph_pileup(self):

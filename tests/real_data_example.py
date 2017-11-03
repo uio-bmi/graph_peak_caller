@@ -39,10 +39,11 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
     #print(ob_graph.node_size(701))
     #return
 
-    builder = SnarlGraphBuilder.from_vg_snarls(ob_graph.copy(), "haplo1kg50-mhc.snarls")
-    snarlgraph = builder.build_snarl_graphs()
-    linear_map = LinearSnarlMap(snarlgraph, ob_graph)
-    linear_map.to_file("linear_map")
+    # builder = SnarlGraphBuilder.from_vg_snarls(ob_graph.copy(), "haplo1kg50-mhc.snarls")
+    # snarlgraph = builder.build_snarl_graphs()
+    linear_map = LinearSnarlMap.from_file("linear_map")
+    # LinearSnarlMap(snarlgraph, ob_graph)
+    # linear_map.to_file("linear_map")
     #snarlgraph._create_distance_dicts()
 
     #snarlgraph.to_file("haplo1kg50-mhc.snarlgraph")

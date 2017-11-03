@@ -1,7 +1,8 @@
 import numpy as np
+from operator import itemgetter
 
 
-class EventSorter(object):
+class DescriteEventSorter(object):
     def __init__(self, index_lists, values_list, names=None):
         if names is not None:
             [setattr(self, name.upper(), i) for i, name in enumerate(names)]
@@ -12,9 +13,26 @@ class EventSorter(object):
         coded_indices = np.concatenate(coded_index_list)
         sorted_args = np.argsort(coded_indices)
         coded_indices = coded_indices[sorted_args]
-        self.indices = coded_indices//n_types
+        self.indices = coded_indices // n_types
         self.codes = coded_indices % n_types
         self.values = np.concatenate(values_list)[sorted_args]
 
     def __iter__(self):
         return zip(self.indices, self.codes, self.values)
+
+
+class EventSorter(object):
+    def __init__(self, index_lists, values_lists, names=None):
+        if names is not None:
+            [setattr(self, name.upper(), i) for i, name in enumerate(names)]
+
+        self.tuples = []
+        i = 0
+        for index_list, values_list in zip(index_lists, values_lists):
+            self.tuples.extend([(idx, i, value) for
+                                idx, value in zip(index_list, values_list)])
+            i += 1
+        self.tuples.sort(key=itemgetter(0, 1))
+
+    def __iter__(self):
+        return self.tuples.__iter__()
