@@ -70,7 +70,7 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
         linear_map=linear_map)
     caller.verbose = True
     caller.run()
-    retriever = SequenceRetriever.from_vg_graph("cactus-mhc.vg")
+    retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
     sequences = [retriever.get_interval_sequence(max_path)
                  for max_path in caller.max_paths]
     f = open("real_data_sequences", "w")

@@ -2,7 +2,7 @@ import numpy as np
 from collections import defaultdict
 from .sparsepileup import SparsePileup, starts_and_ends_to_sparse_pileup
 from .util import sparse_maximum, sanitize_indices_and_values
-from .eventsorter import EventSorter
+from .eventsorter import EventSorter, EventSort
 
 
 def create_control(linear_map, reads, extension_sizes):
@@ -18,6 +18,9 @@ def create_control(linear_map, reads, extension_sizes):
         extended_reads = mapped_reads.extend(extension)
         linear_pileup = LinearPileup.create_from_starts_and_ends(
                 extended_reads.starts, extended_reads.ends)
+        print(type(linear_pileup))
+        linear_pileup /= (extension*2)
+        print(type(linear_pileup))
         max_pileup.maximum(linear_pileup)
 
     max_pileup.threshold(average_value)
@@ -42,11 +45,14 @@ class LinearPileup(object):
         self.indices = indices
         self.values = values
 
+    def __itruediv__(self, scalar):
+        self.values /= scalar
+        return self
+
     @classmethod
     def create_from_starts_and_ends(cls, starts, ends):
-        indices, values = starts_and_ends_to_sparse_pileup(starts, ends)
-        indices, values = sanitize_indices_and_values(indices, values)
-        return LinearPileup(indices, values)
+        es = EventSort([starts, ends], [1, -1])
+        return LinearPileup(es.indices, es.values)
 
     def to_valued_indexes(self, linear_map):
         event_sorter = self.get_event_sorter(linear_map)
@@ -108,8 +114,6 @@ class LinearPileup(object):
                  for node in cur_nodes]
 
     def maximum(self, other):
-
-        #print(self.values)
         indices, values = sparse_maximum(self.indices, self.values,
                                          other.indices, other.values,
                                          max(self.values[-1],
