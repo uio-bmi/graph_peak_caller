@@ -77,6 +77,7 @@ class CallPeaks(object):
         """
 
         assert linear_map is not None, "LinearMap cannot be None"
+        assert isinstance(linear_map, str), "Must be file name"
 
         assert isinstance(sample_intervals, IntervalCollection) \
                or isinstance(sample_intervals, str), \
