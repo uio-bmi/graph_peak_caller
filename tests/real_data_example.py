@@ -33,15 +33,16 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
     logging.basicConfig(level=logging.INFO)
     logging.info("Running")
 
-    vg_graph = pyvg.Graph.create_from_file(vg_graph_file_name)
-    ob_graph = vg_graph.get_offset_based_graph()
-    ob_graph.to_file("obgraph")
+    # vg_graph = pyvg.Graph.create_from_file(vg_graph_file_name)
+    # ob_graph = vg_graph.get_offset_based_graph()
+    # ob_graph.to_file("obgraph")
+    ob_graph = obg.GraphWithReversals.from_file("obgraph")
     #print(ob_graph.node_size(701))
     #return
 
     # builder = SnarlGraphBuilder.from_vg_snarls(ob_graph.copy(), "haplo1kg50-mhc.snarls")
     # snarlgraph = builder.build_snarl_graphs()
-    linear_map = LinearSnarlMap.from_file("linear_map")
+    linear_map = "linear_map" # LinearSnarlMap.from_file("linear_map")
     # LinearSnarlMap(snarlgraph, ob_graph)
     # linear_map.to_file("linear_map")
     #snarlgraph._create_distance_dicts()
@@ -56,10 +57,10 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
 
     # print(ob_graph.blocks)
     reads_intervals = vg_gam_file_to_interval_collection(
-         None, gam_file_name, ob_graph, max_intervals=1000)
+         None, gam_file_name, ob_graph)
 
     control_intervals = vg_gam_file_to_interval_collection(
-         None, gam_control_file, ob_graph, max_intervals=1000)
+         None, gam_control_file, ob_graph)
 
     #experiment_info = callpeaks.ExperimentInfo(graph_size, 103, 50)
     experiment_info = callpeaks.ExperimentInfo(graph_size, 135, 36)

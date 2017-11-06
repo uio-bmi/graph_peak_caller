@@ -24,8 +24,13 @@ class Cleaner(object):
                 self.starts_dict[node] = int(startends[1])
                 self.ends_dict[-node] = int(startends[1])
             if startends[-1] == self.graph.node_size(node):
-                self.starts_dict[-node] = int(self.graph.node_size(node)-startends[-2])
-                self.ends_dict[node] = int(self.graph.node_size(node)-startends[-2])
+                self.starts_dict[-node] = int(self.graph.node_size(node) - startends[-2])
+                self.ends_dict[node] = int(self.graph.node_size(node) - startends[-2])
+
+        logging.info("N starts: %s", len(self.starts_dict))
+        logging.info("N ends: %s", len(self.ends_dict))
+
+
 
     def is_end_included(self, node_id):
         pass
@@ -40,8 +45,9 @@ class Cleaner(object):
         last_node = node_list[-1]
         if len(node_list) > 1 and not self._is_region_path_covered(last_node):
             return []
-        extended = [node_list + [next_node] for next_node in self.cur_adj_list[last_node]
-                if next_node in self.starts_dict]
+        extended = [node_list + [next_node] for next_node
+                    in self.cur_adj_list[last_node]
+                    if next_node in self.starts_dict]
         for added_node in extended:
             self.ignored_nodes.discard(added_node[-1])
 
@@ -159,6 +165,7 @@ class PeaksCleaner(Cleaner):
                 if node in self.ends_dict:
                     self.ignored_nodes.add(node)
         return init_nodes
+
 
 class HolesCleaner(Cleaner):
     def handle_node_list(self, node_list, extensions):

@@ -109,7 +109,7 @@ class CallPeaks(object):
                 self.ob_graph, self.sample_intervals, self.control_intervals)
         self.create_sample_pileup()
         self.create_control(True)
-        # self.scale_tracks()
+        self.scale_tracks()
         self.get_score()
         # self.get_p_values()
         # self.get_q_values()
@@ -197,7 +197,8 @@ class CallPeaks(object):
         logging.info("Creating control track")
 
         extensions = [self.info.fragment_length, 2500, 5000] if self.has_control else [5000]
-        control_pileup = linearsnarls.create_control(self.linear_map, self.control_intervals, extensions)
+        control_pileup = linearsnarls.create_control(self.linear_map,  self.control_intervals,
+                                                     extensions, self.info.fragment_length)
 
         #control_track = ControlTrack(
         #    self.ob_graph, self.control_intervals,
@@ -234,7 +235,9 @@ class CallPeaks(object):
         self.peaks = self.p_values.threshold_copy(-np.log10(cutoff))
         # self.p_values.threshold(-np.log10(cutoff))
         self.peaks.to_bed_file("pre_postprocess.bed")
+        print("Filling small Holes")
         self.peaks.fill_small_wholes(self.info.read_length)
+        print("Removing small peaks")
         self.final_track = self.peaks.remove_small_peaks(
             self.info.fragment_length)
         print("Final track")

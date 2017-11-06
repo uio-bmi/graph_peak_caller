@@ -3,12 +3,14 @@ from collections import defaultdict
 from .sparsepileup import SparsePileup, starts_and_ends_to_sparse_pileup
 from .util import sparse_maximum, sanitize_indices_and_values
 from .eventsorter import EventSorter, EventSort
+from .snarlmaps import LinearSnarlMap
 
 
-def create_control(linear_map, reads, extension_sizes):
+def create_control(linear_map_name, reads, extension_sizes, fragment_length):
     """
     :param snarl_graph: Hierarchical snarl graph
     """
+    linear_map = LinearSnarlMap.from_file(linear_map_name)
     linear_size = linear_map._length
     mapped_reads = linear_map.map_interval_collection(reads)
     average_value = mapped_reads.n_basepairs_covered() / linear_size
@@ -19,7 +21,7 @@ def create_control(linear_map, reads, extension_sizes):
         linear_pileup = LinearPileup.create_from_starts_and_ends(
                 extended_reads.starts, extended_reads.ends)
         print(type(linear_pileup))
-        linear_pileup /= (extension*2)
+        linear_pileup /= (extension*2/fragment_length)
         print(type(linear_pileup))
         max_pileup.maximum(linear_pileup)
 
