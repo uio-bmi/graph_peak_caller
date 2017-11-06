@@ -4,7 +4,6 @@ import numpy as np
 from scipy.stats import poisson
 from collections import defaultdict
 from .pileup import Pileup
-from .pileupcleaner import PileupCleaner
 from .pileupcleaner2 import PeaksCleaner, HolesCleaner
 from .subgraphcollection import SubgraphCollection
 import offsetbasedgraph as obg
