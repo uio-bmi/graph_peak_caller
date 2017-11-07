@@ -69,7 +69,7 @@ class SimulatedPeakCalling():
         linear_map.to_file("simulated_snarl_map.tmp")
         print("Linear map")
         print(linear_map)
-        return
+        #return
 
         print("Control  reads")
         caller = CallPeaks(self.graph,
@@ -85,6 +85,7 @@ class SimulatedPeakCalling():
         caller.create_control()
         print("Control pileup before extended")
         print(self.control_pileup)
+        print(self.control_reads)
         caller.scale_tracks()
         caller.get_score()
         caller.call_peaks("simulated.peaks")
