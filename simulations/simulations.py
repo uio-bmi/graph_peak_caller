@@ -5,6 +5,7 @@ from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo
 from graph_peak_caller.snarls import SnarlGraphBuilder
 from graph_peak_caller.linearsnarls import LinearSnarlMap
 from offsetbasedgraph import IntervalCollection
+from graph_peak_caller.peakcollection import PeakCollection
 import logging
 logging.basicConfig(level=logging.INFO)
 
@@ -71,21 +72,38 @@ class SimulatedPeakCalling():
                            linear_map="simulated_snarl_map.tmp")
 
         caller._sample_pileup = self.sample_pileup
-        print(self.sample_pileup)
+        #print(self.sample_pileup)
         caller.create_control()
-        print(self.control_pileup)
+        #print(self.control_pileup)
         caller.scale_tracks()
         caller.get_score()
         caller.call_peaks("simulated.peaks")
 
+    def compare_with_correct_peaks(self):
+        correct_peaks = PeakCollection(self.correct_peaks)
+        found_peaks = PeakCollection.from_file("max_paths", text_file=True, graph=self.graph)
+
+        matched = correct_peaks.get_peaks_not_in_other_collection(found_peaks)
+        print("%d correct peaks found, %3.f %% " % (len(matched), 100 * len(matched) / len(correct_peaks.intervals)))
+
+        #print(found_peaks)
 
 if __name__ == "__main__":
+    """
+    simulator = GraphSimulator(2, 1000, 25)
+    simulated_graph = simulator.get_simulated_graph()
+    print(simulated_graph.graph)
+    import sys
+    sys.exit()
+    """
     caller = SimulatedPeakCalling(
         n_paths = 2,
-        n_basepairs_length=5000,
-        n_snps =11 ,
-        n_peaks = 7
+        n_basepairs_length=10000,
+        n_snps = 100,
+        n_peaks = 40
     )
-    caller.call_peaks()
 
-    print(caller.correct_peaks)
+    #print(caller.graph)
+    #caller.call_peaks()
+
+    caller.compare_with_correct_peaks()

@@ -66,8 +66,6 @@ class GraphSimulator():
         self.graph = graph
         self.translation = Translation({}, {}, graph)
 
-        print("Created linear graph:")
-        print(self.graph)
 
 
     def _add_snps(self):
@@ -130,7 +128,6 @@ class GraphSimulator():
         while True:
             nexts = self.graph.adj_list[current_node]
             n_nodes_into = len(self.graph.reverse_adj_list[current_node])
-            print(current_node)
             if n_nodes_into == 2:
                 assert snarl_start is not None
                 snarls[snarl_id] = SimpleSnarl(snarl_start, current_node,
