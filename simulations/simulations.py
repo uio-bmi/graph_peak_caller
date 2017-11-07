@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 class SimulatedPeakCalling():
-    def __init__(self, n_paths, n_basepairs_length, n_snps, n_peaks):
+    def __init__(self, n_paths, n_basepairs_length, n_snps, n_peaks, with_control=False):
         self.n_paths = n_paths
         self.n_basepairs_length = n_basepairs_length
         self.n_snps = n_snps
@@ -24,6 +24,7 @@ class SimulatedPeakCalling():
         self.n_sample_reads = None
         self.n_control_reads = None
         self.control_reads = None
+        self.with_control = with_control
 
         self.set_up()
 
@@ -37,7 +38,7 @@ class SimulatedPeakCalling():
         pileup_simulator = PileupSimulator(
                                 simulated_graph=simulated_graph,
                                 n_peaks = self.n_peaks,
-                                with_control=False)
+                                with_control=self.with_control)
 
         self.correct_peaks = pileup_simulator.get_correct_peak_positions_on_graph()
         sample_pileup, control_pileup = pileup_simulator.get_simulated_pileups()
@@ -64,6 +65,7 @@ class SimulatedPeakCalling():
         linear_map = LinearSnarlMap(snarlgraph, self.graph)
         linear_map.to_file("simulated_snarl_map.tmp")
 
+        print("Control  reads")
         caller = CallPeaks(self.graph,
                            sample_intervals="dummy",
                            control_intervals=IntervalCollection(self.control_reads),
@@ -100,7 +102,8 @@ if __name__ == "__main__":
         n_paths = 2,
         n_basepairs_length=10000,
         n_snps = 35,
-        n_peaks = 40
+        n_peaks = 40,
+        with_control=True
     )
 
     #print(caller.graph)

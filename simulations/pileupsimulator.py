@@ -20,7 +20,8 @@ class PileupSimulator():
         self.n_reads_at_peak = 10
         self.with_control = with_control
 
-        self._linear_reads = []
+        self._sample_linear_reads = []
+        self._control_linear_reads = []
         self._sample_reads = []
         self._control_reads = []
         self.linear_peaks = []
@@ -29,7 +30,29 @@ class PileupSimulator():
 
         self._create_linear_reads()
         self._add_noise_to_linear_reads()
+
+        if self.with_control:
+            self.create_control_on_other_path()
+        else:
+            self.copy_sample_to_control()
+
         self._translate_reads_to_graph()
+
+    def create_control_on_other_path(self):
+        print("Creating cointnrol on other path")
+        for read in self._sample_linear_reads:
+            path = read.region_paths[0]
+            other_path = (path - 100  + 1 % self.simulated_graph.n_linear_paths) + 100
+            control_read = Interval(read.start_position.offset,
+                                    read.end_position.offset,
+                                    [other_path])
+            self.n_control_reads += 1
+            self._control_linear_reads.append(control_read)
+
+    def copy_sample_to_control(self):
+        for read in self._sample_reads:
+            self._control_reads.append(read)
+            self.n_control_reads += 1
 
     def get_correct_peak_positions_on_graph(self):
         peaks = []
@@ -43,7 +66,7 @@ class PileupSimulator():
                                    int(offset + self.peak_size/2),
                                    [node_id])
         for i in range(0, self.n_reads_at_peak):
-            self._linear_reads.append(linear_interval.copy())
+            self._sample_linear_reads.append(linear_interval.copy())
             self.n_sample_reads += 1
 
         self.linear_peaks.append(linear_interval)
@@ -65,12 +88,13 @@ class PileupSimulator():
         pass
 
     def _translate_reads_to_graph(self):
-        for interval in self._linear_reads:
+        for interval in self._sample_linear_reads:
             graph_interval = self.simulated_graph.translate(interval)
             self._sample_reads.append(graph_interval)
-            if not self.with_control:
-                self._control_reads.append(graph_interval)
-                self.n_control_reads += 1
+
+        for interval in self._control_linear_reads:
+            graph_interval = self.simulated_graph.translate(interval)
+            self._control_reads.append(graph_interval)
 
     def get_simulated_pileups(self):
         sample_pileup = SparsePileup.from_intervals(self.simulated_graph.graph,
