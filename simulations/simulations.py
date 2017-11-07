@@ -99,11 +99,11 @@ if __name__ == "__main__":
     caller = SimulatedPeakCalling(
         n_paths = 2,
         n_basepairs_length=10000,
-        n_snps = 100,
+        n_snps = 35,
         n_peaks = 40
     )
 
     #print(caller.graph)
-    #caller.call_peaks()
+    caller.call_peaks()
 
     caller.compare_with_correct_peaks()
