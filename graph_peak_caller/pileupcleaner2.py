@@ -48,6 +48,7 @@ class Cleaner(object):
         extended = [node_list + [next_node] for next_node
                     in self.cur_adj_list[last_node]
                     if next_node in self.starts_dict]
+
         for added_node in extended:
             self.ignored_nodes.discard(added_node[-1])
 
@@ -178,6 +179,8 @@ class HolesCleaner(Cleaner):
         if len(extensions) == len(self.cur_adj_list[node_list[-1]]):
             return True
         self.save(node_list)
+        #print("Node list")
+        #print(node_list)
         return True
 
     def get_areas(self, pileup):

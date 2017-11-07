@@ -13,6 +13,20 @@ class LinearSnarlMap(object):
     def get_node_start(self, node_id):
         return self._linear_node_starts[node_id]
 
+    def __str__(self):
+        out = "Linear snarl map \n"
+        out += " Starts: \n"
+        for node, val in self._linear_node_starts.items():
+            out += "  %d, %.3f \n" % (node, val)
+        out += " Ends: \n"
+        for node, val in self._linear_node_ends.items():
+            out += "  %d, %.3f \n" % (node, val)
+
+        return out
+
+    def __repr__(self):
+        return self.__str__()
+
     def get_node_end(self, node_id):
         return self._linear_node_ends[node_id]
 
