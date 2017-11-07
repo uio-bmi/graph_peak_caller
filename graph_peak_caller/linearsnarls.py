@@ -15,7 +15,7 @@ def create_control(linear_map_name, reads, extension_sizes, fragment_length):
     mapped_reads = linear_map.map_interval_collection(reads)
     average_value = mapped_reads.n_basepairs_covered() / linear_size
 
-    max_pileup = LinearPileup([0], [0])
+    max_pileup = LinearPileup([0], [average_value])
     for extension in extension_sizes:
         extended_reads = mapped_reads.extend(extension)
         linear_pileup = LinearPileup.create_from_starts_and_ends(
@@ -23,7 +23,7 @@ def create_control(linear_map_name, reads, extension_sizes, fragment_length):
         linear_pileup /= (extension*2/fragment_length)
         max_pileup.maximum(linear_pileup)
 
-    max_pileup.threshold(average_value)
+    # max_pileup.threshold(average_value)
     valued_indexes = max_pileup.to_valued_indexes(linear_map)
     graph_pileup = SparsePileup(linear_map._graph)
     graph_pileup.data = valued_indexes
