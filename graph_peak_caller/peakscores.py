@@ -79,7 +79,6 @@ class ScoredPeak(object):
                 sums[node_id] = max_finite_value+1
 
     def get_max_path(self):
-
         # Handle peaks that are on one node
         if len(self._peak.internal_intervals) > 0:
             node, start_end = list(self._peak.internal_intervals.items())[0]
