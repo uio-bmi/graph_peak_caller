@@ -82,10 +82,12 @@ class ScoredPeak(object):
         # Handle peaks that are on one node
         if len(self._peak.internal_intervals) > 0:
             node, start_end = list(self._peak.internal_intervals.items())[0]
-            return obg.DirectedInterval(start_end[0], start_end[1], [node], graph=self._graph)
+            return obg.DirectedInterval(start_end[0], start_end[1],
+                                        [node], graph=self._graph)
 
         sums = {node_id: float(vi.sum()) for node_id, vi
                 in self._scores.items()}
+
         self.__clean_sums(sums)
         for key in list(sums.keys()):
             if key in self._peak.full_areas:
@@ -103,7 +105,7 @@ class ScoredPeak(object):
 
         memo = defaultdict(int)
         stack = deque(zip([[e] for e in ends], start_values))
-
+        assert stack, str(self._peak)
         global_max = 0
         global_max_path = None
         while stack:
