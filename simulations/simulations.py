@@ -49,6 +49,9 @@ class SimulatedPeakCalling():
         self.n_control_reads = pileup_simulator.n_control_reads
         self.control_reads = pileup_simulator._control_reads
 
+        print("Graph")
+        print(self.graph)
+
     def call_peaks(self):
 
         genome_size = sum(block.length() for block in self.graph.blocks.values())
@@ -64,19 +67,24 @@ class SimulatedPeakCalling():
         #print(snarlgraph)
         linear_map = LinearSnarlMap(snarlgraph, self.graph)
         linear_map.to_file("simulated_snarl_map.tmp")
+        print("Linear map")
+        print(linear_map)
+        return
 
         print("Control  reads")
         caller = CallPeaks(self.graph,
                            sample_intervals="dummy",
                            control_intervals=IntervalCollection(self.control_reads),
                            experiment_info=experiment_info,
-                           has_control=False,
+                           has_control=self.with_control,
                            linear_map="simulated_snarl_map.tmp")
 
         caller._sample_pileup = self.sample_pileup
-        #print(self.sample_pileup)
+        print("Sample pileup")
+        print(self.sample_pileup)
         caller.create_control()
-        #print(self.control_pileup)
+        print("Control pileup before extended")
+        print(self.control_pileup)
         caller.scale_tracks()
         caller.get_score()
         caller.call_peaks("simulated.peaks")
@@ -91,6 +99,9 @@ class SimulatedPeakCalling():
         #print(found_peaks)
 
 if __name__ == "__main__":
+
+
+
     """
     simulator = GraphSimulator(2, 1000, 25)
     simulated_graph = simulator.get_simulated_graph()
@@ -101,12 +112,12 @@ if __name__ == "__main__":
     caller = SimulatedPeakCalling(
         n_paths = 2,
         n_basepairs_length=10000,
-        n_snps = 35,
-        n_peaks = 40,
-        with_control=True
+        n_snps = 2,
+        n_peaks = 1,
+        with_control=False
     )
 
     #print(caller.graph)
     caller.call_peaks()
 
-    caller.compare_with_correct_peaks()
+    # caller.compare_with_correct_peaks()

@@ -38,6 +38,9 @@ class PileupSimulator():
 
         self._translate_reads_to_graph()
 
+        print("N sample reads: %d" % self.n_sample_reads)
+        print("N control reads: %d" % self.n_control_reads)
+
     def create_control_on_other_path(self):
         print("Creating cointnrol on other path")
         for read in self._sample_linear_reads:
@@ -50,8 +53,8 @@ class PileupSimulator():
             self._control_linear_reads.append(control_read)
 
     def copy_sample_to_control(self):
-        for read in self._sample_reads:
-            self._control_reads.append(read)
+        for read in self._sample_linear_reads:
+            self._control_linear_reads.append(read)
             self.n_control_reads += 1
 
     def get_correct_peak_positions_on_graph(self):
@@ -81,7 +84,7 @@ class PileupSimulator():
         for location in peak_locations:
             path = random.sample(range(0, self.simulated_graph.n_linear_paths), 1)
             path = 0
-            path_id= path + 100
+            path_id = path + 100
             self._create_intervals_around_peak_position(path_id, location)
 
     def _add_noise_to_linear_reads(self):

@@ -198,7 +198,8 @@ class CallPeaks(object):
         extensions = [self.info.fragment_length, 2500, 5000] if self.has_control else [5000]
         control_pileup = linearsnarls.create_control(self.linear_map,  self.control_intervals,
                                                      extensions, self.info.fragment_length)
-
+        print("Control pileup created")
+        print(control_pileup)
         #control_track = ControlTrack(
         #    self.ob_graph, self.control_intervals,
         #    self.info.fragment_length, extensions)
@@ -238,8 +239,10 @@ class CallPeaks(object):
         self.peaks.fill_small_wholes(self.info.read_length)
         logging.info("Removing small peaks")
         self.final_track = self.peaks  # self.peaks.remove_small_peaks(
+        print(self.final_track)
         logging.info("Creating subgraphs from peak regions")
         peaks_as_subgraphs = self.final_track.to_subgraphs()
+        logging.info("Found %d subgraphs" % len(peaks_as_subgraphs.subgraphs))
         peaks_as_subgraphs.to_file(
             self.out_file_base_name + "peaks_as_subgraphs")
 
@@ -252,7 +255,8 @@ class CallPeaks(object):
                      scored_peak in scored_peaks]
         IntervalCollection(max_paths).to_text_file(
             self.out_file_base_name + "max_paths")
-        self.max_paths = max_paths
+        self.max_paths = [path for path in max_paths if
+                          path.length() >= self.info.fragment_length]
         print("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
         self.final_track.to_bed_file(self.out_file_base_name + out_file)
 

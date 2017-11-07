@@ -156,9 +156,6 @@ class SnarlGraph(obg.GraphWithReversals):
         return memo
 
     def get_linear_node_intervals(self):
-        #if self.id == "top_level":
-        #    print("?", self.adj_list[1], self.reverse_adj_list[-1])
-
         linear_node_intervals = {}
         forward_length_dict = self._create_path_length_dict()
         back_length_dict = self._create_path_length_dict(False)
@@ -171,11 +168,6 @@ class SnarlGraph(obg.GraphWithReversals):
                 start_length = forward_length_dict[-node_id]
                 end_length = back_length_dict[node_id]
             else:
-                #print("######ID", self.id, node_id)
-                #print(self.adj_list[node_id], self.adj_list[-node_id])
-                #print(self.reverse_adj_list[-node_id],
-                #      self.reverse_adj_list[node_id])
-                #print(self._start_node, self._end_node)
                 raise Exception()
 
             path_length = start_length + end_length + self.node_size(node_id)
@@ -293,13 +285,8 @@ class SnarlGraphBuilder:
         new_start = self.id_counter
         new_end = new_start + 1
 
-        #print("STARTS")
-        #print("?", self.graph.adj_list[1], self.graph.reverse_adj_list[-1])
         for block in self.graph.get_first_blocks():
-            print(block)
             self.graph._add_edge(new_start, block)
-        #print("?", self.graph.adj_list[1], self.graph.reverse_adj_list[-1])
-        #print("ENDS")
         for block in self.graph.get_last_blocks():
             self.graph._add_edge(block, new_end)
 
