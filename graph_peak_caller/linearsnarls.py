@@ -20,9 +20,7 @@ def create_control(linear_map_name, reads, extension_sizes, fragment_length):
         extended_reads = mapped_reads.extend(extension)
         linear_pileup = LinearPileup.create_from_starts_and_ends(
                 extended_reads.starts, extended_reads.ends)
-        print(type(linear_pileup))
         linear_pileup /= (extension*2/fragment_length)
-        print(type(linear_pileup))
         max_pileup.maximum(linear_pileup)
 
     max_pileup.threshold(average_value)

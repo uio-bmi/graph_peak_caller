@@ -106,4 +106,4 @@ if __name__ == "__main__":
     #print(caller.graph)
     #caller.call_peaks()
 
-    caller.compare_with_correct_peaks()
+    # caller.compare_with_correct_peaks()

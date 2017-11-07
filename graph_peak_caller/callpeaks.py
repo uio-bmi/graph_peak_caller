@@ -252,7 +252,8 @@ class CallPeaks(object):
                      scored_peak in scored_peaks]
         IntervalCollection(max_paths).to_text_file(
             self.out_file_base_name + "max_paths")
-        self.max_paths = max_paths
+        self.max_paths = [path for path in max_paths if
+                          path.length() >= self.info.fragment_length]
         print("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
         self.final_track.to_bed_file(self.out_file_base_name + out_file)
 
