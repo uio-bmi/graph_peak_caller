@@ -77,6 +77,7 @@ class CallPeaks(object):
         """
 
         assert linear_map is not None, "LinearMap cannot be None"
+        assert isinstance(linear_map, str), "Must be file name"
 
         assert isinstance(sample_intervals, IntervalCollection) \
                or isinstance(sample_intervals, str), \
@@ -160,7 +161,7 @@ class CallPeaks(object):
                 yield False
 
     def scale_tracks(self, update_saved_files=False):
-        print("Scaling tracks to ratio: %d / %d" % (self.info.n_sample_reads,
+        logging.info("Scaling tracks to ratio: %d / %d" % (self.info.n_sample_reads,
                                                     self.info.n_control_reads))
         ratio = self.info.n_sample_reads/self.info.n_control_reads
 
@@ -184,14 +185,12 @@ class CallPeaks(object):
         self.n_reads = sum(1 for line in open(self.control_file_name))
 
     def create_graph(self):
-        if self.verbose:
-            print("Creating graph")
+        logging.info("Creating graph")
         if isinstance(self.graph, str):
             self.ob_graph = offsetbasedgraph.Graph.from_file(self.graph)
         else:
             self.ob_graph = self.graph
-            if self.verbose:
-                print("Graph already created")
+            logging.info("Graph already created")
 
     def create_control(self, save_to_file=True):
         logging.info("Creating control track")
@@ -210,7 +209,7 @@ class CallPeaks(object):
         if save_to_file:
             self._control_track = self.out_file_base_name + "control_track.bdg"
             control_pileup.to_bed_graph(self._control_track)
-            print("Saved control pileup to " + self._control_track)
+            logging.info("Saved control pileup to " + self._control_track)
 
         self._control_pileup = control_pileup
 
@@ -226,25 +225,26 @@ class CallPeaks(object):
         self.q_values.to_bed_graph(self.out_file_base_name + "q_values.bdg")
 
     def get_p_values(self):
-        print("Get p-values")
+        logging.info("Getting p-values")
         self.p_values = get_p_value_track_from_pileups(
             self.ob_graph, self._control_pileup, self._sample_pileup)
 
     def call_peaks(self, out_file="final_peaks.bed", cutoff=0.05):
-        print("Calling peaks")
+        logging.info("Calling peaks")
         self.peaks = self.p_values.threshold_copy(-np.log10(cutoff))
         # self.p_values.threshold(-np.log10(cutoff))
         self.peaks.to_bed_file("pre_postprocess.bed")
-        print("Filling small Holes")
+        logging.info("Filling small Holes")
         self.peaks.fill_small_wholes(self.info.read_length)
-        print("Removing small peaks")
+        logging.info("Removing small peaks")
         self.final_track = self.peaks.remove_small_peaks(
             self.info.fragment_length)
-        print("Final track")
+        logging.info("Creating subgraphs from peak regions")
         peaks_as_subgraphs = self.final_track.to_subgraphs()
         peaks_as_subgraphs.to_file(
             self.out_file_base_name + "peaks_as_subgraphs")
 
+        logging.info("Finding max path through subgraphs")
         binary_peaks = (BinaryContinousAreas.from_old_areas(peak) for peak in
                         peaks_as_subgraphs)
         scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, self.p_values)
