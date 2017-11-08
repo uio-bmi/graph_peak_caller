@@ -34,6 +34,9 @@ class EventSorter(object):
             i += 1
         self.tuples.sort(key=itemgetter(0, 1))
 
+    def __str__(self):
+        return "EventSorter(\n" +"\n".join(str(t) for t in self) + ")"
+
     def __iter__(self):
         return self.tuples.__iter__()
 

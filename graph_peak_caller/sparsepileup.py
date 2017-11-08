@@ -358,7 +358,7 @@ class SparsePileup(Pileup):
 
     def __str__(self):
         return "\n".join(
-            "%s: %s, %s, %d" % (node_id, valued_indexes.indexes, valued_indexes.values, valued_indexes.start_value)
+            "%s: %s, %s, %s" % (node_id, valued_indexes.indexes, valued_indexes.values, valued_indexes.start_value)
             for node_id, valued_indexes in self.data.items())
 
     __repr__ = __str__

@@ -10,6 +10,11 @@ class LinearSnarlMap(object):
         self._length = snarl_graph.length()
         self._linear_node_starts, self._linear_node_ends = snarl_graph.get_distance_dicts()
 
+    def __str__(self):
+        d = {n: (self._linear_node_starts[n], self._linear_node_ends[n])
+             for n in self._linear_node_starts}
+        return str(d)
+
     def get_node_start(self, node_id):
         return self._linear_node_starts[node_id]
 
@@ -30,7 +35,7 @@ class LinearSnarlMap(object):
             scale, offset = self.get_scale_and_offset(node_id)
             new_idxs = (np.array(unmapped_indices.indices)-offset) * scale
             new_idxs = new_idxs.astype("int")
-            new_idxs[0] = min(0, new_idxs[0])
+            new_idxs[0] = max(0, new_idxs[0])
             vi = ValuedIndexes(
                 new_idxs[1:], np.array(unmapped_indices.values)[1:],
                 unmapped_indices.values[0], self._graph.node_size(node_id))

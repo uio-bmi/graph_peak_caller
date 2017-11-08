@@ -63,15 +63,8 @@ class SimulatedPeakCalling():
         snarlbuilder = SnarlGraphBuilder(self.graph, self.snarls,
                                          id_counter=self.graph.max_block_id() + 1)
         snarlgraph = snarlbuilder.build_snarl_graphs()
-        #print("Snarlgraph")
-        #print(snarlgraph)
         linear_map = LinearSnarlMap(snarlgraph, self.graph)
         linear_map.to_file("simulated_snarl_map.tmp")
-        print("Linear map")
-        print(linear_map)
-        #return
-
-        print("Control  reads")
         caller = CallPeaks(self.graph,
                            sample_intervals="dummy",
                            control_intervals=IntervalCollection(self.control_reads),
@@ -80,12 +73,7 @@ class SimulatedPeakCalling():
                            linear_map="simulated_snarl_map.tmp")
 
         caller._sample_pileup = self.sample_pileup
-        print("Sample pileup")
-        print(self.sample_pileup)
         caller.create_control()
-        print("Control pileup before extended")
-        print(self.control_pileup)
-        print(self.control_reads)
         caller.scale_tracks()
         caller.get_score()
         caller.call_peaks("simulated.peaks")

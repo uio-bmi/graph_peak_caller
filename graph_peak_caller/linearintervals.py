@@ -7,6 +7,9 @@ class LinearIntervalCollection(object):
         self.starts = np.array(starts)
         self.ends = np.array(ends)
 
+    def __str__(self):
+        return str(self.starts) + "\n" + str(self.ends)
+
     def extend(self, extension_size):
         extended_starts = (self.starts + self.ends)/2 - extension_size
         extended_ends = (self.starts + self.ends)/2 + extension_size
