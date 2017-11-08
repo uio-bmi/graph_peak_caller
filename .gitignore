@@ -15,3 +15,12 @@
 *.obgraph
 *.vggraph
 .project
+*.bed
+*.vg
+*.txt
+*.nodes
+*.edges
+*.xls
+*.narrowPeak
+*.cached
+*.meme
