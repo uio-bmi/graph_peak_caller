@@ -18,6 +18,7 @@ class ScoredPeak(object):
 
     @staticmethod
     def _from_valued_indexes(valued_indexes, start, end):
+        print(valued_indexes, start, end)
         return valued_indexes.get_subset(start, end)
 
     @classmethod

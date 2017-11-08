@@ -1,7 +1,7 @@
 import numpy as np
 from collections import defaultdict
-from .sparsepileup import SparsePileup, starts_and_ends_to_sparse_pileup
-from .util import sparse_maximum, sanitize_indices_and_values
+from .sparsepileup import SparsePileup
+from .util import sparse_maximum
 from .eventsorter import EventSorter, EventSort
 from .snarlmaps import LinearSnarlMap
 import logging
