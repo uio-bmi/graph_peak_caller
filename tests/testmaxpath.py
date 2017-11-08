@@ -100,14 +100,16 @@ class TestMaxPath(unittest.TestCase):
         binary_peak = BinaryContinousAreas.from_old_areas(peak)
         qvalues = SparsePileup.from_intervals(graph,
                 [
-                    Interval(0, 10, [3]) # High value on 3
+                    Interval(0, 10, [3]), # High value on 3
+                    Interval(0, 10, [3]), # High value on 3
+                    Interval(0, 10, [1, 2, 4])
                 ])
 
         print("Q values")
         print(qvalues)
 
         scored_peak = ScoredPeak.from_peak_and_pileup(binary_peak, qvalues)
-        
+
         max_path = scored_peak.get_max_path()
         print(max_path)
 

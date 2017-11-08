@@ -1,7 +1,7 @@
 import numpy as np
 from collections import defaultdict
-from .sparsepileup import SparsePileup, starts_and_ends_to_sparse_pileup
-from .util import sparse_maximum, sanitize_indices_and_values
+from .sparsepileup import SparsePileup
+from .util import sparse_maximum
 from .eventsorter import EventSorter, EventSort
 from .snarlmaps import LinearSnarlMap
 import logging
@@ -16,15 +16,14 @@ def create_control(linear_map_name, reads, extension_sizes, fragment_length):
     mapped_reads = linear_map.map_interval_collection(reads)
     average_value = mapped_reads.n_basepairs_covered() / linear_size
     logging.info("Average control value: %.4f (sum of pileup: %d, linear size: %d)" % (average_value, mapped_reads.n_basepairs_covered(), linear_size))
-
     max_pileup = LinearPileup([0], [average_value])
+
     for extension in extension_sizes:
         extended_reads = mapped_reads.extend(extension)
         linear_pileup = LinearPileup.create_from_starts_and_ends(
                 extended_reads.starts, extended_reads.ends)
         linear_pileup /= (extension*2/fragment_length)
         max_pileup.maximum(linear_pileup)
-
     # max_pileup.threshold(average_value)
     valued_indexes = max_pileup.to_valued_indexes(linear_map)
     graph_pileup = SparsePileup(linear_map._graph)
@@ -37,6 +36,9 @@ class UnmappedIndices(object):
     def __init__(self, indices=None, values=None):
         self.indices = [] if indices is None else indices
         self.values = [] if values is None else values
+
+    def __str__(self):
+        return "(%s, %s)" % (self.indices, self.values)
 
     def add_indexvalue(self, index, value):
         self.indices.append(index)
@@ -55,8 +57,7 @@ class LinearPileup(object):
     def __str__(self):
         return "Indices: %s, values: %s" % (self.indices, self.values)
 
-    def __repr__(self):
-        return self.__str__()
+    __repr__ = __str__
 
     @classmethod
     def create_from_starts_and_ends(cls, starts, ends):
@@ -104,7 +105,6 @@ class LinearPileup(object):
                 try:
                     cur_nodes.remove(value)
                 except:
-                    print(value)
                     raise
             else:
                 raise Exception("Coding Error")

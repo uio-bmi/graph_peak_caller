@@ -63,12 +63,8 @@ class SimulatedPeakCalling():
         snarlbuilder = SnarlGraphBuilder(self.graph.copy(), self.snarls,
                                          id_counter=self.graph.max_block_id() + 1)
         snarlgraph = snarlbuilder.build_snarl_graphs()
-        #print("Snarlgraph")
-        #print(snarlgraph)
-
         linear_map = LinearSnarlMap(snarlgraph, self.graph)
         linear_map.to_file("simulated_snarl_map.tmp")
-
         caller = CallPeaks(self.graph,
                            sample_intervals="dummy",
                            control_intervals=IntervalCollection(self.control_reads),
@@ -78,7 +74,6 @@ class SimulatedPeakCalling():
 
         caller._sample_pileup = self.sample_pileup
         caller.create_control()
-        #print(caller._control_pileup)
         caller.scale_tracks()
         caller.get_score()
         caller.call_peaks("simulated.peaks")
@@ -89,18 +84,16 @@ class SimulatedPeakCalling():
             print(peak)
         found_peaks = PeakCollection.create_list_from_file("max_paths", graph=self.graph)
 
-        print(found_peaks)
-
+        for i in found_peaks:
+            print(i)
         matched = correct_peaks.get_identical_intervals(found_peaks)
 
         print("%d correct peaks identically found, %3.f %% " % (len(matched), 100 * len(matched) / len(correct_peaks.intervals)))
+        for i in correct_peaks:
+            print(i)
 
-        #print(found_peaks)
 
 if __name__ == "__main__":
-
-
-
     """
     simulator = GraphSimulator(2, 1000, 25)
     simulated_graph = simulator.get_simulated_graph()
@@ -109,10 +102,11 @@ if __name__ == "__main__":
     sys.exit()
     """
     caller = SimulatedPeakCalling(
-        n_paths = 2,
+        n_paths=2,
         n_basepairs_length=10000,
         n_snps = 10,
         n_peaks = 5,
+
         with_control=False
     )
 

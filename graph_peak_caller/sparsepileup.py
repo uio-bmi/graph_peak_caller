@@ -59,21 +59,24 @@ class ValuedIndexes(object):
                                  end-start)
         length = end-start
         indexes = self.indexes-start
-        is_in_subset = np.logical_and(indexes > 0, indexes < length)
-        subset_range = np.nonzero(is_in_subset)[0]
-        if not subset_range.size:
-            return self.__class__(np.array([], dtype="int"),
-                                  np.array([]),
-                                  self.start_value,
-                                  length)
+        above_mask = indexes > 0
+        above = np.nonzero(above_mask)[0]
 
-        subset_indexes = indexes[subset_range]
-        subset_values = self.values[subset_range]
-
-        if subset_range[0] == 0:
+        if not above.size:
+            start_value = self.values[-1] if self.values.size else self.start_value
+        elif above[0] == 0:
             start_value = self.start_value
         else:
-            start_value = self.values[subset_range[0] - 1]
+            start_value = self.values[above[0]-1]
+        if not above.size:
+            return self.__class__(np.array([], dtype="int"),
+                                  np.array([]),
+                                  start_value,
+                                  length)
+        inside_mask = np.logical_and(above_mask,
+                                     indexes < length)
+        subset_indexes = indexes[inside_mask]
+        subset_values = self.values[inside_mask]
         return self.__class__(subset_indexes,
                               subset_values, start_value,
                               length)
