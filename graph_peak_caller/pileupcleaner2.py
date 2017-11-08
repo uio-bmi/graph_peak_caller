@@ -1,6 +1,7 @@
 from .extender import AreasBuilder, Areas
 import offsetbasedgraph as obg
 import logging
+LOOP_VALUE = 3000000000
 
 
 class Cleaner(object):
@@ -29,8 +30,6 @@ class Cleaner(object):
 
         logging.info("N starts: %s", len(self.starts_dict))
         logging.info("N ends: %s", len(self.ends_dict))
-
-
 
     def is_end_included(self, node_id):
         pass
@@ -64,18 +63,19 @@ class Cleaner(object):
         return self.areas
 
     def directed_run(self, adj_list):
+        self._cur_memo = {}
+        self._cur_remain_memo = {}
         node_lists = self.get_init_nodes()
         assert all(node_list[0] in self.ends_dict for node_list in node_lists)
         while node_lists:
             logging.info("N lists: %s", len(node_lists))
-            new_list = []
-            for node_list in node_lists:
-                extensions = self.extend_node_list(node_list)
-                should_extend = self.handle_node_list(node_list, extensions)
-                if not should_extend:
-                    continue
-                new_list.extend(self.extend_node_list(node_list))
-            node_lists = new_list
+            node_list = node_lists.pop()
+            extensions = self.extend_node_list(node_list)
+            should_extend = self.handle_node_list(node_list, extensions)
+            if not should_extend:
+                continue
+            node_lists.extend(self.extend_node_list(node_list))
+            # node_lists = new_list
 
     def handle_node_list(self, node_list, extensions):
         raise NotImplementedError
@@ -95,12 +95,15 @@ class Cleaner(object):
         return [[node] for node in self.ends_dict.keys() if
                 self.is_init_node(node)]
 
-    def save(self, node_list):
+    def save(self, node_list, memo_value=None):
         # logging.info("Saving", node_list)
         areas = {node_id: [0, self.starts_dict[node_id]]
                  for node_id in node_list[1:]}
         areas.update({-node_list[0]: [0, self.starts_dict[-node_list[0]]]})
         self.areas_builder.update(areas)
+        if memo_value is not None:
+            for node_id in node_list[1:]:
+                self._cur_remain_memo[node_id] = memo_value
 
     def finalize(self):
         areas = {}
@@ -147,14 +150,25 @@ class PeaksCleaner(Cleaner):
     def handle_node_list(self, node_list, extensions):
         assert node_list[0] in self.ends_dict
         if node_list[-1] in node_list[1:-1]:  # Loop
-            self.save(node_list)
+            self.save(node_list, memo_value=LOOP_VALUE)
             return False
+
+        length = self.get_length(node_list)
+        last_node = node_list[-1]
+        if last_node in self._cur_memo and length <= self._cur_memo[last_node]:
+            if last_node not in self._cur_remain_memo:
+                print(node_list)
+                return False
+            my_remain = self._cur_remain_memo[last_node] - self._cur_memo[last_node] + length
+            if my_remain >= self.threshold:
+                self.save(node_list, memo_value=length)
+            return False
+        self._cur_memo[last_node] = length
         if extensions:
             return True
         length = self.get_length(node_list)
         if length >= self.threshold:
-            self.save(node_list)
-
+            self.save(node_list, memo_value=length)
         return False
 
     def get_init_nodes(self):

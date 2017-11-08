@@ -77,11 +77,12 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
 
 
 def run_from_max_paths_step(graph_file_name, pileup_file_name, read_length):
+    fragment_length = 135
     graph = obg.Graph.from_file(graph_file_name)
     peaks = SparsePileup.from_bed_file(graph, pileup_file_name)
     peaks.fill_small_wholes(read_length)
-    # final_track = peaks.remove_small_peaks(fragment_length)
-    final_track = peaks
+    final_track = peaks.remove_small_peaks(fragment_length)
+    # final_track = peaks
     peaks_as_subgraphs = final_track.to_subgraphs()
     p_values = SparsePileup.from_bed_file(graph, "real_data_q_values.bdg")
     # peaks_as_subgraphs = SubgraphCollection.from_file(graph, "real_data_peaks_as_subgraphs")
@@ -91,7 +92,7 @@ def run_from_max_paths_step(graph_file_name, pileup_file_name, read_length):
                     for peak in binary_peaks)
     max_paths = [scored_peak.get_max_path() for
                  scored_peak in scored_peaks]
-    max_paths = [p for p in max_paths if p.length() > 136]
+    # max_paths = [p for p in max_paths if p.length() > 136]
     IntervalCollection(max_paths).to_text_file(
                 "real_data_max_paths")
     retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
@@ -121,11 +122,10 @@ def peak_sequences_to_fasta(vg_graph_file_name, peaks_file_name, fasta_file_name
 
 if __name__ == "__main__":
     dm_folder = "../graph_peak_caller/dm_test_data/"
-    #run_from_max_paths_step("obgraph", "pre_postprocess.bed", 36)
-    # run_from_max_paths_step("obgraph", "pre_postprocess.bed", 36)
+    run_from_max_paths_step("obgraph", "pre_postprocess.bed", 36)
     #cProfile.run('run_with_gam("ENCFF000WVQ_filtered.gam", "cactus-mhc.json")')
     #cProfile.run('run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")')
     #run_from_max_paths_step()
     #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")
     #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "haplo1kg50-mhc.json")
-    run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q30.gam", "ENCFF001HNS_haplo1kg50-mhc_filtered_q30.gam", "haplo1kg50-mhc.json")
+    # run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q30.gam", "ENCFF001HNS_haplo1kg50-mhc_filtered_q30.gam", "haplo1kg50-mhc.json")
