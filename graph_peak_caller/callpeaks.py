@@ -198,8 +198,7 @@ class CallPeaks(object):
         extensions = [self.info.fragment_length, 2500, 5000] if self.has_control else [5000]
         control_pileup = linearsnarls.create_control(self.linear_map,  self.control_intervals,
                                                      extensions, self.info.fragment_length)
-        print("Control pileup created")
-        print(control_pileup)
+
         #control_track = ControlTrack(
         #    self.ob_graph, self.control_intervals,
         #    self.info.fragment_length, extensions)
@@ -231,17 +230,22 @@ class CallPeaks(object):
             self.ob_graph, self._control_pileup, self._sample_pileup)
 
     def call_peaks(self, out_file="final_peaks.bed", cutoff=0.05):
+
+        #print("P values pileup")
+        #print(self.p_values)
+
         logging.info("Calling peaks")
         self.peaks = self.p_values.threshold_copy(-np.log10(cutoff))
         # self.p_values.threshold(-np.log10(cutoff))
         self.peaks.to_bed_file("pre_postprocess.bed")
         logging.info("Filling small Holes")
         self.peaks.fill_small_wholes(self.info.read_length)
-        logging.info("Removing small peaks")
-        self.final_track = self.peaks  # self.peaks.remove_small_peaks(
-        print(self.final_track)
+        #logging.info("Removing small peaks")
+        self.final_track = self.peaks  # self.peaks.remove_small_peaks
+
         logging.info("Creating subgraphs from peak regions")
         peaks_as_subgraphs = self.final_track.to_subgraphs()
+
         logging.info("Found %d subgraphs" % len(peaks_as_subgraphs.subgraphs))
         peaks_as_subgraphs.to_file(
             self.out_file_base_name + "peaks_as_subgraphs")

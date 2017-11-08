@@ -33,6 +33,7 @@ class PileupSimulator():
 
         if self.with_control:
             self.create_control_on_other_path()
+            self.add_background_control_reads()
         else:
             self.copy_sample_to_control()
 
@@ -42,8 +43,12 @@ class PileupSimulator():
         print("N control reads: %d" % self.n_control_reads)
 
     def create_control_on_other_path(self):
-        print("Creating cointnrol on other path")
+        print("Creating control on other path")
+        i = 0
         for read in self._sample_linear_reads:
+            i += 1
+            if i % 2 == 1:
+                continue
             path = read.region_paths[0]
             other_path = (path - 100  + 1 % self.simulated_graph.n_linear_paths) + 100
             control_read = Interval(read.start_position.offset,
@@ -51,6 +56,20 @@ class PileupSimulator():
                                     [other_path])
             self.n_control_reads += 1
             self._control_linear_reads.append(control_read)
+
+    def _random_path_id(self):
+        return 100 + random.sample(range(0, self.simulated_graph.n_linear_paths), 1)[0]
+
+    def add_background_control_reads(self):
+        n_to_add = int(self.simulated_graph.linear_graph_length / self.peak_size*2)
+        peak_locations = random.sample(range(self.peak_size,
+                                             self.simulated_graph.linear_graph_length - self.peak_size
+                                            ), n_to_add)
+        for location in peak_locations:
+            path = self._random_path_id()
+            interval = Interval(location, location + self.peak_size, [path])
+            self._control_linear_reads.append(interval)
+            self.n_control_reads += 1
 
     def copy_sample_to_control(self):
         for read in self._sample_linear_reads:

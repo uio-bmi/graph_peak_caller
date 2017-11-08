@@ -4,6 +4,7 @@ from .sparsepileup import SparsePileup, starts_and_ends_to_sparse_pileup
 from .util import sparse_maximum, sanitize_indices_and_values
 from .eventsorter import EventSorter, EventSort
 from .snarlmaps import LinearSnarlMap
+import logging
 
 
 def create_control(linear_map_name, reads, extension_sizes, fragment_length):
@@ -14,6 +15,7 @@ def create_control(linear_map_name, reads, extension_sizes, fragment_length):
     linear_size = linear_map._length
     mapped_reads = linear_map.map_interval_collection(reads)
     average_value = mapped_reads.n_basepairs_covered() / linear_size
+    logging.info("Average control value: %.4f (sum of pileup: %d, linear size: %d)" % (average_value, mapped_reads.n_basepairs_covered(), linear_size))
     max_pileup = LinearPileup([0], [average_value])
 
     for extension in extension_sizes:
@@ -26,6 +28,7 @@ def create_control(linear_map_name, reads, extension_sizes, fragment_length):
     valued_indexes = max_pileup.to_valued_indexes(linear_map)
     graph_pileup = SparsePileup(linear_map._graph)
     graph_pileup.data = valued_indexes
+
     return graph_pileup
 
 
@@ -52,7 +55,9 @@ class LinearPileup(object):
         return self
 
     def __str__(self):
-        return str(self.indices) + "\n" + str(self.values)
+        return "Indices: %s, values: %s" % (self.indices, self.values)
+
+    __repr__ = __str__
 
     @classmethod
     def create_from_starts_and_ends(cls, starts, ends):

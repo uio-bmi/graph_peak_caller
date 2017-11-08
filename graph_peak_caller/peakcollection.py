@@ -45,9 +45,10 @@ class PeakCollection(IntervalCollection):
     def get_identical_intervals(self, other_peak_collection):
         identical_intervals = []
         for interval in self.intervals:
-            if other_peak_collection.contains(interval):
-                identical_intervals.append()
+            if other_peak_collection.contains_interval(interval):
+                identical_intervals.append(interval)
 
+        return identical_intervals
 
     def get_peaks_not_in_other_collection(self, other_collection, allowed_mismatches = 0):
         out = []

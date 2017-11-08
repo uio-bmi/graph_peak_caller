@@ -37,7 +37,7 @@ class ValuedIndexes(object):
         return self.length == other.length
 
     def __str__(self):
-        return "VI(%s, %s, %s, %s)" % (
+        return "VI(indices: %s, values: %s, start: %s, length: %s)" % (
             self.indexes, self.values,
             self.start_value, self.length)
 
@@ -135,12 +135,16 @@ class ValuedIndexes(object):
         return np.append(np.insert(self.indexes, 0, 0), self.length)
 
     def find_valued_areas(self, value):
+        #print("     Find valued areas")
         all_indexes = self.all_idxs()
         values = self.all_values()
         idxs = np.where(values == value)[0]
+        #print("      idx: %s" % idxs)
         starts = all_indexes[idxs]
         ends = all_indexes[idxs+1]
-        return list(chain(*zip(starts, ends)))
+        areas = list(chain(*zip(starts, ends)))
+        #print("       Found: %s" % areas)
+        return areas
 
     @classmethod
     def maximum(cls, vi_a, vi_b):
@@ -262,13 +266,12 @@ class SparsePileup(Pileup):
         [vi.scale(scale) for vi in self.data.values()]
 
     def fill_small_wholes(self, max_size):
-        # super().fill_small_wholes(max_size)
         cleaner = HolesCleaner(self, max_size)
         areas = cleaner.run()
         for node_id in areas.areas:
             starts = areas.get_starts(node_id)
             ends = areas.get_ends(node_id)
-            for start,  end in zip(starts, ends):
+            for start, end in zip(starts, ends):
                 self.data[node_id].set_interval_value(start, end, True)
         self.sanitize()
 

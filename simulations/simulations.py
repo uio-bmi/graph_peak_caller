@@ -60,7 +60,7 @@ class SimulatedPeakCalling():
         experiment_info.n_control_reads = self.n_control_reads
 
 
-        snarlbuilder = SnarlGraphBuilder(self.graph, self.snarls,
+        snarlbuilder = SnarlGraphBuilder(self.graph.copy(), self.snarls,
                                          id_counter=self.graph.max_block_id() + 1)
         snarlgraph = snarlbuilder.build_snarl_graphs()
         linear_map = LinearSnarlMap(snarlgraph, self.graph)
@@ -80,10 +80,10 @@ class SimulatedPeakCalling():
 
     def compare_with_correct_peaks(self):
         correct_peaks = PeakCollection(self.correct_peaks)
-        found_peaks = PeakCollection.from_file("max_paths", text_file=True, graph=self.graph)
+        found_peaks = PeakCollection.create_list_from_file("max_paths", graph=self.graph)
+        matched = correct_peaks.get_identical_intervals(found_peaks)
 
-        matched = correct_peaks.get_peaks_not_in_other_collection(found_peaks)
-        print("%d correct peaks found, %3.f %% " % (len(matched), 100 * len(matched) / len(correct_peaks.intervals)))
+        print("%d correct peaks identically found, %3.f %% " % (len(matched), 100 * len(matched) / len(correct_peaks.intervals)))
 
         #print(found_peaks)
 
@@ -101,12 +101,11 @@ if __name__ == "__main__":
     caller = SimulatedPeakCalling(
         n_paths = 2,
         n_basepairs_length=10000,
-        n_snps = 2,
-        n_peaks = 1,
-        with_control=False
+        n_snps = 10,
+        n_peaks = 15,
+        with_control=True
     )
 
     #print(caller.graph)
     caller.call_peaks()
-
-    # caller.compare_with_correct_peaks()
+    caller.compare_with_correct_peaks()
