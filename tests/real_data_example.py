@@ -70,16 +70,10 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
         experiment_info=experiment_info,
         out_file_base_name="real_data_", has_control=True,
         linear_map=linear_map)
-    caller.set_cutoff(0.10)
+    caller.set_cutoff(0.50)
     caller.verbose = True
     caller.run()
-    sequences = [retriever.get_interval_sequence(max_path)
-                 for max_path in caller.max_paths]
-    f = open("real_data_sequences", "w")
-    i = 0
-    for seq in sequences:
-        f.write(">peak" + str(i) + "\n" + seq + "\n")
-        i += 1
+    caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
 
 
 def run_from_max_paths_step(graph_file_name, pileup_file_name, read_length):

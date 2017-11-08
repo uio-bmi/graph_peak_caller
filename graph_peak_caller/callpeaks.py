@@ -11,6 +11,7 @@ from .bdgcmp import *
 from .extender import Extender
 from .areas import ValuedAreas, BinaryContinousAreas
 from .peakscores import ScoredPeak
+from .peakscores import MaxPathPeakCollection, MaxPathPeak
 from . import linearsnarls
 IntervalCollection.interval_class = DirectedInterval
 
@@ -102,6 +103,8 @@ class CallPeaks(object):
         self._sample_pileup = None
         self.out_file_base_name = out_file_base_name
         self.cutoff = 0.05
+
+        self.max_paths = None
 
     def set_cutoff(self, value):
         self.cutoff = value
@@ -261,12 +264,37 @@ class CallPeaks(object):
                         for peak in binary_peaks)
         max_paths = [scored_peak.get_max_path() for
                      scored_peak in scored_peaks]
-        IntervalCollection(max_paths).to_text_file(
-            self.out_file_base_name + "max_paths")
-        self.max_paths = [path for path in max_paths if
+
+        logging.info("Number of peaks before small peaks are removed: %d" % len(max_paths))
+        # Sort max paths
+        max_paths.sort(key=lambda p: p.score, reverse=True)
+
+        # Filter on length
+        max_paths = [path for path in max_paths if
                           path.length() >= self.info.fragment_length]
+
+        logging.info("Number of peaks after small peaks are removed: %d" % len(max_paths))
+
+        MaxPathPeakCollection(max_paths).to_json_file(
+            self.out_file_base_name + "max_paths")
+
+        self.max_paths = max_paths
+
         print("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
         self.final_track.to_bed_file(self.out_file_base_name + out_file)
+
+    def save_max_path_sequences_to_fasta_file(self, file_name, sequence_retriever):
+        assert self.max_paths is not None, \
+                "Max paths has not been found. Run peak calling first."
+        assert sequence_retriever is not None
+        # assert isinstance(sequence_retriever, vg.sequences.SequenceRetriever)
+        f = open(self.out_file_base_name + file_name, "w")
+        i = 0
+        for max_path in self.max_paths:
+            seq = sequence_retriever.get_interval_sequence(max_path)
+            f.write(">peak" + str(i) + " " +
+                    max_path.to_file_line() + "\n" + seq + "\n")
+            i += 1
 
     def create_sample_pileup(self, save_to_file=True):
         logging.debug("In sample pileup")

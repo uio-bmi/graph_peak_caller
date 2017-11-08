@@ -9,6 +9,14 @@ from graph_peak_caller.peakcollection import PeakCollection
 import logging
 logging.basicConfig(level=logging.INFO)
 
+class DummySequenceRetriever(object):
+
+    def __init__(self):
+        pass
+
+    def get_interval_sequence(self, interval):
+        return "AAATTTGGGCCC"
+
 
 class SimulatedPeakCalling():
     def __init__(self, n_paths, n_basepairs_length, n_snps, n_peaks, with_control=False):
@@ -77,6 +85,8 @@ class SimulatedPeakCalling():
         caller.scale_tracks()
         caller.get_score()
         caller.call_peaks("simulated.peaks")
+        sequence_retriever = DummySequenceRetriever()
+        caller.save_max_path_sequences_to_fasta_file("simulated_peak_sequences.fasta", sequence_retriever)
 
     def compare_with_correct_peaks(self):
         correct_peaks = PeakCollection(self.correct_peaks)

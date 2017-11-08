@@ -1,6 +1,53 @@
 from collections import deque, defaultdict
 import offsetbasedgraph as obg
 import numpy as np
+import json
+
+class MaxPathPeakCollection(obg.IntervalCollection):
+
+    @classmethod
+    def from_file(cls):
+        raise NotImplementedError("Not supported. Use from_json_file()")
+
+    def to_file(cls):
+        raise NotImplementedError("Not supported. Use to_json_file()")
+
+    @classmethod
+    def from_json_file(cls, file_name, graph=None):
+        f = open(file_name)
+        intervals = [MaxPathPeak.from_file_line(line, graph=graph) for line in f.readlines()]
+        f.close()
+        return cls(intervals)
+
+    def to_json_file(self, file_name):
+        f = open(file_name, "w")
+        for interval in self.intervals:
+            f.writelines(["%s\n" % interval.to_file_line()])
+        f.close()
+        return file_name
+
+
+class MaxPathPeak(obg.DirectedInterval):
+    def __init__self(self, start, end, rps, graph=None, score=0):
+        super(MaxPathPeak, self).__init__(start, end, rps, graph=graph)
+        self.score = score
+
+    def set_score(self, score):
+        self.score = score
+
+    def to_file_line(self):
+        object = {"start": int(self.start_position.offset),
+                  "end": int(self.end_position.offset),
+                  "region_paths": self.region_paths,
+                  "direction": self.direction,
+                  "average_q_value": self.score
+                 }
+        return json.dumps(object)
+
+    @classmethod
+    def from_file_line(cls, line, graph=None):
+        object = json.loads(line)
+        return cls(object["start"], object["end"], object["region_paths"], direction=object["direction"], graph=graph)
 
 
 class ScoredPeak(object):
@@ -79,14 +126,20 @@ class ScoredPeak(object):
                 sums[node_id] = max_finite_value+1
 
     def get_max_path(self):
-        # Handle peaks that are on one node
-        if len(self._peak.internal_intervals) > 0:
-            node, start_end = list(self._peak.internal_intervals.items())[0]
-            return obg.DirectedInterval(start_end[0], start_end[1],
-                                        [node], graph=self._graph)
 
         sums = {node_id: float(vi.sum()) for node_id, vi
                 in self._scores.items()}
+
+        # Handle peaks that are on one node
+        if len(self._peak.internal_intervals) > 0:
+            node, start_end = list(self._peak.internal_intervals.items())[0]
+
+            interval = MaxPathPeak(start_end[0], start_end[1],
+                                [node], graph=self._graph)
+            score = sums[node]
+            interval.set_score(score / interval.length())
+            return interval
+
 
         self.__clean_sums(sums)
         for key in list(sums.keys()):
@@ -127,6 +180,12 @@ class ScoredPeak(object):
         start_offset = int(self._graph.node_size(start_node) -
                            self._peak.starts[-start_node])
         end_offset = self._peak.starts[global_max_path[-1]]
-        return obg.DirectedInterval(
+
+
+        max_path_peak = MaxPathPeak(
             int(start_offset), int(end_offset),
             global_max_path, graph=self._graph)
+
+        score = global_max / max_path_peak.length()
+        max_path_peak.set_score(score)
+        return max_path_peak
