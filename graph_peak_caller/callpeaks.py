@@ -101,6 +101,10 @@ class CallPeaks(object):
         self._control_pileup = None
         self._sample_pileup = None
         self.out_file_base_name = out_file_base_name
+        self.cutoff = 0.05
+
+    def set_cutoff(self, value):
+        self.cutoff = value
 
     def run(self, out_file="final_peaks"):
         self.create_graph()
@@ -229,13 +233,13 @@ class CallPeaks(object):
         self.p_values = get_p_value_track_from_pileups(
             self.ob_graph, self._control_pileup, self._sample_pileup)
 
-    def call_peaks(self, out_file="final_peaks.bed", cutoff=0.05):
+    def call_peaks(self, out_file="final_peaks.bed"):
 
         #print("P values pileup")
         #print(self.p_values)
 
         logging.info("Calling peaks")
-        self.peaks = self.p_values.threshold_copy(-np.log10(cutoff))
+        self.peaks = self.p_values.threshold_copy(-np.log10(self.cutoff))
         # self.p_values.threshold(-np.log10(cutoff))
         self.peaks.to_bed_file("pre_postprocess.bed")
         logging.info("Filling small Holes")
