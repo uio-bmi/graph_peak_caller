@@ -116,8 +116,6 @@ class CallPeaks(object):
         self.create_control(True)
         self.scale_tracks()
         self.get_score()
-        # self.get_p_values()
-        # self.get_q_values()
         self.call_peaks(out_file)
 
     def preprocess(self):
@@ -245,7 +243,7 @@ class CallPeaks(object):
         logging.info("Filling small Holes")
         self.peaks.fill_small_wholes(self.info.read_length)
         #logging.info("Removing small peaks")
-        self.final_track = self.peaks  # self.peaks.remove_small_peaks
+        self.final_track = self.peaks.remove_small_peaks()
 
         logging.info("Creating subgraphs from peak regions")
         peaks_as_subgraphs = self.final_track.to_subgraphs()
@@ -253,7 +251,6 @@ class CallPeaks(object):
         logging.info("Found %d subgraphs" % len(peaks_as_subgraphs.subgraphs))
         peaks_as_subgraphs.to_file(
             self.out_file_base_name + "peaks_as_subgraphs")
-
         logging.info("Finding max path through subgraphs")
         binary_peaks = (BinaryContinousAreas.from_old_areas(peak) for peak in
                         peaks_as_subgraphs)
@@ -263,8 +260,9 @@ class CallPeaks(object):
                      scored_peak in scored_peaks]
         IntervalCollection(max_paths).to_text_file(
             self.out_file_base_name + "max_paths")
-        self.max_paths = [path for path in max_paths if
-                          path.length() >= self.info.fragment_length]
+        self.max_paths = max_paths
+        # [path for path in max_paths if
+        # path.length() >= self.info.fragment_length]
         print("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
         self.final_track.to_bed_file(self.out_file_base_name + out_file)
 
