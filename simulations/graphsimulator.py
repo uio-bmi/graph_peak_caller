@@ -69,8 +69,8 @@ class GraphSimulator():
 
 
     def _add_snps(self):
-        snp_offsets = 7 * np.array(
-                random.sample(range(1, floor((self.n_basepairs_length - 4) / 7)), self.n_snps))
+        snp_offsets = 15 * np.array(
+                random.sample(range(1, floor((self.n_basepairs_length - 4) / 15)), self.n_snps))
         #print("Snp offsets: " % snp_offsets)
         for snp_offset in snp_offsets:
             #print("Creating snp at %d" % snp_offset)

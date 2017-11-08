@@ -89,8 +89,8 @@ class SimulatedPeakCalling():
         matched = correct_peaks.get_identical_intervals(found_peaks)
 
         print("%d correct peaks identically found, %3.f %% " % (len(matched), 100 * len(matched) / len(correct_peaks.intervals)))
-        for i in correct_peaks:
-            print(i)
+        #for i in correct_peaks:
+        #    print(i)
 
 
 if __name__ == "__main__":
@@ -103,11 +103,11 @@ if __name__ == "__main__":
     """
     caller = SimulatedPeakCalling(
         n_paths=2,
-        n_basepairs_length=10000,
-        n_snps = 10,
-        n_peaks = 5,
+        n_basepairs_length=40000,
+        n_snps = 30,
+        n_peaks = 40,
 
-        with_control=False
+        with_control=True
     )
 
     #print(caller.graph)

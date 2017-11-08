@@ -66,8 +66,6 @@ class TestMaxPath(unittest.TestCase):
         scored_peak = ScoredPeak.from_peak_and_pileup(binary_peak, qvalues)
 
         max_path = scored_peak.get_max_path()
-        print(max_path)
-
         self.assertEqual(max_path, Interval(5, 3, [1, 3, 4]))
 
 
@@ -91,31 +89,27 @@ class TestMaxPath(unittest.TestCase):
                                   2: [0, 10],
                                   3: [0, 10],
                                   1: [5, 10],
-                                  4: [0, 3]
+                                  4: [0, 8]
                               })
-
-        print("Peak")
-        print(peak)
 
         binary_peak = BinaryContinousAreas.from_old_areas(peak)
         qvalues = SparsePileup.from_intervals(graph,
                 [
-                    Interval(0, 10, [3]), # High value on 3
-                    Interval(0, 10, [3]), # High value on 3
+                    Interval(0, 10, [3]), # Higher value on 3 than 2
+                    Interval(0, 10, [3]),
+                    Interval(0, 10, [4]), # Highest value if ending on 4
+                    Interval(0, 10, [4]),
+                    Interval(0, 10, [1]), # Highest value if inncluding 1
+                    Interval(0, 10, [1]), # Highest value if inncluding 1
                     Interval(0, 10, [1, 2, 4])
                 ])
-
-        print("Q values")
-        print(qvalues)
 
         scored_peak = ScoredPeak.from_peak_and_pileup(binary_peak, qvalues)
 
         max_path = scored_peak.get_max_path()
         print(max_path)
 
-        self.assertEqual(max_path, Interval(5, 3, [1, 2, 4]))
-
-
+        self.assertEqual(max_path, Interval(5, 8, [1, 2, 4]))
 
 
 if __name__ == "__main__":
