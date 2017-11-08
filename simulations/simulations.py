@@ -85,7 +85,12 @@ class SimulatedPeakCalling():
 
     def compare_with_correct_peaks(self):
         correct_peaks = PeakCollection(self.correct_peaks)
+        for peak in correct_peaks:
+            print(peak)
         found_peaks = PeakCollection.create_list_from_file("max_paths", graph=self.graph)
+
+        print(found_peaks)
+
         matched = correct_peaks.get_identical_intervals(found_peaks)
 
         print("%d correct peaks identically found, %3.f %% " % (len(matched), 100 * len(matched) / len(correct_peaks.intervals)))
@@ -107,8 +112,8 @@ if __name__ == "__main__":
         n_paths = 2,
         n_basepairs_length=10000,
         n_snps = 10,
-        n_peaks = 15,
-        with_control=True
+        n_peaks = 5,
+        with_control=False
     )
 
     #print(caller.graph)
