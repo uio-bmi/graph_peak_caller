@@ -120,8 +120,6 @@ class CallPeaks(object):
         self.create_control(True)
         self.scale_tracks()
         self.get_score()
-        # self.get_p_values()
-        # self.get_q_values()
         self.call_peaks(out_file)
 
     def preprocess(self):
@@ -256,7 +254,7 @@ class CallPeaks(object):
         logging.info("Filling small Holes")
         self.peaks.fill_small_wholes(self.info.read_length)
         #logging.info("Removing small peaks")
-        self.final_track = self.peaks  # self.peaks.remove_small_peaks
+        self.final_track = self.peaks.remove_small_peaks()
 
         logging.info("Creating subgraphs from peak regions")
         peaks_as_subgraphs = self.final_track.to_subgraphs()
@@ -275,9 +273,8 @@ class CallPeaks(object):
                         for peak in binary_peaks)
         max_paths = [scored_peak.get_max_path() for
                      scored_peak in scored_peaks]
-
         logging.info("Number of peaks before small peaks are removed: %d" % len(max_paths))
-        # Sort max paths
+        # Sort max pathse
         max_paths.sort(key=lambda p: p.score, reverse=True)
 
         # Filter on length
@@ -291,7 +288,6 @@ class CallPeaks(object):
 
         self.peaks_as_subgraphs = peaks_as_subgraphs
         self.max_paths = max_paths
-
         print("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
         self.final_track.to_bed_file(self.out_file_base_name + out_file)
 
