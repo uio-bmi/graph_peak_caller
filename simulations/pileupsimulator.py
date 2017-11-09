@@ -42,6 +42,14 @@ class PileupSimulator():
         print("N sample reads: %d" % self.n_sample_reads)
         print("N control reads: %d" % self.n_control_reads)
 
+    def write_reads_to_bed(self):
+        f = open("sample.bed", "w")
+        for peak in self._sample_linear_reads:
+            line = "chr1\t%d\t%d\t.\t0\t+\n" % (peak.start_position.offset, peak.end_position.offset)
+            f.writelines([line])
+        f.close()
+        print("Wrote to bed")
+
     def create_control_on_other_path(self):
         print("Creating control on other path")
         i = 0
