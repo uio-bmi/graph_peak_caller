@@ -1,5 +1,4 @@
 from .extender import AreasBuilder, Areas
-import offsetbasedgraph as obg
 import logging
 LOOP_VALUE = 3000000000
 

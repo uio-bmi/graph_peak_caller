@@ -70,7 +70,7 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
         experiment_info=experiment_info,
         out_file_base_name="real_data_", has_control=True,
         linear_map=linear_map)
-    caller.set_cutoff(0.50)
+    # caller.set_cutoff(0.50)
     caller.verbose = True
     caller.run()
     caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
@@ -84,6 +84,9 @@ def run_from_max_paths_step(graph_file_name, pileup_file_name, read_length):
     final_track = peaks.remove_small_peaks(fragment_length)
     # final_track = peaks
     peaks_as_subgraphs = final_track.to_subgraphs()
+    peaks_as_subgraphs.to_file(
+        "last_step_" + "peaks_as_subgraphs")
+
     p_values = SparsePileup.from_bed_file(graph, "real_data_q_values.bdg")
     # peaks_as_subgraphs = SubgraphCollection.from_file(graph, "real_data_peaks_as_subgraphs")
     binary_peaks = (BinaryContinousAreas.from_old_areas(peak) for peak in
