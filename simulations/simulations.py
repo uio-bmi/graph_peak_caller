@@ -41,6 +41,7 @@ class SimulatedPeakCalling():
         graph_simulator = GraphSimulator(n_paths=self.n_paths,
                                 n_basepairs_length=self.n_basepairs_length,
                                 n_snps=self.n_snps)
+
         simulated_graph = graph_simulator.get_simulated_graph()
         self.snarls = simulated_graph.snarls
 
@@ -48,6 +49,7 @@ class SimulatedPeakCalling():
                                 simulated_graph=simulated_graph,
                                 n_peaks = self.n_peaks,
                                 with_control=self.with_control)
+        pileup_simulator.write_reads_to_bed()
 
         self.correct_peaks = pileup_simulator.get_correct_peak_positions_on_graph()
         sample_pileup, control_pileup = pileup_simulator.get_simulated_pileups()
