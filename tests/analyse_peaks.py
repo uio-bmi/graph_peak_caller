@@ -170,15 +170,19 @@ class AlignmentsAnalyser(object):
 
 
 
+"""
 sequence_retriever = SequenceRetriever.from_vg_graph("cactus-mhc.vg")
 ob_graph = obg.GraphWithReversals.from_file("cactus-mhc.obg")
 vg_graph = vg_graph = pyvg.Graph.create_from_file("cactus-mhc.json")
+"""
 
+sequence_retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
+ob_graph = obg.GraphWithReversals.from_file("haplo1kg50-mhc.obg")
+vg_graph = vg_graph = pyvg.Graph.create_from_file("haplo1kg50-mhc.json")
 
-
-#comparer = PeaksComparer(ob_graph, sequence_retriever, "linear_path", "linear_peaks", "real_data_max_paths")
+comparer = PeaksComparer(ob_graph, sequence_retriever, "linear_path", "linear_peaks", "real_data_max_paths")
 #comparer.check_similarity()
-#comparer.check_overlap_with_linear_path()
+comparer.check_overlap_with_linear_path()
 #peaks = comparer.get_peaks_not_on_linear_path()
 #comparer.peaks_to_fasta(peaks)
 
@@ -187,8 +191,8 @@ vg_graph = vg_graph = pyvg.Graph.create_from_file("cactus-mhc.json")
 
 
 #analyser = AlignmentsAnalyser(vg_graph, "ENCFF001HNI_filtered_q60.gam", ob_graph, "linear_path")  # sample reads
-analyser = AlignmentsAnalyser(vg_graph, "ENCFF001HNS_filtered_q60.gam", ob_graph, "linear_path")  # Control reads
-analyser.count_alignments_on_linear_paths()
+#analyser = AlignmentsAnalyser(vg_graph, "ENCFF001HNS_filtered_q60.gam", ob_graph, "linear_path")  # Control reads
+#analyser.count_alignments_on_linear_paths()
 #analyser.count_alignments_on_linear_path()
 
 #compare_linear_and_graph_peaks(ob_graph, "linear_peaks", "real_data_max_paths")

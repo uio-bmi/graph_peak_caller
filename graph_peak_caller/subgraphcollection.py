@@ -1,5 +1,6 @@
 from .extender import Areas
 import numpy as np
+import pickle
 
 
 class ConnectedAreas(Areas):
@@ -28,6 +29,34 @@ class ConnectedAreas(Areas):
         for node_id, starts_and_ends in other.areas.items():
             self.add_areas_for_node(node_id, starts_and_ends)
         return self
+
+
+    def contains_interval(self, interval):
+        intervals = self.to_simple_intervals()
+        overlap = 0
+        for internal_interval in intervals:
+            overlap += interval.overlap(internal_interval)
+
+        assert overlap <= interval.length()
+
+        if overlap == interval.length():
+            return True
+
+        return False
+
+    """
+    def contains_interval(self, interval):
+
+        for i, rp in enumerate(interval.region_paths):
+            start = 0
+            end = self.graph.node_size(rp)
+
+            if i == 0:
+                start = interval.start_position.offset
+            if i == len(interval.region_paths) -1:
+                end = interval.start_position.offset
+    """
+
 
 
 class SubgraphCollection(object):
@@ -91,3 +120,21 @@ class SubgraphCollection(object):
         lines = (subgraph.to_file_line() for subgraph in self.subgraphs)
         f.writelines(lines)
         f.close()
+
+    def contains_interval(self, interval):
+        for connected_area in self.subgraphs:
+            if connected_area.contains_interval(interval):
+                return True
+
+        return False
+
+    @classmethod
+    def from_pickle(cls, file_name):
+        with open("%s" % file_name, "rb") as f:
+            obj = pickle.loads(f.read())
+            assert isinstance(obj, cls)
+            return obj
+
+    def to_pickle(self, file_name):
+        with open("%s" % file_name, "wb") as f:
+            pickle.dump(self, f)
