@@ -128,4 +128,4 @@ if __name__ == "__main__":
     #run_from_max_paths_step()
     #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")
     #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "haplo1kg50-mhc.json")
-    run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q30.gam", "ENCFF001HNS_haplo1kg50-mhc_filtered_q30.gam", "haplo1kg50-mhc.json")
+    run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam", "ENCFF001HNS_haplo1kg50-mhc_filtered_q50.gam", "haplo1kg50-mhc.json")

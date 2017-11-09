@@ -89,7 +89,7 @@ if __name__ == "__main__":
     #sys.exit()
     plot_true_positives(
         {
-            "graph peaks": "../tests/real_data_sequences.fasta",
+            "graph peaks": "../tests/real_data_sequences_q50.fasta",
             "macs": "ENCFF155DHA_filtered.fasta",
         },
         "MA0139.1.meme"

@@ -33,6 +33,7 @@ class SimulatedPeakCalling():
         self.n_control_reads = None
         self.control_reads = None
         self.with_control = with_control
+        self.caller = None
 
         self.set_up()
 
@@ -81,22 +82,26 @@ class SimulatedPeakCalling():
                            linear_map="simulated_snarl_map.tmp")
 
         caller._sample_pileup = self.sample_pileup
-        caller.create_control()
-        caller.scale_tracks()
+        self.sample_pileup.to_bed_graph("sample.bdg")
+        caller.create_control(True)
+        caller.scale_tracks(True)
         caller.get_score()
         caller.call_peaks("simulated.peaks")
         sequence_retriever = DummySequenceRetriever()
         caller.save_max_path_sequences_to_fasta_file("simulated_peak_sequences.fasta", sequence_retriever)
+        self.caller = caller
 
     def compare_with_correct_peaks(self):
         correct_peaks = PeakCollection(self.correct_peaks)
-        for peak in correct_peaks:
-            print(peak)
+        #for peak in correct_peaks:
+        #    print(peak)
         found_peaks = PeakCollection.create_list_from_file("max_paths", graph=self.graph)
 
-        for i in found_peaks:
-            print(i)
+        #for i in found_peaks:
+        #    print(i)
         matched = correct_peaks.get_identical_intervals(found_peaks)
+        subgraphs = self.caller.peaks_as_subgraphs
+        print("%d subgraphs" % len(subgraphs.subgraphs))
 
         print("%d correct peaks identically found, %3.f %% " % (len(matched), 100 * len(matched) / len(correct_peaks.intervals)))
         #for i in correct_peaks:
@@ -104,20 +109,13 @@ class SimulatedPeakCalling():
 
 
 if __name__ == "__main__":
-    """
-    simulator = GraphSimulator(2, 1000, 25)
-    simulated_graph = simulator.get_simulated_graph()
-    print(simulated_graph.graph)
-    import sys
-    sys.exit()
-    """
+
     caller = SimulatedPeakCalling(
         n_paths=2,
         n_basepairs_length=40000,
         n_snps = 30,
-        n_peaks = 40,
-
-        with_control=True
+        n_peaks = 100,
+        with_control=False
     )
 
     #print(caller.graph)

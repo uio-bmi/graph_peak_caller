@@ -32,7 +32,7 @@ class PileupSimulator():
         self._add_noise_to_linear_reads()
 
         if self.with_control:
-            self.create_control_on_other_path()
+            #self.create_control_on_other_path()
             self.add_background_control_reads()
         else:
             self.copy_sample_to_control()
@@ -61,7 +61,8 @@ class PileupSimulator():
         return 100 + random.sample(range(0, self.simulated_graph.n_linear_paths), 1)[0]
 
     def add_background_control_reads(self):
-        n_to_add = int(self.simulated_graph.linear_graph_length / self.peak_size*2)
+        #n_to_add = int(self.n_peaks * 10 * 2)
+        n_to_add = int(1 * self.simulated_graph.linear_graph_length / self.peak_size)
         peak_locations = random.sample(range(self.peak_size,
                                              self.simulated_graph.linear_graph_length - self.peak_size
                                             ), n_to_add)

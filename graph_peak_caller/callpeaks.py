@@ -105,6 +105,7 @@ class CallPeaks(object):
         self.cutoff = 0.05
 
         self.max_paths = None
+        self.peaks_as_subgraphs = None
 
     def set_cutoff(self, value):
         self.cutoff = value
@@ -176,10 +177,12 @@ class CallPeaks(object):
             return
 
         if ratio > 1:
+            logging.warning("More reads in sample than in control")
             self._sample_pileup.scale(1/ratio)
             if update_saved_files:
                 self._sample_pileup.to_bed_graph(self._sample_track)
         else:
+            logging.info("Scaling control pileup down using ration %.3f" % ratio)
             self._control_pileup.scale(ratio)
             if update_saved_files:
                 self._control_pileup.to_bed_graph(self._control_track)
@@ -229,7 +232,9 @@ class CallPeaks(object):
         sparse_pileup.get_scores()
         self.p_values = sparse_pileup
         self.q_values = sparse_pileup
-        self.q_values.to_bed_graph(self.out_file_base_name + "q_values.bdg")
+        q_val_file_name = self.out_file_base_name + "q_values.bdg"
+        self.q_values.to_bed_graph(q_val_file_name)
+        logging.info("Writing q values to %s" % q_val_file_name)
 
     def get_p_values(self):
         logging.info("Getting p-values")
@@ -242,7 +247,10 @@ class CallPeaks(object):
         #print(self.p_values)
 
         logging.info("Calling peaks")
-        self.peaks = self.p_values.threshold_copy(-np.log10(self.cutoff))
+        threshold = -np.log10(self.cutoff)
+        logging.info("Thresholding peaks on q value %.4f" % threshold)
+        self.peaks = self.p_values.threshold_copy(threshold)
+
         # self.p_values.threshold(-np.log10(cutoff))
         self.peaks.to_bed_file("pre_postprocess.bed")
         logging.info("Filling small Holes")
@@ -256,6 +264,9 @@ class CallPeaks(object):
         logging.info("Found %d subgraphs" % len(peaks_as_subgraphs.subgraphs))
         peaks_as_subgraphs.to_file(
             self.out_file_base_name + "peaks_as_subgraphs")
+
+        peaks_as_subgraphs.to_pickle(
+            self.out_file_base_name + "peaks_as_subgraphs.pickle")
 
         logging.info("Finding max path through subgraphs")
         binary_peaks = (BinaryContinousAreas.from_old_areas(peak) for peak in
@@ -278,6 +289,7 @@ class CallPeaks(object):
         MaxPathPeakCollection(max_paths).to_json_file(
             self.out_file_base_name + "max_paths")
 
+        self.peaks_as_subgraphs = peaks_as_subgraphs
         self.max_paths = max_paths
 
         print("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))

@@ -189,5 +189,29 @@ class TestConnectedAreas(Tester):
         self.assertTrue(np.all(areas[1] == [2, 3]))
         self.assertTrue(np.all(areas[2] == [2, 3]))
 
+    def test_contains_interval(self):
+
+        full_areas = ConnectedAreas(self.simple_graph,
+                               {
+                                   1: [0, 3],
+                                   2: [0, 3],
+                                   3: [0, 3]
+                               })
+        self.assertTrue(full_areas.contains_interval(Interval(1, 2, [1], self.simple_graph)))
+        self.assertTrue(full_areas.contains_interval(Interval(0, 3, [1, 2, 3], self.simple_graph)))
+
+        partial_areas = ConnectedAreas(self.simple_graph,
+                               {
+                                   1: [2, 3],
+                                   2: [0, 3],
+                                   3: [2, 3]
+                               })
+
+        self.assertFalse(partial_areas.contains_interval(Interval(1, 2, [1], self.simple_graph)))
+        self.assertTrue(partial_areas.contains_interval(Interval(2, 3, [1], self.simple_graph)))
+        self.assertFalse(partial_areas.contains_interval(Interval(0, 3, [1, 2, 3], self.simple_graph)))
+        self.assertFalse(partial_areas.contains_interval(Interval(0, 3, [2, 3], self.simple_graph)))
+        self.assertTrue(partial_areas.contains_interval(Interval(0, 3, [2], self.simple_graph)))
+
 if __name__ == "__main__":
     unittest.main()
