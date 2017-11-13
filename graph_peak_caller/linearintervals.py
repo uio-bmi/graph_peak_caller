@@ -19,7 +19,4 @@ class LinearIntervalCollection(object):
     def n_basepairs_covered(self):
 
         lengths = self.ends - self.starts
-        for l in lengths:
-            assert l >= 0
-
         return np.sum(np.abs(self.ends - self.starts))
