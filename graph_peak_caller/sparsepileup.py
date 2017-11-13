@@ -513,7 +513,7 @@ class SparseControlSample(SparsePileup):
             val = valued_indexes.start_value
             for start, end, val in valued_indexes:
                 if val[1] not in p_value_dict[val[0]]:
-                    pre_val = poisson.cdf(np.ceil(val[1])-1, val[0])
+                    pre_val = poisson.cdf(val[1],  val[0])
                     p_val = 1 - pre_val
                     p_value_dict[val[0]][val[1]] = -np.log10(p_val)
                 p = p_value_dict[val[0]][val[1]]

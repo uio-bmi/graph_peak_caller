@@ -148,17 +148,12 @@ class MACSTests(object):
                                     "lin_control_pileup.bdg", min_value=self.background)
 
     def test_call_peaks(self):
-        # self.assertPileupFilesEqual("control_track.bdg", "macstest_control_lambda.bdg")
-        # self.assertPileupFilesEqual("sample_track.bdg", "macstest_treat_pileup.bdg")
+        self.assertPileupFilesEqual("control_track.bdg", "lin_control_pileup.bdg")
+        self.assertPileupFilesEqual("sample_track.bdg", "lin_sample_pileup.bdg")
         self.caller._control_pileup = SparsePileup.from_bed_graph(self.graph, "control_track.bdg")
         self.caller._sample_pileup = SparsePileup.from_bed_graph(self.graph, "sample_track.bdg")
         self.caller.get_score()
-        # self.caller.p_values.to_bed_graph(self.caller._p_value_track)
         self._get_scores("qpois")
-        #self.assertPileupFilesEqual(self.caller._p_value_track,
-        # "lin_scores.bdg")
-
-        # self.caller.get_q_values()
         self.caller.q_values.to_bed_graph(self.caller._q_value_track)
         self._get_scores()
         print(self.caller._q_value_track)
