@@ -551,7 +551,7 @@ def big_test(with_control=False):
 
 if __name__ == "__main__":
     random.seed(102)
-    test = small_test(False)
+    test = big_test(False)
     test.test_sample_pileup()
     test.test_control_pileup()
     test.test_call_peaks()
