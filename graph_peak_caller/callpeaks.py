@@ -208,7 +208,7 @@ class CallPeaks(object):
     def create_control(self, save_to_file=True):
         logging.info("Creating control track")
 
-        extensions = [self.info.fragment_length, 2500, 5000] if self.has_control else [5000]
+        extensions = [self.info.fragment_length, 1000, 10000] if self.has_control else [10000]
         control_pileup = linearsnarls.create_control(self.linear_map,  self.control_intervals,
                                                      extensions, self.info.fragment_length)
 
