@@ -264,6 +264,9 @@ class SimpleSnarl():
 class SnarlGraphBuilder:
 
     def __init__(self, graph, snarls, id_counter=0):
+        assert isinstance(snarls, dict), \
+            "Should be dict with ids as keys and SimpleSnarls as values"
+
         self.graph = graph
         self.snarls = snarls  # dict of snarls, id: SimpleSnarls
         self.id_counter = id_counter
