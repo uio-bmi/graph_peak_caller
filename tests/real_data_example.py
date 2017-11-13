@@ -84,6 +84,9 @@ def run_from_max_paths_step(graph_file_name, pileup_file_name, read_length):
     final_track = peaks.remove_small_peaks(15)
     # final_track = peaks
     peaks_as_subgraphs = final_track.to_subgraphs()
+    peaks_as_subgraphs.to_file(
+        "last_step_" + "peaks_as_subgraphs")
+
     p_values = SparsePileup.from_bed_file(graph, "real_data_q_values.bdg")
     # peaks_as_subgraphs = SubgraphCollection.from_file(graph, "real_data_peaks_as_subgraphs")
     binary_peaks = (BinaryContinousAreas.from_old_areas(peak) for peak in

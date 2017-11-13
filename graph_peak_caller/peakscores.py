@@ -3,6 +3,7 @@ import offsetbasedgraph as obg
 import numpy as np
 import json
 
+
 class MaxPathPeakCollection(obg.IntervalCollection):
 
     @classmethod
@@ -15,7 +16,8 @@ class MaxPathPeakCollection(obg.IntervalCollection):
     @classmethod
     def from_json_file(cls, file_name, graph=None):
         f = open(file_name)
-        intervals = [MaxPathPeak.from_file_line(line, graph=graph) for line in f.readlines()]
+        intervals = [MaxPathPeak.from_file_line(line, graph=graph)
+                     for line in f.readlines()]
         f.close()
         return cls(intervals)
 
@@ -95,9 +97,8 @@ class ScoredPeak(object):
         return cls(peak, scores)
 
     def __str__(self):
-        return "\n".join("%s: %s" % (node_id, vi) for
+        return "\n".join("%s: (%s, %s)" % (node_id, vi.sum(), vi.length) for
                          node_id, vi in self._scores.items())
-        return str(self._scores)
 
     __repr__ = __str__
 
@@ -135,12 +136,11 @@ class ScoredPeak(object):
             node, start_end = list(self._peak.internal_intervals.items())[0]
 
             interval = MaxPathPeak(start_end[0], start_end[1],
-                                [node], graph=self._graph)
+                                   [node], graph=self._graph)
             score = sums[node]
             #interval.set_score(np.max(self._scores[node].all_values())) # score / interval.length())
             interval.set_score(score / interval.length())
             return interval
-
 
         self.__clean_sums(sums)
         for key in list(sums.keys()):
