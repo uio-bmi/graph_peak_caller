@@ -70,6 +70,7 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
         experiment_info=experiment_info,
         out_file_base_name="real_data_", has_control=True,
         linear_map=linear_map)
+    caller.set_cutoff(0.1)
     # caller.set_cutoff(0.50)
     caller.verbose = True
     caller.run()
@@ -121,18 +122,16 @@ def peak_sequences_to_fasta(vg_graph_file_name, peaks_file_name, fasta_file_name
         sequence = sequence_retriever.get_sequence_on_directed_node()
 
 
-
-
 if __name__ == "__main__":
-    dm_folder = "../graph_peak_caller/dm_test_data/"
-    run_from_max_paths_step("obgraph", "pre_postprocess.bed", 36)
+    # dm_folder = "../graph_peak_caller/dm_test_data/"
+    control_file_name = "/home/knut/Downloads/ctcf_control_mhc.gam"
+    sample_file_name = "/home/knut/Downloads/ctcf_mhc.gam"
+    # run_from_max_paths_step("obgraph", "pre_postprocess.bed", 36)
     #cProfile.run('run_with_gam("ENCFF000WVQ_filtered.gam", "cactus-mhc.json")')
     #cProfile.run('run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")')
     #run_from_max_paths_step()
     #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")
     #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "haplo1kg50-mhc.json")
-<<<<<<< HEAD
-    run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam", "ENCFF001HNS_haplo1kg50-mhc_filtered_q50.gam", "haplo1kg50-mhc.json")
-=======
+    # run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam", "ENCFF001HNS_haplo1kg50-mhc_filtered_q50ca.gam", "haplo1kg50-mhc.json")
+    run_with_gam(sample_file_name, control_file_name, "haplo1kg50-mhc.json")
     # run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q30.gam", "ENCFF001HNS_haplo1kg50-mhc_filtered_q30.gam", "haplo1kg50-mhc.json")
->>>>>>> e3137c6408aa2b445c06967a70e60f2d3284524f

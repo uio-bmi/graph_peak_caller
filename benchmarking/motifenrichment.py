@@ -7,6 +7,7 @@ from nongraphpeaks import NonGraphPeak, NonGraphPeakCollection
 import subprocess
 import matplotlib.pyplot as plt
 
+
 class MotifMatcher():
 
     def __init__(self, ranked_fasta_file_name, meme_motif_file_name):
@@ -22,7 +23,7 @@ class MotifMatcher():
         #commmand = ["/home/ivargry/meme_4.11.4/src/fimo", self.meme_file, self.fasta_file]
         #commmand = ["bash", "-c", "'/home/ivargry/meme_4.11.4/src/fimo -oc fimo_tmp " + self.meme_file + " " + self.fasta_file +"'"]
         #print(' '.join(commmand))
-        subprocess.check_output(["/home/ivargry/meme_4.11.4/src/fimo -oc fimo_tmp %s %s" % (self.meme_file, self.fasta_file)], shell=True)
+        subprocess.check_output(["/home/knut/Sources/meme_4.12.0/src/fimo -oc fimo_tmp %s %s" % (self.meme_file, self.fasta_file)], shell=True)
         #ps = subprocess.check_output(commmand, shell=True)
         #output, error = ps.communicate()
         #print("Output")
@@ -60,37 +61,31 @@ class MotifMatcher():
 
 
 def plot_true_positives(peak_file_sets, meme_file_name):
-
+    handles = []
+    names = []
     for name, fasta_file_name in peak_file_sets.items():
         matcher = MotifMatcher(fasta_file_name, meme_file_name)
         true_positives = matcher.compute_true_positives()
         print("True positives for %s: %s" % (name, true_positives))
-        plt.plot(true_positives, label=name)
-
+        handles.append(plt.plot(true_positives, label=name))
+        names.append(fasta_file_name)
+    plt.legend(handles, names)
     plt.show()
 
 
 if __name__ == "__main__":
-
-
-    collection = NonGraphPeakCollection.from_bed_file("../ENCFF155DHA.bed")
-    collection.filter_peaks_outside_region("chr6", 28510119, 33480577)
-    collection.set_peak_sequences()
-    collection.save_to_sorted_fasta("ENCFF155DHA_filtered.fasta")
-
-
-
-    #import sys
-    #sys.exit()
-    #matcher = MotifMatcher("../tests/real_data_sequences.fasta", "MA0139.1.meme")
-    #true_positives = matcher.compute_true_positives()
-
-    #print(true_positives)
-    #sys.exit()
+    #narrow_file_name = "/home/knut/Downloads/NA_peaks.narrowPeak"
+    #
+    #collection = NonGraphPeakCollection.from_bed_file(narrow_file_name)
+    #collection.filter_peaks_outside_region("chr6", 28510119, 33480577)
+    #collection.set_peak_sequences()
+    #collection.save_to_sorted_fasta("CTCFpFix.fasta")
     plot_true_positives(
         {
-            "graph peaks": "../tests/real_data_sequences_q50.fasta",
-            "macs": "ENCFF155DHA_filtered.fasta",
+            "graph peaks": "../tests/real_data_sequences",
+            # "spp": "ENCFF155DHA_filtered.fasta",
+            "macs": "/home/knut/Downloads/CTCF_filtered.fasta",
+            # "pFix": "CTCFpFix.fasta",
         },
         "MA0139.1.meme"
     )

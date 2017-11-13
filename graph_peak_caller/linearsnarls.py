@@ -1,7 +1,7 @@
 import numpy as np
 from collections import defaultdict
 from .sparsepileup import SparsePileup
-from .util import sparse_maximum
+from .util import sanitize_indices_and_values
 from .eventsorter import EventSorter, EventSort
 from .snarlmaps import LinearSnarlMap
 import logging
@@ -14,7 +14,7 @@ def create_control(linear_map_name, reads, extension_sizes, fragment_length):
     linear_map = LinearSnarlMap.from_file(linear_map_name)
     linear_size = linear_map._length
     mapped_reads = linear_map.map_interval_collection(reads)
-    average_value = mapped_reads.n_basepairs_covered() / linear_size
+    average_value = mapped_reads.n_intervals*fragment_length / linear_size
     logging.info("Average control value: %.4f (sum of pileup: %d, linear size: %d)" % (average_value, mapped_reads.n_basepairs_covered(), linear_size))
     max_pileup = LinearPileup([0], [average_value])
 
@@ -49,6 +49,11 @@ class LinearPileup(object):
     def __init__(self, indices, values):
         self.indices = indices
         self.values = values
+
+    def __eq__(self, other):
+        if not np.allclose(self.indices, other.indices):
+            return False
+        return np.allclose(self.values, other.values)
 
     def __itruediv__(self, scalar):
         self.values /= scalar
@@ -122,13 +127,58 @@ class LinearPileup(object):
                 [node.append((idx, value))
                  for node in cur_nodes]
 
-    def maximum(self, other):
-        indices, values = sparse_maximum(self.indices, self.values,
-                                         other.indices, other.values,
-                                         max(self.values[-1],
-                                             other.values[-1]) + 1)
-        self.indices = indices
+    def continuous_sparse_maximum(self, other):
+        indices1 = self.indices
+        indices2 = other.indices
+        values1 = self.values
+        values2 = other.values
+        all_indices = np.concatenate([indices1, indices2])
+        codes = np.concatenate([np.zeros_like(indices1),
+                                np.ones_like(indices2)])
+        sorted_args = np.argsort(all_indices)
+        sorted_indices = all_indices[sorted_args]
+        sorted_codes = codes[sorted_args]
+        values_list = []
+        for code, values in enumerate((values1, values2)):
+            my_args = np.where(sorted_codes == code)[0]
+            diffs = np.diff(values)
+            my_values = np.zeros(sorted_indices.shape)
+            my_values[my_args[1:]] = diffs
+            my_values[my_args[0]] = values[0]
+            values_list.append(my_values.cumsum())
+        values = np.maximum(values_list[0], values_list[1])
+        self.indices = sorted_indices
         self.values = values
+        self.sanitize_indices()
+        self.sanitize_values()
+        # 
+        # 
+        # empty_ends = np.nonzero(np.diff(sorted_indices) == 0)[0]
+        # max_values = np.maximum(values[empty_ends], values[empty_ends+1])
+        # values[empty_ends+1] = max_values
+        # values[empty_ends] = max_values
+        # indices, values = sanitize_indices_and_values(sorted_indices, values)
+        # self.indices = indices
+        # self.values = values
+
+    def sanitize_indices(self, choose_last=True):
+        assert choose_last
+        idx_diffs = np.diff(self.indices)
+        changes = np.nonzero(idx_diffs)[0]
+        new_args = np.concatenate([changes, [self.values.size - 1]])
+        self.indices = self.indices[new_args]
+        self.values = self.values[new_args]
+
+    def sanitize_values(self):
+        value_diffs = np.diff(self.values)
+        changes = np.nonzero(value_diffs)[0]
+        new_args = np.concatenate([[0], changes+1])
+        self.indices = self.indices[new_args]
+        self.values = self.values[new_args]
+
+    def maximum(self, other):
+        return self.continuous_sparse_maximum(other)
 
     def threshold(self, value):
         self.values = np.maximum(self.values, value)
+        self.sanitize_values()

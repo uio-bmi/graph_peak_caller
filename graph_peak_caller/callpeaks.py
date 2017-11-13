@@ -32,7 +32,8 @@ def enable_filewrite(func):
 
             with open(write_to_file, "w") as file:
                 print("Wrote results to " + str(write_to_file))
-                file.writelines(("%s\n" % interval.to_file_line() for interval in interval_list))
+                file.writelines(("%s\n" % interval.to_file_line()
+                                 for interval in interval_list))
 
             return write_to_file
         else:
@@ -177,11 +178,15 @@ class CallPeaks(object):
         if ratio > 1:
             logging.warning("More reads in sample than in control")
             self._sample_pileup.scale(1/ratio)
+            self._sample_pileup.to_graph(
+                self.out_file_base_name + "scaled_treat.bdg")
             if update_saved_files:
                 self._sample_pileup.to_bed_graph(self._sample_track)
         else:
             logging.info("Scaling control pileup down using ration %.3f" % ratio)
             self._control_pileup.scale(ratio)
+            self._control_pileup.to_bed_graph(
+                self.out_file_base_name + "scaled_control.bdg")
             if update_saved_files:
                 self._control_pileup.to_bed_graph(self._control_track)
 

@@ -6,6 +6,7 @@ from collections import defaultdict
 from .pileup import Pileup
 from .pileupcleaner2 import PeaksCleaner, HolesCleaner
 from .subgraphcollection import SubgraphCollection
+
 import offsetbasedgraph as obg
 
 
@@ -138,15 +139,12 @@ class ValuedIndexes(object):
         return np.append(np.insert(self.indexes, 0, 0), self.length)
 
     def find_valued_areas(self, value):
-        #print("     Find valued areas")
         all_indexes = self.all_idxs()
         values = self.all_values()
         idxs = np.where(values == value)[0]
-        #print("      idx: %s" % idxs)
         starts = all_indexes[idxs]
         ends = all_indexes[idxs+1]
         areas = list(chain(*zip(starts, ends)))
-        #print("       Found: %s" % areas)
         return areas
 
     @classmethod
@@ -197,7 +195,8 @@ class ValuedIndexes(object):
         unique_idxs = np.append(np.nonzero(np.diff(idxs))[0], len(idxs)-1)
         idxs = idxs[unique_idxs]
         values = values[:, unique_idxs]
-        obj = cls(idxs[1:], np.transpose(values[:, 1:]), values[:, 0], vi_a.length)
+        obj = cls(idxs[1:], np.transpose(values[:, 1:]),
+                  values[:, 0], vi_a.length)
         return obj
 
     def trunctate(self, min_value):
@@ -218,13 +217,6 @@ class ValuedIndexes(object):
             chain(self.indexes, [self.length]),
             chain([self.start_value], self.values)
             )
-
-"""
-   |     |
-    |      |
-     |  |
-   |       |
-"""
 
 
 class BinaryIndexes(object):
@@ -566,8 +558,6 @@ class SparseControlSample(SparsePileup):
     def get_scores(self):
         self.get_p_dict()
         self.get_p_to_q_values()
-        print("P to q dict:")
-        print(self.p_to_q_values)
         self.get_q_values()
 
     @classmethod

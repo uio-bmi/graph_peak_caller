@@ -27,8 +27,8 @@ class Cleaner(object):
                 self.starts_dict[-node] = int(self.graph.node_size(node) - startends[-2])
                 self.ends_dict[node] = int(self.graph.node_size(node) - startends[-2])
 
-        logging.info("N starts: %s", len(self.starts_dict))
-        logging.info("N ends: %s", len(self.ends_dict))
+        logging.debug("N starts: %s", len(self.starts_dict))
+        logging.debug("N ends: %s", len(self.ends_dict))
 
     def is_end_included(self, node_id):
         pass
@@ -67,7 +67,7 @@ class Cleaner(object):
         node_lists = self.get_init_nodes()
         assert all(node_list[0] in self.ends_dict for node_list in node_lists)
         while node_lists:
-            logging.info("N lists: %s", len(node_lists))
+            logging.debug("N lists: %s", len(node_lists))
             node_list = node_lists.pop()
             extensions = self.extend_node_list(node_list)
             should_extend = self.handle_node_list(node_list, extensions)
@@ -95,7 +95,6 @@ class Cleaner(object):
                 self.is_init_node(node)]
 
     def save(self, node_list, memo_value=None):
-        # logging.info("Saving", node_list)
         areas = {node_id: [0, self.starts_dict[node_id]]
                  for node_id in node_list[1:]}
         areas.update({-node_list[0]: [0, self.starts_dict[-node_list[0]]]})
@@ -156,7 +155,6 @@ class PeaksCleaner(Cleaner):
         last_node = node_list[-1]
         if last_node in self._cur_memo and length <= self._cur_memo[last_node]:
             if last_node not in self._cur_remain_memo:
-                print(node_list)
                 return False
             my_remain = self._cur_remain_memo[last_node] - self._cur_memo[last_node] + length
             if my_remain >= self.threshold:

@@ -32,6 +32,7 @@ class EventSorter(object):
             self.tuples.extend([(idx, i, value) for
                                 idx, value in zip(index_list, values_list)])
             i += 1
+        self.n_codes = i
         self.tuples.sort(key=itemgetter(0, 1))
 
     def __str__(self):
@@ -57,6 +58,6 @@ class EventSort(object):
         self.indices = np.empty(new_values.size+1, dtype="int")
 
         self.indices[1:] = indices[new_values]
-        self.indices[0] = 0
+        self.indices[0] = indices[0]
         self.values[1:] = values[new_values]
         self.values[0] = values[0]

@@ -71,7 +71,8 @@ class Areas(object):
         else:
             current = self.areas[node_id]
             if len(current) > 2 or len(starts_and_ends) > 2:
-                return self._add_nontrivial_areas_for_node(node_id, starts_and_ends)
+                return self._add_nontrivial_areas_for_node(
+                    node_id, starts_and_ends)
 
             if current[1] < starts_and_ends[0]:
                 new = np.append(current, starts_and_ends)
@@ -82,7 +83,8 @@ class Areas(object):
                 print("Error")
                 print(current)
                 print(starts_and_ends)
-                raise NotImplementedError("Case where new start equals old end is not implemented")
+                raise NotImplementedError(
+                    "Case where new start equals old end is not implemented")
 
             assert len(new) == 4
             self.areas[node_id] = new

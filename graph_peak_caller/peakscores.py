@@ -171,9 +171,10 @@ class ScoredPeak(object):
 
             memo[node_ids[-1]] = value
             nexts = adj_list[node_ids[-1]]
-            new_items = [(node_ids+[next_node], value+sums[next_node])
-                         for next_node in nexts
-                         if next_node not in node_ids[1:] and next_node in sums]
+            new_items = [
+                (node_ids+[next_node], value+sums[next_node])
+                for next_node in nexts
+                if next_node not in node_ids[1:] and next_node in sums]
             stack.extend(new_items)
 
         start_node = global_max_path[0]
