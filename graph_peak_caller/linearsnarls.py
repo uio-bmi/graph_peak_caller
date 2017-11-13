@@ -18,11 +18,14 @@ def create_control(linear_map_name, reads, extension_sizes, fragment_length):
     logging.info("Average control value: %.4f (sum of pileup: %d, linear size: %d)" % (average_value, mapped_reads.n_basepairs_covered(), linear_size))
     max_pileup = LinearPileup([0], [average_value])
 
-    for extension in extension_sizes:
+    for tmp_extension in extension_sizes:
+        extension = tmp_extension//2
+        print("#########", extension)
         extended_reads = mapped_reads.extend(extension)
         linear_pileup = LinearPileup.create_from_starts_and_ends(
                 extended_reads.starts, extended_reads.ends)
         linear_pileup /= (extension*2/fragment_length)
+        print(np.max(linear_pileup.values))
         max_pileup.maximum(linear_pileup)
     # max_pileup.threshold(average_value)
     valued_indexes = max_pileup.to_valued_indexes(linear_map)
