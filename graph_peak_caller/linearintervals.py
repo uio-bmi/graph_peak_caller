@@ -11,9 +11,14 @@ class LinearIntervalCollection(object):
     def __str__(self):
         return str(self.starts) + "\n" + str(self.ends)
 
-    def extend(self, extension_size):
+    def extend_mid(self, extension_size):
         extended_starts = (self.starts + self.ends)/2 - extension_size
         extended_ends = (self.starts + self.ends)/2 + extension_size
+        return self.__class__(extended_starts, extended_ends)
+
+    def extend(self, extension_size):
+        extended_starts = self.starts - extension_size
+        extended_ends = self.starts + extension_size
         return self.__class__(extended_starts, extended_ends)
 
     def n_basepairs_covered(self):

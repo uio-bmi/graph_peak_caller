@@ -281,8 +281,11 @@ class MACSTests(object):
 
         if not np.allclose(linear_pileup, graph_pileup, rtol=rtol):
             different = np.abs(linear_pileup - graph_pileup) > rtol
-            print(linear_pileup)
-            print(graph_pileup)
+            # for l, g in zip(linear_pileup[different],
+            #                 graph_pileup[different]):
+            #     print(l, g)
+            # print(linear_pileup[different])
+            # print(graph_pileup[different])
             print(different)
             print(np.where(different))
             print("Number of indices different")
@@ -361,7 +364,6 @@ class MACSTests(object):
         nodes = {i+1: Block(self.node_size) for i in range(0, self.n_nodes)}
         adj_list = {i: [i+1] for i in range(1, self.n_nodes)}
         self.graph = GraphWithReversals(nodes, adj_list)
-        print(self.graph)
         self.graph.to_file("lin_graph")
         snarlbuilder = SnarlGraphBuilder(self.graph,
                                         snarls=
@@ -540,7 +542,7 @@ class MACSTests(object):
 
 
 def small_test(with_control=False):
-    return MACSTests(100, 5, 100, read_length=10,
+    return MACSTests(100, 100, 100, read_length=11,
                      fragment_length=50, with_control=with_control)
 
 
@@ -551,7 +553,8 @@ def big_test(with_control=False):
 
 if __name__ == "__main__":
     random.seed(102)
-    test = small_test(False)
+    test = big_test(False)
+    # test.test_whole_pipeline()
     test.test_sample_pileup()
     test.test_control_pileup()
     test.test_call_peaks()
