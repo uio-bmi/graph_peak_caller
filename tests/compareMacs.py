@@ -281,9 +281,9 @@ class MACSTests(object):
 
         if not np.allclose(linear_pileup, graph_pileup, rtol=rtol):
             different = np.abs(linear_pileup - graph_pileup) > rtol
-            # for l, g in zip(linear_pileup[different],
-            #                 graph_pileup[different]):
-            #     print(l, g)
+            for l, g in zip(linear_pileup[different],
+                            graph_pileup[different]):
+                print(l, g)
             # print(linear_pileup[different])
             # print(graph_pileup[different])
             print(different)
@@ -506,7 +506,7 @@ class MACSTests(object):
 
     def _run_whole_macs(self):
 
-        command = "macs2 callpeak -t lin_intervals.bed -f BED -g " + str(self.genome_size) + " -n macstest -B -q 0.05 --llocal 5000"
+        command = "macs2 callpeak -t lin_intervals.bed -f BED -g " + str(self.genome_size) + " --nomodel --extsize " + str(self.info.fragment_length) + " -n macstest -B -q 0.05"
         if self.with_control:
             command += " --slocal 2500 -c lin_intervals_control.bed"
 
@@ -518,9 +518,10 @@ class MACSTests(object):
 
     def test_whole_pipeline(self):
         self._run_whole_macs()
-        self.caller.create_graph()
+        # self.caller.create_graph()
+        self.caller.sample_intervals = self.graph_intervals
+        self.caller.control_intervals = self.graph_intervals
         self.caller.preprocess()
-
         self.caller.create_sample_pileup(True)
         print("#", self.caller.info.n_control_reads)
         self.caller.create_control(True)
