@@ -144,7 +144,6 @@ class CallPeaks(object):
 
     @enable_filewrite
     def filter_duplicates_and_count_intervals(self, intervals, is_control=False):
-        print("HERE", intervals)
         interval_hashes = {}
         n_duplicates = 0
         n_reads_left = 0
@@ -157,10 +156,8 @@ class CallPeaks(object):
             interval_hashes[hash] = True
             if is_control:
                 self.info.n_control_reads += 1
-                print("UPPING CONTROL", self.info.n_control_reads)
             else:
                 self.info.n_sample_reads += 1
-                print("UPPING SAMPLE", self.info.n_sample_reads)
 
             yield interval
 

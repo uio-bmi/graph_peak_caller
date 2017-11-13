@@ -40,12 +40,14 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
     #print(ob_graph.node_size(701))
     #return
 
-    #builder = SnarlGraphBuilder.from_vg_snarls(ob_graph.copy(), "haplo1kg50-mhc.snarls")
-    #snarlgraph = builder.build_snarl_graphs()
+    builder = SnarlGraphBuilder.from_vg_snarls(
+        ob_graph.copy(),
+        "haplo1kg50-mhc.snarls")
+    snarlgraph = builder.build_snarl_graphs()
     # LinearSnarlMap(snarlgraph, ob_graph)
-    #linear_map = LinearSnarlMap(snarlgraph, ob_graph)
-    #linear_map.to_file("linear_map")
-    linear_map = "linear_map"
+    linear_map = LinearSnarlMap(snarlgraph, ob_graph)
+    linear_map.to_file("haplo1kg50-mhc.lm")
+    linear_map = "haplo1kg50-mhc.lm"
     #snarlgraph._create_distance_dicts()
 
     #snarlgraph.to_file("haplo1kg50-mhc.snarlgraph")
@@ -129,5 +131,5 @@ if __name__ == "__main__":
     #run_from_max_paths_step()
     #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")
     #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "haplo1kg50-mhc.json")
-    #run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam", "ENCFF001HNS_haplo1kg50-mhc_filtered_q50.gam", "haplo1kg50-mhc.json")
-    run_with_gam("ctcf_mhc.gam", "ctcf_control_mhc.gam", "haplo1kg50-mhc.json")
+    run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam", "ENCFF001HNS_haplo1kg50-mhc_filtered_q50.gam", "haplo1kg50-mhc.json")
+    # run_with_gam("ctcf_mhc.gam", "ctcf_control_mhc.gam", "haplo1kg50-mhc.json")
