@@ -15,7 +15,7 @@ from graph_peak_caller.sparsepileup import SparsePileup
 from graph_peak_caller.snarls import SnarlGraph, SnarlGraphBuilder, SimpleSnarl
 from graph_peak_caller.linearsnarls import LinearSnarlMap
 
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.INFO)
 
 
 class SimpleInterval(object):
@@ -416,11 +416,12 @@ class MACSTests(object):
         return intervals
 
     def create_random_linear_reads(self, n_reads, include_pairs=False):
+        print("Creating %d linear reads" % n_reads)
         reads = []
-        for i in range(n_reads//100+1):
+        for i in range(n_reads//10+1):
+            print("Creating read %d" % i)
             point = random.randint(0, self.genome_size)
-            reads.extend(self.create_pairs_around_point(point))
-            continue
+            reads.extend(self.create_pairs_around_point(point, n=10))
             direction = random.choice((-1, 1))
             if direction == -1:
                 start = random.randint(self.fragment_length-self.read_length,
