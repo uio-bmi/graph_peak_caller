@@ -296,6 +296,7 @@ class CallPeaks(object):
         self.max_paths = max_paths
         print("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
         self.final_track.to_bed_file(self.out_file_base_name + out_file)
+        logging.info("Wrote final peaks to %s" % self.out_file_base_name + out_file)
 
     def save_max_path_sequences_to_fasta_file(self, file_name, sequence_retriever):
         assert self.max_paths is not None, \
