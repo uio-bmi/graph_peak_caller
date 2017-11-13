@@ -20,6 +20,6 @@ class LinearIntervalCollection(object):
 
         lengths = self.ends - self.starts
         for l in lengths:
-            print(l)
+            assert l >= 0
 
         return np.sum(np.abs(self.ends - self.starts))
