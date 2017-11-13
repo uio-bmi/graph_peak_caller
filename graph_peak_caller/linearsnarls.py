@@ -25,7 +25,7 @@ def create_control(linear_map_name, reads, extension_sizes, fragment_length):
         linear_pileup = LinearPileup.create_from_starts_and_ends(
                 extended_reads.starts, extended_reads.ends)
         linear_pileup /= (extension*2/fragment_length)
-        print(np.max(linear_pileup.values))
+        print(linear_pileup)
         max_pileup.maximum(linear_pileup)
     # max_pileup.threshold(average_value)
     valued_indexes = max_pileup.to_valued_indexes(linear_map)
@@ -63,7 +63,9 @@ class LinearPileup(object):
         return self
 
     def __str__(self):
-        return "Indices: %s, values: %s" % (self.indices, self.values)
+        pos = self.indices >= 0
+        return "Indices: %s, values: %s" % (self.indices[pos],
+                                            self.values[pos])
 
     __repr__ = __str__
 

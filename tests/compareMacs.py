@@ -98,13 +98,13 @@ class MACSTests(object):
         self.create_linear_graph()
         self.create_intervals()
         self.write_intervals()
-        self.n_intervals_control = self.n_intervals
+        # self.n_intervals_control = self.n_intervals
         self.info = ExperimentInfo(self.genome_size,
-                                   self.fragment_length - 1 - (self.fragment_length%2),
+                                   self.fragment_length,
                                    self.read_length)
-        self.info.n_control_reads = self.n_intervals
+        self.info.n_control_reads = self.n_intervals_control
         self.info.n_sample_reads = self.n_intervals
-
+        print(self.info.n_control_reads, self.info.n_sample_reads)
         control_file_name = "graph_intervals"
         if self.with_control:
             control_file_name = "graph_intervals_control"
@@ -281,9 +281,9 @@ class MACSTests(object):
 
         if not np.allclose(linear_pileup, graph_pileup, rtol=rtol):
             different = np.abs(linear_pileup - graph_pileup) > rtol
-            for l, g in zip(linear_pileup[different],
-                            graph_pileup[different]):
-                print(l, g)
+            # for l, g in zip(linear_pileup[different],
+            #                 graph_pileup[different]):
+            #     print(l, g)
             # print(linear_pileup[different])
             # print(graph_pileup[different])
             print(different)
@@ -420,8 +420,10 @@ class MACSTests(object):
         for i in range(n_reads//10+1):
             print("Creating read %d" % i)
             point = random.randint(0, self.genome_size)
-            reads.extend(self.create_pairs_around_point(point, n=10))
+            reads.extend(self.create_pairs_around_point(point, n=2))
+            continue
             direction = random.choice((-1, 1))
+            
             if direction == -1:
                 start = random.randint(self.fragment_length-self.read_length,
                                        self.genome_size-self.read_length)
@@ -467,11 +469,11 @@ class MACSTests(object):
 
         if self.with_control:
             self.linear_intervals_control = self.create_random_linear_reads(self.n_intervals // 2, include_pairs=False)
-
             self.linear_intervals_control.append(dummy_end)
 
             self.graph_intervals_control = [self.linear_to_graph_interval(i) for i in self.linear_intervals_control]
             self.n_intervals_control = len(self.linear_intervals_control)
+            print("!!!!!!!!!!!!!!!!", self.n_intervals_control)
             print("Created %d control intervals " % self.n_intervals_control)
         else:
             self.n_intervals_control = self.n_intervals
@@ -508,7 +510,7 @@ class MACSTests(object):
 
         command = "macs2 callpeak -t lin_intervals.bed -f BED -g " + str(self.genome_size) + " --nomodel --extsize " + str(self.info.fragment_length) + " -n macstest -B -q 0.05"
         if self.with_control:
-            command += " --slocal 2500 -c lin_intervals_control.bed"
+            command += " --slocal=1000 -c lin_intervals_control.bed"
 
         print(command)
         command = command.split()
@@ -520,7 +522,7 @@ class MACSTests(object):
         self._run_whole_macs()
         # self.caller.create_graph()
         self.caller.sample_intervals = self.graph_intervals
-        self.caller.control_intervals = self.graph_intervals
+        self.caller.control_intervals = self.graph_intervals_control
         self.caller.preprocess()
         self.caller.create_sample_pileup(True)
         print("#", self.caller.info.n_control_reads)
@@ -543,7 +545,7 @@ class MACSTests(object):
 
 
 def small_test(with_control=False):
-    return MACSTests(100, 100, 100, read_length=11,
+    return MACSTests(10000, 2, 1, read_length=10,
                      fragment_length=50, with_control=with_control)
 
 
@@ -554,7 +556,7 @@ def big_test(with_control=False):
 
 if __name__ == "__main__":
     random.seed(102)
-    test = big_test(False)
+    test = big_test(True)
     test.test_whole_pipeline()
     exit()
     test.test_sample_pileup()
