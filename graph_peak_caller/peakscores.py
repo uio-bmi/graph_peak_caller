@@ -138,6 +138,7 @@ class ScoredPeak(object):
             interval = MaxPathPeak(start_end[0], start_end[1],
                                    [node], graph=self._graph)
             score = sums[node]
+            #interval.set_score(np.max(self._scores[node].all_values())) # score / interval.length())
             interval.set_score(score / interval.length())
             return interval
 
@@ -182,11 +183,25 @@ class ScoredPeak(object):
                            self._peak.starts[-start_node])
         end_offset = self._peak.starts[global_max_path[-1]]
 
+        """
+        if -global_max_path[0] in self._scores:
+            max_score_in_peak = np.max(self._scores[-global_max_path[0]].all_values())
+        else:
+            max_score_in_peak = np.max(self._scores[global_max_path[0]].all_values())
+
+        for node in global_max_path[1:-1]:
+            max_score_in_peak = max(max_score_in_peak,
+                                    np.max(self._scores[abs(node)].all_values()))
+
+        if len(global_max_path) > 1:
+            max_score_in_peak = np.max(self._scores[global_max_path[-1]].all_values())
+        """
 
         max_path_peak = MaxPathPeak(
             int(start_offset), int(end_offset),
             global_max_path, graph=self._graph)
 
+        #score = max_score_in_peak  # global_max / max_path_peak.length()
         score = global_max / max_path_peak.length()
         max_path_peak.set_score(score)
         return max_path_peak

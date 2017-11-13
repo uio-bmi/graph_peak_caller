@@ -6,9 +6,14 @@ from pyvg.sequences import SequenceRetriever
 from pybedtools import BedTool
 from pyvg.util import vg_gam_file_to_interval_collection, vg_gam_file_to_interval_list
 from graph_peak_caller.util import get_linear_paths_in_graph
-from offsetbasedgraph import IntervalCollection
+from offsetbasedgraph import IntervalCollection, DirectedInterval
 import pyvg
 from collections import defaultdict
+from graph_peak_caller.subgraphcollection import SubgraphCollection
+from graph_peak_caller.peakscores import MaxPathPeakCollection
+
+
+import matplotlib.pyplot as plt
 
 def create_linear_peaks_from_bed(linear_sequence_fasta_file, peaks_bed_file,
                                  obg_graph_file_name, vg_graph_file_name, start_node,
@@ -38,6 +43,44 @@ def create_linear_peaks_from_bed(linear_sequence_fasta_file, peaks_bed_file,
     linear_peaks.to_file("linear_peaks", text_file=True)
 
 
+class SubgraphAnalyser(object):
+
+    def __init__(self, graph, subgraphs_file_name):
+        self.graph = graph
+        self.subgraphs = SubgraphCollection.from_pickle(subgraphs_file_name, graph=graph)
+
+
+
+    def print_sizes(self):
+        sizes = []
+        for subgraph in self.subgraphs:
+            print(subgraph.n_basepairs())
+            sizes.append(subgraph.n_basepairs())
+
+        plt.hist(sizes, bins=100)
+        plt.show()
+
+
+
+class SubgraphComparer():
+    # Compare subgraph vs linear peaks
+    def __init__(self, graph, subgraphs_file_name, peaks_file_name):
+        self.graph = graph
+        IntervalCollection.interval_class = DirectedInterval
+        self.subgraphs = SubgraphCollection.from_pickle(subgraphs_file_name, graph=graph)
+        self.peaks = PeakCollection.create_list_from_file(peaks_file_name, graph=graph)
+
+    def check_peaks_in_subgraphs(self):
+        n_in_subgraphs = 0
+        for peak in self.peaks:
+            print(peak)
+            if self.subgraphs.contains_interval(peak):
+                n_in_subgraphs += 1
+
+        print("%d peaks are in subgraphs" % n_in_subgraphs)
+
+
+
 class PeaksComparer(object):
 
     def __init__(self, graph, sequence_retriever, linear_path_file_name, peaks1_file_name, peaks2_file_name):
@@ -45,34 +88,65 @@ class PeaksComparer(object):
         self.sequence_retriever = sequence_retriever
         self.peaks1 = PeakCollection.create_list_from_file(peaks1_file_name, graph=graph)
         self.peaks2 = PeakCollection.create_list_from_file(peaks2_file_name, graph=graph)
+        print("Number of intervals in set 1/2: %d / %d" % (len(self.peaks1.intervals), len(self.peaks2.intervals)))
+
         self.linear_path = IntervalCollection.create_list_from_file(linear_path_file_name, self.graph).intervals[0]
 
+
+    def plot_peak_lengths(self):
+        import matplotlib.pyplot as plt
+        i = 1
+        for peak_set in (self.peaks1, self.peaks2):
+            plt.hist([peak.length() for peak in peak_set], bins=1000, label="Peak set %d" % i)
+            i += 1
+
+        plt.legend()
+        plt.show()
+
     def check_similarity(self):
-        n_identical = 0
-        n_similar = 0
-        n_tot = 0
-        for peak in self.peaks1:
-            #print("Linear peak: %s" % peak)
-            if self.peaks2.contains_interval(peak):
-                print("  IDENTICAL MATCH")
-                n_identical += 1
+        i = 1
+        for peak_datasets in [(self.peaks1, self.peaks2), (self.peaks2, self.peaks1)]:
+            n_identical = 0
+            tot_n_similar = 0
+            n_similar = 0
+            n_tot = 0
+            print("\n-- Comparing set %d against set %d ---" % (i, i % 2 + 1))
+            peaks1, peaks2 = peak_datasets
+            print("Number of peaks in main set: %d" % len(peaks1.intervals))
+            not_matching = []
 
-            similar_intervals = self.peaks2.get_similar_intervals(peak, 50)
-            #for similar in similar_intervals:
-            #    print("%s is simmilar to %s" % (peak, similar))
+            for peak in peaks1:
+                if peaks2.contains_interval(peak):
+                    n_identical += 1
 
-            if len(similar_intervals) > 0:
-                n_similar += 1
+                similar_intervals = peaks2.get_overlapping_intervals(peak, 50)
+                #for similar in similar_intervals:
+                #    print("%s is simmilar to %s" % (peak, similar))
 
-            n_tot += 1
-        print("Total linear peaks: %d" % n_tot)
-        print("N identical: %d " % n_identical)
-        print("N similar: %d " % n_similar)
+                if len(similar_intervals) > 0:
+                    #print("%s \n overlaps with \n %s \n\n" % (peak, similar_intervals[0]))
+                    n_similar += 1
+                    tot_n_similar += len(similar_intervals)
+                else:
+                    not_matching.append(peak)
+
+                n_tot += 1
+
+            not_matching = IntervalCollection(not_matching)
+            not_matching.to_file("not_matching_set%d.intervals" % i)
+
+            print("Total peaks in main set: %d" % n_tot)
+            print("N identical to peak in other set: %d " % n_identical)
+            print("N similar to peak in other set: %d " % n_similar)
+            print("Total number of simmilar hits (counting all hits for each peaks): %d " % tot_n_similar)
+
+            i += 1
 
     def check_overlap_with_linear_path(self):
-
+        i = 0
         for peaks in [self.peaks1, self.peaks2]:
-            print("Peak dataset ========")
+            print("\n -- Checking peak dataset % against linear path -- " % (i))
+            i += 1
             n_inside = 0
             n_inside_correct_order = 0
             for peak in peaks:
@@ -170,21 +244,48 @@ class AlignmentsAnalyser(object):
 
 
 
+
+
 """
 sequence_retriever = SequenceRetriever.from_vg_graph("cactus-mhc.vg")
 ob_graph = obg.GraphWithReversals.from_file("cactus-mhc.obg")
 vg_graph = vg_graph = pyvg.Graph.create_from_file("cactus-mhc.json")
 """
 
-sequence_retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
-ob_graph = obg.GraphWithReversals.from_file("haplo1kg50-mhc.obg")
-vg_graph = vg_graph = pyvg.Graph.create_from_file("haplo1kg50-mhc.json")
 
-comparer = PeaksComparer(ob_graph, sequence_retriever, "linear_path", "linear_peaks", "real_data_max_paths")
-#comparer.check_similarity()
+sequence_retriever = None  # SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
+ob_graph = obg.GraphWithReversals.from_file("haplo1kg50-mhc.obg")
+#vg_graph = pyvg.Graph.create_from_file("haplo1kg50-mhc.json")
+
+#linear_paths = get_linear_paths_in_graph(ob_graph, vg_graph, write_to_file_name="linear_paths_haplo1kg-50.intervals")
+
+linear_path = IntervalCollection.create_list_from_file("linear_paths_haplo1kg-50.intervals", ob_graph).intervals[0]
+
+
+linear_peaks = PeakCollection.create_from_linear_intervals_in_bed_file(ob_graph,
+                                                                       linear_path,
+                                                                       "CTCF_peaks.narrowPeak",
+                                                                       28510119,
+                                                                       33480577)
+linear_peaks.to_file("mac_peaks.intervals", text_file=True)
+
+
+comparer = PeaksComparer(ob_graph, sequence_retriever, "linear_paths_haplo1kg-50.intervals", "mac_peaks.intervals", "real_data_max_paths")
+comparer.plot_peak_lengths()
+
+comparer.check_similarity()
 comparer.check_overlap_with_linear_path()
 #peaks = comparer.get_peaks_not_on_linear_path()
 #comparer.peaks_to_fasta(peaks)
+
+
+
+
+#comparer = SubgraphComparer(ob_graph, "real_data_peaks_as_subgraphs.pickle", "linear_peaks")
+#comparer.check_peaks_in_subgraphs()
+
+#analyser = SubgraphAnalyser(ob_graph, "real_data_peaks_as_subgraphs.pickle")
+#analyser.print_sizes()
 
 #peaks = comparer.graph_peaks_on_main_path_not_in_linear()
 #comparer.peaks_to_fasta(peaks, "alone_linear.peaks")
@@ -198,6 +299,5 @@ comparer.check_overlap_with_linear_path()
 #compare_linear_and_graph_peaks(ob_graph, "linear_peaks", "real_data_max_paths")
 #create_linear_peaks_from_bed("mhc_cleaned2.fa", "../ENCFF155DHA.bed", "cactus-mhc.obg", "cactus-mhc.vg", 225518, 28510119, 33480577)
 
-#linear_peaks = PeakCollection.create_from_linear_intervals_in_bed_file("..ENCFF155DHA.bed")
 #graph_peaks = PeakCollection.from_file("real_data_max_paths")
 

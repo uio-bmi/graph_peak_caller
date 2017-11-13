@@ -38,7 +38,7 @@ class MotifMatcher():
             sequence_id = l[2]
             self.peaks_matching_motif.add(sequence_id)
 
-        print(self.peaks_matching_motif)
+        #print(self.peaks_matching_motif)
 
     def get_sorted_peak_ids(self):
         for line in open(self.fasta_file):
@@ -66,26 +66,39 @@ def plot_true_positives(peak_file_sets, meme_file_name):
     for name, fasta_file_name in peak_file_sets.items():
         matcher = MotifMatcher(fasta_file_name, meme_file_name)
         true_positives = matcher.compute_true_positives()
-        print("True positives for %s: %s" % (name, true_positives))
-        handles.append(plt.plot(true_positives, label=name))
-        names.append(fasta_file_name)
-    plt.legend(handles, names)
+        n_matching = len(matcher.peaks_matching_motif)
+        n_tot = len(matcher.sorted_peaks)
+        print("True positives for %s: %d / %d = %.3f" % (name, n_matching, n_tot, n_matching/n_tot))
+        plt.plot(true_positives, label=name + " (%.2f)" % (100 * n_matching/n_tot))
+
+    plt.legend()
     plt.show()
 
 
 if __name__ == "__main__":
-    #narrow_file_name = "/home/knut/Downloads/NA_peaks.narrowPeak"
-    #
-    #collection = NonGraphPeakCollection.from_bed_file(narrow_file_name)
-    #collection.filter_peaks_outside_region("chr6", 28510119, 33480577)
-    #collection.set_peak_sequences()
-    #collection.save_to_sorted_fasta("CTCFpFix.fasta")
+    """
+    collection = NonGraphPeakCollection.from_bed_file("../tests/CTCF_peaks.narrowPeak")
+    collection.filter_peaks_outside_region("chr6", 28510119, 33480577)
+    collection.set_peak_sequences()
+    collection.save_to_sorted_fasta("CTCF_filtered.fasta")
+    """
+
+
+    #import sys
+    #sys.exit()
+    #matcher = MotifMatcher("../tests/real_data_sequences.fasta", "MA0139.1.meme")
+    #true_positives = matcher.compute_true_positives()
+
+    #print(true_positives)
+    #sys.exit()
     plot_true_positives(
         {
-            "graph peaks": "../tests/real_data_sequences",
-            # "spp": "ENCFF155DHA_filtered.fasta",
-            "macs": "/home/knut/Downloads/CTCF_filtered.fasta",
-            # "pFix": "CTCFpFix.fasta",
+            #"graph peaks": "../tests/real_data_sequences_q50.fasta",
+            "graph peaks_more": "../tests/real_data_sequences_kept_small",
+            "new_fasta": "../tests/sequences_new_control_sample.fasta",
+            "max_instead_of_average": "../tests/real_data_sequences_max_instead_of_average.fasta",
+            #"spp_from_encode": "ENCFF155DHA_filtered.fasta",
+            "macs": "CTCF_filtered.fasta",
         },
         "MA0139.1.meme"
     )
