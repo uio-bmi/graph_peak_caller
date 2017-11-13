@@ -95,9 +95,8 @@ def sparse_maximum(indices1, values1, indices2, values2, genome_size):
     indices1 = np.insert(indices1, len(indices1), genome_size)
     indices2 = np.insert(indices2, len(indices2), genome_size)
 
-
-    a = indices1[:-1]*2
-    b = indices2[:-1]*2+1
+    a = indices1[:-1] * 2
+    b = indices2[:-1] * 2 + 1
     all_idxs = np.concatenate([a, b])
     all_idxs.sort()
     vi_list = [values1, values2]
@@ -105,17 +104,11 @@ def sparse_maximum(indices1, values1, indices2, values2, genome_size):
     for i, vals in enumerate(vi_list):
         idxs = np.nonzero((all_idxs % 2) == i)[0]
         all_values = vals
-        #print("Idx: %s" % idxs)
-        #print("Values %i: %s" % (i, all_values))
         value_diffs = np.diff(all_values)
-        #print("Diffs: %s" % value_diffs)
         values = np.zeros(all_idxs.shape)
         values[idxs[1:]] = value_diffs
         values[idxs[0]] = all_values[0]
-        #print("  values after diffs: %s" % values)
         values_list.append(values.cumsum())
-    #print("Values list:")
-    #print(values_list)
     values = np.maximum(values_list[0], values_list[1])
     idxs = all_idxs // 2
     empty_ends = np.nonzero(np.diff(idxs) == 0)[0]
@@ -128,6 +121,33 @@ def sparse_maximum(indices1, values1, indices2, values2, genome_size):
 
     indices, values = sanitize_indices_and_values(indices, values)
     return indices, values
+
+
+def continuous_sparse_maximum(indices1, values1, indices2, values2):
+    all_indices = np.concatenate([indices1, indices2])
+    # all_values = np.concatenate([values1, values2])
+    codes = np.concatenate([np.zeros_like(indices1), np.ones_like(indices2)])
+    sorted_args = np.argsort(all_indices)
+
+    sorted_indices = all_indices[sorted_args]
+    sorted_codes = codes[sorted_args]
+    values_list = []
+    for code, values in enumerate(values1, values2):
+        my_args = sorted_codes == code
+        diffs = np.diff(values)
+        my_values = np.zeros(sorted_indices.shape)
+        my_values[my_args[1:]] = diffs
+        my_values[my_args[0]] = values[0]
+        values_list.append(my_values.cumsum())
+
+    values = np.maximum(values_list[0], values_list[1])
+    empty_ends = np.nonzero(np.diff(sorted_indices) == 0)[0]
+    max_values = np.maximum(values[empty_ends], values[empty_ends+1])
+    values[empty_ends+1] = max_values
+    values[empty_ends] = max_values
+    indices, values = sanitize_indices_and_values(sorted_indices, values)
+    return indices, values
+
 
 def sanitize_indices_and_values(indices, values):
 

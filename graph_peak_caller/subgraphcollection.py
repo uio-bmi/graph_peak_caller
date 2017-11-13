@@ -16,7 +16,7 @@ class ConnectedAreas(Areas):
 
         if start == 0:
             if not self._is_start_position(other_node, start):
-               return True
+                return True
 
         if end == self.graph.node_size(other_node):
             if not self._is_end_position(other_node, end):
@@ -24,12 +24,23 @@ class ConnectedAreas(Areas):
 
         return False
 
+    def _is_start_position(self, node, offset):
+        if offset > 0:
+            return True
+
+        graph = self.graph
+        for in_node in graph.reverse_adj_list[-node]:
+            if -in_node in self.areas:
+                if self.areas[-in_node][-1] == graph.node_size(in_node):
+                    return False
+
+        return True
+
     def __add__(self, other):
         # Adds another connected area to this one
         for node_id, starts_and_ends in other.areas.items():
             self.add_areas_for_node(node_id, starts_and_ends)
         return self
-
 
     def contains_interval(self, interval):
         intervals = self.to_simple_intervals()
@@ -50,20 +61,6 @@ class ConnectedAreas(Areas):
         for interval in intervals:
             n += interval.length()
         return n
-
-    """
-    def contains_interval(self, interval):
-
-        for i, rp in enumerate(interval.region_paths):
-            start = 0
-            end = self.graph.node_size(rp)
-
-            if i == 0:
-                start = interval.start_position.offset
-            if i == len(interval.region_paths) -1:
-                end = interval.start_position.offset
-    """
-
 
 
 class SubgraphCollection(object):
@@ -109,10 +106,13 @@ class SubgraphCollection(object):
         touching_subgraphs = self._subgraphs_touching_area(node_id, start, end)
 
         if len(touching_subgraphs) == 0:
-            new_subgraph = ConnectedAreas(self.graph, {node_id: np.array([start, end])})
+            new_subgraph = ConnectedAreas(
+                self.graph,
+                {node_id: np.array([start, end])})
             self.subgraphs.append(new_subgraph)
         elif len(touching_subgraphs) == 1:
-            touching_subgraphs[0].add_areas_for_node(node_id, np.array([start, end]))
+            touching_subgraphs[0].add_areas_for_node(
+                node_id, np.array([start, end]))
         elif len(touching_subgraphs) > 1:
             # Merge all touching subgraphs, then add the area
             new_subgraph = touching_subgraphs[0]

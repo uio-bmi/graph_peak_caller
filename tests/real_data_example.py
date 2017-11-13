@@ -121,8 +121,6 @@ def peak_sequences_to_fasta(vg_graph_file_name, peaks_file_name, fasta_file_name
         sequence = sequence_retriever.get_sequence_on_directed_node()
 
 
-
-
 if __name__ == "__main__":
     dm_folder = "../graph_peak_caller/dm_test_data/"
     #run_from_max_paths_step("obgraph", "pre_postprocess.bed", 36)
