@@ -143,7 +143,43 @@ def sanitize_indices_and_values(indices, values):
 
     return new_indices, new_values
 
+
+def filter_ucsc_snps_on_region_output_vcf(bed_file_name, out_file_name, chromosome, start, end):
+    out_file = open(out_file_name, "w")
+    out_file.writelines(["#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\n"])
+    i = 0
+    for line in open(bed_file_name):
+        l = line.split()
+        if i % 1000 == 0:
+            print("Line %d" % i)
+        i += 1
+        type = l[11]
+        if type != "single":
+            continue
+
+        chr = l[1]
+        if chr != chromosome:
+            continue
+
+        chr = chr.replace("chr", "")
+
+        pos = int(l[2])
+        if pos < start or pos > end:
+            continue
+
+        id = l[4]
+        variant = l[9].split("/")
+        ref = variant[0]
+        alt = variant[1]
+
+
+        print("Wrote")
+        out_file.writelines(["%s\t%d\t%s\t%s\t%s\t%d\t%s\n" % (chr, pos + 1, id, ref, alt, 0, "PASS")])
+
+    out_file.close()
+
 if __name__ == "__main__":
+    """
     values = get_average_signal_values_within_peaks("../data/sample1_signal_1.bigwig", "../data/sample1_peaks_1.bed")
     values = values[np.logical_not(np.isnan(values))]
     values = values[values < 8]
@@ -152,3 +188,18 @@ if __name__ == "__main__":
     plt.hist(values, 100)
     plt.show()
     #longest_segment("../data/sample1_signal_1.bedGraph")
+    """
+
+    #filter_ucsc_snps_on_region_output_vcf("snp141_chr6.txt", "snp141_mhc_500k.vcf", "chr6", 28510119, 28510119 + 500000) #, 33480577)
+    ob_graph = obg.GraphWithReversals.from_file("haplo1kg50-mhc.obg")
+    from graph_peak_caller.peakcollection import PeakCollection
+    linear_path = IntervalCollection.create_list_from_file("linear_paths_haplo1kg-50.intervals", ob_graph).intervals[0]
+
+
+    linear_reads = PeakCollection.create_from_linear_intervals_in_bed_file(ob_graph,
+                                                                           linear_path,
+                                                                           "ctcf_control_reads_mhc.bed",
+                                                                           28510119,
+                                                                           33480577)
+
+    linear_reads.to_file("control_linear_reads.intervals", text_file=False)

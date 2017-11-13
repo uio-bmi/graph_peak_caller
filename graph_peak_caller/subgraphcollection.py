@@ -44,6 +44,13 @@ class ConnectedAreas(Areas):
 
         return False
 
+    def n_basepairs(self):
+        intervals = self.to_simple_intervals()
+        n = 0
+        for interval in intervals:
+            n += interval.length()
+        return n
+
     """
     def contains_interval(self, interval):
 
@@ -129,10 +136,14 @@ class SubgraphCollection(object):
         return False
 
     @classmethod
-    def from_pickle(cls, file_name):
+    def from_pickle(cls, file_name, graph=None):
         with open("%s" % file_name, "rb") as f:
             obj = pickle.loads(f.read())
             assert isinstance(obj, cls)
+
+            for subgraph in obj.subgraphs:
+                subgraph.graph = graph
+
             return obj
 
     def to_pickle(self, file_name):

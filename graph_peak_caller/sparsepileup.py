@@ -566,8 +566,6 @@ class SparseControlSample(SparsePileup):
     def get_scores(self):
         self.get_p_dict()
         self.get_p_to_q_values()
-        print("P to q dict:")
-        print(self.p_to_q_values)
         self.get_q_values()
 
     @classmethod

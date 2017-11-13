@@ -255,7 +255,7 @@ class CallPeaks(object):
         self.peaks.fill_small_wholes(self.info.read_length)
         #logging.info("Removing small peaks")
         self.final_track = self.peaks.remove_small_peaks(
-            self.info.fragment_length / 2
+            self.info.fragment_length
         )
 
         logging.info("Creating subgraphs from peak regions")

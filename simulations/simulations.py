@@ -116,7 +116,7 @@ if __name__ == "__main__":
         n_paths=2,
         n_basepairs_length=40000,
         n_snps = 30,
-        n_peaks = 100,
+        n_peaks = 30,
         with_control=False
     )
 

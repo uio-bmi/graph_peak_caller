@@ -18,12 +18,18 @@ class PeakCollection(IntervalCollection):
             end = peak.end - graph_start_offset
             if peak.chrom != "chr6" or peak.start < graph_start_offset or peak.end > graph_end_offset:
                 continue
-            #print("Peak  %i" % (i))
+
+            if i % 100 == 0:
+                print("Interval %i" % (i))
             i += 1
             #if i > 10:
             #    break
             linear_interval = linear_path_interval.get_subinterval(start, end)
+            linear_interval.graph = ob_graph
             intervals_on_graph.append(linear_interval)
+
+            #if linear_interval.length() < 137:
+            #    print("Peak %d, %d has length %d" % (peak.start, peak.end, linear_interval.length()))
 
         return cls(intervals_on_graph)
 
@@ -58,3 +64,10 @@ class PeakCollection(IntervalCollection):
                 out.append(peak)
 
         return out
+
+    def get_overlapping_intervals(self, interval, minimum_overlap = 1):
+        overlapping = []
+        for i in self.intervals:
+            if i.overlaps(interval, minimum_overlap=minimum_overlap):
+                overlapping.append(i)
+        return overlapping

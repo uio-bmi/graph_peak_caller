@@ -68,7 +68,7 @@ class Cleaner(object):
         node_lists = self.get_init_nodes()
         assert all(node_list[0] in self.ends_dict for node_list in node_lists)
         while node_lists:
-            logging.info("N lists: %s", len(node_lists))
+            logging.debug("N lists: %s", len(node_lists))
             node_list = node_lists.pop()
             extensions = self.extend_node_list(node_list)
             should_extend = self.handle_node_list(node_list, extensions)

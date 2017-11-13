@@ -10,3 +10,18 @@ Sjekke:
         - Antall peaks funnet av den ene og ikke den andre
     - IDR mellom replikater
 
+Artikler som benchmarker:
+Triform peak caller: https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-13-176
+
+http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0011471 (inneholder link til read datasett + motifer for NRSF, GABP, FoxA1)
+    - Inneholder også qPCR validated peaks
+
+
+Konvertere bam til fastq og plukke ut region:
+
+samtools index file.bam
+samtools view -bh file.bam "chr6:28510119-33480577" > file_mhc.bam
+bamtools convert -in file_mhc.bam -format fastq > file.fastq &
+
+
+
