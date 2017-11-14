@@ -58,11 +58,13 @@ class PeaksComparer(object):
             linear_peaks_bed_file_name,
             graph_peaks_file_name,
             ob_graph,
-            linear_path):
+            linear_path,
+            graph_region=None):
         linear_path = linear_path.to_indexed_interval()
         linear_peaks = PeakCollection.create_from_linear_intervals_in_bed_file(
             ob_graph, linear_path, linear_peaks_bed_file_name,
-            28510119, 33480577)
+            graph_region=graph_region)
+
         linear_peaks.to_file("macs_peaks.intervals", text_file=True)
         sequence_retriever = None
         comparer = PeaksComparer(ob_graph, sequence_retriever,

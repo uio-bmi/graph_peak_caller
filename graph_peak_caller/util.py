@@ -9,6 +9,12 @@ import offsetbasedgraph as obg
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 
+class LinearRegion(object):
+    def __init__(self, chromosome, start, end):
+        self.chromosome = chromosome
+        self.start = start
+        self.end = end
+
 
 def get_average_signal_values_within_peaks(signal_file_name, peaks_bed_file_name):
     signal_file = pyBigWig.open(signal_file_name)

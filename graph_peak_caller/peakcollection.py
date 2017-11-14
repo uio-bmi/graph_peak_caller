@@ -1,6 +1,7 @@
 import json
 import offsetbasedgraph as obg
 from pybedtools import BedTool
+import logging
 
 
 class Peak(obg.DirectedInterval):
@@ -39,8 +40,8 @@ class PeakCollection(obg.IntervalCollection):
     interval_class = Peak
 
     @classmethod
-    def _is_in_graph(cls, peak, start_offset, end_offset):
-        if peak.chrom != "chr6":
+    def _is_in_graph(cls, peak, chrom, start_offset, end_offset):
+        if peak.chrom != chrom:
             return False
         if (peak.start < start_offset or peak.end > end_offset):
             return False
@@ -49,15 +50,21 @@ class PeakCollection(obg.IntervalCollection):
     @classmethod
     def create_from_linear_intervals_in_bed_file(
             cls, ob_graph, linear_path_interval, bed_file_name,
-            graph_start_offset, graph_end_offset):
+            graph_region=None):
         peaks = BedTool(bed_file_name)
         intervals_on_graph = []
         i = 0
+        graph_start_offset = 0 if graph_region is None else graph_region.start
         for peak in peaks:
             start = peak.start - graph_start_offset
             end = peak.end - graph_start_offset
-            if not cls._is_in_graph(peak, graph_start_offset, graph_end_offset):
-                continue
+
+            if graph_region is not None:
+                if not cls._is_in_graph(peak, graph_region.chromosome,
+                                        graph_region.start,
+                                        graph_region.end):
+                    logging.info("Filtered out peak")
+                    continue
             if i % 100 == 0:
                 print("Interval %i" % (i))
             i += 1

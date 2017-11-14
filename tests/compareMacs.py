@@ -523,8 +523,12 @@ class MACSTests(object):
                                        list(range(1, self.n_nodes+1)),
                                        graph=self.graph)
         comparer = PeaksComparer.create_from_graph_peaks_and_linear_peaks(
-            linear_peaks_file, graph_peaks_file, self.graph, linear_path)
+            linear_peaks_file, graph_peaks_file, self.graph, linear_path,
+            graph_region=None
+        )
         matches = comparer.get_peaks_at_same_position()
+        print(len(comparer.peaks1.intervals))
+        print(len(comparer.peaks2.intervals))
         assert len(matches) == len(comparer.peaks1.intervals)
 
     def test_whole_pipeline(self):
