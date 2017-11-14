@@ -14,8 +14,9 @@ class PeaksComparer(object):
         self.peaks1 = PeakCollection.create_list_from_file(peaks1_file_name, graph=graph)
         self.peaks2 = PeakCollection.create_list_from_file(peaks2_file_name, graph=graph)
         print("Number of intervals in set 1/2: %d / %d" % (len(self.peaks1.intervals), len(self.peaks2.intervals)))
-
-        self.linear_path = IntervalCollection.create_list_from_file(linear_path_file_name, self.graph).intervals[0]
+        if linear_path_file_name is not None:
+            self.linear_path = IntervalCollection.create_list_from_file(
+                linear_path_file_name, self.graph).intervals[0]
 
     def plot_peak_lengths(self):
         import matplotlib.pyplot as plt
@@ -62,11 +63,11 @@ class PeaksComparer(object):
         linear_peaks = PeakCollection.create_from_linear_intervals_in_bed_file(
             ob_graph, linear_path, linear_peaks_bed_file_name,
             28510119, 33480577)
-        linear_peaks.to_file("mac_peaks.intervals", text_file=True)
+        linear_peaks.to_file("macs_peaks.intervals", text_file=True)
         sequence_retriever = None
         comparer = PeaksComparer(ob_graph, sequence_retriever,
-                                 "linear_paths_haplo1kg-50.intervals",
-                                 "mac_peaks.intervals",
+                                 None,
+                                 "macs_peaks.intervals",
                                  graph_peaks_file_name)
         return comparer
 
