@@ -10,6 +10,12 @@ class Peak(obg.DirectedInterval):
                          region_paths, graph, direction)
         self.score = score
 
+    @classmethod
+    def from_interval_and_score(cls, interval, score):
+        return cls(interval.start_position, interval.end_position,
+                   interval.region_paths, interval.graph, interval.direction,
+                   score)
+
     def set_score(self, score):
         self.score = score
 
@@ -57,7 +63,8 @@ class PeakCollection(obg.IntervalCollection):
             i += 1
             linear_interval = linear_path_interval.get_subinterval(start, end)
             linear_interval.graph = ob_graph
-            intervals_on_graph.append(linear_interval)
+            intervals_on_graph.append(Peak.from_interval_and_score(
+                linear_interval, float(peak[8])))
 
         return cls(intervals_on_graph)
 
