@@ -17,7 +17,6 @@ class PeaksComparer(object):
 
         self.linear_path = IntervalCollection.create_list_from_file(linear_path_file_name, self.graph).intervals[0]
 
-
     def plot_peak_lengths(self):
         import matplotlib.pyplot as plt
         i = 1
@@ -53,31 +52,18 @@ class PeaksComparer(object):
                 print("No match for peak %s" % peak)
 
     @classmethod
-    def create_from_graph_peaks_and_linear_peaks(cls,
-                                linear_peaks_bed_file_name,
-                                graph_peaks_file_name,
-                                ob_graph,
-                                vg_graph):
-
-        sequence_retriever = None  # SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
-        ob_graph = obg.GraphWithReversals.from_file("haplo1kg50-mhc.obg")
-        if not os.path.isfile("linear_paths_haplo1kg-50.intervals"):
-            vg_graph = pyvg.Graph.create_from_file("haplo1kg50-mhc.json")
-            linear_paths = get_linear_paths_in_graph(
-                            ob_graph,
-                            vg_graph,
-                            write_to_file_name="linear_paths_haplo1kg-50.intervals")
-
-        linear_path = IntervalCollection.create_list_from_file(
-                            "linear_paths_haplo1kg-50.intervals",
-                            ob_graph).intervals[0]
+    def create_from_graph_peaks_and_linear_peaks(
+            cls,
+            linear_peaks_bed_file_name,
+            graph_peaks_file_name,
+            ob_graph,
+            linear_path):
         linear_path = linear_path.to_indexed_interval()
-        linear_peaks = PeakCollection.create_from_linear_intervals_in_bed_file(ob_graph,
-                                                                               linear_path,
-                                                                               linear_peaks_bed_file_name,
-                                                                               28510119,
-                                                                               33480577)
+        linear_peaks = PeakCollection.create_from_linear_intervals_in_bed_file(
+            ob_graph, linear_path, linear_peaks_bed_file_name,
+            28510119, 33480577)
         linear_peaks.to_file("mac_peaks.intervals", text_file=True)
+        sequence_retriever = None
         comparer = PeaksComparer(ob_graph, sequence_retriever,
                                  "linear_paths_haplo1kg-50.intervals",
                                  "mac_peaks.intervals",
