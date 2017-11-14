@@ -206,10 +206,12 @@ class AlignmentsAnalyser(object):
         self.graph = ob_graph
         self.vg_graph = vg_graph
         print("Reading reads")
-        self.reads = vg_gam_file_to_interval_list(vg_graph, vg_gam_file_name, ob_graph, max_intervals=10000)
+        self.reads = vg_gam_file_to_interval_list(
+            vg_graph, vg_gam_file_name, ob_graph, max_intervals=10000)
         print("Number of reads: %d" % len(self.reads))
 
-        self.linear_path = IntervalCollection.create_list_from_file(linear_path_interval_file_name, self.graph).intervals[0]
+        self.linear_path = IntervalCollection.create_list_from_file(
+            linear_path_interval_file_name, self.graph).intervals[0]
 
     def count_alignments_on_linear_path(self):
         n_on_path = 0
