@@ -288,9 +288,12 @@ def get_peaks_comparer_for_linear_and_graph_peaks(
 comparer = get_peaks_comparer_for_linear_and_graph_peaks(
             "CTCF_peaks.narrowPeak", "real_data_max_paths")
 
-comparer.plot_peak_lengths()
-comparer.check_similarity()
-comparer.check_overlap_with_linear_path()
+comparer.compare_q_values_for_similar_peaks()
+
+
+#comparer.plot_peak_lengths()
+#comparer.check_similarity()
+#comparer.check_overlap_with_linear_path()
 #peaks = comparer.get_peaks_not_on_linear_path()
 #comparer.peaks_to_fasta(peaks)
 
