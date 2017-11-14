@@ -526,10 +526,17 @@ class MACSTests(object):
             linear_peaks_file, graph_peaks_file, self.graph, linear_path,
             graph_region=None
         )
+        print(comparer.peaks1.intervals)
+        print(comparer.peaks2.intervals)
+        assert len(comparer.peaks1.intervals) == len(comparer.peaks2.intervals)
         matches = comparer.get_peaks_at_same_position()
         print(len(comparer.peaks1.intervals))
         print(len(comparer.peaks2.intervals))
         assert len(matches) == len(comparer.peaks1.intervals)
+        for peak1, peak2 in matches:
+            print(peak1)
+            print(peak2)
+            print("_________________")
 
     def test_whole_pipeline(self):
         self._run_whole_macs()

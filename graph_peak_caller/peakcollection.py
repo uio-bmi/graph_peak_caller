@@ -11,6 +11,9 @@ class Peak(obg.DirectedInterval):
                          region_paths, graph, direction)
         self.score = score
 
+    def __str__(self):
+        return super().__str__() + " [%s]" % self.score
+
     @classmethod
     def from_interval_and_score(cls, interval, score):
         return cls(interval.start_position, interval.end_position,
@@ -33,7 +36,8 @@ class Peak(obg.DirectedInterval):
     def from_file_line(cls, line, graph=None):
         object = json.loads(line)
         return cls(object["start"], object["end"], object["region_paths"],
-                   direction=object["direction"], graph=graph)
+                   direction=object["direction"], graph=graph,
+                   score=object["average_q_value"])
 
 
 class PeakCollection(obg.IntervalCollection):
