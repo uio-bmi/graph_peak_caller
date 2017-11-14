@@ -551,7 +551,7 @@ def small_test(with_control=False):
 
 
 def big_test(with_control=False):
-    return MACSTests(100, 100000, 500000, read_length=51,
+    return MACSTests(10000, 10000, 500000, read_length=51,
                      fragment_length=120, with_control=with_control)
 
 
