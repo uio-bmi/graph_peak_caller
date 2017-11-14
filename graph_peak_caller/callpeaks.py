@@ -290,7 +290,7 @@ class CallPeaks(object):
         logging.info("Number of peaks after small peaks are removed: %d" % len(max_paths))
 
         PeakCollection(max_paths).to_file(
-            self.out_file_base_name + "max_paths")
+            self.out_file_base_name + "max_paths", text_file=True)
 
         self.peaks_as_subgraphs = peaks_as_subgraphs
         self.max_paths = max_paths
