@@ -529,13 +529,14 @@ class MACSTests(object):
         self.caller.create_control(True)
         print("#", self.caller.info.n_control_reads)
         self.caller.scale_tracks(update_saved_files=True)
-        self.assertPileupFilesEqual("sample_track.bdg", "macstest_treat_pileup.bdg")
-        self.assertPileupFilesEqual("control_track.bdg", "macstest_control_lambda.bdg")
-        print("################### GETTING SCORE")
+        self.assertPileupFilesEqual("sample_track.bdg",
+                                    "macstest_treat_pileup.bdg")
+        self.assertPileupFilesEqual("control_track.bdg",
+                                    "macstest_control_lambda.bdg")
+        logging.info("################### GETTING SCORE")
         self.caller.get_score()
-        print("################### CALLING PEAKS")
+        logging.info("################### CALLING PEAKS")
         self.caller.call_peaks("final_peaks")
-
         self.assertEqualBedFiles("final_peaks", "macstest_peaks.narrowPeak")
 
     def test_final_tracks(self):

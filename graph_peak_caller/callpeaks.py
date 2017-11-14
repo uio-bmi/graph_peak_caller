@@ -5,13 +5,12 @@ from offsetbasedgraph import IntervalCollection, DirectedInterval
 import pyvg as vg
 import offsetbasedgraph
 from graph_peak_caller import get_shift_size_on_offset_based_graph
-from .control import ControlTrack
 from .sparsepileup import SparseControlSample, SparsePileup
 from .bdgcmp import *
 from .extender import Extender
 from .areas import ValuedAreas, BinaryContinousAreas
 from .peakscores import ScoredPeak
-from .peakscores import MaxPathPeakCollection, MaxPathPeak
+from .peakcollection import PeakCollection
 from . import linearsnarls
 IntervalCollection.interval_class = DirectedInterval
 
@@ -247,20 +246,14 @@ class CallPeaks(object):
             self.ob_graph, self._control_pileup, self._sample_pileup)
 
     def call_peaks(self, out_file="final_peaks.bed"):
-
-        #print("P values pileup")
-        #print(self.p_values)
-
         logging.info("Calling peaks")
         threshold = -np.log10(self.cutoff)
         logging.info("Thresholding peaks on q value %.4f" % threshold)
         self.peaks = self.p_values.threshold_copy(threshold)
-
-        # self.p_values.threshold(-np.log10(cutoff))
         self.peaks.to_bed_file("pre_postprocess.bed")
         logging.info("Filling small Holes")
         self.peaks.fill_small_wholes(self.info.read_length)
-        #logging.info("Removing small peaks")
+        logging.info("Removing small peaks")
         self.final_track = self.peaks.remove_small_peaks(
             self.info.fragment_length)
 
@@ -292,11 +285,11 @@ class CallPeaks(object):
 
         # Filter on length
         max_paths = [path for path in max_paths if
-                          path.length() >= self.info.fragment_length]
+                     path.length() >= self.info.fragment_length]
 
         logging.info("Number of peaks after small peaks are removed: %d" % len(max_paths))
 
-        MaxPathPeakCollection(max_paths).to_json_file(
+        PeakCollection(max_paths).to_file(
             self.out_file_base_name + "max_paths")
 
         self.peaks_as_subgraphs = peaks_as_subgraphs

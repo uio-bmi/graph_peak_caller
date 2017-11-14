@@ -1,21 +1,18 @@
-from graph_peak_caller.peakcollection import PeakCollection
-from graph_peak_caller.util import bed_intervals_to_graph
+from collections import defaultdict
+import matplotlib.pyplot as plt
+import os
+import pyvg
+from pyvg.sequences import SequenceRetriever
+from pyvg.util import vg_gam_file_to_interval_list
 import offsetbasedgraph as obg
 from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
-from pyvg.sequences import SequenceRetriever
-from pybedtools import BedTool
-from pyvg.util import vg_gam_file_to_interval_collection, vg_gam_file_to_interval_list
+from graph_peak_caller.peakcollection import PeakCollection
 from graph_peak_caller.util import get_linear_paths_in_graph
 from offsetbasedgraph import IntervalCollection, DirectedInterval
-import pyvg
-from collections import defaultdict
 from graph_peak_caller.subgraphcollection import SubgraphCollection
 from graph_peak_caller.peakscores import MaxPathPeakCollection
 from .peakscomparer import PeaksComparer, get_peaks_comparer_for_linear_and_graph_peaks
 
-
-import matplotlib.pyplot as plt
-import os
 
 def create_linear_peaks_from_bed(linear_sequence_fasta_file, peaks_bed_file,
                                  obg_graph_file_name, vg_graph_file_name, start_node,
@@ -133,10 +130,8 @@ class AlignmentsAnalyser(object):
             print("%s: %d " % (name, hit))
 
 
-comparer = get_peaks_comparer_for_linear_and_graph_peaks(
-            "CTCF_peaks.narrowPeak", "real_data_max_paths")
-
-comparer.compare_q_values_for_similar_peaks()
+#comparer = PeaksComparer("CTCF_peaks.narrowPeak", "real_data_max_paths")
+#comparer.compare_q_values_for_similar_peaks()
 
 
 #comparer.plot_peak_lengths()
