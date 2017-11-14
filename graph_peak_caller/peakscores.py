@@ -1,55 +1,6 @@
 from collections import deque, defaultdict
-import offsetbasedgraph as obg
 import numpy as np
-import json
-
-
-class MaxPathPeakCollection(obg.IntervalCollection):
-
-    @classmethod
-    def from_file(cls):
-        raise NotImplementedError("Not supported. Use from_json_file()")
-
-    def to_file(cls):
-        raise NotImplementedError("Not supported. Use to_json_file()")
-
-    @classmethod
-    def from_json_file(cls, file_name, graph=None):
-        f = open(file_name)
-        intervals = [MaxPathPeak.from_file_line(line, graph=graph)
-                     for line in f.readlines()]
-        f.close()
-        return cls(intervals)
-
-    def to_json_file(self, file_name):
-        f = open(file_name, "w")
-        for interval in self.intervals:
-            f.writelines(["%s\n" % interval.to_file_line()])
-        f.close()
-        return file_name
-
-
-class MaxPathPeak(obg.DirectedInterval):
-    def __init__self(self, start, end, rps, graph=None, score=0):
-        super(MaxPathPeak, self).__init__(start, end, rps, graph=graph)
-        self.score = score
-
-    def set_score(self, score):
-        self.score = score
-
-    def to_file_line(self):
-        object = {"start": int(self.start_position.offset),
-                  "end": int(self.end_position.offset),
-                  "region_paths": self.region_paths,
-                  "direction": self.direction,
-                  "average_q_value": self.score
-                 }
-        return json.dumps(object)
-
-    @classmethod
-    def from_file_line(cls, line, graph=None):
-        object = json.loads(line)
-        return cls(object["start"], object["end"], object["region_paths"], direction=object["direction"], graph=graph)
+from .peakcollection import Peak
 
 
 class ScoredPeak(object):
@@ -135,8 +86,8 @@ class ScoredPeak(object):
         if len(self._peak.internal_intervals) > 0:
             node, start_end = list(self._peak.internal_intervals.items())[0]
 
-            interval = MaxPathPeak(start_end[0], start_end[1],
-                                   [node], graph=self._graph)
+            interval = Peak(start_end[0], start_end[1],
+                            [node], graph=self._graph)
             score = sums[node]
             #interval.set_score(np.max(self._scores[node].all_values())) # score / interval.length())
             interval.set_score(score / interval.length())
@@ -197,7 +148,7 @@ class ScoredPeak(object):
             max_score_in_peak = np.max(self._scores[global_max_path[-1]].all_values())
         """
 
-        max_path_peak = MaxPathPeak(
+        max_path_peak = Peak(
             int(start_offset), int(end_offset),
             global_max_path, graph=self._graph)
 

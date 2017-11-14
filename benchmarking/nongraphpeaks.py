@@ -4,12 +4,13 @@ from pybedtools import BedTool, Interval
 import logging
 logging.basicConfig(level=logging.INFO)
 
+
 class NonGraphPeak():
     def __init__(self, chromosome, start, end, score=None):
         self.chromosome = chromosome
         self.start = start
         self.end = end
-        self.score  = score
+        self.score = score
         self.sequence = None
 
     def set_sequence(self):
@@ -24,7 +25,8 @@ class NonGraphPeak():
     def __repr__(self):
         return self.__str__()
 
-class NonGraphPeakCollection():
+
+class NonGraphPeakCollection(object):
     def __init__(self, peaks):
         self.peaks = peaks
 
@@ -67,7 +69,6 @@ class NonGraphPeakCollection():
             logging.info("Set sequence for peak %d/%d" % (i, len(self.peaks)))
             i += 1
             peak.set_sequence()
-
 
     def save_to_sorted_fasta(self, file_name):
         self._sort_on_score_descending()
