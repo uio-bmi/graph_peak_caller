@@ -1,5 +1,6 @@
 from collections import defaultdict
 import matplotlib.pyplot as plt
+import os
 import pyvg
 from pyvg.sequences import SequenceRetriever
 from pyvg.util import vg_gam_file_to_interval_list
@@ -255,10 +256,10 @@ class AlignmentsAnalyser(object):
 def get_peaks_comparer_for_linear_and_graph_peaks(
                 linear_peaks_bed_file_name,
                 graph_peaks_file_name):
-    import os
+
     sequence_retriever = None  # SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
     ob_graph = obg.GraphWithReversals.from_file("haplo1kg50-mhc.obg")
-    if not os.isfile("linear_paths_haplo1kg-50.intervals"):
+    if not os.path.isfile("linear_paths_haplo1kg-50.intervals"):
         vg_graph = pyvg.Graph.create_from_file("haplo1kg50-mhc.json")
         linear_paths = get_linear_paths_in_graph(
                         ob_graph,
@@ -279,6 +280,7 @@ def get_peaks_comparer_for_linear_and_graph_peaks(
                              "linear_paths_haplo1kg-50.intervals",
                              "mac_peaks.intervals",
                              graph_peaks_file_name)
+    return comparer
 
 
 comparer = get_peaks_comparer_for_linear_and_graph_peaks(
