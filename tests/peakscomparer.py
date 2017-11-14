@@ -28,6 +28,18 @@ class PeaksComparer(object):
         plt.legend()
         plt.show()
 
+    def get_peaks_at_same_position(self, allowed_mismatches=10):
+        same_pos = []
+        for peak in self.peaks1:
+            identical = self.peaks2.get_similar_intervals(
+                peak, allowed_mismatches)
+
+            assert len(identical) <= 1
+            if len(identical) > 0:
+                same_pos.append((peak, identical[0]))
+
+        return same_pos
+
     def compare_q_values_for_similar_peaks(self):
 
         for peak in self.peaks1:
