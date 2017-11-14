@@ -14,7 +14,7 @@ from graph_peak_caller.pileup import Pileup
 from graph_peak_caller.sparsepileup import SparsePileup
 from graph_peak_caller.snarls import SnarlGraph, SnarlGraphBuilder, SimpleSnarl
 from graph_peak_caller.linearsnarls import LinearSnarlMap
-from .peakscomparer import PeaksComparer
+from peakscomparer import PeaksComparer
 logging.basicConfig(level=logging.INFO)
 
 
@@ -520,11 +520,12 @@ class MACSTests(object):
 
     def assertPeakSetsEqual(self, linear_peaks_file, graph_peaks_file):
         linear_path = DirectedInterval(0, self.node_size,
-                                       list(range(1, self.n_nodes+1)))
+                                       list(range(1, self.n_nodes+1)),
+                                       graph=self.graph)
         comparer = PeaksComparer.create_from_graph_peaks_and_linear_peaks(
             linear_peaks_file, graph_peaks_file, self.graph, linear_path)
         matches = comparer.get_peaks_at_same_position()
-        assert len(matches) == len(graph_peaks_file.intervals)
+        assert len(matches) == len(comparer.peaks1.intervals)
 
     def test_whole_pipeline(self):
         self._run_whole_macs()
@@ -566,7 +567,7 @@ def big_test(with_control=False):
 
 if __name__ == "__main__":
     random.seed(102)
-    test = big_test(True)
+    test = small_test(True)
     test.test_whole_pipeline()
     exit()
     test.test_sample_pileup()
