@@ -277,8 +277,13 @@ class CallPeaks(object):
                         peaks_as_subgraphs)
         scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, self.p_values)
                         for peak in binary_peaks)
-        max_paths = [scored_peak.get_max_path() for
-                     scored_peak in scored_peaks]
+        max_paths = []
+        for scored_peak in scored_peaks:
+            print("Scored peak")
+            print(scored_peak)
+            max_paths.append(scored_peak.get_max_path())
+        #max_paths = [scored_peak.get_max_path() for
+        #             scored_peak in scored_peaks]
         logging.info("Number of peaks before small peaks are removed: %d" % len(max_paths))
         # Sort max pathse
         max_paths.sort(key=lambda p: p.score, reverse=True)

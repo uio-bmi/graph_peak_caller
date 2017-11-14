@@ -103,6 +103,18 @@ class PeaksComparer(object):
         plt.legend()
         plt.show()
 
+    def compare_q_values_for_similar_peaks(self):
+
+        for peak in self.peaks1:
+            similar = self.peaks2.get_similar_intervals(peak, allowed_mismatches=10)
+            if len(similar) > 0:
+                print("Found match(es) for %s" % peak)
+                for matched_peak in similar:
+                    print("   Match agsinst %s with scores %.3f, %.3f" %
+                          (matched_peak, peak.score, matched_peak.score))
+            else:
+                print("No match for peak %s" % peak)
+
     def check_similarity(self):
         i = 1
         for peak_datasets in [(self.peaks1, self.peaks2), (self.peaks2, self.peaks1)]:
@@ -244,35 +256,39 @@ class AlignmentsAnalyser(object):
 
 
 
+def get_peaks_comparer_for_linear_and_graph_peaks(
+                linear_peaks_bed_file_name,
+                graph_peaks_file_name):
+    import os
+    sequence_retriever = None  # SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
+    ob_graph = obg.GraphWithReversals.from_file("haplo1kg50-mhc.obg")
+    if not os.isfile("linear_paths_haplo1kg-50.intervals"):
+        vg_graph = pyvg.Graph.create_from_file("haplo1kg50-mhc.json")
+        linear_paths = get_linear_paths_in_graph(
+                        ob_graph,
+                        vg_graph,
+                        write_to_file_name="linear_paths_haplo1kg-50.intervals")
+
+    linear_path = IntervalCollection.create_list_from_file(
+                        "linear_paths_haplo1kg-50.intervals",
+                        ob_graph).intervals[0]
+    linear_path = linear_path.to_indexed_interval()
+    linear_peaks = PeakCollection.create_from_linear_intervals_in_bed_file(ob_graph,
+                                                                           linear_path,
+                                                                           linear_peaks_bed_file_name,
+                                                                           28510119,
+                                                                           33480577)
+    linear_peaks.to_file("mac_peaks.intervals", text_file=True)
+    comparer = PeaksComparer(ob_graph, sequence_retriever,
+                             "linear_paths_haplo1kg-50.intervals",
+                             "mac_peaks.intervals",
+                             graph_peaks_file_name)
 
 
-"""
-sequence_retriever = SequenceRetriever.from_vg_graph("cactus-mhc.vg")
-ob_graph = obg.GraphWithReversals.from_file("cactus-mhc.obg")
-vg_graph = vg_graph = pyvg.Graph.create_from_file("cactus-mhc.json")
-"""
+comparer = get_peaks_comparer_for_linear_and_graph_peaks(
+            "CTCF_peaks.narrowPeak", "real_data_max_paths")
 
-
-sequence_retriever = None  # SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
-ob_graph = obg.GraphWithReversals.from_file("haplo1kg50-mhc.obg")
-#vg_graph = pyvg.Graph.create_from_file("haplo1kg50-mhc.json")
-
-#linear_paths = get_linear_paths_in_graph(ob_graph, vg_graph, write_to_file_name="linear_paths_haplo1kg-50.intervals")
-
-linear_path = IntervalCollection.create_list_from_file("linear_paths_haplo1kg-50.intervals", ob_graph).intervals[0]
-
-
-linear_peaks = PeakCollection.create_from_linear_intervals_in_bed_file(ob_graph,
-                                                                       linear_path,
-                                                                       "CTCF_peaks.narrowPeak",
-                                                                       28510119,
-                                                                       33480577)
-linear_peaks.to_file("mac_peaks.intervals", text_file=True)
-
-
-comparer = PeaksComparer(ob_graph, sequence_retriever, "linear_paths_haplo1kg-50.intervals", "mac_peaks.intervals", "real_data_max_paths")
 comparer.plot_peak_lengths()
-
 comparer.check_similarity()
 comparer.check_overlap_with_linear_path()
 #peaks = comparer.get_peaks_not_on_linear_path()

@@ -27,46 +27,29 @@ def warn_with_traceback(message, category, filename, lineno, file=None, line=Non
 warnings.showwarning = warn_with_traceback
 
 
-def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
-                 limit_to_chromosomes=False):
+def create_linear_map(ob_graph):
+    builder = SnarlGraphBuilder.from_vg_snarls(ob_graph.copy(), "haplo1kg50-mhc.snarls")
+    snarlgraph = builder.build_snarl_graphs()
+    LinearSnarlMap(snarlgraph, ob_graph)
+    linear_map = LinearSnarlMap(snarlgraph, ob_graph)
+    linear_map.to_file("linear_map")
+
+
+def run_with_intervals(sample_intervals, control_intervals):
+
+    logging.info("Running from intervals")
+
     retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
-    logging.basicConfig(level=logging.INFO)
-    logging.info("Running")
-
-    # vg_graph = pyvg.Graph.create_from_file(vg_graph_file_name)
-    # ob_graph = vg_graph.get_offset_based_graph()
-    # ob_graph.to_file("obgraph")
     ob_graph = obg.GraphWithReversals.from_file("obgraph")
-    #print(ob_graph.node_size(701))
-    #return
-
-    #builder = SnarlGraphBuilder.from_vg_snarls(ob_graph.copy(), "haplo1kg50-mhc.snarls")
-    #snarlgraph = builder.build_snarl_graphs()
-    # LinearSnarlMap(snarlgraph, ob_graph)
-    #linear_map = LinearSnarlMap(snarlgraph, ob_graph)
-    #linear_map.to_file("linear_map")
-    linear_map = "linear_map"
-    #snarlgraph._create_distance_dicts()
-
-    #snarlgraph.to_file("haplo1kg50-mhc.snarlgraph")
-    #snarlgraph = SnarlGraph.from_file("haplo1kg50-mhc.snarlgraph")
-
-    #ob_graph = obg.GraphWithReversals.from_file("obgraph")
     graph_size = sum(block.length() for block in ob_graph.blocks.values())
     logging.info("Graph size: %d" % graph_size)
     logging.info("N nodes in graph: %d" % len(ob_graph.blocks))
 
-    # print(ob_graph.blocks)
-    reads_intervals = vg_gam_file_to_interval_collection(
-         None, gam_file_name, ob_graph)
+    linear_map = "linear_map"
 
-    control_intervals = vg_gam_file_to_interval_collection(
-         None, gam_control_file, ob_graph)
-
-    #experiment_info = callpeaks.ExperimentInfo(graph_size, 103, 50)
     experiment_info = callpeaks.ExperimentInfo(graph_size, 135, 36)
     caller = callpeaks.CallPeaks(
-        ob_graph, reads_intervals, control_intervals,
+        ob_graph, sample_intervals, control_intervals,
         experiment_info=experiment_info,
         out_file_base_name="real_data_", has_control=True,
         linear_map=linear_map)
@@ -74,6 +57,22 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
     caller.verbose = True
     caller.run()
     caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
+
+
+def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
+                 limit_to_chromosomes=False):
+    logging.basicConfig(level=logging.INFO)
+    logging.info("Running from gam files")
+
+    ob_graph = obg.GraphWithReversals.from_file("obgraph")
+    # print(ob_graph.blocks)
+    reads_intervals = vg_gam_file_to_interval_collection(
+         None, gam_file_name, ob_graph)
+
+    control_intervals = vg_gam_file_to_interval_collection(
+         None, gam_control_file, ob_graph)
+
+    run_with_intervals(reads_intervals, control_intervals)
 
 
 def run_from_max_paths_step(graph_file_name, pileup_file_name, read_length):
@@ -123,6 +122,10 @@ def peak_sequences_to_fasta(vg_graph_file_name, peaks_file_name, fasta_file_name
 
 if __name__ == "__main__":
     dm_folder = "../graph_peak_caller/dm_test_data/"
+
+    ob_graph = obg.GraphWithReversals.from_file("obgraph")
+    create_linear_map(ob_graph)
+
     #run_from_max_paths_step("obgraph", "pre_postprocess.bed", 36)
     #cProfile.run('run_with_gam("ENCFF000WVQ_filtered.gam", "cactus-mhc.json")')
     #cProfile.run('run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")')
@@ -130,4 +133,11 @@ if __name__ == "__main__":
     #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")
     #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "haplo1kg50-mhc.json")
     #run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam", "ENCFF001HNS_haplo1kg50-mhc_filtered_q50.gam", "haplo1kg50-mhc.json")
-    run_with_gam("ctcf_mhc.gam", "ctcf_control_mhc.gam", "haplo1kg50-mhc.json")
+    #run_with_gam("ctcf_mhc.gam", "ctcf_control_mhc.gam", "haplo1kg50-mhc.json")
+
+
+    run_with_intervals(
+        sample_intervals=IntervalCollection.from_file("sample_linear_reads.intervals", graph=ob_graph),
+        control_intervals=IntervalCollection.from_file("control_linear_reads.intervals", graph=ob_graph),
+
+    )

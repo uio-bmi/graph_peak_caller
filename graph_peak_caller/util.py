@@ -214,12 +214,14 @@ if __name__ == "__main__":
     ob_graph = obg.GraphWithReversals.from_file("haplo1kg50-mhc.obg")
     from graph_peak_caller.peakcollection import PeakCollection
     linear_path = IntervalCollection.create_list_from_file("linear_paths_haplo1kg-50.intervals", ob_graph).intervals[0]
+    linear_path = linear_path.to_indexed_interval()
 
 
     linear_reads = PeakCollection.create_from_linear_intervals_in_bed_file(ob_graph,
                                                                            linear_path,
-                                                                           "ctcf_control_reads_mhc.bed",
+                                                                           #"ctcf_control_reads_mhc.bed",
+                                                                           "ctcf_reads_mhc.bed",
                                                                            28510119,
                                                                            33480577)
 
-    linear_reads.to_file("control_linear_reads.intervals", text_file=False)
+    linear_reads.to_file("sample_linear_reads.intervals", text_file=False)
