@@ -34,6 +34,22 @@ def create_linear_map(ob_graph):
     linear_map = LinearSnarlMap(snarlgraph, ob_graph)
     linear_map.to_file("linear_map")
 
+    # vg_graph = pyvg.Graph.create_from_file(vg_graph_file_name)
+    # ob_graph = vg_graph.get_offset_based_graph()
+    # ob_graph.to_file("obgraph")
+    ob_graph = obg.GraphWithReversals.from_file("obgraph")
+    #print(ob_graph.node_size(701))
+    #return
+
+    builder = SnarlGraphBuilder.from_vg_snarls(
+        ob_graph.copy(),
+        "haplo1kg50-mhc.snarls")
+    snarlgraph = builder.build_snarl_graphs()
+    # LinearSnarlMap(snarlgraph, ob_graph)
+    linear_map = LinearSnarlMap(snarlgraph, ob_graph)
+    linear_map.to_file("haplo1kg50-mhc.lm")
+    linear_map = "haplo1kg50-mhc.lm"
+    #snarlgraph._create_distance_dicts()
 
 def run_with_intervals(sample_intervals, control_intervals):
 
@@ -132,12 +148,13 @@ if __name__ == "__main__":
     #run_from_max_paths_step()
     #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")
     #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "haplo1kg50-mhc.json")
-    #run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam", "ENCFF001HNS_haplo1kg50-mhc_filtered_q50.gam", "haplo1kg50-mhc.json")
-    #run_with_gam("ctcf_mhc.gam", "ctcf_control_mhc.gam", "haplo1kg50-mhc.json")
-
 
     run_with_intervals(
         sample_intervals=IntervalCollection.from_file("sample_linear_reads.intervals", graph=ob_graph),
         control_intervals=IntervalCollection.from_file("control_linear_reads.intervals", graph=ob_graph),
 
     )
+
+    run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam", "ENCFF001HNS_haplo1kg50-mhc_filtered_q50.gam", "haplo1kg50-mhc.json")
+    # run_with_gam("ctcf_mhc.gam", "ctcf_control_mhc.gam", "haplo1kg50-mhc.json")
+

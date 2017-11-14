@@ -124,6 +124,8 @@ class CallPeaks(object):
         self.call_peaks(out_file)
 
     def preprocess(self):
+        self.info.n_control_reads = 0
+        self.info.n_sample_reads = 0
         self.sample_intervals = self.remove_alignments_not_in_graph(
                                     self.sample_intervals)
         self.sample_intervals = self.filter_duplicates_and_count_intervals(
@@ -178,7 +180,7 @@ class CallPeaks(object):
         if ratio > 1:
             logging.warning("More reads in sample than in control")
             self._sample_pileup.scale(1/ratio)
-            self._sample_pileup.to_graph(
+            self._sample_pileup.to_bed_graph(
                 self.out_file_base_name + "scaled_treat.bdg")
             if update_saved_files:
                 self._sample_pileup.to_bed_graph(self._sample_track)

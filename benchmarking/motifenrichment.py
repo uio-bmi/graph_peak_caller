@@ -94,11 +94,12 @@ if __name__ == "__main__":
     plot_true_positives(
         {
             #"graph peaks": "../tests/real_data_sequences_q50.fasta",
-            "graph peaks_more": "../tests/real_data_sequences_kept_small",
-            "new_fasta": "../tests/sequences_new_control_sample.fasta",
-            "max_instead_of_average": "../tests/real_data_sequences_max_instead_of_average.fasta",
+            "graph peaks_more": "../tests/real_data_sequences.fasta",
+            "macs": "CTCFpFix.fasta"
+            # "new_fasta": "../tests/sequences_new_control_sample.fasta",
+            # "max_instead_of_average": "../tests/real_data_sequences_max_instead_of_average.fasta",
             #"spp_from_encode": "ENCFF155DHA_filtered.fasta",
-            "macs": "CTCF_filtered.fasta",
+
         },
         "MA0139.1.meme"
     )
