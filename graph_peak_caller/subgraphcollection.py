@@ -78,12 +78,8 @@ class SubgraphCollection(object):
     def _subgraphs_touching_area(self, node_id, start, end):
         touching_subgraphs = []
         for subgraph in self.subgraphs:
-            print("    Checking touching %d,%d,%d for subgraph %s" % (node_id, start, end, subgraph))
             if subgraph.touches_area(node_id, start, end):
-                print("    Touching!")
                 touching_subgraphs.append(subgraph)
-            else:
-                print("    Not touching")
         return touching_subgraphs
 
     def __iter__(self):
@@ -93,22 +89,18 @@ class SubgraphCollection(object):
         assert node_id in self.graph.blocks
         assert start >= 0 and start < end
         assert end <= self.graph.node_size(node_id)
-        print("Adding area %s" % ([node_id, start, end]))
 
         touching_subgraphs = self._subgraphs_touching_area(node_id, start, end)
 
         if len(touching_subgraphs) == 0:
-            print("  No touching subgraphs")
             new_subgraph = ConnectedAreas(
                 self.graph,
                 {node_id: np.array([start, end])})
             self.subgraphs.append(new_subgraph)
         elif len(touching_subgraphs) == 1:
-            print("  1 touching subgraph")
             touching_subgraphs[0].add_areas_for_node(
                 node_id, np.array([start, end]))
         elif len(touching_subgraphs) > 1:
-            print("  > 1 touching subgraph")
             # Merge all touching subgraphs, then add the area
             new_subgraph = touching_subgraphs[0]
             for touching_subgraph in touching_subgraphs[1:]:
