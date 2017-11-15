@@ -1,13 +1,13 @@
 import unittest
 from graph_peak_caller.subgraphcollection import SubgraphCollection, ConnectedAreas
 from graph_peak_caller.extender import Areas
-from offsetbasedgraph import Graph, Block, Interval, Position
+from offsetbasedgraph import Graph, Block, Interval, Position, GraphWithReversals
 import numpy as np
 from graph_peak_caller.sparsepileup import SparsePileup
 
 class Tester(unittest.TestCase):
     def setUp(self):
-        self.simple_graph = Graph({
+        self.simple_graph = GraphWithReversals({
             1: Block(3),
             2: Block(3),
             3: Block(3)
@@ -17,7 +17,7 @@ class Tester(unittest.TestCase):
             2: [3]
         })
 
-        self.reversed_simple_graph = Graph({
+        self.reversed_simple_graph = GraphWithReversals({
             1: Block(3),
             2: Block(3),
             3: Block(3)
@@ -123,7 +123,7 @@ class TestSubGraphCollection(Tester):
 
     def test_subgraphs_multiple(self):
 
-        for graph in self.simple_graphs:
+        for graph in self.simple_graphs[1:]:
             collection = SubgraphCollection(graph)
             collection.add_area(1, 0, 3)
             collection.add_area(3, 0, 3)
@@ -131,6 +131,8 @@ class TestSubGraphCollection(Tester):
 
             self.assertTrue(len(collection.subgraphs), 1)
             areas = collection.subgraphs[0].areas
+            print("Areas")
+            print(areas)
             self.assertTrue(np.all(areas[1] == [0, 3]))
             self.assertTrue(np.all(areas[2] == [0, 3]))
             self.assertTrue(np.all(areas[3] == [0, 3]))
@@ -152,6 +154,7 @@ class TestSubGraphCollection(Tester):
         collection.add_area(3, 0, 3)
         collection.add_area(2, 0, 2)
         collection.to_file("subgraphcollection.test.tmp")
+
 
 class TestConnectedAreas(Tester):
 

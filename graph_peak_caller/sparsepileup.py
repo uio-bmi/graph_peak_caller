@@ -268,6 +268,7 @@ class SparsePileup(Pileup):
             ends = areas.get_ends(node_id)
             for start, end in zip(starts, ends):
                 self.data[node_id].set_interval_value(start, end, True)
+                print("Filling hole %s, %d, %d" % (node_id, start, end))
         self.sanitize()
 
     def sanitize(self):
