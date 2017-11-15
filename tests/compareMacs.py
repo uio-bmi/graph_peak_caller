@@ -5,7 +5,7 @@ import random
 import re
 import numpy as np
 import logging
-
+ 
 from offsetbasedgraph import Graph, Block, Position,\
     DirectedInterval, GraphWithReversals
 from offsetbasedgraph.interval import IntervalCollection
@@ -417,13 +417,12 @@ class MACSTests(object):
     def create_random_linear_reads(self, n_reads, include_pairs=False):
         print("Creating %d linear reads" % n_reads)
         reads = []
-        for i in range(n_reads//10+1):
+        for i in range(n_reads//50+1):
             print("Creating read %d" % i)
             point = random.randint(0, self.genome_size)
-            reads.extend(self.create_pairs_around_point(point, n=2))
+            reads.extend(self.create_pairs_around_point(point, n=50))
             continue
             direction = random.choice((-1, 1))
-            
             if direction == -1:
                 start = random.randint(self.fragment_length-self.read_length,
                                        self.genome_size-self.read_length)
@@ -572,13 +571,13 @@ def small_test(with_control=False):
 
 
 def big_test(with_control=False):
-    return MACSTests(10000, 10000, 500000, read_length=51,
+    return MACSTests(100, 1000, 500, read_length=51,
                      fragment_length=120, with_control=with_control)
 
 
 if __name__ == "__main__":
     random.seed(102)
-    test = small_test(True)
+    test = big_test(True)
     test.test_whole_pipeline()
     exit()
     test.test_sample_pileup()
