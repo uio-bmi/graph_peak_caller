@@ -508,14 +508,17 @@ class SparseControlSample(SparsePileup):
     def get_p_dict(self):
         p_value_dict = defaultdict(dict)
         count_dict = defaultdict(int)
+        baseEtoTen = np.log(10)
         for node_id, valued_indexes in self.data.items():
             start = 0
             val = valued_indexes.start_value
             for start, end, val in valued_indexes:
                 if val[1] not in p_value_dict[val[0]]:
-                    pre_val = poisson.cdf(val[1],  val[0])
-                    p_val = 1 - pre_val
-                    p_value_dict[val[0]][val[1]] = -np.log10(p_val)
+                    log_p_val = poisson.logsf(val[1], val[0])
+                    # pre_val = poisson.cdf(val[1],  val[0])
+                    # p_val = 1 - pre_val
+                    p_value_dict[val[0]][val[1]] = -log_p_val/baseEtoTen
+                    # -np.log10(p_val)
                 p = p_value_dict[val[0]][val[1]]
                 count_dict[p] += end-start
 

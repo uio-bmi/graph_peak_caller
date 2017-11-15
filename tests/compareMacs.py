@@ -5,7 +5,7 @@ import random
 import re
 import numpy as np
 import logging
-
+ 
 from offsetbasedgraph import Graph, Block, Position,\
     DirectedInterval, GraphWithReversals
 from offsetbasedgraph.interval import IntervalCollection
@@ -571,7 +571,7 @@ def small_test(with_control=False):
 
 
 def big_test(with_control=False):
-    return MACSTests(10000, 10000, 5000, read_length=51,
+    return MACSTests(100, 1000, 500, read_length=51,
                      fragment_length=120, with_control=with_control)
 
 
