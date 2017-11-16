@@ -55,7 +55,8 @@ def create_linear_map(ob_graph):
 
 def run_with_intervals(sample_intervals, control_intervals):
     logging.info("Running from intervals")
-    ob_graph = obg.GraphWithReversals.from_file("obgraph")
+    retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
+    ob_graph = obg.GraphWithReversals.from_file("graph.obg")
     graph_size = sum(block.length() for block in ob_graph.blocks.values())
     logging.info("Graph size: %d" % graph_size)
     logging.info("N nodes in graph: %d" % len(ob_graph.blocks))
