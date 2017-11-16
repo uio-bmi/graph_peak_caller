@@ -26,11 +26,17 @@ class Peak(obg.DirectedInterval):
     def to_file_line(self):
         object = {"start": int(self.start_position.offset),
                   "end": int(self.end_position.offset),
-                  "region_paths": self.region_paths,
-                  "direction": self.direction,
-                  "average_q_value": self.score
+                  "region_paths": [int(r) for r in self.region_paths],
+                  "direction": int(self.direction),
+                  "average_q_value": float(self.score)
                   }
-        return json.dumps(object)
+        try:
+            d = json.dumps(object)
+        except:
+            for k, v in object.items():
+                print(k, v, type(v))
+            raise
+        return d
 
     @classmethod
     def from_file_line(cls, line, graph=None):
