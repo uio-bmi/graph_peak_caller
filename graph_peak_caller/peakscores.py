@@ -113,6 +113,10 @@ class ScoredPeak(object):
         # ends.extend(-node_id for node_id in self._peak.full_areas.keys())
         # start_values.extend(sums[abs(node_id)] for
         # node_id in self._peak.full_areas.keys())
+        if 211559 in self._peak.get_node_ids():
+            print(self.start_positions)
+            print(self.ends)
+            print(self.start_values)
 
         memo = defaultdict(int)
         stack = deque(zip([[e] for e in ends], start_values))
@@ -142,7 +146,7 @@ class ScoredPeak(object):
         # start_offset = int(self._graph.node_size(start_node) -
         # self._peak.starts[-start_node])
         end_node = global_max_path[-1]
-        end_offset = self._peak.starts[end_node] if end_node in self._peak.starts else self.graph.node_size(end_node)
+        end_offset = self._peak.starts[end_node] if end_node in self._peak.starts else self._peak.graph.node_size(end_node)
         # self._peak.starts[global_max_path[-1]]
 
         if -global_max_path[0] in self._scores:
@@ -165,6 +169,7 @@ class ScoredPeak(object):
             global_max_path, graph=self._graph)
 
         score = max_score_in_peak  # global_max / max_path_peak.length()
+        print("#", score)
         # score = global_max / max_path_peak.length()
         max_path_peak.set_score(score)
         return max_path_peak

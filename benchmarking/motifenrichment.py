@@ -93,6 +93,7 @@ if __name__ == "__main__":
         {
             #"graph peaks": "../tests/real_data_sequences_q50.fasta",
             "graph peaks_more": "../tests/real_data_sequences.fasta",
+            # "graph_peaks_new": "../tests/last_step_real_data_sequences",
             "macs": "CTCFpFix.fasta"
             # "new_fasta": "../tests/sequences_new_control_sample.fasta",
             # "max_instead_of_average": "../tests/real_data_sequences_max_instead_of_average.fasta",

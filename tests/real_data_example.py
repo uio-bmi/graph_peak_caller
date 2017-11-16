@@ -14,6 +14,7 @@ from graph_peak_caller.peakscores import ScoredPeak
 import offsetbasedgraph as obg
 from graph_peak_caller.snarls import SnarlGraph, SnarlGraphBuilder
 from graph_peak_caller.snarlmaps import LinearSnarlMap
+from graph_peak_caller.peakcollection import PeakCollection
 import traceback
 import warnings
 import sys
@@ -90,34 +91,51 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
     run_with_intervals(reads_intervals, control_intervals)
 
 
-def run_from_max_paths_step(graph_file_name, pileup_file_name, read_length):
+def run_from_max_paths_step(graph_file_name, pileup_file_name):
     """(211559:0),(211565:90)	211559,211560,211561,211562,211563,211564,211565,536238 """
-    fragment_length = 135
-    graph = obg.Graph.from_file(graph_file_name)
-    peaks = SparsePileup.from_bed_file(graph, pileup_file_name)
-    peaks.fill_small_wholes(read_length)
-    final_track = peaks.remove_small_peaks(fragment_length)
-    peaks_as_subgraphs = final_track.to_subgraphs()
-    peaks_as_subgraphs.to_file(
-        "last_step_" + "peaks_as_subgraphs")
+    ob_graph = obg.GraphWithReversals.from_file("obgraph")
+    graph_size = sum(block.length() for block in ob_graph.blocks.values())
+    experiment_info = callpeaks.ExperimentInfo(graph_size, 135, 36)
+    linear_map = "haplo1kg50-mhc.lm"
+    caller = callpeaks.CallPeaks(
+        ob_graph, IntervalCollection([]), IntervalCollection([]),
+        experiment_info=experiment_info,
+        out_file_base_name="laststep_", has_control=True,
+        linear_map=linear_map)
 
-    p_values = SparsePileup.from_bed_file(graph, "real_data_q_values.bdg")
-    binary_peaks = (BinaryContinousAreas.from_old_areas(peak) for peak in
-                    peaks_as_subgraphs)
-    scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, p_values)
-                    for peak in binary_peaks)
-    max_paths = [scored_peak.get_max_path() for
-                 scored_peak in scored_peaks]
-    IntervalCollection(max_paths).to_text_file(
-                "last_step_max_paths")
-    retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
-    sequences = [retriever.get_interval_sequence(max_path)
-                 for max_path in max_paths]
-    f = open("last_step_real_data_sequences", "w")
-    i = 0
-    for seq in sequences:
-        f.write(">peak" + str(i) + "\n" + seq + "\n")
-        i += 1
+    caller.p_values = SparsePileup.from_bed_file(ob_graph, pileup_file_name)
+    caller.call_peaks()
+
+    # fragment_length = 135
+    # graph = obg.Graph.from_file(graph_file_name)
+    # peaks = SparsePileup.from_bed_file(graph, pileup_file_name)
+    # peaks.fill_small_wholes(read_length)
+    # final_track = peaks.remove_small_peaks(fragment_length)
+    # peaks_as_subgraphs = final_track.to_subgraphs()
+    # peaks_as_subgraphs.to_file(
+    #     "last_step_" + "peaks_as_subgraphs")
+    # 
+    # p_values = SparsePileup.from_bed_file(graph, "real_data_q_values.bdg")
+    # binary_peaks = (BinaryContinousAreas.from_old_areas(peak) for peak in
+    #                 peaks_as_subgraphs)
+    # scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, p_values)
+    #                 for peak in binary_peaks)
+    # max_paths = [scored_peak.get_max_path() for
+    #              scored_peak in scored_peaks]
+    # max_paths.sort(key=lambda p: p.score, reverse=True)
+    # PeakCollection(max_paths).to_file(
+    #     "last_step_" + "max_paths", text_file=True)
+    # 
+    # # IntervalCollection(max_paths).to_text_file(
+    # #             "last_step_max_paths")
+    # retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
+    # sequences = [retriever.get_interval_sequence(max_path)
+    #              for max_path in max_paths]
+    # f = open("last_step_real_data_sequences", "w")
+    # i = 0
+    # for seq in sequences:
+    #     f.write(">peak" + str(i) + "\n" + seq + "\n")
+    #     i += 1
 
 
 def peak_sequences_to_fasta(vg_graph_file_name, peaks_file_name, fasta_file_name):
@@ -139,7 +157,7 @@ if __name__ == "__main__":
     ob_graph = obg.GraphWithReversals.from_file("obgraph")
     # create_linear_map(ob_graph)
 
-    run_from_max_paths_step("obgraph", "pre_postprocess.bed", 36)
+    run_from_max_paths_step("obgraph", "real_data_q_values.bdg")
     exit()
     #cProfile.run('run_with_gam("ENCFF000WVQ_filtered.gam", "cactus-mhc.json")')
     #cProfile.run('run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")')
