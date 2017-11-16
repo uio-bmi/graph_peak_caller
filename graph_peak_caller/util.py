@@ -1,4 +1,3 @@
-import sys
 import pyBigWig
 import numpy as np
 import pybedtools
@@ -6,8 +5,7 @@ from pybedtools import BedTool
 from offsetbasedgraph import IntervalCollection
 from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
 import offsetbasedgraph as obg
-import matplotlib.mlab as mlab
-import matplotlib.pyplot as plt
+
 
 class LinearRegion(object):
     def __init__(self, chromosome, start, end):
@@ -16,7 +14,8 @@ class LinearRegion(object):
         self.end = end
 
 
-def get_average_signal_values_within_peaks(signal_file_name, peaks_bed_file_name):
+def get_average_signal_values_within_peaks(signal_file_name,
+                                           peaks_bed_file_name):
     signal_file = pyBigWig.open(signal_file_name)
     peaks_file = pybedtools.BedTool(peaks_bed_file_name)
     long_segments = []
@@ -27,10 +26,8 @@ def get_average_signal_values_within_peaks(signal_file_name, peaks_bed_file_name
         start = peak.start
         end = peak.stop
         signal_values = signal_file.values(chrom, start, end)
-        #signal_value = np.log(np.mean(signal_values))
         signal_value = np.mean(signal_values)
         long_segments.append(signal_value)
-        #print("Found %d-%d with value %.5f" % (start, end, signal_value))
         i += 1
         if i > max_segments:
             break
@@ -44,14 +41,16 @@ def longest_segment(file_name):
         l = line.split()
         start = int(l[1])
         end = int(l[2])
-        #print(end - start)
         if end - start > longest:
-            print("Found longer %d at %d-%d with value %.6f" % (end-start, start, end, float(l[3])))
+            print("Found longer %d at %d-%d with value %.6f" % (
+                end-start, start, end, float(l[3])))
             longest = end - start
 
     print(longest)
 
-def bed_intervals_to_graph(obg_graph, linear_path_interval, bed_file_name, graph_start_offset):
+
+def bed_intervals_to_graph(obg_graph, linear_path_interval,
+                           bed_file_name, graph_start_offset):
     peaks = BedTool(bed_file_name)
     intervals_on_graph = []
     for peak in peaks:
@@ -61,28 +60,27 @@ def bed_intervals_to_graph(obg_graph, linear_path_interval, bed_file_name, graph
 
     return intervals_on_graph
 
-def fasta_sequence_to_linear_path_through_graph(linear_sequence_fasta_file, sequence_retriever, ob_graph, start_node):
+
+def fasta_sequence_to_linear_path_through_graph(
+        linear_sequence_fasta_file, sequence_retriever, ob_graph, start_node):
     search_sequence = open(linear_sequence_fasta_file).read()
     print("Length of search sequence: %d" % len(search_sequence))
-    traverser = GraphTraverserUsingSequence(ob_graph, search_sequence, sequence_retriever)
+    traverser = GraphTraverserUsingSequence(
+        ob_graph, search_sequence, sequence_retriever)
     traverser.search_from_node(start_node)
     linear_path_interval = traverser.get_interval_found()
-    #IntervalCollection([linear_path_interval]).to_file("linear_path", text_file=True)
     return linear_path_interval
 
 
 def get_linear_paths_in_graph(ob_graph, vg_graph, write_to_file_name=None):
-    intervals = []
+    intervals = {}
     for path in vg_graph.paths:
-        #print(path.__dict__.keys())
-        print(path.name)
         obg_interval = path.to_obg(ob_graph=ob_graph)
-        print(obg_interval.length())
         obg_interval.name = path.name
-        intervals.append(obg_interval)
+        intervals[obg_interval.name] = obg_interval
 
     if write_to_file_name is not None:
-        collection = obg.IntervalCollection(intervals)
+        collection = obg.IntervalCollection(intervals.values())
         collection.to_file(write_to_file_name, text_file=True)
 
     return intervals
@@ -170,7 +168,8 @@ def sanitize_indices_and_values(indices, values):
     return new_indices, new_values
 
 
-def filter_ucsc_snps_on_region_output_vcf(bed_file_name, out_file_name, chromosome, start, end):
+def filter_ucsc_snps_on_region_output_vcf(bed_file_name, out_file_name,
+                                          chromosome, start, end):
     out_file = open(out_file_name, "w")
     out_file.writelines(["#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\n"])
     i = 0
@@ -197,7 +196,6 @@ def filter_ucsc_snps_on_region_output_vcf(bed_file_name, out_file_name, chromoso
         variant = l[9].split("/")
         ref = variant[0]
         alt = variant[1]
-
 
         print("Wrote")
         out_file.writelines(["%s\t%d\t%s\t%s\t%s\t%d\t%s\n" % (chr, pos + 1, id, ref, alt, 0, "PASS")])

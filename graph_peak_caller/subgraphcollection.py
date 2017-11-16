@@ -55,7 +55,6 @@ class SubgraphCollection(object):
 
     def __init__(self, graph, subgraphs=None):
         self.graph = graph
-        # A subgraph is a connected area
         if subgraphs is not None:
             self.subgraphs = subgraphs
         else:

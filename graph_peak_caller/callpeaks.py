@@ -67,7 +67,6 @@ class ExperimentInfo(object):
                    fragment_length, read_length)
 
 
-
 class CallPeaksFromQvalues(object):
     def __init__(self, graph, q_values_sparse_pileup,
                  experiment_info, out_file_base_name="", cutoff=0.1):
@@ -107,11 +106,7 @@ class CallPeaksFromQvalues(object):
                         for peak in binary_peaks)
         max_paths = []
         for scored_peak in scored_peaks:
-            print("Scored peak")
-            print(scored_peak)
             max_paths.append(scored_peak.get_max_path())
-        #max_paths = [scored_peak.get_max_path() for
-        #             scored_peak in scored_peaks]
         logging.info("Number of peaks before small peaks are removed: %d" % len(max_paths))
         # Sort max pathse
         max_paths.sort(key=lambda p: p.score, reverse=True)

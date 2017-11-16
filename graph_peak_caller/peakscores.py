@@ -78,9 +78,10 @@ class ScoredPeak(object):
                 sums[node_id] = max_finite_value+1
 
     def get_max_path(self):
-
         sums = {node_id: float(vi.sum()) for node_id, vi
                 in self._scores.items()}
+        if 211559 in self._peak.get_node_ids():
+            print(self._peak)
 
         # Handle peaks that are on one node
         if len(self._peak.internal_intervals) > 0:
@@ -98,14 +99,20 @@ class ScoredPeak(object):
                 sums[-key] = sums[key]
 
         adj_list = self._get_adj_list()
-        ends = [-node_id for node_id in self._peak.starts.keys()]
-        start_values = [sums[-node_id] for node_id in ends]
-        ends.extend(self._peak.full_areas.keys())
-        start_values.extend(sums[abs(node_id)] for
-                            node_id in self._peak.full_areas.keys())
-        ends.extend(-node_id for node_id in self._peak.full_areas.keys())
-        start_values.extend(sums[abs(node_id)] for
-                            node_id in self._peak.full_areas.keys())
+        start_positions = self._peak.get_start_positions()
+        ends = [pos.region_path_id for pos in start_positions]
+        start_values = [sums[-node_id] if (-node_id in self._peak.starts)
+                        else sums[abs(node_id)]
+                        for node_id in ends]
+
+        # ends = [-node_id for node_id in self._peak.starts.keys()]
+        # start_values = [sums[-node_id] for node_id in ends]
+        # ends.extend(self._peak.full_areas.keys())
+        # start_values.extend(sums[abs(node_id)] for
+        # node_id in self._peak.full_areas.keys())
+        # ends.extend(-node_id for node_id in self._peak.full_areas.keys())
+        # start_values.extend(sums[abs(node_id)] for
+        # node_id in self._peak.full_areas.keys())
 
         memo = defaultdict(int)
         stack = deque(zip([[e] for e in ends], start_values))
@@ -128,10 +135,21 @@ class ScoredPeak(object):
                 if next_node not in node_ids[1:] and next_node in sums]
             stack.extend(new_items)
 
+        if 211559 in self._peak.get_node_ids():
+            print(start_positions)
+            print(ends)
+            print(start_values)
+            print(global_max_path)
+
         start_node = global_max_path[0]
-        start_offset = int(self._graph.node_size(start_node) -
-                           self._peak.starts[-start_node])
-        end_offset = self._peak.starts[global_max_path[-1]]
+        start_pos = [pos for pos in start_positions if
+                     pos.region_path_id == start_node][0]
+        start_offset = int(start_pos.offset)
+        # start_offset = int(self._graph.node_size(start_node) -
+        # self._peak.starts[-start_node])
+        end_node = global_max_path[-1]
+        end_offset = self._peak.starts[end_node] if end_node in self._peak.starts else self._peak.graph.node_size(end_node)
+        # self._peak.starts[global_max_path[-1]]
 
         if -global_max_path[0] in self._scores:
             max_score_in_peak = np.max(self._scores[-global_max_path[0]].all_values())
@@ -153,6 +171,7 @@ class ScoredPeak(object):
             global_max_path, graph=self._graph)
 
         score = max_score_in_peak  # global_max / max_path_peak.length()
+        print("#", score)
         # score = global_max / max_path_peak.length()
         max_path_peak.set_score(score)
         return max_path_peak
