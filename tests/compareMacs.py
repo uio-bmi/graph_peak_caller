@@ -555,14 +555,14 @@ class MACSTests(object):
         logging.info("################### GETTING SCORE")
         self.caller.get_score()
         logging.info("################### CALLING PEAKS")
-        self.caller.call_peaks("final_peaks")
-        self.assertEqualBedFiles("final_peaks", "macstest_peaks.narrowPeak")
+        self.caller.call_peaks()
+        self.assertEqualBedFiles("final_peaks.bed", "macstest_peaks.narrowPeak")
         self.assertPeakSetsEqual("macstest_peaks.narrowPeak", "max_paths.intervalcollection")
         
     def test_final_tracks(self):
         self._run_whole_macs()
         self.caller.run()
-        self.assertEqualBedFiles("final_peaks", "macstest_peaks.narrowPeak")
+        self.assertEqualBedFiles("final_peaks.bed", "macstest_peaks.narrowPeak")
 
 
 def small_test(with_control=False):

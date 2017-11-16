@@ -318,7 +318,7 @@ class CallPeaks(object):
         self.q_values.to_bed_graph(q_val_file_name)
         logging.info("Writing q values to %s" % q_val_file_name)
 
-    def call_peaks(self, out_file="final_peaks.bed"):
+    def call_peaks(self):
 
         self.q_value_peak_caller = CallPeaksFromQvalues(self.graph,
                                                    self.q_values,
