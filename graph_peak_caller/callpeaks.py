@@ -227,29 +227,20 @@ class CallPeaks(object):
 
         self._control_pileup = control_pileup
 
-    def get_q_values(self):
-        get_q_values_track_from_p_values(self.p_values)
-
     def get_score(self):
-        sparse_pileup = SparseControlSample.from_sparse_control_and_sample(
+        q_values_pileup = SparseControlSample.from_sparse_control_and_sample(
             self._control_pileup, self._sample_pileup)
-        sparse_pileup.get_scores()
-        self.p_values = sparse_pileup
-        self.q_values = sparse_pileup
+        q_values_pileup.get_scores()
+        self.q_values = q_values_pileup
         q_val_file_name = self.out_file_base_name + "q_values.bdg"
         self.q_values.to_bed_graph(q_val_file_name)
         logging.info("Writing q values to %s" % q_val_file_name)
-
-    def get_p_values(self):
-        logging.info("Getting p-values")
-        self.p_values = get_p_value_track_from_pileups(
-            self.ob_graph, self._control_pileup, self._sample_pileup)
 
     def call_peaks(self, out_file="final_peaks.bed"):
         logging.info("Calling peaks")
         threshold = -np.log10(self.cutoff)
         logging.info("Thresholding peaks on q value %.4f" % threshold)
-        self.peaks = self.p_values.threshold_copy(threshold)
+        self.peaks = self.q_values.threshold_copy(threshold)
         self.peaks.to_bed_file(self.out_file_base_name
                                + "pre_postprocess.bed")
         logging.info("Filling small Holes")
@@ -271,7 +262,7 @@ class CallPeaks(object):
         logging.info("Finding max path through subgraphs")
         binary_peaks = (BinaryContinousAreas.from_old_areas(peak) for peak in
                         peaks_as_subgraphs)
-        scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, self.p_values)
+        scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, self.q_values)
                         for peak in binary_peaks)
         max_paths = []
         for scored_peak in scored_peaks:
