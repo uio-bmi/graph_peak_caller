@@ -7,8 +7,6 @@ import numpy as np
 from examples import *
 from graph_peak_caller.bdgcmp import *
 
-
-
 class TestPileup(unittest.TestCase):
     def _test_simple_bdgcmp(self):
         graph = one_block_graph

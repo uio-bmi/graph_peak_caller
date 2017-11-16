@@ -5,7 +5,6 @@ from graph_peak_caller import bdgcmp, callpeaks
 import numpy as np
 
 
-
 class TestCallpeaks(unittest.TestCase):
     def test_filter_duplicates(self):
         graph = Graph({
@@ -19,7 +18,7 @@ class TestCallpeaks(unittest.TestCase):
                 2: [3],
                 4: [4]
             })
-        graph.to_file("test_graph")
+        graph.to_file("test_graph.tmp")
 
         intervals = [
             Interval(0, 10, [1, 2, 3]),
@@ -27,10 +26,10 @@ class TestCallpeaks(unittest.TestCase):
             Interval(0, 10, [1, 2, 3])
         ]
         interval_collection = IntervalCollection(intervals)
-        interval_collection.to_file("test_intervals")
+        interval_collection.to_file("test_intervals.tmp")
 
-        caller = callpeaks.CallPeaks("test_graph", "test_intervals")
-        filtered_intervals_file_name = caller.filter_duplicates(caller.sample_file_name, write_to_file = "filtered_intervals_test")
+        caller = callpeaks.CallPeaks("test_graph.tmp", "test_intervals.tmp")
+        filtered_intervals_file_name = caller.filter_duplicates(caller.sample_file_name, write_to_file = "filtered_intervals_test.tmp")
 
         intervals_filtered = []
         for interval in IntervalCollection.create_generator_from_file(filtered_intervals_file_name):
