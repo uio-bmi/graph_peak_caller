@@ -105,15 +105,15 @@ class MACSTests(object):
         self.info.n_control_reads = self.n_intervals_control
         self.info.n_sample_reads = self.n_intervals
         print(self.info.n_control_reads, self.info.n_sample_reads)
-        control_file_name = "graph_intervals"
+        control_file_name = "graph_intervals.tmp"
         if self.with_control:
             control_file_name = "graph_intervals_control"
 
-        self.caller = CallPeaks("lin_graph", "graph_intervals", control_file_name,
+        self.caller = CallPeaks("lin_graph.tmp", "graph_intervals.tmp", control_file_name,
                                 has_control=self.with_control,
                                 experiment_info=self.info,
                                 verbose=True,
-                                linear_map="linear_map")
+                                linear_map="linear_map.tmp")
 
         self.caller.create_graph()
 
@@ -125,7 +125,7 @@ class MACSTests(object):
         subprocess.check_output(command)
         self.dup_file_name = self.caller.filter_duplicates(
             "graph_intervals",
-            write_to_file="graph_intervals_filtered")
+            write_to_file="graph_intervals_filtered.tmp")
         self.assertEqualIntervalFiles(
             self.dup_file_name,
             "lin_intervals_dup.bed")
@@ -364,7 +364,7 @@ class MACSTests(object):
         nodes = {i+1: Block(self.node_size) for i in range(0, self.n_nodes)}
         adj_list = {i: [i+1] for i in range(1, self.n_nodes)}
         self.graph = GraphWithReversals(nodes, adj_list)
-        self.graph.to_file("lin_graph")
+        self.graph.to_file("lin_graph.tmp")
         snarlbuilder = SnarlGraphBuilder(self.graph,
                                         snarls=
                                         {
@@ -377,7 +377,7 @@ class MACSTests(object):
 
 
         self.linear_map = LinearSnarlMap(self.snarlgraph, self.graph)
-        self.linear_map.to_file("linear_map")
+        self.linear_map.to_file("linear_map.tmp")
 
     def _get_graph_interval(self, tmp_start, tmp_end, direction):
         start = tmp_start
@@ -479,7 +479,7 @@ class MACSTests(object):
 
     def test_shift_estimation(self):
         self.setup()
-        caller = CallPeaks("lin_graph", "graph_intervals_filtered", "graph_intervals_filtered", has_control=False)
+        caller = CallPeaks("lin_graph.tmp", "graph_intervals_filtered.tmp", "graph_intervals_filtered.tmp", has_control=False)
         caller.create_graph()
         info = ExperimentInfo.find_info(
             caller.ob_graph, caller.sample_file_name, caller.control_file_name)
@@ -557,7 +557,7 @@ class MACSTests(object):
         logging.info("################### CALLING PEAKS")
         self.caller.call_peaks("final_peaks")
         self.assertEqualBedFiles("final_peaks", "macstest_peaks.narrowPeak")
-        self.assertPeakSetsEqual("macstest_peaks.narrowPeak", "max_paths")
+        self.assertPeakSetsEqual("macstest_peaks.narrowPeak", "max_paths.intervalcollection")
         
     def test_final_tracks(self):
         self._run_whole_macs()

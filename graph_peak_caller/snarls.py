@@ -266,7 +266,8 @@ class SnarlGraphBuilder:
     def __init__(self, graph, snarls, id_counter=0):
         assert isinstance(snarls, dict), \
             "Should be dict with ids as keys and SimpleSnarls as values"
-
+        assert id_counter > 0,\
+            "ID counter must be set to higher than highest ID in graph"
         self.graph = graph
         self.snarls = snarls  # dict of snarls, id: SimpleSnarls
         self.id_counter = id_counter
@@ -290,6 +291,8 @@ class SnarlGraphBuilder:
 
         for block in self.graph.get_first_blocks():
             self.graph._add_edge(new_start, block)
+            print("Adding new edge from %d to %d" % (new_start, block))
+
         for block in self.graph.get_last_blocks():
             self.graph._add_edge(block, new_end)
 

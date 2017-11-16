@@ -33,11 +33,16 @@ class TestValuedIndexes(unittest.TestCase):
         vi1 = valued_indexes()
         vi2 = valued_indexes2()
         combined = ValuedIndexes.combine(vi1, vi2)
+
         true_combined = ValuedIndexes(np.array([5, 10, 15, 17], dtype="int"),
-                                      np.array([[50, 100, 200, 200],
-                                                [60, 60, 210, 190]]),
+                                      np.array([np.array([50, 60]),
+                                                np.array([100, 60]),
+                                                np.array([200, 210]),
+                                                np.array([200, 190])
+                                                ]),
                                       np.array([50, 40]),
                                       20)
+
         self.assertEqual(combined, true_combined)
 
     def test_max(self):

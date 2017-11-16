@@ -31,8 +31,7 @@ def create_linear_peaks_from_bed(linear_sequence_fasta_file, peaks_bed_file,
         ob_graph, search_sequence, sequence_retriever)
     traverser.search_from_node(start_node)
     linear_path_interval = traverser.get_interval_found()
-    IntervalCollection([linear_path_interval]).to_file(
-        "linear_path", text_file=True)
+    IntervalCollection([linear_path_interval]).to_file("linear_path.intervalcollection", text_file=True)
     print("Length")
     print(linear_path_interval.length())
     print(linear_path_interval.region_paths[0])
@@ -46,8 +45,7 @@ def create_linear_peaks_from_bed(linear_sequence_fasta_file, peaks_bed_file,
                         region.start,
                         region.end)
 
-    linear_peaks.to_file("linear_peaks", text_file=True)
-    return linear_peaks
+    linear_peaks.to_file("linear_peaks.intervalcollection", text_file=True)
 
 
 class SubgraphAnalyser(object):
@@ -168,7 +166,7 @@ def find_missing_graph_peaks():
 
 
 
-#comparer = SubgraphComparer(ob_graph, "real_data_peaks_as_subgraphs.pickle", "linear_peaks")
+#comparer = SubgraphComparer(ob_graph, "real_data_peaks_as_subgraphs.pickle", "linear_peaks.intervalcollection")
 #comparer.check_peaks_in_subgraphs()
 
 #analyser = SubgraphAnalyser(ob_graph, "real_data_peaks_as_subgraphs.pickle")
@@ -178,15 +176,13 @@ def find_missing_graph_peaks():
 #comparer.peaks_to_fasta(peaks, "alone_linear.peaks")
 
 
-#analyser = AlignmentsAnalyser(vg_graph, "ENCFF001HNI_filtered_q60.gam", ob_graph, "linear_path")  # sample reads
-#analyser = AlignmentsAnalyser(vg_graph, "ENCFF001HNS_filtered_q60.gam", ob_graph, "linear_path")  # Control reads
+#analyser = AlignmentsAnalyser(vg_graph, "ENCFF001HNI_filtered_q60.gam", ob_graph, "linear_path.intervalcollection")  # sample reads
+#analyser = AlignmentsAnalyser(vg_graph, "ENCFF001HNS_filtered_q60.gam", ob_graph, "linear_path.intervalcollection")  # Control reads
 #analyser.count_alignments_on_linear_paths()
 #analyser.count_alignments_on_linear_path()
 
-#compare_linear_and_graph_peaks(ob_graph, "linear_peaks", "real_data_max_paths")
-# create_linear_peaks_from_bed("mhc_cleaned2.fa", "../ENCFF155DHA.bed", "cactus-mhc.obg", "cactus-mhc.vg", 225518, 28510119, 33480577)
-
-#graph_peaks = PeakCollection.from_file("real_data_max_paths")
-
 if __name__ == "__main__":
     find_missing_graph_peaks()
+    ob_graph = obg.GraphWithReversals.from_file("graph.obg")
+    vg_graph = pyvg.vg.Graph.create_from_file("haplo1kg50-mhc.json")
+    get_linear_paths_in_graph(ob_graph, vg_graph, "linear_maps")

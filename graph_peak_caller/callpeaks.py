@@ -67,6 +67,85 @@ class ExperimentInfo(object):
                    fragment_length, read_length)
 
 
+
+class CallPeaksFromQvalues(object):
+    def __init__(self, graph, q_values_sparse_pileup,
+                 experiment_info, out_file_base_name=""):
+        self.graph = graph
+        self.q_values = q_values_sparse_pileup,
+        self.info = experiment_info
+        self.out_file = out_file_base_name
+
+    def callpeaks(self):
+        logging.info("Calling peaks")
+        threshold = -np.log10(self.cutoff)
+        logging.info("Thresholding peaks on q value %.4f" % threshold)
+        self.pre_processed_peaks = self.q_values.threshold_copy(threshold)
+        self.pre_processed_peaks.to_bed_file(
+                self.out_file_base_name + "pre_postprocess.bed")
+        logging.info("Filling small Holes")
+        self.pre_processed_peaks.fill_small_wholes(self.info.read_length)
+        logging.info("Removing small peaks")
+        self.filtered_peaks = self.pre_processed_peaks.remove_small_peaks(
+            self.info.fragment_length)
+
+        logging.info("Creating subgraphs from peak regions")
+        peaks_as_subgraphs = self.filtered_peaks.to_subgraphs()
+
+        logging.info("Found %d subgraphs" % len(peaks_as_subgraphs.subgraphs))
+        peaks_as_subgraphs.to_file(
+            self.out_file_base_name + "peaks.subgraphs")
+
+        peaks_as_subgraphs.to_pickle(
+            self.out_file_base_name + "peaks_as_subgraphs.pickle")
+
+        logging.info("Finding max path through subgraphs")
+        binary_peaks = (BinaryContinousAreas.from_old_areas(peak) for peak in
+                        peaks_as_subgraphs)
+        scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, self.q_values)
+                        for peak in binary_peaks)
+        max_paths = []
+        for scored_peak in scored_peaks:
+            print("Scored peak")
+            print(scored_peak)
+            max_paths.append(scored_peak.get_max_path())
+        #max_paths = [scored_peak.get_max_path() for
+        #             scored_peak in scored_peaks]
+        logging.info("Number of peaks before small peaks are removed: %d" % len(max_paths))
+        # Sort max pathse
+        max_paths.sort(key=lambda p: p.score, reverse=True)
+
+        # Filter on length
+        max_paths = [path for path in max_paths if
+                     path.length() >= self.info.fragment_length]
+
+        logging.info("Number of peaks after small peaks are removed: %d" % len(max_paths))
+
+        PeakCollection(max_paths).to_file(
+            self.out_file_base_name + "max_paths.intervalcollection", text_file=True)
+
+        self.peaks_as_subgraphs = peaks_as_subgraphs
+        self.max_paths = max_paths
+        print("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
+
+        self.filtered_peaks.to_bed_file(self.out_file_base_name + self.out_file)
+        logging.info("Wrote final filtered peaks to %s" % self.out_file_base_name + self.out_file)
+
+    def save_max_path_sequences_to_fasta_file(self, file_name, sequence_retriever):
+        assert self.max_paths is not None, \
+                "Max paths has not been found. Run peak calling first."
+        assert sequence_retriever is not None
+        # assert isinstance(sequence_retriever, vg.sequences.SequenceRetriever)
+        f = open(self.out_file_base_name + file_name, "w")
+        i = 0
+        for max_path in self.max_paths:
+            seq = sequence_retriever.get_interval_sequence(max_path)
+            f.write(">peak" + str(i) + " " +
+                    max_path.to_file_line() + "\n" + seq + "\n")
+            i += 1
+        logging.info("Wrote max path sequences to fasta file: %s" % (self.out_file_base_name + file_name))
+
+
 class CallPeaks(object):
     def __init__(self, graph, sample_intervals,
                  control_intervals=None, experiment_info=None, \
@@ -103,6 +182,8 @@ class CallPeaks(object):
         self._sample_pileup = None
         self.out_file_base_name = out_file_base_name
         self.cutoff = 0.05
+        self.pre_processed_peaks = None
+        self.filtered_peaks = None
 
         self.max_paths = None
         self.peaks_as_subgraphs = None
@@ -110,7 +191,7 @@ class CallPeaks(object):
     def set_cutoff(self, value):
         self.cutoff = value
 
-    def run(self, out_file="final_peaks"):
+    def run(self, out_file="final_peaks.bed"):
         self.create_graph()
         self.preprocess()
         if self.info is None:
@@ -227,80 +308,25 @@ class CallPeaks(object):
 
         self._control_pileup = control_pileup
 
-    def get_q_values(self):
-        get_q_values_track_from_p_values(self.p_values)
-
     def get_score(self):
-        sparse_pileup = SparseControlSample.from_sparse_control_and_sample(
+        q_values_pileup = SparseControlSample.from_sparse_control_and_sample(
             self._control_pileup, self._sample_pileup)
-        sparse_pileup.get_scores()
-        self.p_values = sparse_pileup
-        self.q_values = sparse_pileup
+        q_values_pileup.get_scores()
+        self.q_values = q_values_pileup
         q_val_file_name = self.out_file_base_name + "q_values.bdg"
         self.q_values.to_bed_graph(q_val_file_name)
         logging.info("Writing q values to %s" % q_val_file_name)
 
-    def get_p_values(self):
-        logging.info("Getting p-values")
-        self.p_values = get_p_value_track_from_pileups(
-            self.ob_graph, self._control_pileup, self._sample_pileup)
-
     def call_peaks(self, out_file="final_peaks.bed"):
-        logging.info("Calling peaks")
-        threshold = -np.log10(self.cutoff)
-        logging.info("Thresholding peaks on q value %.4f" % threshold)
-        self.peaks = self.p_values.threshold_copy(threshold)
-        self.peaks.to_bed_file("pre_postprocess.bed")
-        logging.info("Filling small Holes")
-        self.peaks.fill_small_wholes(self.info.read_length)
-        logging.info("Removing small peaks")
-        self.final_track = self.peaks.remove_small_peaks(
-            self.info.fragment_length)
 
-        logging.info("Creating subgraphs from peak regions")
-        peaks_as_subgraphs = self.final_track.to_subgraphs()
+        self.q_value_peak_caller = CallPeaksFromQvalues(self.graph,
+                                                   self.q_values,
+                                                   self.info,
+                                                   self.out_file_base_name)
 
-        logging.info("Found %d subgraphs" % len(peaks_as_subgraphs.subgraphs))
-        peaks_as_subgraphs.to_file(
-            self.out_file_base_name + "peaks_as_subgraphs")
-
-        peaks_as_subgraphs.to_pickle(
-            self.out_file_base_name + "peaks_as_subgraphs.pickle")
-
-        logging.info("Finding max path through subgraphs")
-        binary_peaks = (BinaryContinousAreas.from_old_areas(peak) for peak in
-                        peaks_as_subgraphs)
-        scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, self.p_values)
-                        for peak in binary_peaks)
-        max_paths = []
-        for scored_peak in scored_peaks:
-            max_paths.append(scored_peak.get_max_path())
-
-        logging.info("Number of peaks before small peaks are removed: %d" % len(max_paths))
-        max_paths.sort(key=lambda p: p.score, reverse=True)
-        logging.info("Number of peaks after small peaks are removed: %d" % len(max_paths))
-
-        PeakCollection(max_paths).to_file(
-            self.out_file_base_name + "max_paths", text_file=True)
-
-        self.peaks_as_subgraphs = peaks_as_subgraphs
-        self.max_paths = max_paths
-        print("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
-        self.final_track.to_bed_file(self.out_file_base_name + out_file)
-        logging.info("Wrote final peaks to %s" % self.out_file_base_name + out_file)
-
-    def save_max_path_sequences_to_fasta_file(self, file_name, sequence_retriever):
-        assert self.max_paths is not None, \
-                "Max paths has not been found. Run peak calling first."
-        assert sequence_retriever is not None
-        # assert isinstance(sequence_retriever, vg.sequences.SequenceRetriever)
-        f = open(self.out_file_base_name + file_name, "w")
-        i = 0
-        for max_path in self.max_paths:
-            seq = sequence_retriever.get_interval_sequence(max_path)
-            f.write(">peak" + str(i) + " " +
-                    max_path.to_file_line() + "\n" + seq + "\n")
-            i += 1
+    def save_max_path_sequences_to_fasta_file(self, file_name, retriever):
+        self.q_value_peak_caller.\
+            save_max_path_sequences_to_fasta_file(file_name, retriever)
 
     def create_sample_pileup(self, save_to_file=True):
         logging.debug("In sample pileup")

@@ -7,9 +7,7 @@ import numpy as np
 from examples import *
 from graph_peak_caller.bdgcmp import *
 
-
-
-class TestPileup(unittest.TestCase):
+class BackgroundComparer(unittest.TestCase):
     def _test_simple_bdgcmp(self):
         graph = one_block_graph
         pileup1 = pileup1_one_block
@@ -71,5 +69,4 @@ class TestPileup(unittest.TestCase):
 
         self._test_get_p_value_track(graph, sample, control)
 
-if __name__ == "__main__":
-    unittest.main()
+
