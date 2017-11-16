@@ -75,7 +75,7 @@ class TestExtendLinearIntervalCollection(unittest.TestCase):
             extended.starts,
             extended.ends
         )
-        
+
         self.assertTrue(np.all(pileup.indices == [4, 9, 12, 16, 21, 24]))
         self.assertTrue(np.all(pileup.values == [1, 2, 3, 2, 1, 0]))
 
