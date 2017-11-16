@@ -113,10 +113,6 @@ class ScoredPeak(object):
         # ends.extend(-node_id for node_id in self._peak.full_areas.keys())
         # start_values.extend(sums[abs(node_id)] for
         # node_id in self._peak.full_areas.keys())
-        if 211559 in self._peak.get_node_ids():
-            print(self.start_positions)
-            print(self.ends)
-            print(self.start_values)
 
         memo = defaultdict(int)
         stack = deque(zip([[e] for e in ends], start_values))
@@ -138,6 +134,12 @@ class ScoredPeak(object):
                 for next_node in nexts
                 if next_node not in node_ids[1:] and next_node in sums]
             stack.extend(new_items)
+
+        if 211559 in self._peak.get_node_ids():
+            print(start_positions)
+            print(ends)
+            print(start_values)
+            print(global_max_path)
 
         start_node = global_max_path[0]
         start_pos = [pos for pos in start_positions if

@@ -69,12 +69,12 @@ class ExperimentInfo(object):
 
 class CallPeaksFromQvalues(object):
     def __init__(self, graph, q_values_sparse_pileup,
-                 experiment_info, out_file_base_name=""):
+                 experiment_info, out_file_base_name="", cutoff=0.1):
         self.graph = graph
-        self.q_values = q_values_sparse_pileup,
+        self.q_values = q_values_sparse_pileup
         self.info = experiment_info
-        self.out_file = out_file_base_name
-        self.cutoff = 0.05
+        self.out_file_base_name = out_file_base_name
+        self.cutoff = cutoff
 
     def callpeaks(self):
         logging.info("Calling peaks")
@@ -106,11 +106,7 @@ class CallPeaksFromQvalues(object):
                         for peak in binary_peaks)
         max_paths = []
         for scored_peak in scored_peaks:
-            print("Scored peak")
-            print(scored_peak)
             max_paths.append(scored_peak.get_max_path())
-        #max_paths = [scored_peak.get_max_path() for
-        #             scored_peak in scored_peaks]
         logging.info("Number of peaks before small peaks are removed: %d" % len(max_paths))
         # Sort max pathse
         max_paths.sort(key=lambda p: p.score, reverse=True)
@@ -128,8 +124,8 @@ class CallPeaksFromQvalues(object):
         self.max_paths = max_paths
         print("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
 
-        self.filtered_peaks.to_bed_file(self.out_file_base_name + self.out_file)
-        logging.info("Wrote final filtered peaks to %s" % self.out_file_base_name + self.out_file)
+        self.filtered_peaks.to_bed_file(self.out_file_base_name + "final_peaks.bed")
+        logging.info("Wrote final filtered peaks to %s" % self.out_file_base_name + "final_peaks.bed")
 
     def save_max_path_sequences_to_fasta_file(self, file_name, sequence_retriever):
         assert self.max_paths is not None, \
@@ -288,7 +284,7 @@ class CallPeaks(object):
             logging.info("Graph already created")
 
     def create_control(self, save_to_file=True):
-        logging.info("Creating control track")
+        logging.info("Creating control track using linear map %s" % self.linear_map)
 
         extensions = [self.info.fragment_length, 1000, 10000] if self.has_control else [10000]
         control_pileup = linearsnarls.create_control(self.linear_map,  self.control_intervals,
@@ -322,7 +318,10 @@ class CallPeaks(object):
         self.q_value_peak_caller = CallPeaksFromQvalues(self.graph,
                                                    self.q_values,
                                                    self.info,
-                                                   self.out_file_base_name)
+                                                   self.out_file_base_name,
+                                                   self.cutoff)
+        self.q_value_peak_caller.callpeaks()
+
 
     def save_max_path_sequences_to_fasta_file(self, file_name, retriever):
         self.q_value_peak_caller.\

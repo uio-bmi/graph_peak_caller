@@ -126,8 +126,8 @@ class BinaryContinousAreas(Areas):
 
         def filter_my_nodes(node_list):
             return [node_id for node_id in node_list if
-                    not(abs(node_id) in self.full_areas or node_id
-                        in self.starts)]
+                    abs(node_id) in self.full_areas or node_id
+                    in self.starts]
         previous_nodes_list = [filter_my_nodes(prev_nodes) for
                                prev_nodes in previous_nodes_list]
         full_starts = [obg.Position(node_id, 0) for node_id, prev_nodes in

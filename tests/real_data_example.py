@@ -125,14 +125,18 @@ def run_from_max_paths_step(graph_file_name, pileup_file_name):
     # 
     # # IntervalCollection(max_paths).to_text_file(
     # #             "last_step_max_paths")
-    # retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
-    # sequences = [retriever.get_interval_sequence(max_path)
-    #              for max_path in max_paths]
-    # f = open("last_step_real_data_sequences", "w")
-    # i = 0
-    # for seq in sequences:
-    #     f.write(">peak" + str(i) + "\n" + seq + "\n")
-    #     i += 1
+
+
+def get_sequences(path_file):
+    max_paths = PeakCollection.from_file(path_file, True)
+    retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
+    sequences = [retriever.get_interval_sequence(max_path)
+                 for max_path in max_paths]
+    f = open("tmp_sequences", "w")
+    i = 0
+    for seq in sequences:
+        f.write(">peak" + str(i) + "\n" + seq + "\n")
+        i += 1
 
 
 def peak_sequences_to_fasta(vg_graph_file_name, peaks_file_name, fasta_file_name):
@@ -157,7 +161,8 @@ def create_ob_graph_from_vg(vg_json_graph_file_name, ob_graph_file_name="graph.o
 
 if __name__ == "__main__":
     dm_folder = "../graph_peak_caller/dm_test_data/"
-
+    get_sequences("laststepmax_paths.intervalcollection")
+    exit()
     # ob_graph = obg.GraphWithReversals.from_file("obgraph")
     # create_linear_map(ob_graph)
     run_from_max_paths_step("obgraph", "real_data_q_values.bdg")

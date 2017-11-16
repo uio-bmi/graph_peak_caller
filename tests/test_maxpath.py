@@ -25,7 +25,6 @@ class TestMaxPath(unittest.TestCase):
                                   1: [5, 10]
                               })
 
-
         binary_peak = BinaryContinousAreas.from_old_areas(peak)
         qvalues = SparsePileup.from_base_value(graph, 10)
         scored_peak = ScoredPeak.from_peak_and_pileup(binary_peak, qvalues)
@@ -69,6 +68,37 @@ class TestMaxPath(unittest.TestCase):
         max_path = scored_peak.get_max_path()
         self.assertEqual(max_path, Interval(5, 3, [1, 3, 4]))
 
+    def test_find_max_path_on_start_and_end_node(self):
+
+        graph = Graph({
+                1: Block(10),
+                2: Block(10),
+                3: Block(10),
+                4: Block(10)
+            },
+            {
+                1: [2, 3],
+                2: [4],
+                3: [4]
+            }
+        )
+
+        peak = ConnectedAreas(graph,
+                              {
+                                  2: [0, 10],
+                                  4: [0, 10],
+                              })
+
+        binary_peak = BinaryContinousAreas.from_old_areas(peak)
+        qvalues = SparsePileup.from_intervals(
+            graph,
+            [
+                Interval(7, 2, [1, 2, 4])
+            ])
+        scored_peak = ScoredPeak.from_peak_and_pileup(binary_peak, qvalues)
+
+        max_path = scored_peak.get_max_path()
+        self.assertEqual(max_path, Interval(0, 10, [2, 4]))
 
     def test_find_max_path_through_subgraph_with_illegal_paths(self):
 
