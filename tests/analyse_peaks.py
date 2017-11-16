@@ -1,54 +1,61 @@
 from collections import defaultdict
 import matplotlib.pyplot as plt
-import os
 import pyvg
 from pyvg.sequences import SequenceRetriever
-from pyvg.util import vg_gam_file_to_interval_list
 import offsetbasedgraph as obg
 from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
 from graph_peak_caller.peakcollection import PeakCollection
-from graph_peak_caller.util import get_linear_paths_in_graph
 from offsetbasedgraph import IntervalCollection, DirectedInterval
 from graph_peak_caller.subgraphcollection import SubgraphCollection
-from graph_peak_caller.peakscores import MaxPathPeakCollection
-from .peakscomparer import PeaksComparer, get_peaks_comparer_for_linear_and_graph_peaks
+from graph_peak_caller.util import LinearRegion, get_linear_paths_in_graph
+from peakscomparer import PeaksComparer
+
+MHC_REGION = LinearRegion("chr6", 28510119, 33480577)
+
+
+def create_linear_path(ob_graph, vg_graph):
+    linear_paths = get_linear_paths_in_graph(ob_graph, vg_graph, "linear_maps")
+    ref_path = linear_paths["ref"]
+    return ref_path
 
 
 def create_linear_peaks_from_bed(linear_sequence_fasta_file, peaks_bed_file,
-                                 obg_graph_file_name, vg_graph_file_name, start_node,
-                                 graph_start_offset, graph_end_offset):
+                                 obg_graph_file_name, vg_graph_file_name,
+                                 start_node,
+                                 region):
 
     ob_graph = obg.GraphWithReversals.from_file(obg_graph_file_name)
     search_sequence = open(linear_sequence_fasta_file).read()
     sequence_retriever = SequenceRetriever.from_vg_graph(vg_graph_file_name)
-    traverser = GraphTraverserUsingSequence(ob_graph, search_sequence, sequence_retriever)
+    traverser = GraphTraverserUsingSequence(
+        ob_graph, search_sequence, sequence_retriever)
     traverser.search_from_node(start_node)
     linear_path_interval = traverser.get_interval_found()
-    IntervalCollection([linear_path_interval]).to_file("linear_path", text_file=True)
+    IntervalCollection([linear_path_interval]).to_file(
+        "linear_path", text_file=True)
     print("Length")
     print(linear_path_interval.length())
     print(linear_path_interval.region_paths[0])
     print(linear_path_interval.start_position)
     print(linear_path_interval.end_position)
 
-
     linear_peaks = PeakCollection.create_from_linear_intervals_in_bed_file(
                         obg_graph_file_name,
                         linear_path_interval,
                         peaks_bed_file,
-                        graph_start_offset,
-                        graph_end_offset)
+                        region.start,
+                        region.end)
 
     linear_peaks.to_file("linear_peaks", text_file=True)
+    return linear_peaks
 
 
 class SubgraphAnalyser(object):
 
     def __init__(self, graph, subgraphs_file_name):
         self.graph = graph
-        self.subgraphs = SubgraphCollection.from_pickle(subgraphs_file_name, graph=graph)
-
-
+        self.subgraphs = SubgraphCollection.from_pickle(
+            subgraphs_file_name, graph=graph)
 
     def print_sizes(self):
         sizes = []
@@ -60,14 +67,15 @@ class SubgraphAnalyser(object):
         plt.show()
 
 
-
 class SubgraphComparer():
     # Compare subgraph vs linear peaks
     def __init__(self, graph, subgraphs_file_name, peaks_file_name):
         self.graph = graph
         IntervalCollection.interval_class = DirectedInterval
-        self.subgraphs = SubgraphCollection.from_pickle(subgraphs_file_name, graph=graph)
-        self.peaks = PeakCollection.create_list_from_file(peaks_file_name, graph=graph)
+        self.subgraphs = SubgraphCollection.from_pickle(
+            subgraphs_file_name, graph=graph)
+        self.peaks = PeakCollection.create_list_from_file(
+            peaks_file_name, graph=graph)
 
     def check_peaks_in_subgraphs(self):
         n_in_subgraphs = 0
@@ -80,7 +88,8 @@ class SubgraphComparer():
 
 
 class AlignmentsAnalyser(object):
-    def __init__(self, vg_graph, vg_gam_file_name, ob_graph, linear_path_interval_file_name):
+    def __init__(self, vg_graph, vg_gam_file_name, ob_graph,
+                 linear_path_interval_file_name):
         self.graph = ob_graph
         self.vg_graph = vg_graph
         print("Reading reads")
@@ -119,7 +128,6 @@ class AlignmentsAnalyser(object):
         for read in self.reads:
 
             for path in paths:
-                #if path.contains_in_order_any_direction(read):
                 if path.contains(read):
                     hits[path.name] += 1
 
@@ -131,6 +139,21 @@ class AlignmentsAnalyser(object):
         for name, hit in hits.items():
             print("%s: %d " % (name, hit))
 
+
+def find_missing_graph_peaks():
+    ob_graph = obg.GraphWithReversals.from_file("obgraph")
+    vg_graph = pyvg.vg.Graph.create_from_file("haplo1kg50-mhc.json")
+    path = create_linear_path(ob_graph, vg_graph)
+    comparer = PeaksComparer.create_from_graph_peaks_and_linear_peaks(
+        "ctcf05_peaks.narrowPeak",
+        "real_data_max_paths",
+        ob_graph,
+        path,
+        MHC_REGION)
+    comparer.check_similarity()
+        
+        
+    
 
 #comparer = PeaksComparer("CTCF_peaks.narrowPeak", "real_data_max_paths")
 #comparer.compare_q_values_for_similar_peaks()
@@ -161,7 +184,9 @@ class AlignmentsAnalyser(object):
 #analyser.count_alignments_on_linear_path()
 
 #compare_linear_and_graph_peaks(ob_graph, "linear_peaks", "real_data_max_paths")
-#create_linear_peaks_from_bed("mhc_cleaned2.fa", "../ENCFF155DHA.bed", "cactus-mhc.obg", "cactus-mhc.vg", 225518, 28510119, 33480577)
+# create_linear_peaks_from_bed("mhc_cleaned2.fa", "../ENCFF155DHA.bed", "cactus-mhc.obg", "cactus-mhc.vg", 225518, 28510119, 33480577)
 
 #graph_peaks = PeakCollection.from_file("real_data_max_paths")
 
+if __name__ == "__main__":
+    find_missing_graph_peaks()

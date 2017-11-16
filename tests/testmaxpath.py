@@ -5,6 +5,7 @@ from graph_peak_caller.areas import BinaryContinousAreas, Areas
 from graph_peak_caller.sparsepileup import SparsePileup
 from graph_peak_caller.peakscores import ScoredPeak
 
+
 class TestMaxPath(unittest.TestCase):
 
     def test_find_max_path_through_subgraph_two_node_graph(self):

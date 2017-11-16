@@ -274,19 +274,10 @@ class CallPeaks(object):
                         for peak in binary_peaks)
         max_paths = []
         for scored_peak in scored_peaks:
-            print("Scored peak")
-            print(scored_peak)
             max_paths.append(scored_peak.get_max_path())
-        #max_paths = [scored_peak.get_max_path() for
-        #             scored_peak in scored_peaks]
+
         logging.info("Number of peaks before small peaks are removed: %d" % len(max_paths))
-        # Sort max pathse
         max_paths.sort(key=lambda p: p.score, reverse=True)
-
-        # Filter on length
-        max_paths = [path for path in max_paths if
-                     path.length() >= self.info.fragment_length]
-
         logging.info("Number of peaks after small peaks are removed: %d" % len(max_paths))
 
         PeakCollection(max_paths).to_file(

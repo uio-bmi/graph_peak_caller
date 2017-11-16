@@ -1,5 +1,7 @@
+from itertools import chain
 from collections import defaultdict
 import numpy as np
+import offsetbasedgraph as obg
 
 
 class Areas(object):
@@ -14,8 +16,10 @@ class BinaryContinousAreas(Areas):
         self.internal_intervals = {}
 
     def __str__(self):
-        full_str = "Full: %s" % ",".join(str(node_id) for node_id in self.full_areas)
-        start_str = "Start: %s" % ", ".join("(%s,%s)" % (node_id, idx) for node_id, idx in self.starts.items())
+        full_str = "Full: %s" % ",".join(
+            str(node_id) for node_id in self.full_areas)
+        start_str = "Start: %s" % ", ".join(
+            "(%s,%s)" % (node_id, idx) for node_id, idx in self.starts.items())
         internal_str = "Internsals: %s" % self.internal_intervals
         return "\n".join((full_str, start_str, internal_str))
 
@@ -110,8 +114,31 @@ class BinaryContinousAreas(Areas):
 
         return pos_remain, neg_remain
 
+    def get_start_positions(self):
+        start_positions = [
+            obg.Position(-node_id, self.graph.node_size(node_id)-offset)
+            for node_id, offset in self.starts.items()]
+        node_ids = list(self.full_areas.keys()) + [
+            -node_id for node_id in self.full_areas]
+        previous_nodes_list = [
+            self.graph.reverse_adj_list[-node_id]
+            for node_id in node_ids]
+
+        def filter_my_nodes(node_list):
+            return [node_id for node_id in node_list if
+                    not(abs(node_id) in self.full_areas or node_id
+                        in self.starts)]
+        previous_nodes_list = [filter_my_nodes(prev_nodes) for
+                               prev_nodes in previous_nodes_list]
+        full_starts = [obg.Position(node_id, 0) for node_id, prev_nodes in
+                       zip(node_ids, previous_nodes_list)
+                       if not prev_nodes]
+
+        return start_positions + full_starts
+
     def get_node_ids(self):
-        return self.full_areas.keys() + self.starts.keys() + self.internal_intervals.keys()
+        return chain(self.full_areas.keys(), self.starts.keys(),
+                     self.internal_intervals.keys())
 
     @classmethod
     def from_old_areas(cls, areas):
