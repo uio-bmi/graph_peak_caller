@@ -37,7 +37,7 @@ def create_linear_map(ob_graph):
     # vg_graph = pyvg.Graph.create_from_file(vg_graph_file_name)
     # ob_graph = vg_graph.get_offset_based_graph()
     # ob_graph.to_file("obgraph")
-    ob_graph = obg.GraphWithReversals.from_file("obgraph")
+    ob_graph = obg.GraphWithReversals.from_file("graph.obg")
     #print(ob_graph.node_size(701))
     #return
 
@@ -80,7 +80,7 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
     logging.basicConfig(level=logging.INFO)
     logging.info("Running from gam files")
 
-    ob_graph = obg.GraphWithReversals.from_file("obgraph")
+    ob_graph = obg.GraphWithReversals.from_file("graph.obg")
     # print(ob_graph.blocks)
     reads_intervals = vg_gam_file_to_interval_collection(
          None, gam_file_name, ob_graph)
@@ -136,10 +136,18 @@ def peak_sequences_to_fasta(vg_graph_file_name, peaks_file_name, fasta_file_name
         sequence = sequence_retriever.get_sequence_on_directed_node()
 
 
+def create_ob_graph_from_vg(vg_json_graph_file_name, ob_graph_file_name="graph.obg"):
+    vg_graph = pyvg.Graph.create_from_file(vg_json_graph_file_name)
+    ob_graph = vg_graph.get_offset_based_graph()
+    ob_graph.to_file(ob_graph_file_name)
+    logging.info("Wrote obgraph to %s" % ob_graph_file_name)
+
+
 if __name__ == "__main__":
     dm_folder = "../graph_peak_caller/dm_test_data/"
 
-    ob_graph = obg.GraphWithReversals.from_file("obgraph")
+    create_ob_graph_from_vg("haplo1kg50-mhc.json")
+    ob_graph = obg.GraphWithReversals.from_file("graph.obg")
     #create_linear_map(ob_graph)
 
     #run_from_max_paths_step("obgraph", "pre_postprocess.bed", 36)

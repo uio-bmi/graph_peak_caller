@@ -10,8 +10,8 @@ from graph_peak_caller.peakcollection import PeakCollection
 from graph_peak_caller.util import get_linear_paths_in_graph
 from offsetbasedgraph import IntervalCollection, DirectedInterval
 from graph_peak_caller.subgraphcollection import SubgraphCollection
-from graph_peak_caller.peakscores import MaxPathPeakCollection
-from .peakscomparer import PeaksComparer, get_peaks_comparer_for_linear_and_graph_peaks
+#from graph_peak_caller.peakscores import MaxPathPeakCollection
+#from .peakscomparer import PeaksComparer, get_peaks_comparer_for_linear_and_graph_peaks
 
 
 def create_linear_peaks_from_bed(linear_sequence_fasta_file, peaks_bed_file,
@@ -164,4 +164,6 @@ class AlignmentsAnalyser(object):
 #create_linear_peaks_from_bed("mhc_cleaned2.fa", "../ENCFF155DHA.bed", "cactus-mhc.obg", "cactus-mhc.vg", 225518, 28510119, 33480577)
 
 #graph_peaks = PeakCollection.from_file("real_data_max_paths")
-
+ob_graph = obg.GraphWithReversals.from_file("graph.obg")
+vg_graph = pyvg.vg.Graph.create_from_file("haplo1kg50-mhc.json")
+get_linear_paths_in_graph(ob_graph, vg_graph, "linear_maps")
