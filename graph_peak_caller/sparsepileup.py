@@ -12,6 +12,14 @@ import offsetbasedgraph as obg
 
 class ValuedIndexes(object):
     def __init__(self, indexes, values, start_value, length):
+
+        if isinstance(indexes, list):
+            indexes = np.array(indexes)
+
+        if isinstance(values, list):
+            values = np.array(values)
+
+
         assert type(indexes) == np.ndarray
         assert type(values) == np.ndarray
         # assert indexes.size == values.size
