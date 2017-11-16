@@ -319,10 +319,14 @@ class CallPeaks(object):
 
     def call_peaks(self, out_file="final_peaks.bed"):
 
-        q_value_peak_caller = CallPeaksFromQvalues(self.graph,
+        self.q_value_peak_caller = CallPeaksFromQvalues(self.graph,
                                                    self.q_values,
                                                    self.info,
                                                    self.out_file_base_name)
+
+    def save_max_path_sequences_to_fasta_file(self, file_name, retriever):
+        self.q_value_peak_caller.\
+            save_max_path_sequences_to_fasta_file(file_name, retriever)
 
     def create_sample_pileup(self, save_to_file=True):
         logging.debug("In sample pileup")
