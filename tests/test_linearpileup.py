@@ -1,5 +1,6 @@
 import unittest
 from graph_peak_caller.linearsnarls import *
+from graph_peak_caller.linearintervals import LinearIntervalCollection
 
 
 class TestLinearPileup(unittest.TestCase):
@@ -16,10 +17,6 @@ class TestLinearPileup(unittest.TestCase):
                                       np.array([1., 0., 1., 0., 1., 0.])),
                          self.pileup)
 
-    def test_threshold(self):
-        self.valued_pileup.threshold(2)
-        self.assertTrue(np.all(self.valued_pileup.values == [2, 2, 3]))
-
     def test_maximum(self):
         pileup1 = LinearPileup(np.array([0,   3, 5.2, 10.8]),
                                np.array([10, 20,  15,   25]))
@@ -32,16 +29,8 @@ class TestLinearPileup(unittest.TestCase):
                                 np.array([25, 15, 25]))
         self.assertEqual(pileup1, true_max)
 
-    def _test_max(self):
-        pileup1 = LinearPileup(np.array([1, 5, 10]), np.array([1, 2, 3]))
-        pileup2 = LinearPileup(np.array([1, 5, 10]), np.array([3, 2, 1]))
 
-        pileup1.maximum(pileup2)
-        print(pileup1.values)
-        self.assertTrue(np.all(pileup1.values == [3, 2, 3]))
-
-
-class TestLinearIntervalCollection(object):
+class TestExtendLinearIntervalCollection(unittest.TestCase):
 
     def test_extend_non_overlapping(self):
 
@@ -50,9 +39,12 @@ class TestLinearIntervalCollection(object):
             np.array([7, 12])
         )
 
-        pileup = collection.extend(2)
-        print(pileup.indices)
-        self.assertTrue(np.all(pileup.indices == [4, 8, 9, 13]))
+        extended = collection.extend(2)
+        pileup = LinearPileup.create_from_starts_and_ends(
+            extended.starts,
+            extended.ends
+        )
+        self.assertTrue(np.all(pileup.indices == [3, 7, 8, 12]))
         self.assertTrue(np.all(pileup.values == [1, 0, 1, 0]))
 
     def test_extend_overlapping(self):
@@ -62,23 +54,30 @@ class TestLinearIntervalCollection(object):
             np.array([7, 12])
         )
 
-        pileup = collection.extend(5)
+        extended = collection.extend(5)
+        pileup = LinearPileup.create_from_starts_and_ends(
+            extended.starts,
+            extended.ends
+        )
         print(pileup.indices)
-        self.assertTrue(np.all(pileup.indices == [1, 6, 11, 16]))
+        self.assertTrue(np.all(pileup.indices == [0, 5, 10, 15]))
         self.assertTrue(np.all(pileup.values == [1, 2, 1, 0]))
 
-    def test_extend_overlapping_and_touching(self):
+    def test_extend_complex(self):
 
         collection = LinearIntervalCollection(
-            np.array([0, 5, 8]),
-            np.array([4, 7, 10])
+            np.array([10, 15, 18]),
+            np.array([14, 17, 20])
         )
 
-        pileup = collection.extend(2)
-        print(pileup.indices)
-        print(pileup.values)
-        self.assertTrue(np.all(pileup.indices == [0, 7, 8, 11]))
-        self.assertTrue(np.all(pileup.values == [1, 2, 1, 0]))
+        extended = collection.extend(6)
+        pileup = LinearPileup.create_from_starts_and_ends(
+            extended.starts,
+            extended.ends
+        )
+
+        self.assertTrue(np.all(pileup.indices == [4, 9, 12, 16, 21, 24]))
+        self.assertTrue(np.all(pileup.values == [1, 2, 3, 2, 1, 0]))
 
 
 if __name__ == "__main__":

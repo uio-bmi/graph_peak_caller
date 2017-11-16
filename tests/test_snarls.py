@@ -37,6 +37,8 @@ class SnarlsTests(unittest.TestCase):
                  6: [8],
                  7: [8]
              })
+        print(self.simple_graph.get_first_blocks())
+        print(self.simple_graph.reverse_adj_list)
 
         self.simple_snarls = \
             {
@@ -70,7 +72,7 @@ class TestSnarlGraphBuilder(SnarlsTests):
 
     def test_build_non_nested(self):
 
-        builder = SnarlGraphBuilder(self.simple_graph, self.simple_snarls)
+        builder = SnarlGraphBuilder(self.simple_graph, self.simple_snarls, id_counter=9)
         graph = builder.build_snarl_graphs()
 
         correct_snarl_graph = SnarlGraph(
@@ -114,7 +116,6 @@ class TestSnarlGraphBuilder(SnarlsTests):
             end_node=10
         )
         print("Final graph")
-
         print(graph)
 
         self.assertEqual(correct_snarl_graph, graph)
@@ -147,7 +148,7 @@ class TestSnarlGraphBuilder(SnarlsTests):
             22: subsnarl2
         }
 
-        builder = SnarlGraphBuilder(graph, snarls)
+        builder = SnarlGraphBuilder(graph, snarls, id_counter=13)
         snarlgraph = builder.build_snarl_graphs()
         print("Snarlgraph")
         print(snarlgraph)

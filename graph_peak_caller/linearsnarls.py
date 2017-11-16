@@ -183,7 +183,3 @@ class LinearPileup(object):
 
     def maximum(self, other):
         return self.continuous_sparse_maximum(other)
-
-    def threshold(self, value):
-        self.values = np.maximum(self.values, value)
-        self.sanitize_values()

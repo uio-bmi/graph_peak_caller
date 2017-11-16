@@ -2,11 +2,15 @@ import unittest
 from graph_peak_caller.pileup import Pileup
 from offsetbasedgraph import Graph, Block, Interval, IntervalCollection
 from graph_peak_caller import bdgcmp, callpeaks
+from graph_peak_caller.callpeaks import ExperimentInfo
 import numpy as np
 
+class DummyLinearMap:
+    def __init__(self):
+        pass
 
 
-class TestCallpeaks(unittest.TestCase):
+class TestFilterDulicates(unittest.TestCase):
     def test_filter_duplicates(self):
         graph = Graph({
                         1: Block(10),
@@ -19,21 +23,29 @@ class TestCallpeaks(unittest.TestCase):
                 2: [3],
                 4: [4]
             })
-        graph.to_file("test_graph")
+        graph.to_file("test_graph.tmp")
 
         intervals = [
             Interval(0, 10, [1, 2, 3]),
             Interval(1, 10, [1, 2, 3]),
             Interval(0, 10, [1, 2, 3])
         ]
-        interval_collection = IntervalCollection(intervals)
-        interval_collection.to_file("test_intervals")
 
-        caller = callpeaks.CallPeaks("test_graph", "test_intervals")
-        filtered_intervals_file_name = caller.filter_duplicates(caller.sample_file_name, write_to_file = "filtered_intervals_test")
+        experiment_info = ExperimentInfo(100, 10, 2)
+
+        interval_collection = IntervalCollection(intervals)
+        interval_collection.to_file("test_intervals.tmp")
+
+        caller = callpeaks.CallPeaks("test_graph.tmp", "test_intervals.tmp",
+                                     "test_intervals.tmp",
+                                     experiment_info=experiment_info,
+                                     linear_map="dummy_linear_map")
+        filtered_intervals_file_name = caller.filter_duplicates_and_count_intervals(
+                        caller.sample_intervals,
+                        write_to_file = "filtered_intervals_test.tmp")
 
         intervals_filtered = []
-        for interval in IntervalCollection.create_generator_from_file(filtered_intervals_file_name):
+        for interval in IntervalCollection.from_file(filtered_intervals_file_name, text_file=False):
             intervals_filtered.append(interval)
 
         self.assertEqual(len(intervals_filtered), len(intervals)-1)
