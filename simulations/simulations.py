@@ -97,7 +97,7 @@ class SimulatedPeakCalling():
         correct_peaks = PeakCollection(self.correct_peaks)
         #for peak in correct_peaks:
         #    print(peak)
-        found_peaks = PeakCollection.create_list_from_file("max_paths", graph=self.graph)
+        found_peaks = PeakCollection.create_list_from_file("max_paths.tmp", graph=self.graph)
 
         #for i in found_peaks:
         #    print(i)

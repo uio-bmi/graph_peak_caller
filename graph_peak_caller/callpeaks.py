@@ -110,7 +110,7 @@ class CallPeaks(object):
     def set_cutoff(self, value):
         self.cutoff = value
 
-    def run(self, out_file="final_peaks"):
+    def run(self, out_file="final_peaks.bed"):
         self.create_graph()
         self.preprocess()
         if self.info is None:
@@ -250,7 +250,8 @@ class CallPeaks(object):
         threshold = -np.log10(self.cutoff)
         logging.info("Thresholding peaks on q value %.4f" % threshold)
         self.peaks = self.p_values.threshold_copy(threshold)
-        self.peaks.to_bed_file("pre_postprocess.bed")
+        self.peaks.to_bed_file(self.out_file_base_name
+                               + "pre_postprocess.bed")
         logging.info("Filling small Holes")
         self.peaks.fill_small_wholes(self.info.read_length)
         logging.info("Removing small peaks")
@@ -262,7 +263,7 @@ class CallPeaks(object):
 
         logging.info("Found %d subgraphs" % len(peaks_as_subgraphs.subgraphs))
         peaks_as_subgraphs.to_file(
-            self.out_file_base_name + "peaks_as_subgraphs")
+            self.out_file_base_name + "peaks.subgraphs")
 
         peaks_as_subgraphs.to_pickle(
             self.out_file_base_name + "peaks_as_subgraphs.pickle")
@@ -290,7 +291,7 @@ class CallPeaks(object):
         logging.info("Number of peaks after small peaks are removed: %d" % len(max_paths))
 
         PeakCollection(max_paths).to_file(
-            self.out_file_base_name + "max_paths", text_file=True)
+            self.out_file_base_name + "max_paths.intervalcollection", text_file=True)
 
         self.peaks_as_subgraphs = peaks_as_subgraphs
         self.max_paths = max_paths
