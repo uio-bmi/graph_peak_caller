@@ -2,7 +2,7 @@ import unittest
 import logging
 
 from collections import defaultdict
-from graph_peak_caller.extender import Extender
+from graph_peak_caller.extender import Extender, Areas
 from graph_peak_caller.areas import BinaryContinousAreas
 from offsetbasedgraph import Block, GraphWithReversals,\
     DirectedInterval, Position
@@ -16,17 +16,7 @@ nodes = {i: Block(20) for i in range(1, 4)}
 tmp_edges = {1: [2, -2],
              2: [3],
              -2: [3]}
-
-edges = defaultdict(list)
-edges.update(tmp_edges)
-
-tmp_rev_edges = {-2: [-1],
-                 2: [-1],
-                 3: [-2, 2]}
-
-rev_edges = defaultdict(list)
-rev_edges.update(tmp_rev_edges)
-graph = Graph(nodes, edges, rev_adj_list=rev_edges)
+graph = Graph(nodes, tmp_edges)
 
 pos_interval = DirectedInterval(8, 18, [2])
 neg_interval = DirectedInterval(2, 12, [-2])
@@ -104,7 +94,7 @@ class TestExtender(unittest.TestCase):
         self.assertEqual(areas, true_areas)
 
 
-class TestAreas():
+class TestAreas(unittest.TestCase):
     def test_from_pos_interval(self):
         areas = Areas.from_interval(pos_interval, graph)
         true_areas = Areas(graph, {2: [8, 18]})
@@ -112,17 +102,20 @@ class TestAreas():
 
     def test_from_neg_interval(self):
         areas = Areas.from_interval(neg_interval, graph)
-        true_areas = Areas(graph, {-2: [2, 12]})
+        areas.reverse_reversals()
+        true_areas = Areas(graph, {2: [8, 18]})
         self.assertEqual(areas, true_areas)
 
     def test_from_spanning_neg_interval(self):
         areas = Areas.from_interval(neg_spanning_interval, graph)
-        true_areas = Areas(graph, {-3: [12, 20],
-                                   -2: [0, 2]})
+        areas.reverse_reversals()
+        true_areas = Areas(graph, {2: [18, 20],
+                                   3: [0, 8]})
         self.assertEqual(areas, true_areas)
 
     def test_from_spanning_pos_interval(self):
         areas = Areas.from_interval(pos_spanning_interval, graph)
+        areas.reverse_reversals()
         true_areas = Areas(graph, {2: [18, 20],
                                    3: [0, 8]})
         self.assertEqual(areas, true_areas)

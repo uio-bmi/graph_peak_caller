@@ -83,9 +83,9 @@ class CyclicHolesClean(TestCyclicCleanup):
         super().setUp()
         nodes = {i: obg.Block(100) for i in range(1, 11)}
         edges = {i: [i+1] for i in range(1, 10)}
-        self.lin_graph = obg.Graph(nodes, edges)
+        self.lin_graph = obg.GraphWithReversals(nodes, edges)
         edges = {i: [i+1, (i+5) % 5 +1 ] for i in range(1, 5)}
-        self.double_graph = obg.Graph(nodes, edges)
+        self.double_graph = obg.GraphWithReversals(nodes, edges)
 
     def test_lin(self):
         intervals = [
