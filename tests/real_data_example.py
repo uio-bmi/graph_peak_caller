@@ -97,15 +97,11 @@ def run_from_max_paths_step(graph_file_name, pileup_file_name):
     ob_graph = obg.GraphWithReversals.from_file("obgraph")
     graph_size = sum(block.length() for block in ob_graph.blocks.values())
     experiment_info = callpeaks.ExperimentInfo(graph_size, 135, 36)
-    linear_map = "haplo1kg50-mhc.lm"
-    caller = callpeaks.CallPeaks(
-        ob_graph, IntervalCollection([]), IntervalCollection([]),
-        experiment_info=experiment_info,
-        out_file_base_name="laststep_", has_control=True,
-        linear_map=linear_map)
+    q_values = SparsePileup.from_bed_graph(ob_graph, pileup_file_name)
+    fromqvalues = callpeaks.CallPeaksFromQvalues(
+        ob_graph, q_values, experiment_info, "laststep")
 
-    caller.p_values = SparsePileup.from_bed_file(ob_graph, pileup_file_name)
-    caller.call_peaks()
+    fromqvalues.callpeaks()
 
     # fragment_length = 135
     # graph = obg.Graph.from_file(graph_file_name)

@@ -67,7 +67,6 @@ class ExperimentInfo(object):
                    fragment_length, read_length)
 
 
-
 class CallPeaksFromQvalues(object):
     def __init__(self, graph, q_values_sparse_pileup,
                  experiment_info, out_file_base_name=""):
@@ -75,6 +74,7 @@ class CallPeaksFromQvalues(object):
         self.q_values = q_values_sparse_pileup,
         self.info = experiment_info
         self.out_file = out_file_base_name
+        self.cutoff = 0.05
 
     def callpeaks(self):
         logging.info("Calling peaks")
