@@ -61,15 +61,15 @@ class MotifMatcher():
 
 
 def plot_true_positives(peak_file_sets, meme_file_name):
-    handles = []
-    names = []
     for name, fasta_file_name in peak_file_sets.items():
         matcher = MotifMatcher(fasta_file_name, meme_file_name)
         true_positives = matcher.compute_true_positives()
         n_matching = len(matcher.peaks_matching_motif)
         n_tot = len(matcher.sorted_peaks)
-        print("True positives for %s: %d / %d = %.3f" % (name, n_matching, n_tot, n_matching/n_tot))
-        plt.plot(true_positives, label=name + " (%.2f)" % (100 * n_matching/n_tot))
+        print("True positives for %s: %d / %d = %.3f" % (
+            name, n_matching, n_tot, n_matching/n_tot))
+        plt.plot(true_positives,
+                 label=name + " (%.2f)" % (100 * n_matching/n_tot))
 
     plt.legend()
     plt.show()
@@ -82,8 +82,6 @@ if __name__ == "__main__":
     collection.set_peak_sequences()
     collection.save_to_sorted_fasta("CTCF_filtered.fasta")
     """
-
-
     #import sys
     #sys.exit()
     #matcher = MotifMatcher("../tests/real_data_sequences.fasta", "MA0139.1.meme")

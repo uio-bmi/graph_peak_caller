@@ -1,19 +1,19 @@
 from graph_peak_caller.peakcollection import PeakCollection
-import offsetbasedgraph as obg
-from graph_peak_caller.util import get_linear_paths_in_graph
 from offsetbasedgraph import IntervalCollection
-import pyvg
-import os
 
 
 class PeaksComparer(object):
 
-    def __init__(self, graph, sequence_retriever, linear_path_file_name, peaks1_file_name, peaks2_file_name):
+    def __init__(self, graph, sequence_retriever, linear_path_file_name,
+                 peaks1_file_name, peaks2_file_name):
         self.graph = graph
         self.sequence_retriever = sequence_retriever
-        self.peaks1 = PeakCollection.create_list_from_file(peaks1_file_name, graph=graph)
-        self.peaks2 = PeakCollection.create_list_from_file(peaks2_file_name, graph=graph)
-        print("Number of intervals in set 1/2: %d / %d" % (len(self.peaks1.intervals), len(self.peaks2.intervals)))
+        self.peaks1 = PeakCollection.create_list_from_file(
+            peaks1_file_name, graph=graph)
+        self.peaks2 = PeakCollection.create_list_from_file(
+            peaks2_file_name, graph=graph)
+        print("Number of intervals in set 1/2: %d / %d" % (
+            len(self.peaks1.intervals), len(self.peaks2.intervals)))
         if linear_path_file_name is not None:
             self.linear_path = IntervalCollection.create_list_from_file(
                 linear_path_file_name, self.graph).intervals[0]
@@ -22,7 +22,8 @@ class PeaksComparer(object):
         import matplotlib.pyplot as plt
         i = 1
         for peak_set in (self.peaks1, self.peaks2):
-            plt.hist([peak.length() for peak in peak_set], bins=1000, label="Peak set %d" % i)
+            plt.hist([peak.length() for peak in peak_set],
+                     bins=1000, label="Peak set %d" % i)
             i += 1
 
         plt.legend()
@@ -43,7 +44,8 @@ class PeaksComparer(object):
     def compare_q_values_for_similar_peaks(self):
 
         for peak in self.peaks1:
-            similar = self.peaks2.get_similar_intervals(peak, allowed_mismatches=10)
+            similar = self.peaks2.get_similar_intervals(
+                peak, allowed_mismatches=10)
             if len(similar) > 0:
                 print("Found match(es) for %s" % peak)
                 for matched_peak in similar:
@@ -75,7 +77,8 @@ class PeaksComparer(object):
 
     def check_similarity(self):
         i = 1
-        for peak_datasets in [(self.peaks1, self.peaks2), (self.peaks2, self.peaks1)]:
+        for peak_datasets in [(self.peaks1, self.peaks2),
+                              (self.peaks2, self.peaks1)]:
             n_identical = 0
             tot_n_similar = 0
             n_similar = 0
@@ -90,11 +93,7 @@ class PeaksComparer(object):
                     n_identical += 1
 
                 similar_intervals = peaks2.get_overlapping_intervals(peak, 50)
-                #for similar in similar_intervals:
-                #    print("%s is simmilar to %s" % (peak, similar))
-
                 if len(similar_intervals) > 0:
-                    #print("%s \n overlaps with \n %s \n\n" % (peak, similar_intervals[0]))
                     n_similar += 1
                     tot_n_similar += len(similar_intervals)
                 else:
@@ -121,13 +120,9 @@ class PeaksComparer(object):
             n_inside_correct_order = 0
             for peak in peaks:
                 if self.linear_path.contains(peak):
-                    #print(peak)
                     n_inside += 1
                 if self.linear_path.contains_in_order_any_direction(peak):
                     n_inside_correct_order += 1
-
-                #overlap = linear_interval.overlap(peak)
-                #print("Overlap: %d / %d" % (overlap, peak.length()))
 
             print("n inside: %d / %d" % (n_inside, len(peaks.intervals)))
             print("n inside correct order: %d / %d" % (n_inside_correct_order, len(peaks.intervals)))
@@ -160,4 +155,3 @@ class PeaksComparer(object):
         print("On linear path: %d" % len(on_linear))
         on_linear = PeakCollection(on_linear)
         return on_linear.get_peaks_not_in_other_collection(self.peaks1, 20)
-

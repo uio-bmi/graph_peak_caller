@@ -18,6 +18,7 @@ import traceback
 import warnings
 import sys
 
+
 def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
 
     log = file if hasattr(file, 'write') else sys.stderr
@@ -51,27 +52,25 @@ def create_linear_map(ob_graph):
     linear_map = "haplo1kg50-mhc.lm"
     #snarlgraph._create_distance_dicts()
 
+
 def run_with_intervals(sample_intervals, control_intervals):
-
     logging.info("Running from intervals")
-
-    retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
     ob_graph = obg.GraphWithReversals.from_file("obgraph")
     graph_size = sum(block.length() for block in ob_graph.blocks.values())
     logging.info("Graph size: %d" % graph_size)
     logging.info("N nodes in graph: %d" % len(ob_graph.blocks))
 
-    linear_map = "linear_map"
-
+    linear_map = "haplo1kg50-mhc.lm"
     experiment_info = callpeaks.ExperimentInfo(graph_size, 135, 36)
     caller = callpeaks.CallPeaks(
         ob_graph, sample_intervals, control_intervals,
         experiment_info=experiment_info,
         out_file_base_name="real_data_", has_control=True,
         linear_map=linear_map)
-    caller.set_cutoff(0.10)
+    caller.set_cutoff(0.05)
     caller.verbose = True
     caller.run()
+    retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
     caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
 
 
@@ -140,7 +139,7 @@ if __name__ == "__main__":
     dm_folder = "../graph_peak_caller/dm_test_data/"
 
     ob_graph = obg.GraphWithReversals.from_file("obgraph")
-    create_linear_map(ob_graph)
+    # create_linear_map(ob_graph)
 
     #run_from_max_paths_step("obgraph", "pre_postprocess.bed", 36)
     #cProfile.run('run_with_gam("ENCFF000WVQ_filtered.gam", "cactus-mhc.json")')
@@ -149,12 +148,13 @@ if __name__ == "__main__":
     #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")
     #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "haplo1kg50-mhc.json")
 
-    run_with_intervals(
-        sample_intervals=IntervalCollection.from_file("sample_linear_reads.intervals", graph=ob_graph),
-        control_intervals=IntervalCollection.from_file("control_linear_reads.intervals", graph=ob_graph),
+    # run_with_intervals(
+    #     sample_intervals=IntervalCollection.from_file("sample_linear_reads.intervals", graph=ob_graph),
+    #     control_intervals=IntervalCollection.from_file("control_linear_reads.intervals", graph=ob_graph),
+    # )
 
-    )
-
-    run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam", "ENCFF001HNS_haplo1kg50-mhc_filtered_q50.gam", "haplo1kg50-mhc.json")
+    run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
+                 "ENCFF001HNS_haplo1kg50-mhc_filtered_q50.gam",
+                 "haplo1kg50-mhc.json")
     # run_with_gam("ctcf_mhc.gam", "ctcf_control_mhc.gam", "haplo1kg50-mhc.json")
 
