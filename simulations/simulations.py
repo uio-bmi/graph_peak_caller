@@ -114,10 +114,10 @@ if __name__ == "__main__":
 
     caller = SimulatedPeakCalling(
         n_paths=2,
-        n_basepairs_length=40000,
+        n_basepairs_length=500000,
         n_snps = 30,
-        n_peaks = 30,
-        with_control=False
+        n_peaks = 120,
+        with_control=True
     )
 
     #print(caller.graph)

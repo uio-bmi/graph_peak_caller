@@ -310,6 +310,7 @@ class CallPeaks(object):
             f.write(">peak" + str(i) + " " +
                     max_path.to_file_line() + "\n" + seq + "\n")
             i += 1
+        logging.info("Wrote max path sequences to fasta file: %s" % (self.out_file_base_name + file_name))
 
     def create_sample_pileup(self, save_to_file=True):
         logging.debug("In sample pileup")
