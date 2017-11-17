@@ -42,8 +42,11 @@ class TestScoredPeak(unittest.TestCase):
         values = np.array([2, 4, 6, 8])
         self.scores = {
             2: ValuedIndexes(indexes, values+20, 20, 10),
+            -2: ValuedIndexes(indexes, values+20, 20, 10),
             3: ValuedIndexes(indexes, values+30, 30, 10),
+            -3: ValuedIndexes(indexes, values+30, 30, 10),
             4: ValuedIndexes(indexes, values+40, 40, 10),
+            -4: ValuedIndexes(indexes, values+40, 40, 10),
             5: ValuedIndexes(np.array([2, 4]), np.array([52, 54]), 50, 5),
             -1: ValuedIndexes(np.array([1, 3]), np.array([16, 18]), 14, 5)
             }
@@ -52,6 +55,9 @@ class TestScoredPeak(unittest.TestCase):
             2: ValuedIndexes(np.array([], dtype="int"), np.array([]), 20, 10),
             3: ValuedIndexes(np.array([], dtype="int"), np.array([]), 30, 10),
             4: ValuedIndexes(np.array([], dtype="int"), np.array([]), 40, 10),
+            -2: ValuedIndexes(np.array([], dtype="int"), np.array([]), 20, 10),
+            -3: ValuedIndexes(np.array([], dtype="int"), np.array([]), 30, 10),
+            -4: ValuedIndexes(np.array([], dtype="int"), np.array([]), 40, 10),
             5: ValuedIndexes(np.array([], dtype="int"), np.array([]), 50, 5),
             -1: ValuedIndexes(np.array([], dtype="int"), np.array([]), 10, 5)
             }
