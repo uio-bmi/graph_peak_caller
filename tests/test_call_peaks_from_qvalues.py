@@ -27,6 +27,13 @@ class TestCallPeaksFromQValues(unittest.TestCase):
                 2: ValuedIndexes([3], [0], 2, 10)
             }
 
+        self.one_peak_with_big_hole = SparsePileup(self.linear_graph)
+        self.one_peak_with_big_hole.data = \
+            {
+                1: ValuedIndexes([5, 7], [2, 0], 0, 10),
+                2: ValuedIndexes([3], [0], 2, 10)
+            }
+
 
         self.split_graph = GraphWithReversals(
             {i: Block(10) for i in range(1, 5)},
@@ -51,6 +58,17 @@ class TestCallPeaksFromQValues(unittest.TestCase):
                     -3: [-2]
                 }
             )
+
+        self.single_block_graph = \
+            GraphWithReversals({1: Block(20)}, {})
+
+        self.multi_start_end_graph = \
+                GraphWithReversals({i: Block(10) for i in range(1, 6)},
+                           {
+                               1: [3],
+                               2: [3],
+                               3: [4, 5]
+                           })
 
         self.fragment_length = 6
         self.read_length = 2
@@ -82,6 +100,10 @@ class TestCallPeaksFromQValues(unittest.TestCase):
     def test_finds_single_peak_with_hole(self):
         self._assert_finds_max_paths([Interval(5, 3, [1, 2])],
                                      self.linear_graph, self.one_peak_with_hole)
+
+    def test_finds_no_peak_too_large_hole(self):
+        self._assert_finds_max_paths([],
+                                     self.linear_graph, self.one_peak_with_big_hole)
 
     def test_find_max_path_on_split_graph(self):
 
@@ -138,8 +160,91 @@ class TestCallPeaksFromQValues(unittest.TestCase):
             pileup
         )
 
+    def test_removes_too_small_peak(self):
+        pileup = SparsePileup(self.single_block_graph)
+        pileup.data = {
+            1: ValuedIndexes([5, 9], [2, 0], 0, 20)
+        }
+        self._assert_finds_max_paths([],
+                    self.single_block_graph,
+                    pileup)
 
+    def test_finds_internal_peak_with_internal_hole(self):
+        pileup = SparsePileup(self.single_block_graph)
+        pileup.data = {
+            1: ValuedIndexes([5, 8, 9, 15], [2, 0, 2, 0], 0, 20)
+        }
+        self._assert_finds_max_paths(
+                    [Interval(5, 15, [1])],
+                    self.single_block_graph,
+                    pileup)
 
+    def test_finds_correct_max_path_among_many_paths(self):
+        graph = GraphWithReversals(
+            {
+                1: Block(10),
+                2: Block(10),
+                3: Block(10),
+                4: Block(10),
+                5: Block(10)
+            },
+            {
+                1: [2, 3, 4],
+                2: [5],
+                4: [5],
+                4: [5]
+            }
+        )
+
+        pileup = SparsePileup(graph)
+        pileup.data = {
+            1: ValuedIndexes([], [], 2, 10),
+            # Higher qval, but two holes with low
+            2: ValuedIndexes([1, 2, 7, 8], [0, 2.001, 0, 2.001], 2, 10),
+            3: ValuedIndexes([], [], 1.5, 10),
+            4: ValuedIndexes([], [], 2, 10),
+            5: ValuedIndexes([], [], 2, 10)
+        }
+        self._assert_finds_max_paths(
+            [Interval(0, 10, [1, 4, 5])],
+            graph, pileup
+        )
+
+    def test_multiple_start_and_end_nodes(self):
+
+        pileup = SparsePileup(self.multi_start_end_graph)
+        pileup.data = {
+            1: ValuedIndexes([], [], 2, 10),
+            2: ValuedIndexes([], [], 2.2, 10),
+            3: ValuedIndexes([1, 9], [2, 0], 0, 10),
+            4: ValuedIndexes([], [], 2, 10),
+            5: ValuedIndexes([3], [3], 0, 10),
+        }
+
+        self._assert_finds_max_paths(
+            [
+                Interval(0, 10, [2, 3, 4]),
+                Interval(3, 10, [5])
+            ],
+            self.multi_start_end_graph, pileup
+        )
+
+    def test_multiple_start_and_end_nodes2(self):
+        pileup = SparsePileup(self.multi_start_end_graph)
+        pileup.data = {
+            1: ValuedIndexes([], [], 2, 10),
+            2: ValuedIndexes([], [], 2.2, 10),
+            3: ValuedIndexes([1, 9], [2, 0], 0, 10),
+            4: ValuedIndexes([], [], 2, 10),
+            5: ValuedIndexes([1], [3], 0, 10),
+        }
+
+        self._assert_finds_max_paths(
+            [
+                Interval(0, 10, [2, 3, 5])
+            ],
+            self.multi_start_end_graph, pileup
+        )
 
 
 if __name__ == "__main__":
