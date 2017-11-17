@@ -187,11 +187,9 @@ class HolesCleaner(Cleaner):
         length = self.get_length(node_list)
         if length > self.threshold:
             return False
-        if len(extensions) == len(self.cur_adj_list[node_list[-1]]):
+        if extensions and len(extensions) == len(self.cur_adj_list[node_list[-1]]):
             return True
         self.save(node_list)
-        #print("Node list")
-        #print(node_list)
         return True
 
     def get_areas(self, pileup):
