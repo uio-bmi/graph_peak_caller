@@ -1,4 +1,4 @@
-from offsetbasedgraph import Interval, Block, Graph, Translation
+from offsetbasedgraph import Interval, Block, Graph, Translation, GraphWithReversals
 import numpy as np
 import random
 from math import floor
@@ -48,7 +48,7 @@ class GraphSimulator():
     def _create_graph_with_linear_blocks(self):
         blocks = {i: Block(self.n_basepairs_length)
                   for i in range(100, 100 + self.n_paths)}
-        graph = Graph(blocks, {})
+        graph = GraphWithReversals(blocks, {})
 
         # Add dummy blocks at start and end
         start = Block(1)

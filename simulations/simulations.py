@@ -88,7 +88,7 @@ class SimulatedPeakCalling():
         caller.create_control(True)
         caller.scale_tracks(True)
         caller.get_score()
-        caller.call_peaks("simulated.peaks")
+        caller.call_peaks()
         sequence_retriever = DummySequenceRetriever()
         caller.save_max_path_sequences_to_fasta_file("simulated_peak_sequences.fasta", sequence_retriever)
         self.caller = caller
@@ -97,12 +97,12 @@ class SimulatedPeakCalling():
         correct_peaks = PeakCollection(self.correct_peaks)
         #for peak in correct_peaks:
         #    print(peak)
-        found_peaks = PeakCollection.create_list_from_file("max_paths.tmp", graph=self.graph)
+        found_peaks = PeakCollection.create_list_from_file("max_paths.intervalcollection", graph=self.graph)
 
         #for i in found_peaks:
         #    print(i)
         matched = correct_peaks.get_identical_intervals(found_peaks)
-        subgraphs = self.caller.peaks_as_subgraphs
+        subgraphs = self.caller.q_value_peak_caller.peaks_as_subgraphs
         print("%d subgraphs" % len(subgraphs.subgraphs))
 
         print("%d correct peaks identically found, %3.f %% " % (len(matched), 100 * len(matched) / len(correct_peaks.intervals)))
@@ -116,8 +116,8 @@ if __name__ == "__main__":
         n_paths=2,
         n_basepairs_length=500000,
         n_snps = 30,
-        n_peaks = 120,
-        with_control=True
+        n_peaks = 300,
+        with_control=False
     )
 
     #print(caller.graph)
