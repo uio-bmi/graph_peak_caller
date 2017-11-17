@@ -54,7 +54,7 @@ def create_linear_map(ob_graph):
     #snarlgraph._create_distance_dicts()
 
 
-def run_with_intervals(sample_intervals, control_intervals):
+def run_with_intervals(sample_intervals, control_intervals, out_name, has_control=True):
     logging.info("Running from intervals")
     retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
     ob_graph = obg.GraphWithReversals.from_file("graph.obg")
@@ -67,7 +67,7 @@ def run_with_intervals(sample_intervals, control_intervals):
     caller = callpeaks.CallPeaks(
         ob_graph, sample_intervals, control_intervals,
         experiment_info=experiment_info,
-        out_file_base_name="real_data_", has_control=True,
+        out_file_base_name=out_name, has_control=has_control,
         linear_map=linear_map)
     caller.set_cutoff(0.05)
     caller.verbose = True
@@ -76,7 +76,7 @@ def run_with_intervals(sample_intervals, control_intervals):
     caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
 
 
-def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
+def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name, out_name="real_data_", has_control=True,
                  limit_to_chromosomes=False):
     logging.basicConfig(level=logging.INFO)
     logging.info("Running from gam files")
@@ -89,7 +89,7 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
     control_intervals = vg_gam_file_to_interval_collection(
          None, gam_control_file, ob_graph)
 
-    run_with_intervals(reads_intervals, control_intervals)
+    run_with_intervals(reads_intervals, control_intervals, out_name=out_name, has_control=has_control)
 
 
 def run_from_max_paths_step(graph_file_name, pileup_file_name):
@@ -159,7 +159,17 @@ def create_ob_graph_from_vg(vg_json_graph_file_name, ob_graph_file_name="graph.o
     logging.info("Wrote obgraph to %s" % ob_graph_file_name)
 
 
+def run_ctcf_example():
+     run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
+                 "ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
+                 "haplo1kg50-mhc.json",
+                 out_name="ctcf_q50_without_control_",
+                  has_control=False)
+
 if __name__ == "__main__":
+    run_ctcf_example()
+    exit()
+
     dm_folder = "../graph_peak_caller/dm_test_data/"
     get_sequences("laststepmax_paths.intervalcollection")
     exit()
@@ -177,9 +187,6 @@ if __name__ == "__main__":
     #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")
     #run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "haplo1kg50-mhc.json")
 
-    run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
-                 "ENCFF001HNS_haplo1kg50-mhc_filtered_q50.gam",
-                 "haplo1kg50-mhc.json")
     #run_with_intervals(
     #    sample_intervals=IntervalCollection.from_file("sample_linear_reads.intervals", graph=ob_graph),
     #    control_intervals=IntervalCollection.from_file("control_linear_reads.intervals", graph=ob_graph)
