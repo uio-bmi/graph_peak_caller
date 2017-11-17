@@ -28,6 +28,7 @@ class ScoredPeak(object):
             node_scores = cls._from_valued_indexes(
                 valued_indexes, 0, valued_indexes.length)
             scores[node_id] = node_scores
+            scores[-node_id] = node_scores
 
         for node_id, start in peak.starts.items():
             valued_indexes = pileup.data[abs(node_id)]
