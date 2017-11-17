@@ -187,7 +187,16 @@ class HolesCleaner(Cleaner):
         length = self.get_length(node_list)
         if length > self.threshold:
             return False
-        if extensions and len(extensions) == len(self.cur_adj_list[node_list[-1]]):
+
+        if (len(self.cur_adj_list[node_list[-1]])) == 0:
+            if self._is_region_path_covered(node_list[-1]):
+                return False
+            if node_list[-1] in self.starts_dict:
+                self.save(node_list)
+                return True
+            return False
+
+        if len(extensions) and (len(extensions) == len(self.cur_adj_list[node_list[-1]])):
             return True
         self.save(node_list)
         return True
