@@ -48,7 +48,7 @@ class ScoredPeak(object):
         return cls(peak, scores)
 
     def __str__(self):
-        return "\n".join("%s: (%s, %s)" % (node_id, vi.sum(), vi.length) for
+        return "\n".join("%s: (%s, %s, %s)" % (node_id, vi.sum(), vi.length, vi.sum()/vi.length) for
                          node_id, vi in self._scores.items())
 
     __repr__ = __str__

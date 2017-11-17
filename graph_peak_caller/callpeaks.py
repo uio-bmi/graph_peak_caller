@@ -8,7 +8,7 @@ from graph_peak_caller import get_shift_size_on_offset_based_graph
 from .sparsepileup import SparseControlSample, SparsePileup
 from .bdgcmp import *
 from .extender import Extender
-from .areas import ValuedAreas, BinaryContinousAreas
+from .areas import ValuedAreas, BinaryContinousAreas, BCACollection
 from .peakscores import ScoredPeak
 from .peakcollection import PeakCollection
 from . import linearsnarls
@@ -100,8 +100,10 @@ class CallPeaksFromQvalues(object):
             self.out_file_base_name + "peaks_as_subgraphs.pickle")
 
         logging.info("Finding max path through subgraphs")
-        binary_peaks = (BinaryContinousAreas.from_old_areas(peak) for peak in
-                        peaks_as_subgraphs)
+        binary_peaks = [BinaryContinousAreas.from_old_areas(peak) for peak in
+                        peaks_as_subgraphs]
+        BCACollection(binary_peaks).to_file(
+            self.out_file_base_name + "bcapeaks.subgraphs")
         scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, self.q_values)
                         for peak in binary_peaks)
         max_paths = []
@@ -198,7 +200,7 @@ class CallPeaks(object):
         self.create_control(True)
         self.scale_tracks()
         self.get_score()
-        self.call_peaks(out_file)
+        self.call_peaks()
 
     def preprocess(self):
         self.info.n_control_reads = 0
@@ -355,8 +357,9 @@ class CallPeaks(object):
 
 class CallPeaksWRawReads(CallPeaks):
     def __handle_sample_read(self, sample_read):
-        extended_area = self.__extender.extend_interval(interval)
-        raw_area = Areas.from_interval(sample_read)
+        extended_area = self.__extender.extend_interval(sample_read)
+        raw_area = BinaryContinousAreas(self.graph)
+        raw_area.filled_interval(sample_read)
         self.__valued_areas.add_binary_areas(extended_area)
         self.__raw_valued_areas.add_binary_areas(raw_area)
 
@@ -364,23 +367,24 @@ class CallPeaksWRawReads(CallPeaks):
         logging.debug("In sample pileup")
         if self.verbose:
             print("Create sample pileup")
-        alignments = self.sample_intervals
         logging.debug(self.sample_intervals)
-        extender = Extender(self.ob_graph, self.info.fragment_length)
+        self.__extender = Extender(self.ob_graph, self.info.fragment_length)
         self.__valued_areas = ValuedAreas(self.ob_graph)
         self.__raw_valued_areas = ValuedAreas(self.ob_graph)
+        for read in self.sample_intervals:
+            self.__handle_sample_read(read)
 
-        areas_list = (extender.extend_interval(interval)
-                      for interval in alignments)
-        for area in areas_list:
-            valued_areas.add_binary_areas(area)
         pileup = SparsePileup.from_valued_areas(
-            self.ob_graph, valued_areas)
+            self.ob_graph, self.__valued_areas)
+        self.raw_pileup = SparsePileup.from_valued_areas(
+            self.ob_graph, self.__raw_valued_areas)
+
         self._sample_track = self.out_file_base_name + "sample_track.bdg"
         if save_to_file:
             pileup.to_bed_graph(self._sample_track)
+            self.raw_pileup.to_bed_graph(
+                self.out_file_base_name + "raw_track.bdg")
             print("Saved sample pileup to " + self._sample_track)
-
         self._sample_pileup = pileup
 
 

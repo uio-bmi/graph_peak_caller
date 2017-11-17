@@ -64,7 +64,7 @@ def run_with_intervals(sample_intervals, control_intervals):
 
     linear_map = "haplo1kg50-mhc.lm"
     experiment_info = callpeaks.ExperimentInfo(graph_size, 135, 36)
-    caller = callpeaks.CallPeaks(
+    caller = callpeaks.CallPeaksWRawReads(
         ob_graph, sample_intervals, control_intervals,
         experiment_info=experiment_info,
         out_file_base_name="real_data_", has_control=True,
@@ -161,13 +161,9 @@ def create_ob_graph_from_vg(vg_json_graph_file_name, ob_graph_file_name="graph.o
 
 if __name__ == "__main__":
     dm_folder = "../graph_peak_caller/dm_test_data/"
-    get_sequences("laststepmax_paths.intervalcollection")
-    exit()
     # ob_graph = obg.GraphWithReversals.from_file("obgraph")
     # create_linear_map(ob_graph)
-    run_from_max_paths_step("obgraph", "real_data_q_values.bdg")
-    exit()
-    create_ob_graph_from_vg("haplo1kg50-mhc.json")
+    # create_ob_graph_from_vg("haplo1kg50-mhc.json")
     ob_graph = obg.GraphWithReversals.from_file("graph.obg")
     #create_linear_map(ob_graph)
     #run_from_max_paths_step("obgraph", "pre_postprocess.bed", 36)
