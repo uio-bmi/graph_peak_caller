@@ -172,7 +172,6 @@ class ScoredPeak(object):
             global_max_path, graph=self._graph)
 
         score = max_score_in_peak  # global_max / max_path_peak.length()
-        print("#", score)
         # score = global_max / max_path_peak.length()
         max_path_peak.set_score(score)
         return max_path_peak
