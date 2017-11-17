@@ -271,12 +271,15 @@ class SparsePileup(Pileup):
     def fill_small_wholes(self, max_size):
         cleaner = HolesCleaner(self, max_size)
         areas = cleaner.run()
+        n_filled = 0
         for node_id in areas.areas:
             starts = areas.get_starts(node_id)
             ends = areas.get_ends(node_id)
             for start, end in zip(starts, ends):
                 self.data[node_id].set_interval_value(start, end, True)
-                print("Filling hole %s, %d, %d" % (node_id, start, end))
+                logging.debug("Filling hole %s, %d, %d" % (node_id, start, end))
+                n_filled += 1
+        logging.info("Filled %d small holes (splitted into holes per node)" % n_filled)
         self.sanitize()
 
     def sanitize(self):

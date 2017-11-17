@@ -511,7 +511,7 @@ class MACSTests(object):
         if self.with_control:
             command += " --slocal=1000 -c lin_intervals_control.bed"
 
-        print(command)
+        print("Macs command used: %s" % command)
         command = command.split()
         output = subprocess.check_output(command, stderr=subprocess.STDOUT)
         output = output.decode("utf-8")
@@ -541,7 +541,11 @@ class MACSTests(object):
         self._run_whole_macs()
         # self.caller.create_graph()
         self.caller.sample_intervals = self.graph_intervals
-        self.caller.control_intervals = self.graph_intervals_control
+        if self.with_control:
+            self.caller.control_intervals = self.graph_intervals_control
+        else:
+            self.caller.control_intervals = self.graph_intervals
+
         self.caller.preprocess()
         self.caller.create_sample_pileup(True)
         print("#", self.caller.info.n_control_reads)

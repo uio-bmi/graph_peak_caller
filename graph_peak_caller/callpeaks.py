@@ -122,7 +122,7 @@ class CallPeaksFromQvalues(object):
 
         self.peaks_as_subgraphs = peaks_as_subgraphs
         self.max_paths = max_paths
-        print("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
+        logging.info("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
 
         self.filtered_peaks.to_bed_file(self.out_file_base_name + "final_peaks.bed")
         logging.info("Wrote final filtered peaks to %s" % self.out_file_base_name + "final_peaks.bed")
@@ -163,6 +163,11 @@ class CallPeaks(object):
                or isinstance(control_intervals, str), \
                 "control_intervals must be either interval collection or a file name"
 
+        if not has_control:
+            logging.info("Running without control")
+        else:
+            logging.info("Running with control")
+
         self.graph = graph
 
         self.sample_intervals = sample_intervals
@@ -197,7 +202,7 @@ class CallPeaks(object):
         self.create_control(True)
         self.scale_tracks()
         self.get_score()
-        self.call_peaks(out_file)
+        self.call_peaks()
 
     def preprocess(self):
         self.info.n_control_reads = 0

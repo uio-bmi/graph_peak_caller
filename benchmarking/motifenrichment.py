@@ -76,10 +76,10 @@ def plot_true_positives(peak_file_sets, meme_file_name):
 
 if __name__ == "__main__":
 
-    # collection = NonGraphPeakCollection.from_bed_file("../tests/CTCF_peaks.narrowPeak")
-    # collection.filter_peaks_outside_region("chr6", 28510119, 33480577)
-    # collection.set_peak_sequences()
-    # collection.save_to_sorted_fasta("CTCF_filtered.fasta")
+    #collection = NonGraphPeakCollection.from_bed_file("../tests/without_control_peaks.narrowPeak")
+    #collection.filter_peaks_outside_region("chr6", 28510119, 33480577)
+    #collection.set_peak_sequences()
+    #collection.save_to_sorted_fasta("macs_without_control.fasta")
     #import sys
     #sys.exit()
     #matcher = MotifMatcher("../tests/real_data_sequences.fasta", "MA0139.1.meme")
@@ -89,10 +89,14 @@ if __name__ == "__main__":
     #sys.exit()
     plot_true_positives(
         {
-            "graph peaks2": "../tests/tmp_sequences",
-            # "graph peaks on macs path": "../tests/real_data_sequences_only_macs_path.fasta",
-            # "macs reads remapped": "../tests/real_data_sequences_macs_remapped.fasta",
-            "macs": "CTCFpFix.fasta",
+            #"graph peaks2": "../tests/tmp_sequences",
+            "graph peaks on macs path": "../tests/real_data_sequences_only_macs_path.fasta",
+            "macs reads remapped": "../tests/real_data_sequences_macs_remapped.fasta",
+            #"macs": "CTCFpFix.fasta",
+            "macs without control": "macs_without_control.fasta",
+            "macs with control": "CTCF_filtered.fasta",
+            "graph with control": "../tests/ctcf_q50_sequences.fasta",
+            "graph without control": "../tests/ctcf_q50_without_control_sequences.fasta"
             #"graph_peaks_bugfix": "../tests/real_data_sequences_after_bugfix"
             #"macs": "../tests/CTCF_peaks.narrowPeak"
             #"macs": "CTCFpFix.fasta"
