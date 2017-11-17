@@ -77,8 +77,8 @@ class PeaksComparer(object):
 
     def check_similarity(self):
         i = 1
-        for peak_datasets in [(self.peaks1, self.peaks2)]:#,
-                              # (self.peaks2, self.peaks1)]:
+        for peak_datasets in [(self.peaks1, self.peaks2),
+                              (self.peaks2, self.peaks1)]:
             n_identical = 0
             tot_n_similar = 0
             n_similar = 0
@@ -87,19 +87,20 @@ class PeaksComparer(object):
             peaks1, peaks2 = peak_datasets
             print("Number of peaks in main set: %d" % len(peaks1.intervals))
             not_matching = []
-
-            for peak in sorted(peaks1, key=lambda x: x.score):
+            counter = 0
+            for peak in sorted(peaks1, key=lambda x: x.score, reverse=True)[0:50]:
+                counter += 1
                 if peaks2.contains_interval(peak):
-                    print(peak.score, "\t", 1)
+                    print(counter, peak.score, "\t", 1, peak.start_position)
                     n_identical += 1
 
                 similar_intervals = peaks2.get_overlapping_intervals(peak, 50)
                 if len(similar_intervals) > 0:
                     n_similar += 1
                     tot_n_similar += len(similar_intervals)
-                    print(peak.score)
+                    print(counter, peak.score, peak.start_position)
                     for j in similar_intervals:
-                        print("\t", j.score)
+                        print("\t", j.score, j.start_position)
                 else:
                     not_matching.append(peak)
                     print(peak, "\t", 0)

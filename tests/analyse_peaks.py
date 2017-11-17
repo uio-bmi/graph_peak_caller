@@ -31,7 +31,8 @@ def create_linear_peaks_from_bed(linear_sequence_fasta_file, peaks_bed_file,
         ob_graph, search_sequence, sequence_retriever)
     traverser.search_from_node(start_node)
     linear_path_interval = traverser.get_interval_found()
-    IntervalCollection([linear_path_interval]).to_file("linear_path.intervalcollection", text_file=True)
+    IntervalCollection([linear_path_interval]).to_file("linear_path.intervalcollection",
+                                                       text_file=True)
     print("Length")
     print(linear_path_interval.length())
     print(linear_path_interval.region_paths[0])
@@ -144,7 +145,7 @@ def find_missing_graph_peaks():
     path = create_linear_path(ob_graph, vg_graph)
     comparer = PeaksComparer.create_from_graph_peaks_and_linear_peaks(
         "ctcf05_peaks.narrowPeak",
-        "real_data_max_paths",
+        "laststepmax_paths.intervalcollection",
         ob_graph,
         path,
         MHC_REGION)
@@ -183,6 +184,7 @@ def find_missing_graph_peaks():
 
 if __name__ == "__main__":
     find_missing_graph_peaks()
+    exit()
     ob_graph = obg.GraphWithReversals.from_file("graph.obg")
     vg_graph = pyvg.vg.Graph.create_from_file("haplo1kg50-mhc.json")
     get_linear_paths_in_graph(ob_graph, vg_graph, "linear_maps")

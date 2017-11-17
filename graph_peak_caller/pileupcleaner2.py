@@ -74,7 +74,6 @@ class Cleaner(object):
             if not should_extend:
                 continue
             node_lists.extend(self.extend_node_list(node_list))
-            # node_lists = new_list
 
     def handle_node_list(self, node_list, extensions):
         raise NotImplementedError
@@ -190,8 +189,6 @@ class HolesCleaner(Cleaner):
         if len(extensions) == len(self.cur_adj_list[node_list[-1]]):
             return True
         self.save(node_list)
-        #print("Node list")
-        #print(node_list)
         return True
 
     def get_areas(self, pileup):

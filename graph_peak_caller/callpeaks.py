@@ -107,7 +107,8 @@ class CallPeaksFromQvalues(object):
         max_paths = []
         for scored_peak in scored_peaks:
             max_paths.append(scored_peak.get_max_path())
-        logging.info("Number of peaks before small peaks are removed: %d" % len(max_paths))
+        logging.info("Number of peaks before small peaks are removed: %d" %
+                     len(max_paths))
         # Sort max pathse
         max_paths.sort(key=lambda p: p.score, reverse=True)
 
@@ -144,7 +145,7 @@ class CallPeaksFromQvalues(object):
 
 class CallPeaks(object):
     def __init__(self, graph, sample_intervals,
-                 control_intervals=None, experiment_info=None, \
+                 control_intervals=None, experiment_info=None,
                  verbose=False, out_file_base_name="", has_control=True,
                  linear_map=None):
         """
@@ -350,6 +351,37 @@ class CallPeaks(object):
 
     def _write_vg_alignments_as_intervals_to_bed_file(self):
         pass
+
+
+class CallPeaksWRawReads(CallPeaks):
+    def __handle_sample_read(self, sample_read):
+        extended_area = self.__extender.extend_interval(interval)
+        raw_area = Areas.from_interval(sample_read)
+        self.__valued_areas.add_binary_areas(extended_area)
+        self.__raw_valued_areas.add_binary_areas(raw_area)
+
+    def create_sample_pileup(self, save_to_file=True):
+        logging.debug("In sample pileup")
+        if self.verbose:
+            print("Create sample pileup")
+        alignments = self.sample_intervals
+        logging.debug(self.sample_intervals)
+        extender = Extender(self.ob_graph, self.info.fragment_length)
+        self.__valued_areas = ValuedAreas(self.ob_graph)
+        self.__raw_valued_areas = ValuedAreas(self.ob_graph)
+
+        areas_list = (extender.extend_interval(interval)
+                      for interval in alignments)
+        for area in areas_list:
+            valued_areas.add_binary_areas(area)
+        pileup = SparsePileup.from_valued_areas(
+            self.ob_graph, valued_areas)
+        self._sample_track = self.out_file_base_name + "sample_track.bdg"
+        if save_to_file:
+            pileup.to_bed_graph(self._sample_track)
+            print("Saved sample pileup to " + self._sample_track)
+
+        self._sample_pileup = pileup
 
 
 if __name__ == "__main__":

@@ -188,7 +188,8 @@ class Areas(object):
 
             for end in starts_and_ends[range(1, n_starts_ends, 2)]:
                 if self._is_end_position(node, end):
-                    positions.append(obg.Position(node, end-1))  # Correct to non-inclusive end, since this may be interpreted as a start
+                    positions.append(obg.Position(node, end-1))
+                    # Correct to non-inclusive end, since this may be interpreted as a start
 
         return positions
 
@@ -196,9 +197,14 @@ class Areas(object):
         return self.areas.keys()
 
     def to_file_line(self):
-        start_ends = ','.join([str(position) for position in self.get_start_and_end_positions()])
+        start_ends = ','.join([str(position) for position in
+                               self.get_start_and_end_positions()])
         nodes = ','.join([str(node) for node in self.get_all_included_nodes()])
         return "%s\t%s\n" % (start_ends, nodes)
+
+    @classmethod
+    def from_file_line(cls, line):
+        pass
 
 
 class AreasBuilder(object):
