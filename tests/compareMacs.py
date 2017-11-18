@@ -170,12 +170,14 @@ class MACSTests(object):
         start_rp = (lin_interval.end-1) // self.node_size + 1
         end_rp = (lin_interval.start) // self.node_size + 1
         rps = list(range(start_rp*-1, end_rp*-1+1))
-        return DirectedInterval(start_offset, end_offset, rps,
+        interval = DirectedInterval(start_offset, end_offset, rps,
                                 graph=self.graph)
+        print(interval)
 
     def linear_to_graph_interval(self, lin_interval):
         if lin_interval.direction == -1:
             return self.neg_linear_to_graph_interval(lin_interval)
+
         start = lin_interval.start
         end = lin_interval.end
         start_rp = start//self.node_size+1
@@ -421,32 +423,6 @@ class MACSTests(object):
             print("Creating read %d" % i)
             point = random.randint(0, self.genome_size)
             reads.extend(self.create_pairs_around_point(point, n=50))
-            continue
-            direction = random.choice((-1, 1))
-            if direction == -1:
-                start = random.randint(self.fragment_length-self.read_length,
-                                       self.genome_size-self.read_length)
-            else:
-                start = random.randint(0, self.genome_size-self.read_length-self.fragment_length)
-            end = start+self.read_length
-            interval = SimpleInterval(start, end, direction)
-            reads.append(interval)
-
-            # Add duplicate
-            if start % 50 == 0:
-                reads.append(interval)
-
-            # Add pair
-            if include_pairs:
-                if direction == 1:
-                    start = start + self.fragment_length - self.read_length
-                else:
-                    start = end - self.fragment_length
-
-                end = start + self.read_length
-                direction = direction * -1
-                paired_interval = SimpleInterval(start, end, direction)
-                reads.append(paired_interval)
 
         return reads
 
