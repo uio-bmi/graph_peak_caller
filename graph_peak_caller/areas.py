@@ -2,6 +2,7 @@ from itertools import chain
 from collections import defaultdict
 import numpy as np
 import offsetbasedgraph as obg
+from .io import CollectionIO
 
 
 class Areas(object):
@@ -151,6 +152,33 @@ class BinaryContinousAreas(Areas):
 
         return binary_connected_areas
 
+    def to_file_line(self):
+        fulls = ",".join(str(node_id) for node_id in self.full_areas)
+        starts = ",".join("%s:%s" % (node_id, offset)
+                          for node_id, offset in self.starts.items())
+        internals = ",".join("%s:%s-%s" % (node_id, v[0], v[1])
+                             for node_id, v in self.internal_intervals.items())
+        return "(%s)\t(%s)\t(%s)\n" % (fulls, starts, internals)
+
+    @classmethod
+    def from_file_line(cls, line, graph):
+        obj = cls(graph)
+        fulls, starts, internals = [v[1:-1] for v in line.split()]
+        if fulls:
+            obj.full_areas = {int(full): 1 for full in fulls.split(",")}
+        if starts:
+            obj.starts = {int(p.split(":")[0]): int(p.split(":")[1]) for
+                          p in starts.split(",")}
+        if internals:
+            k, v = internals.split(":")
+            obj.internal_intervals = {int(k): [int(v.split("-")[0]),
+                                               int(v.split("-")[1])]}
+        return obj
+
+
+class BCACollection(CollectionIO):
+    _obj_type = BinaryContinousAreas
+
 
 class ValuedAreas(Areas):
     def __init__(self, graph):
@@ -205,4 +233,3 @@ class ValuedAreas(Areas):
         diff = np.diff(positions)
         changes = np.nonzero(diff)[0]
         unique_pos = position[changes]
-

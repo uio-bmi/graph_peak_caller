@@ -6,6 +6,7 @@ from collections import defaultdict
 from .pileup import Pileup
 from .pileupcleaner2 import PeaksCleaner, HolesCleaner
 from .subgraphcollection import SubgraphCollection
+from .eventsorter import DiscreteEventSorter
 
 import offsetbasedgraph as obg
 
@@ -543,8 +544,6 @@ class SparseControlSample(SparsePileup):
         sorted_p_values = sorted(p_value_counts.keys(), reverse=True)
         rank = 1
         logN = np.log10(sum(p_value_counts.values()))
-        print("######################",
-              sum(p_value_counts.values()))
         pre_q = None
         for p_value in sorted_p_values:
             value_count = p_value_counts[p_value]
@@ -648,6 +647,9 @@ def filter_pileup_duplicated_position(positions, values):
 
 
 def starts_and_ends_to_sparse_pileup(starts, ends):
+    return filter_pileup_duplicated_position(
+        *DiscreteEventSorter([ends, starts]).pileup())
+
     coded_starts = starts * 8 + 5
     coded_ends = ends * 8 + 3
 

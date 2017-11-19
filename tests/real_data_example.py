@@ -64,7 +64,7 @@ def run_with_intervals(sample_intervals, control_intervals, out_name, has_contro
 
     linear_map = "haplo1kg50-mhc.lm"
     experiment_info = callpeaks.ExperimentInfo(graph_size, 135, 36)
-    caller = callpeaks.CallPeaks(
+    caller = callpeaks.CallPeaksWRawReads(
         ob_graph, sample_intervals, control_intervals,
         experiment_info=experiment_info,
         out_file_base_name=out_name, has_control=has_control,
@@ -92,14 +92,15 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name, out_name="
     run_with_intervals(reads_intervals, control_intervals, out_name=out_name, has_control=has_control)
 
 
-def run_from_max_paths_step(graph_file_name, pileup_file_name):
-    """(211559:0),(211565:90)	211559,211560,211561,211562,211563,211564,211565,536238 """
+def run_from_max_paths_step(graph_file_name, pileup_file_name, raw_pileup_file_name):
     ob_graph = obg.GraphWithReversals.from_file("obgraph")
     graph_size = sum(block.length() for block in ob_graph.blocks.values())
     experiment_info = callpeaks.ExperimentInfo(graph_size, 135, 36)
     q_values = SparsePileup.from_bed_graph(ob_graph, pileup_file_name)
+    raw_pileup = SparsePileup.from_bed_graph(ob_graph, raw_pileup_file_name)
+
     fromqvalues = callpeaks.CallPeaksFromQvalues(
-        ob_graph, q_values, experiment_info, "laststep")
+        ob_graph, q_values, experiment_info, "laststep", raw_pileup=raw_pileup)
 
     fromqvalues.callpeaks()
 
@@ -166,21 +167,27 @@ def run_ctcf_example():
                  out_name="ctcf_q50_without_control_",
                   has_control=False)
 
+
+def run_ctcf_example_w_control():
+     run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
+                  "ENCFF001HNS_haplo1kg50-mhc_filtered_q50.gam",
+                  "haplo1kg50-mhc.json",
+                  out_name="ctcf_q50_with_control_",
+                  has_control=True)
+
 if __name__ == "__main__":
-    run_ctcf_example()
+    # run_ctcf_example_w_control()
+    run_from_max_paths_step("obgraph", "ctcf_q50_with_control_q_values.bdg",
+                            "ctcf_q50_with_control_raw_track.bdg")
     exit()
 
     dm_folder = "../graph_peak_caller/dm_test_data/"
-    get_sequences("laststepmax_paths.intervalcollection")
-    exit()
     # ob_graph = obg.GraphWithReversals.from_file("obgraph")
     # create_linear_map(ob_graph)
-    run_from_max_paths_step("obgraph", "real_data_q_values.bdg")
-    exit()
-    create_ob_graph_from_vg("haplo1kg50-mhc.json")
+    # create_ob_graph_from_vg("haplo1kg50-mhc.json")
     ob_graph = obg.GraphWithReversals.from_file("graph.obg")
     #create_linear_map(ob_graph)
-    #run_from_max_paths_step("obgraph", "pre_postprocess.bed", 36)
+    
     #cProfile.run('run_with_gam("ENCFF000WVQ_filtered.gam", "cactus-mhc.json")')
     #cProfile.run('run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")')
     #run_from_max_paths_step()

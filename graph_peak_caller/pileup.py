@@ -343,13 +343,10 @@ class Pileup(object):
         return interval_dict, end_interval_dict, whole_intervals
 
     def fill_small_wholes(self, max_size):
-        print("¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤")
         areas = self.find_valued_areas(False)
         intervals = self.areas_to_intervals(areas, True)
-        # print(intervals)
         intervals = [interval for interval in intervals if
                      interval.length() <= max_size]
-        print(intervals)
         for interval in intervals:
             self.set_interval_value(interval, True)
 

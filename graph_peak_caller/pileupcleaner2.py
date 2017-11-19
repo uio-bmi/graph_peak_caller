@@ -74,7 +74,6 @@ class Cleaner(object):
             if not should_extend:
                 continue
             node_lists.extend(self.extend_node_list(node_list))
-            # node_lists = new_list
 
     def handle_node_list(self, node_list, extensions):
         raise NotImplementedError

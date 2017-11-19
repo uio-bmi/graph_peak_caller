@@ -1,13 +1,13 @@
 import unittest
 import logging
 
-from collections import defaultdict
 from graph_peak_caller.extender import Extender, Areas
 from graph_peak_caller.areas import BinaryContinousAreas
 from offsetbasedgraph import Block, GraphWithReversals,\
     DirectedInterval, Position
-logging.getLogger("extender").setLevel("DEBUG")
 from cyclic_graph import get_small_cyclic_graph, get_large_cyclic_graph
+logging.getLogger("extender").setLevel("DEBUG")
+
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -43,12 +43,6 @@ class TestExtender(unittest.TestCase):
         true_areas.add_start(2, 18)
         true_areas.add_start(3, 2)
         true_areas.add_start(-1, 2)
-#         true_areas = Areas(graph, {2: [0, 18],
-#                                    3: [0, 2],
-#                                    1: [18, 20]})
-#
-        print(areas)
-        print(true_areas)
         self.assertEqual(areas, true_areas)
 
     def test_extend_cyclic(self):
@@ -61,7 +55,6 @@ class TestExtender(unittest.TestCase):
         true_areas.add_start(-1, 30)
 
         self.assertEqual(areas, true_areas)
-        # Areas(graph, {1: [0, 10, 70, 100]}))
 
     def test_extend_large_cyclic(self):
         logging.debug("CYCLIC")
@@ -74,8 +67,6 @@ class TestExtender(unittest.TestCase):
         true_areas.add_start(-1, 10)
         true_areas.add_start(2, 20)
         self.assertEqual(areas, true_areas)
-                         #Areas(graph, {1: [0, 10, 90, 100],
-                         #                    2: [0, 20]}))
 
     def _test_areas_from_point_pos(self):
         traverser = self.extender.pos_traverser
@@ -144,7 +135,6 @@ class TestAreas(unittest.TestCase):
         areas.reverse_reversals()
         self.assertEqual(areas, Areas(graph, {2: [8, 18]}))
 
-    # def test_reverse_reversals2(self):
 
 if __name__ == "__main__":
     unittest.main()
