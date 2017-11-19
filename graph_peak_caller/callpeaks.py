@@ -199,6 +199,10 @@ class CallPeaks(object):
         self.cutoff = value
 
     def run(self, out_file="final_peaks.bed"):
+        self.run_pre_call_peaks_steps()
+        self.call_peaks()
+
+    def run_pre_callpeaks_steps(self):
         self.create_graph()
         self.preprocess()
         if self.info is None:
@@ -208,7 +212,6 @@ class CallPeaks(object):
         self.create_control(True)
         self.scale_tracks()
         self.get_score()
-        self.call_peaks()
 
     def preprocess(self):
         self.info.n_control_reads = 0
@@ -262,6 +265,7 @@ class CallPeaks(object):
         ratio = self.info.n_sample_reads/self.info.n_control_reads
 
         if self.info.n_sample_reads == self.info.n_control_reads:
+            logging.info("Not scaling any tracks because of same amount of reads")
             return
 
         if ratio > 1:
@@ -280,7 +284,6 @@ class CallPeaks(object):
                 self._control_pileup.to_bed_graph(self._control_track)
 
     def find_info(self):
-        genome_size = 0
         sizes = (block.length() for block in self.ob_graph.blocks.values())
 
         self.genome_size = sum(sizes)
@@ -300,11 +303,6 @@ class CallPeaks(object):
         extensions = [self.info.fragment_length, 1000, 10000] if self.has_control else [10000]
         control_pileup = linearsnarls.create_control(self.linear_map,  self.control_intervals,
                                                      extensions, self.info.fragment_length)
-
-        #control_track = ControlTrack(
-        #    self.ob_graph, self.control_intervals,
-        #    self.info.fragment_length, extensions)
-        #pileup = control_track.get_control_track(self._sample_pileup.mean())
 
         logging.info("Number of control reads: %d" % self.info.n_control_reads)
 
