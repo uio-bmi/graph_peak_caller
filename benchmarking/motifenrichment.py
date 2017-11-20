@@ -91,7 +91,8 @@ if __name__ == "__main__":
         {
             #"graph peaks2": "../tests/tmp_sequences",
             # "graph peaks on macs path": "../tests/real_data_sequences_only_macs_path.fasta",
-            "my_peaks": "../tests/ctcf_q50_with_control_sequences.fasta",
+            # "my_peaks": "../tests/ctcf_q50_with_control_sequences.fasta",
+            "my_peaks": "../tests/tmp_sequences",
             # "macs reads remapped": "../tests/real_data_sequences_macs_remapped.fasta",
             #"macs": "CTCFpFix.fasta",
             # "macs without control": "macs_without_control.fasta",

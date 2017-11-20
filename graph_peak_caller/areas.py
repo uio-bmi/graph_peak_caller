@@ -37,12 +37,15 @@ class BinaryContinousAreas(Areas):
         self.full_areas[abs(node_id)] = 1
 
     def add_start(self, node_id, idx):
+        assert idx > 0
         self.starts[node_id] = max(idx, self.starts[node_id])
 
     def add_internal(self, node_id, start, end):
+        assert start != end
         self.internal_intervals[node_id] = [start, end]
 
     def add(self, node_id, start, end):
+        assert start != end
         node_size = self.graph.node_size(node_id)
         if start == 0 and end == node_size:
             self.add_full(node_id)
@@ -111,8 +114,6 @@ class BinaryContinousAreas(Areas):
         self.add_start(interval.end_position.region_path_id, end)
         for region_path in interval.region_paths[1:-1]:
             self.add_full(abs(region_path))
-            # self.areas[region_path] = [0, self.graph.node_size(region_path)]
-
         return pos_remain, neg_remain
 
     def get_start_positions(self):
@@ -211,25 +212,3 @@ class ValuedAreas(Areas):
         ends.extend([node_size]*(
             len(self.starts[-node_id])+self.full_areas[node_id]))
         return np.array(ends, dtype="int")
-
-    def to_valued_indexes(self, node_id):
-        node_size = self.graph.node_size(node_id)
-        start_value = self.full_areas[node_id] + len(self.starts[node_id])
-        n_starts = len(self.starts[node_id])
-        n_internal = len(self.internal_starts)
-        n_ends = len(self.starts[-node_id])
-        n_indexes = n_starts + 2*n_internal + n_ends
-
-        indexes = np.empty(n_indexes, dtype="int", )
-        indexes[:n_starts] = np.array(self.starts)*2+1
-        indexes[n_starts:n_starts+n_internal] = np.array(self.internal_starts)*2+1
-        indexes[n_starts+n_internal:n_starts+2*n_internal] = np.array(self.internal_ends)*2
-        indexes[-n_ends-1:-1] = (node_size - np.array(self.starts[-node_id]))*2 + 1
-        indexes[-1] = -10000000
-        indexes.sort()
-        codes = indexes % 2
-        values = np.cumsum(codes)
-        positions = indexes // 2
-        diff = np.diff(positions)
-        changes = np.nonzero(diff)[0]
-        unique_pos = position[changes]

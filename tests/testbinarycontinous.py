@@ -4,7 +4,7 @@ from graph_peak_caller.areas import BinaryContinousAreas, BCACollection
 import offsetbasedgraph as obg
 
 nodes = {i: obg.Block(10) for i in range(1, 10)}
-graph = obg.GraphWithReversals(nodes, {})
+graph = obg.GraphWithReversals(nodes, {i: [i+1] for i in range(1, 9)})
 
 
 class TestBinaryContinousAreas(unittest.TestCase):
@@ -23,6 +23,26 @@ class TestBinaryContinousAreas(unittest.TestCase):
         c = BCACollection([self.areas, self.areas])
         c.to_file("tmp.subgraphs")
         BCACollection.from_file("tmp.subgraphs", graph)
+
+    def test_filled_interval(self):
+        interval = obg.DirectedInterval(4, 4, [2, 3, 4])
+        areas = BinaryContinousAreas(graph)
+        areas.filled_interval(interval)
+        areas.sanitize()
+        true_areas = BinaryContinousAreas(graph)
+        true_areas.full_areas = {3: 1}
+        true_areas.starts = {-2: 6, 4: 4}
+        self.assertEqual(areas, true_areas)
+
+    def test_internal_filled_interval(self):
+        interval = obg.DirectedInterval(2, 8, [3])
+        areas = BinaryContinousAreas(graph)
+        areas.filled_interval(interval)
+        areas.sanitize()
+        true_areas = BinaryContinousAreas(graph)
+        true_areas.internal_intervals = {3: [2, 8]}
+        self.assertEqual(areas, true_areas)
+
 
 if __name__ == "__main__":
     unittest.main()

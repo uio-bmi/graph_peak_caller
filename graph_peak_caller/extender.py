@@ -258,7 +258,7 @@ class AreasBuilder(object):
 
         for region_path in interval.region_paths[1:-1]:
             self.areas[region_path] = [0, self.graph.node_size(region_path)]
-        
+
         return pos_remain, neg_remain
 
 
@@ -275,16 +275,12 @@ class Extender(object):
             traverser.extend_from_block(next_node, length, visited)
 
         for node_id, l in visited.items():
+            if l == 0:
+                continue
             if l >= self.graph.node_size(node_id):
                 self.area_builder.add_full(node_id)
             else:
                 self.area_builder.add_start(node_id, l)
-
-        # visited = {node_id: min(self.graph.node_size(node_id), l)
-        #            for node_id, l in visited.items()}
-        # logging.debug(visited)
-        # self.area_builder.update(
-        #      {node_id: [0, l] for node_id, l in visited.items()})
 
     def extend_interval(self, interval, direction=1):
         self.area_builder = BinaryContinousAreas(self.graph)

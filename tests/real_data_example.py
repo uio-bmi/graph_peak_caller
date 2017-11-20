@@ -76,7 +76,9 @@ def run_with_intervals(sample_intervals, control_intervals, out_name, has_contro
     caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
 
 
-def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name, out_name="real_data_", has_control=True,
+def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
+                 out_name="real_data_",
+                 has_control=True,
                  limit_to_chromosomes=False):
     logging.basicConfig(level=logging.INFO)
     logging.info("Running from gam files")
@@ -103,7 +105,8 @@ def run_from_max_paths_step(graph_file_name, pileup_file_name, raw_pileup_file_n
         ob_graph, q_values, experiment_info, "laststep", raw_pileup=raw_pileup)
 
     fromqvalues.callpeaks()
-
+    retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
+    caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
     # fragment_length = 135
     # graph = obg.Graph.from_file(graph_file_name)
     # peaks = SparsePileup.from_bed_file(graph, pileup_file_name)
@@ -176,9 +179,11 @@ def run_ctcf_example_w_control():
                   has_control=True)
 
 if __name__ == "__main__":
-    # run_ctcf_example_w_control()
-    run_from_max_paths_step("obgraph", "ctcf_q50_with_control_q_values.bdg",
-                            "ctcf_q50_with_control_raw_track.bdg")
+    # get_sequences("laststepmax_paths.intervalcollection")
+    run_ctcf_example_w_control()
+    exit()
+    # run_from_max_paths_step("obgraph", "ctcf_q50_with_control_q_values.bdg",
+    # "ctcf_q50_with_control_raw_track.bdg")
     exit()
 
     dm_folder = "../graph_peak_caller/dm_test_data/"
