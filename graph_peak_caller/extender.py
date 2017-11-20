@@ -188,7 +188,8 @@ class Areas(object):
 
             for end in starts_and_ends[range(1, n_starts_ends, 2)]:
                 if self._is_end_position(node, end):
-                    positions.append(obg.Position(node, end-1))  # Correct to non-inclusive end, since this may be interpreted as a start
+                    positions.append(obg.Position(node, end-1))
+                    # Correct to non-inclusive end, since this may be interpreted as a start
 
         return positions
 
@@ -196,9 +197,14 @@ class Areas(object):
         return self.areas.keys()
 
     def to_file_line(self):
-        start_ends = ','.join([str(position) for position in self.get_start_and_end_positions()])
+        start_ends = ','.join([str(position) for position in
+                               self.get_start_and_end_positions()])
         nodes = ','.join([str(node) for node in self.get_all_included_nodes()])
         return "%s\t%s\n" % (start_ends, nodes)
+
+    @classmethod
+    def from_file_line(cls, line):
+        pass
 
 
 class AreasBuilder(object):
@@ -252,7 +258,7 @@ class AreasBuilder(object):
 
         for region_path in interval.region_paths[1:-1]:
             self.areas[region_path] = [0, self.graph.node_size(region_path)]
-        
+
         return pos_remain, neg_remain
 
 
@@ -269,16 +275,12 @@ class Extender(object):
             traverser.extend_from_block(next_node, length, visited)
 
         for node_id, l in visited.items():
+            if l == 0:
+                continue
             if l >= self.graph.node_size(node_id):
                 self.area_builder.add_full(node_id)
             else:
                 self.area_builder.add_start(node_id, l)
-
-        # visited = {node_id: min(self.graph.node_size(node_id), l)
-        #            for node_id, l in visited.items()}
-        # logging.debug(visited)
-        # self.area_builder.update(
-        #      {node_id: [0, l] for node_id, l in visited.items()})
 
     def extend_interval(self, interval, direction=1):
         self.area_builder = BinaryContinousAreas(self.graph)

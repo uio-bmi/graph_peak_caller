@@ -6,6 +6,7 @@ from collections import defaultdict
 from .pileup import Pileup
 from .pileupcleaner2 import PeaksCleaner, HolesCleaner
 from .subgraphcollection import SubgraphCollection
+from .eventsorter import DiscreteEventSorter
 
 import offsetbasedgraph as obg
 
@@ -646,6 +647,16 @@ def filter_pileup_duplicated_position(positions, values):
 
 
 def starts_and_ends_to_sparse_pileup(starts, ends):
+    indices, values = filter_pileup_duplicated_position(
+        *DiscreteEventSorter([ends, starts]).pileup())
+    twins = np.where(np.diff(values) == 0)
+    if not np.all(values[twins]):
+        print(starts)
+        print(ends)
+        print(indices)
+        print(values)
+        print("----------")
+    return indices, values
     coded_starts = starts * 8 + 5
     coded_ends = ends * 8 + 3
 

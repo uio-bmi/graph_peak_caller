@@ -8,7 +8,7 @@ from graph_peak_caller import get_shift_size_on_offset_based_graph
 from .sparsepileup import SparseControlSample, SparsePileup
 from .bdgcmp import *
 from .extender import Extender
-from .areas import ValuedAreas, BinaryContinousAreas
+from .areas import ValuedAreas, BinaryContinousAreas, BCACollection
 from .peakscores import ScoredPeak
 from .peakcollection import PeakCollection
 from . import linearsnarls
@@ -69,63 +69,60 @@ class ExperimentInfo(object):
 
 class CallPeaksFromQvalues(object):
     def __init__(self, graph, q_values_sparse_pileup,
-                 experiment_info, out_file_base_name="", cutoff=0.1):
+                 experiment_info, out_file_base_name="",
+                 cutoff=0.1, raw_pileup=None):
         self.graph = graph
         self.q_values = q_values_sparse_pileup
         self.info = experiment_info
         self.out_file_base_name = out_file_base_name
         self.cutoff = cutoff
+        self.raw_pileup = raw_pileup
 
-    def callpeaks(self):
-        logging.info("Calling peaks")
+    def __threshold(self):
         threshold = -np.log10(self.cutoff)
         logging.info("Thresholding peaks on q value %.4f" % threshold)
         self.pre_processed_peaks = self.q_values.threshold_copy(threshold)
         self.pre_processed_peaks.to_bed_file(
                 self.out_file_base_name + "pre_postprocess.bed")
+
+    def __postprocess(self):
         logging.info("Filling small Holes")
         self.pre_processed_peaks.fill_small_wholes(self.info.read_length)
         logging.info("Removing small peaks")
         self.filtered_peaks = self.pre_processed_peaks.remove_small_peaks(
             self.info.fragment_length)
 
+    def __get_max_paths(self):
+        _pileup = self.raw_pileup if self.raw_pileup is not None else self.q_values
+        scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, _pileup)
+                        for peak in self.binary_peaks)
+        max_paths = [peak.get_max_path() for peak in scored_peaks]
+        max_paths.sort(key=lambda p: p.score, reverse=True)
+        PeakCollection(max_paths).to_file(
+            self.out_file_base_name + "max_paths.intervalcollection",
+            text_file=True)
+
+        self.max_paths = max_paths
+
+    def __get_subgraphs(self):
         logging.info("Creating subgraphs from peak regions")
         peaks_as_subgraphs = self.filtered_peaks.to_subgraphs()
-
         logging.info("Found %d subgraphs" % len(peaks_as_subgraphs.subgraphs))
-        peaks_as_subgraphs.to_file(
-            self.out_file_base_name + "peaks.subgraphs")
-
-        peaks_as_subgraphs.to_pickle(
-            self.out_file_base_name + "peaks_as_subgraphs.pickle")
-
+        binary_peaks = [BinaryContinousAreas.from_old_areas(peak) for peak in
+                        peaks_as_subgraphs]
         logging.info("Finding max path through subgraphs")
-        binary_peaks = (BinaryContinousAreas.from_old_areas(peak) for peak in
-                        peaks_as_subgraphs)
-        scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, self.q_values)
-                        for peak in binary_peaks)
-        max_paths = []
-        for scored_peak in scored_peaks:
-            max_paths.append(scored_peak.get_max_path())
-        logging.info("Number of peaks before small peaks are removed: %d" % len(max_paths))
-        # Sort max pathse
-        max_paths.sort(key=lambda p: p.score, reverse=True)
+        BCACollection(binary_peaks).to_file(
+            self.out_file_base_name + "bcapeaks.subgraphs")
+        self.binary_peaks = binary_peaks
 
-        # Filter on length
-        max_paths = [path for path in max_paths if
-                     path.length() >= self.info.fragment_length]
-
-        logging.info("Number of peaks after small peaks are removed: %d" % len(max_paths))
-
-        PeakCollection(max_paths).to_file(
-            self.out_file_base_name + "max_paths.intervalcollection", text_file=True)
-
-        self.peaks_as_subgraphs = peaks_as_subgraphs
-        self.max_paths = max_paths
-        logging.info("Number of subgraphs: %d" % len(peaks_as_subgraphs.subgraphs))
-
-        self.filtered_peaks.to_bed_file(self.out_file_base_name + "final_peaks.bed")
-        logging.info("Wrote final filtered peaks to %s" % self.out_file_base_name + "final_peaks.bed")
+    def callpeaks(self):
+        logging.info("Calling peaks")
+        self.__threshold()
+        self.__postprocess()
+        self.__get_subgraphs()
+        self.__get_max_paths()
+        self.filtered_peaks.to_bed_file(
+            self.out_file_base_name + "final_peaks.bed")
 
     def save_max_path_sequences_to_fasta_file(self, file_name, sequence_retriever):
         assert self.max_paths is not None, \
@@ -144,7 +141,7 @@ class CallPeaksFromQvalues(object):
 
 class CallPeaks(object):
     def __init__(self, graph, sample_intervals,
-                 control_intervals=None, experiment_info=None, \
+                 control_intervals=None, experiment_info=None,
                  verbose=False, out_file_base_name="", has_control=True,
                  linear_map=None, skip_filter_duplicates=False):
         """
@@ -200,7 +197,7 @@ class CallPeaks(object):
         self.run_pre_callpeaks_steps()
         self.call_peaks()
 
-    def run_pre_callpeaks_steps(self):
+    def run_pre_call_peaks_steps(self):
         self.create_graph()
         self.preprocess()
         if self.info is None:
@@ -329,7 +326,6 @@ class CallPeaks(object):
                                                    self.cutoff)
         self.q_value_peak_caller.callpeaks()
 
-
     def save_max_path_sequences_to_fasta_file(self, file_name, retriever):
         self.q_value_peak_caller.\
             save_max_path_sequences_to_fasta_file(file_name, retriever)
@@ -357,6 +353,44 @@ class CallPeaks(object):
 
     def _write_vg_alignments_as_intervals_to_bed_file(self):
         pass
+
+
+class CallPeaksWRawReads(CallPeaks):
+    def __handle_sample_read(self, sample_read):
+        extended_area = self.__extender.extend_interval(sample_read)
+        raw_area = BinaryContinousAreas(self.graph)
+        try:
+            raw_area.filled_interval(sample_read)
+        except:
+            print(sample_read)
+            raise
+        raw_area.sanitize()
+        self.__valued_areas.add_binary_areas(extended_area)
+        self.__raw_valued_areas.add_binary_areas(raw_area)
+
+    def create_sample_pileup(self, save_to_file=True):
+        logging.debug("In sample pileup")
+        if self.verbose:
+            print("Create sample pileup")
+        logging.debug(self.sample_intervals)
+        self.__extender = Extender(self.ob_graph, self.info.fragment_length)
+        self.__valued_areas = ValuedAreas(self.ob_graph)
+        self.__raw_valued_areas = ValuedAreas(self.ob_graph)
+        for read in self.sample_intervals:
+            self.__handle_sample_read(read)
+
+        pileup = SparsePileup.from_valued_areas(
+            self.ob_graph, self.__valued_areas)
+        self.raw_pileup = SparsePileup.from_valued_areas(
+            self.ob_graph, self.__raw_valued_areas)
+
+        self._sample_track = self.out_file_base_name + "sample_track.bdg"
+        if save_to_file:
+            pileup.to_bed_graph(self._sample_track)
+            self.raw_pileup.to_bed_graph(
+                self.out_file_base_name + "raw_track.bdg")
+            print("Saved sample pileup to " + self._sample_track)
+        self._sample_pileup = pileup
 
 
 if __name__ == "__main__":
