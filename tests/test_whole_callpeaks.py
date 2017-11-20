@@ -42,8 +42,8 @@ class TestWholeCallPeaks(unittest.TestCase):
 
     def run_callpeaks(self):
         self._create_reads()
-        for read in self.sample_reads:
-            print(read)
+        #for read in self.sample_reads:
+        #    print(read)
 
         control_reads = self.sample_reads.copy()
 
@@ -55,7 +55,7 @@ class TestWholeCallPeaks(unittest.TestCase):
     def run_test(self):
         for peak in self.peaks:
             assert peak.length() == self.fragment_length
-            print(peak.length())
+
         self.run_callpeaks()
         self.assert_final_peaks_equals_input_peaks()
 
@@ -201,9 +201,7 @@ class TestWholeCallPeaksHierarchical(TestWholeCallPeaks):
 
     def test_multiple_peaks(self):
         self.peaks = [
-            #DirectedInterval(2, 2, [1, 2, 7], self.graph),
-            #DirectedInterval(0, 3, [5, 6], self.graph),
-            DirectedInterval(0, 3, [3, 4], self.graph),
+            DirectedInterval(2, 2, [1, 3, 4], self.graph),
             DirectedInterval(2, 2, [6, 10, 12], self.graph),
         ]
         self.run_test()
