@@ -291,7 +291,6 @@ class SnarlGraphBuilder:
 
         for block in self.graph.get_first_blocks():
             self.graph._add_edge(new_start, block)
-            print("Adding new edge from %d to %d" % (new_start, block))
 
         for block in self.graph.get_last_blocks():
             self.graph._add_edge(block, new_end)

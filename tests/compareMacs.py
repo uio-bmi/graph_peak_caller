@@ -172,7 +172,7 @@ class MACSTests(object):
         rps = list(range(start_rp*-1, end_rp*-1+1))
         interval = DirectedInterval(start_offset, end_offset, rps,
                                 graph=self.graph)
-        print(interval)
+        return interval
 
     def linear_to_graph_interval(self, lin_interval):
         if lin_interval.direction == -1:
@@ -517,6 +517,7 @@ class MACSTests(object):
         self._run_whole_macs()
         # self.caller.create_graph()
         self.caller.sample_intervals = self.graph_intervals
+
         if self.with_control:
             self.caller.control_intervals = self.graph_intervals_control
         else:
@@ -560,6 +561,8 @@ if __name__ == "__main__":
     test = big_test(False)
     test.test_whole_pipeline()
     exit()
+
+
     test.test_sample_pileup()
     test.test_control_pileup()
     test.test_call_peaks()
