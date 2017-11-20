@@ -26,20 +26,24 @@ class TestSnarlMap(unittest.TestCase):
         self.graph_interval = obg.DirectedInterval(self.graph_positions[0],
                                                    self.graph_positions[2])
 
-    def _test_create_control(self):
+    def test_create_control(self):
         intervals = [obg.DirectedInterval(0, 20, [3]),
-                     obg.DirectedInterval(0, 20, [12]),
-                     obg.DirectedInterval(0, 20, [13])]
+                     obg.DirectedInterval(0, 10, [5]),
+                     obg.DirectedInterval(0, 21, [13])]
         mapped_intervals = self.snarl_map.map_interval_collection(
             intervals)
-        linear_pileup = []
-        graph_pileup = create_control_from_objs(self.snarl_map,
-                                                intervals,
-                                                [20], 20)
+        linear_pileup = LinearPileup.create_from_starts_and_ends(
+            mapped_intervals.starts,
+            mapped_intervals.ends)
+        valued_indexes = linear_pileup.to_valued_indexes(self.snarl_map)
+        graph_pileup = SparsePileup(graph)
+        graph_pileup.data = valued_indexes
         true_sparse_pileup = SparsePileup(graph)
-        true_sparse_pileup.data = {3: ValuedIndexes([], [], 1, 20),
-                                   12: ValuedIndexes([], [], 1, 20),
-                                   12: ValuedIndexes([21], [0], 1, 21)}
+        true_sparse_pileup.data = {3: ValuedIndexes([], [], 2, 20),
+                                   12: ValuedIndexes([], [], 2, 20),
+                                   13: ValuedIndexes([], [], 2, 21),
+                                   5: ValuedIndexes([], [], 2, 10)}
+        print(graph_pileup)
         self.assertEqual(graph_pileup, true_sparse_pileup)
 
     def test_graph_position_to_linear(self):

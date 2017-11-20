@@ -8,14 +8,12 @@ from .pileupcleaner2 import PeaksCleaner, HolesCleaner
 from .subgraphcollection import SubgraphCollection
 from .eventsorter import DiscreteEventSorter
 
-import offsetbasedgraph as obg
-
 
 class ValuedIndexes(object):
     def __init__(self, indexes, values, start_value, length):
 
         if isinstance(indexes, list):
-            indexes = np.array(indexes)
+            indexes = np.array(indexes, dtype="int")
 
         if isinstance(values, list):
             values = np.array(values)
@@ -35,6 +33,7 @@ class ValuedIndexes(object):
     def __eq__(self, other):
         if not np.allclose(self.values, other.values):
             return False
+
         if not np.allclose(self.indexes, other.indexes):
             return False
 
@@ -140,6 +139,15 @@ class ValuedIndexes(object):
         changes = np.where(diffs != 0)[0]
         self.values = self.values[changes]
         self.indexes = self.indexes[changes]
+
+    def sanitize_indices(self):
+        indexes = self.all_idxs()
+        values = self.all_values()
+        diffs = np.where(np.diff(indexes) > 0)[0]
+
+        self.indexes = indexes[diffs[1:]]
+        self.values = values[diffs[1:]]
+        self.start_value = values[diffs[0]]
 
     def all_values(self):
         return np.insert(self.values, 0, self.start_value)

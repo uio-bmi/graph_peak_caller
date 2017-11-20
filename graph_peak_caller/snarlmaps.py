@@ -55,7 +55,8 @@ class LinearSnarlMap(object):
                     print(unmapped_indices)
                     print(new_idxs)
                     raise
-
+            vi.sanitize_indices()
+            vi.sanitize()
             vi_dict[node_id] = vi
         return vi_dict
 
