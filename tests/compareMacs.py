@@ -98,7 +98,6 @@ class MACSTests(object):
         self.create_linear_graph()
         self.create_intervals()
         self.write_intervals()
-        # self.n_intervals_control = self.n_intervals
         self.info = ExperimentInfo(self.genome_size,
                                    self.fragment_length,
                                    self.read_length)
@@ -367,17 +366,13 @@ class MACSTests(object):
         adj_list = {i: [i+1] for i in range(1, self.n_nodes)}
         self.graph = GraphWithReversals(nodes, adj_list)
         self.graph.to_file("lin_graph.tmp")
-        snarlbuilder = SnarlGraphBuilder(self.graph,
-                                        snarls=
-                                        {
-                                            self.n_nodes+2:
-                                            SimpleSnarl(1, self.n_nodes, id=self.n_nodes+2)
-                                        },
-                                        id_counter=self.n_nodes + 3)
+        snarlbuilder = SnarlGraphBuilder(
+            self.graph,
+            snarls={
+                self.n_nodes+2:
+                SimpleSnarl(1, self.n_nodes, id=self.n_nodes+2)},
+            id_counter=self.n_nodes + 3)
         self.snarlgraph = snarlbuilder.build_snarl_graphs()
-
-
-
         self.linear_map = LinearSnarlMap(self.snarlgraph, self.graph)
         self.linear_map.to_file("linear_map.tmp")
 
@@ -557,8 +552,8 @@ def big_test(with_control=False):
 
 
 if __name__ == "__main__":
-    random.seed(102)
-    test = big_test(False)
+    random.seed(110)
+    test = big_test(True)
     test.test_whole_pipeline()
     exit()
 

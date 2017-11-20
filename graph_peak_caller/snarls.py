@@ -1,6 +1,5 @@
-from collections import deque, defaultdict
+from collections import deque
 import logging
-from filecache import filecache
 import pickle
 from offsetbasedgraph.graphtraverser import GraphTravserserBetweenNodes
 import offsetbasedgraph as obg
@@ -308,7 +307,6 @@ class SnarlGraphBuilder:
         return whole_graph_snarl
 
     @classmethod
-    #@filecache(24*60*60)
     def from_vg_snarls(cls, graph, vg_snarls_file_name):
         logging.info("Building snarlgraph from vg graph")
         snarls = Snarls.from_vg_snarls_file(vg_snarls_file_name).snarls
@@ -327,7 +325,8 @@ class SnarlGraphBuilder:
                 start = snarl.end.node_id
                 end = snarl.start.node_id
 
-            simple_snarls[id_counter] = SimpleSnarl(start, end, id=id_counter, parent=snarl.parent)
+            simple_snarls[id_counter] = SimpleSnarl(
+                start, end, id=id_counter, parent=snarl.parent)
 
             start_end_mapping["%d-%d" % (start, end)] = id_counter
             id_counter += 1
@@ -339,7 +338,8 @@ class SnarlGraphBuilder:
                 if parent.start.node_id == 0:
                     snarl.set_parent(None)
                 else:
-                    mapping_id = "%d-%d" % (parent.start.node_id, parent.end.node_id)
+                    mapping_id = "%d-%d" % (
+                        parent.start.node_id, parent.end.node_id)
                     if mapping_id in start_end_mapping:
                         parent_id = start_end_mapping[mapping_id]
                         parent = simple_snarls[parent_id]

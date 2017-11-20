@@ -6,7 +6,6 @@ import pyvg as vg
 import offsetbasedgraph
 from graph_peak_caller import get_shift_size_on_offset_based_graph
 from .sparsepileup import SparseControlSample, SparsePileup
-from .bdgcmp import *
 from .extender import Extender
 from .areas import ValuedAreas, BinaryContinousAreas, BCACollection
 from .peakscores import ScoredPeak
