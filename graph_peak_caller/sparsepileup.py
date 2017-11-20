@@ -33,16 +33,16 @@ class ValuedIndexes(object):
         self.__tmp_end = 0
 
     def __eq__(self, other):
-        if np.any(self.values != other.values):
+        if not np.allclose(self.values, other.values):
             return False
-        if np.any(self.indexes != other.indexes):
+        if not np.allclose(self.indexes, other.indexes):
             return False
 
         if isinstance(self.start_value, np.ndarray):
-            if np.any(self.start_value != other.start_value):
+            if not np.allclose(self.start_value, other.start_value):
                 return False
         else:
-            if self.start_value != other.start_value:
+            if not np.isclose(self.start_value, other.start_value):
                 return False
         return self.length == other.length
 

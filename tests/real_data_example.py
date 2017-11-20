@@ -167,7 +167,7 @@ def run_ctcf_example():
      run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
                  "ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
                  "haplo1kg50-mhc.json",
-                 out_name="hack_",
+                 out_name="ctcf_without_control_hack_",
                   has_control=False)
 
 
@@ -180,7 +180,7 @@ def run_ctcf_example_w_control():
 
 if __name__ == "__main__":
     # get_sequences("laststepmax_paths.intervalcollection")
-    run_ctcf_example_w_control()
+    run_ctcf_example()
     exit()
     # run_from_max_paths_step("obgraph", "ctcf_q50_with_control_q_values.bdg",
     # "ctcf_q50_with_control_raw_track.bdg")
