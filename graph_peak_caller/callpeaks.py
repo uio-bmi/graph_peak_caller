@@ -194,7 +194,7 @@ class CallPeaks(object):
         self.cutoff = value
 
     def run(self, out_file="final_peaks.bed"):
-        self.run_pre_callpeaks_steps()
+        self.run_pre_call_peaks_steps()
         self.call_peaks()
 
     def run_pre_call_peaks_steps(self):
