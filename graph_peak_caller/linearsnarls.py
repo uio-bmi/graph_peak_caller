@@ -7,11 +7,15 @@ from .snarlmaps import LinearSnarlMap
 import logging
 
 
-def create_control(linear_map_name, reads, extension_sizes, fragment_length):
+def create_control(linear_map_name, *args, **kwargs):
+    linear_map = LinearSnarlMap.from_file(linear_map_name)
+    create_control_from_objs(linear_map, *args, **kwargs)
+
+
+def create_control_from_objs(linear_map, reads, extension_sizes, fragment_length):
     """
     :param snarl_graph: Hierarchical snarl graph
     """
-    linear_map = LinearSnarlMap.from_file(linear_map_name)
     linear_size = linear_map._length
     mapped_reads = linear_map.map_interval_collection(reads)
     average_value = mapped_reads.n_intervals*fragment_length / linear_size
@@ -20,13 +24,12 @@ def create_control(linear_map_name, reads, extension_sizes, fragment_length):
     logging.info("Extending control reads with extension sizes: %s" % extension_sizes)
     for tmp_extension in extension_sizes:
         logging.info("Extension size: %d" % tmp_extension)
-        extension = tmp_extension//2
+        extension = tmp_extension // 2
         extended_reads = mapped_reads.extend(extension)
         linear_pileup = LinearPileup.create_from_starts_and_ends(
                 extended_reads.starts, extended_reads.ends)
         linear_pileup /= (extension*2/fragment_length)
         max_pileup.maximum(linear_pileup)
-    # max_pileup.threshold(average_value)
     valued_indexes = max_pileup.to_valued_indexes(linear_map)
     graph_pileup = SparsePileup(linear_map._graph)
     graph_pileup.data = valued_indexes
@@ -41,6 +44,12 @@ class UnmappedIndices(object):
 
     def __str__(self):
         return "(%s, %s)" % (self.indices, self.values)
+
+    def get_index_array(self):
+        return np.array(self.indices)
+
+    def get_values_array(self):
+        return np.array(self.values)
 
     def add_indexvalue(self, index, value):
         self.indices.append(index)

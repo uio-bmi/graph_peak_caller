@@ -10,7 +10,8 @@ class TestLinearPileup(unittest.TestCase):
         ends = np.array([2, 5, 10])
         self.pileup = LinearPileup.create_from_starts_and_ends(starts, ends)
 
-        self.valued_pileup = LinearPileup(np.array([1, 4, 8]), np.array([1, 0, 3]))
+        self.valued_pileup = LinearPileup(np.array([1, 4, 8]),
+                                          np.array([1, 0, 3]))
 
     def test_create_from_starts_and_ends(self):
         self.assertEqual(LinearPileup(np.array([1, 2, 4, 5, 6, 10]),

@@ -91,7 +91,8 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
     control_intervals = vg_gam_file_to_interval_collection(
          None, gam_control_file, ob_graph)
 
-    run_with_intervals(reads_intervals, control_intervals, out_name=out_name, has_control=has_control)
+    run_with_intervals(reads_intervals, control_intervals,
+                       out_name=out_name, has_control=has_control)
 
 
 def run_from_max_paths_step(graph_file_name, pileup_file_name, raw_pileup_file_name):
@@ -100,7 +101,6 @@ def run_from_max_paths_step(graph_file_name, pileup_file_name, raw_pileup_file_n
     experiment_info = callpeaks.ExperimentInfo(graph_size, 135, 36)
     q_values = SparsePileup.from_bed_graph(ob_graph, pileup_file_name)
     raw_pileup = SparsePileup.from_bed_graph(ob_graph, raw_pileup_file_name)
-
     fromqvalues = callpeaks.CallPeaksFromQvalues(
         ob_graph, q_values, experiment_info, "laststep", raw_pileup=raw_pileup)
 
@@ -141,7 +141,6 @@ def get_sequences(path_file):
     for seq in sequences:
         f.write(">peak" + str(i) + "\n" + seq + "\n")
         i += 1
-
 
 def peak_sequences_to_fasta(vg_graph_file_name, peaks_file_name, fasta_file_name):
 

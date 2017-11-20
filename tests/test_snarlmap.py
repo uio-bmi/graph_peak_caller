@@ -2,9 +2,10 @@ import numpy as np
 import unittest
 import offsetbasedgraph as obg
 from test_snarls import snarl_graph2
-from graph_peak_caller.linearsnarls import UnmappedIndices, LinearPileup
+from graph_peak_caller.linearsnarls import UnmappedIndices, LinearPileup,\
+    create_control_from_objs
 from graph_peak_caller.snarlmaps import LinearSnarlMap
-from graph_peak_caller.sparsepileup import ValuedIndexes
+from graph_peak_caller.sparsepileup import ValuedIndexes, SparsePileup
 
 graph = obg.GraphWithReversals(
     {3: obg.Block(20), 5: obg.Block(10),
@@ -25,6 +26,22 @@ class TestSnarlMap(unittest.TestCase):
         self.graph_interval = obg.DirectedInterval(self.graph_positions[0],
                                                    self.graph_positions[2])
 
+    def _test_create_control(self):
+        intervals = [obg.DirectedInterval(0, 20, [3]),
+                     obg.DirectedInterval(0, 20, [12]),
+                     obg.DirectedInterval(0, 20, [13])]
+        mapped_intervals = self.snarl_map.map_interval_collection(
+            intervals)
+        linear_pileup = []
+        graph_pileup = create_control_from_objs(self.snarl_map,
+                                                intervals,
+                                                [20], 20)
+        true_sparse_pileup = SparsePileup(graph)
+        true_sparse_pileup.data = {3: ValuedIndexes([], [], 1, 20),
+                                   12: ValuedIndexes([], [], 1, 20),
+                                   12: ValuedIndexes([21], [0], 1, 21)}
+        self.assertEqual(graph_pileup, true_sparse_pileup)
+
     def test_graph_position_to_linear(self):
         for graph_pos, lin_pos in zip(self.graph_positions,
                                       self.linear_positions):
@@ -34,8 +51,9 @@ class TestSnarlMap(unittest.TestCase):
     def test_map_graph_interval(self):
         mapped_interval = self.snarl_map.map_graph_interval(
             self.graph_interval)
-        self.assertEqual(mapped_interval, (self.linear_positions[0],
-                                           self.linear_positions[2]), [5, 12])
+        self.assertEqual(mapped_interval,
+                         (self.linear_positions[0],
+                          self.linear_positions[2]), [5, 12])
 
     def test_to_graph_pileup(self):
         """[0, 5, 10, 15, 20, 25, 30]"""
@@ -50,9 +68,9 @@ class TestSnarlMap(unittest.TestCase):
             idxs, [values[idx] for idx in idxs])
                             for node_id, idxs in unmapped_indices.items()}
 
-        vis = {3: (np.array(all_indices)*31/20, np.array(list(range(7)))),
+        vis = {3: (np.array(all_indices)*20/31, np.array(list(range(7)))),
                5: (np.array([0, 5]), np.array([0, 1])),
-               12: ((np.array(all_indices[2:])-10)*21/20,
+               12: ((np.array(all_indices[2:])-10)*20/21,
                     np.array(list(range(2, 7)))),
                13: ((np.array(all_indices[2:])-10,
                      np.array(list(range(2, 7)))))}
@@ -71,9 +89,9 @@ class TestLinearPileupMap(TestSnarlMap):
         linear_pileup = LinearPileup(np.array(all_indices),
                                      np.array(list(range(7))))
 
-        vis = {3: (np.array(all_indices)*31/20, np.array(list(range(7)))),
+        vis = {3: (np.array(all_indices)*20/31, np.array(list(range(7)))),
                5: (np.array([0, 5]), np.array([0, 1])),
-               12: ((np.array(all_indices[2:])-10)*21/20,
+               12: ((np.array(all_indices[2:])-10)*20/21,
                     np.array(list(range(2, 7)))),
                13: ((np.array(all_indices[2:])-10,
                      np.array(list(range(2, 7)))))}
