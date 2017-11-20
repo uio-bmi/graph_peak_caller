@@ -52,7 +52,7 @@ class TestWholeCallPeaks(unittest.TestCase):
                                       has_control=False)
         self.caller.run()
 
-    def run_test(self):
+    def do_asserts(self):
         for peak in self.peaks:
             assert peak.length() == self.fragment_length
 
@@ -85,14 +85,14 @@ class TestWholeCallpeaksSplitGraph(TestWholeCallPeaks):
         self.peaks = [
             DirectedInterval(3, 8, [2], self.graph),
         ]
-        self.run_test()
+        self.do_asserts()
 
     def test_peak_crossing_blocks(self):
         self.peaks = [
             DirectedInterval(13, 3, [1, 2], self.graph),
             DirectedInterval(13, 3, [2, 4], self.graph),
         ]
-        self.run_test()
+        self.do_asserts()
 
     def test_multiple_peaks(self):
         self.peaks = [
@@ -100,7 +100,7 @@ class TestWholeCallpeaksSplitGraph(TestWholeCallPeaks):
             DirectedInterval(7, 12, [4], self.graph),
             DirectedInterval(14, 4, [3, 4], self.graph),
         ]
-        self.run_test()
+        self.run()
 
 
 class TestWholeCallPeaksHierarchical(TestWholeCallPeaks):
@@ -194,17 +194,19 @@ class TestWholeCallPeaksHierarchical(TestWholeCallPeaks):
         LinearSnarlMap(self.snarlgraph, self.graph).to_file("test_linear_map.tmp")
 
     def test_single_peak(self):
+        
         self.peaks = [
             DirectedInterval(1, 1, [1, 2, 7], self.graph),
         ]
-        self.run_test()
+        self.do_asserts()
 
     def test_multiple_peaks(self):
+        
         self.peaks = [
             DirectedInterval(2, 2, [1, 3, 4], self.graph),
             DirectedInterval(2, 2, [6, 10, 12], self.graph),
         ]
-        self.run_test()
+        self.do_asserts()
 
 if __name__ == "__main__":
     unittest.main()

@@ -543,8 +543,6 @@ class SparseControlSample(SparsePileup):
         sorted_p_values = sorted(p_value_counts.keys(), reverse=True)
         rank = 1
         logN = np.log10(sum(p_value_counts.values()))
-        print("######################",
-              sum(p_value_counts.values()))
         pre_q = None
         for p_value in sorted_p_values:
             value_count = p_value_counts[p_value]
