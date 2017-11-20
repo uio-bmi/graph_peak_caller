@@ -142,7 +142,7 @@ class CallPeaks(object):
     def __init__(self, graph, sample_intervals,
                  control_intervals=None, experiment_info=None,
                  verbose=False, out_file_base_name="", has_control=True,
-                 linear_map=None):
+                 linear_map=None, skip_filter_duplicates=False):
         """
         :param sample_intervals: Either an interval collection or file name
         :param control_intervals: Either an interval collection or a file name
@@ -181,9 +181,13 @@ class CallPeaks(object):
         self.cutoff = 0.05
         self.pre_processed_peaks = None
         self.filtered_peaks = None
+        self.skip_filter_duplicates = skip_filter_duplicates
 
         self.max_paths = None
         self.peaks_as_subgraphs = None
+
+        if self.skip_filter_duplicates:
+            logging.info("Not removing duplicates")
 
     def set_cutoff(self, value):
         self.cutoff = value
@@ -229,7 +233,7 @@ class CallPeaks(object):
         n_reads_left = 0
         for interval in intervals:
             hash = interval.hash()
-            if hash in interval_hashes:
+            if hash in interval_hashes and not self.skip_filter_duplicates:
                 n_duplicates += 1
                 continue
 
