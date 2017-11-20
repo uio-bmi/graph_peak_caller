@@ -166,7 +166,7 @@ def run_ctcf_example():
      run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
                  "ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
                  "haplo1kg50-mhc.json",
-                 out_name="ctcf_without_control_hack_",
+                 out_name="ctcf_without_control_",
                   has_control=False)
 
 

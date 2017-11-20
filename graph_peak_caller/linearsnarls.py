@@ -9,7 +9,7 @@ import logging
 
 def create_control(linear_map_name, *args, **kwargs):
     linear_map = LinearSnarlMap.from_file(linear_map_name)
-    create_control_from_objs(linear_map, *args, **kwargs)
+    return create_control_from_objs(linear_map, *args, **kwargs)
 
 
 def create_control_from_objs(linear_map, reads, extension_sizes, fragment_length):
