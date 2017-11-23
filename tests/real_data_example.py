@@ -115,7 +115,7 @@ def run_from_max_paths_step(graph_file_name, pileup_file_name, raw_pileup_file_n
     # peaks_as_subgraphs = final_track.to_subgraphs()
     # peaks_as_subgraphs.to_file(
     #     "last_step_" + "peaks_as_subgraphs")
-    # 
+    #
     # p_values = SparsePileup.from_bed_file(graph, "real_data_q_values.bdg")
     # binary_peaks = (BinaryContinousAreas.from_old_areas(peak) for peak in
     #                 peaks_as_subgraphs)
@@ -126,7 +126,7 @@ def run_from_max_paths_step(graph_file_name, pileup_file_name, raw_pileup_file_n
     # max_paths.sort(key=lambda p: p.score, reverse=True)
     # PeakCollection(max_paths).to_file(
     #     "last_step_" + "max_paths", text_file=True)
-    # 
+    #
     # # IntervalCollection(max_paths).to_text_file(
     # #             "last_step_max_paths")
 
@@ -171,16 +171,29 @@ def run_with_macs_filtered_reads():
 
 
 def run_with_reads_filtered_outside():
-
-
-
-    return
-
     run_with_gam("ctcf_mhc_data/ctcf_without_outside2_filtered_q30.gam",
                  "ctcf_mhc_data/ctcf_without_outside2_filtered_q30.gam",
                  "haplo1kg50-mhc.json",
                  out_name="ctcf_filtered_outside_",
                   has_control=False)
+
+
+def run_with_linear_reads_moved_to_graph_without_control():
+    ob_graph = obg.GraphWithReversals.from_file("graph.obg")
+    run_with_intervals(
+        sample_intervals=IntervalCollection.from_file("sample_linear_reads.intervals", graph=ob_graph),
+        control_intervals=IntervalCollection.from_file("sample_linear_reads.intervals", graph=ob_graph),
+        has_control=False,
+        out_name="linear_reads_moved_to_graph_"
+    )
+
+def run_macs_reads_remapped_without_control():
+    run_with_gam("ctcf_mhc.gam",
+                 "ctcf_control_mhc.gam",
+                 "haplo1kg50-mhc.json",
+                 out_name="ctcf_macs_reads_with_control_",
+                  has_control=False)
+
 
 def run_with_macs_filtered_reads_w_control():
     run_with_gam("ctcf_mhc.gam",
@@ -191,10 +204,10 @@ def run_with_macs_filtered_reads_w_control():
 
 
 def run_ctcf_example():
-     run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
-                 "ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
+     run_with_gam("ENCFF001HNI_filtered_q60_r099.gam",
+                 "ENCFF001HNI_filtered_q60_r099.gam",
                  "haplo1kg50-mhc.json",
-                 out_name="ctcf_q50_without_control_",
+                 out_name="ctcf_r099_without_control_",
                   has_control=False)
 
 
@@ -206,8 +219,10 @@ def run_ctcf_example_w_control():
                   has_control=True)
 
 if __name__ == "__main__":
+    run_ctcf_example()
+    #run_with_linear_reads_moved_to_graph_without_control()
     # get_sequences("laststepmax_paths.intervalcollection")
-    run_with_reads_filtered_outside()
+    #run_with_reads_filtered_outside()
     #run_ctcf_example_w_control()
     exit()
     # run_from_max_paths_step("obgraph", "ctcf_q50_with_control_q_values.bdg",
@@ -220,7 +235,7 @@ if __name__ == "__main__":
     # create_ob_graph_from_vg("haplo1kg50-mhc.json")
     ob_graph = obg.GraphWithReversals.from_file("graph.obg")
     #create_linear_map(ob_graph)
-    
+
     #cProfile.run('run_with_gam("ENCFF000WVQ_filtered.gam", "cactus-mhc.json")')
     #cProfile.run('run_with_gam("ENCFF001HNI_filtered_q60.gam", "ENCFF001HNS_filtered_q60.gam", "cactus-mhc.json")')
     #run_from_max_paths_step()
