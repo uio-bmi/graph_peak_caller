@@ -24,4 +24,37 @@ samtools view -bh file.bam "chr6:28510119-33480577" > file_mhc.bam
 bamtools convert -in file_mhc.bam -format fastq > file.fastq &
 
 
+Få fasta fil med reads som ikke mapper unikt/bra utenfor MHC
+
+input:
+    linear.bam (original fasta file mapped to linear genome),
+    orig.fasta (original fasta file)
+
+output:
+    output.fasta (fasta reads not mapping well outside region)
+
+samtools index linear.bam
+
+samtools
+# Filtrer reads med høy mappingn score (unikt mappet?)
+samtools view -bq 30 file.bam > filtered.bam
+
+
+# Fjerne reads utenfor MHC
+# Bruker ngsutils sin bamutils
+bamutils filter filtered.bam filtered_outside_mhc.bam -exclude chr6:28510119-33480577
+
+# Konverter til fastq
+bamtools convert -in file_mhc.bam -format fastq > file.fastq &
+
+# Lag en fil med sekvensid per linje på det som skal fjernes
+grep @ filtered_outside_mhc.fastq > filtered_outside_mhc.ids
+sed -e s/@//g -i filtered_outside_mhc.ids
+
+
+# Fjern reads fra opprinnelig fastq som er i den fastq-en
+på abel: module load qiime
+filter_fasta.py -f input.fasta -o output.fasta ----subject_fasta_fp filtered_outside_mhc.fasta --negate
+
+
 
