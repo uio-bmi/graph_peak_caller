@@ -548,6 +548,7 @@ class SparsePileup(Pileup):
     def set_sorted_interval_values(self, intervals, values):
         # Requires intervals to be sorted within nodes
         for j, interval in enumerate(intervals):
+            logging.info("Setting sorted interval %d/%d" % (j, len(intervals)))
             for i, rp in enumerate(interval.region_paths):
                 start = 0
                 if i == 0:

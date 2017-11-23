@@ -75,7 +75,7 @@ class PeaksComparer(object):
                                  graph_peaks_file_name)
         return comparer
 
-    def check_similarity(self):
+    def check_similarity(self, analyse_first_n_peaks=50):
         i = 1
         for peak_datasets in [(self.peaks1, self.peaks2),
                               (self.peaks2, self.peaks1)]:
@@ -88,10 +88,10 @@ class PeaksComparer(object):
             print("Number of peaks in main set: %d" % len(peaks1.intervals))
             not_matching = []
             counter = 0
-            for peak in sorted(peaks1, key=lambda x: x.score, reverse=True)[0:50]:
+            for peak in sorted(peaks1, key=lambda x: x.score, reverse=True)[0:analyse_first_n_peaks]:
                 counter += 1
                 if peaks2.contains_interval(peak):
-                    print(counter, peak.score, "\t", 1, peak.start_position)
+                    #print(counter, peak.score, "\t", 1, peak.start_position)
                     n_identical += 1
 
                 similar_intervals = peaks2.get_overlapping_intervals(peak, 50)
@@ -99,8 +99,8 @@ class PeaksComparer(object):
                     n_similar += 1
                     tot_n_similar += len(similar_intervals)
                     print(counter, peak.score, peak.start_position)
-                    for j in similar_intervals:
-                        print("\t", j.score, j.start_position)
+                    #for j in similar_intervals:
+                    #    print("\t", j.score, j.start_position)
                 else:
                     not_matching.append(peak)
                     print(peak, "\t", 0)
@@ -108,12 +108,12 @@ class PeaksComparer(object):
                 n_tot += 1
 
             not_matching = IntervalCollection(not_matching)
-            not_matching.to_file("not_matching_set%d.intervals" % i)
+            not_matching.to_file("not_matching_set%d.intervals" % i, text_file=True)
 
             print("Total peaks in main set: %d" % n_tot)
             print("N identical to peak in other set: %d " % n_identical)
             print("N similar to peak in other set: %d " % n_similar)
-            print("Total number of simmilar hits (counting all hits for each peaks): %d " % tot_n_similar)
+            print("Total number of similar hits (counting all hits for each peaks): %d " % tot_n_similar)
 
             i += 1
 

@@ -162,11 +162,39 @@ def create_ob_graph_from_vg(vg_json_graph_file_name, ob_graph_file_name="graph.o
     logging.info("Wrote obgraph to %s" % ob_graph_file_name)
 
 
+def run_with_macs_filtered_reads():
+    run_with_gam("ctcf_mhc.gam",
+                 "ctcf_mhc.gam",
+                 "haplo1kg50-mhc.json",
+                 out_name="ctcf_macs_reads_without_control_",
+                  has_control=False)
+
+
+def run_with_reads_filtered_outside():
+
+
+
+    return
+
+    run_with_gam("ctcf_mhc_data/ctcf_without_outside2_filtered_q30.gam",
+                 "ctcf_mhc_data/ctcf_without_outside2_filtered_q30.gam",
+                 "haplo1kg50-mhc.json",
+                 out_name="ctcf_filtered_outside_",
+                  has_control=False)
+
+def run_with_macs_filtered_reads_w_control():
+    run_with_gam("ctcf_mhc.gam",
+                 "ctcf_control_mhc.gam",
+                 "haplo1kg50-mhc.json",
+                 out_name="ctcf_macs_reads_with_control_",
+                  has_control=False)
+
+
 def run_ctcf_example():
      run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
                  "ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
                  "haplo1kg50-mhc.json",
-                 out_name="ctcf_without_control_",
+                 out_name="ctcf_q50_without_control_",
                   has_control=False)
 
 
@@ -179,7 +207,8 @@ def run_ctcf_example_w_control():
 
 if __name__ == "__main__":
     # get_sequences("laststepmax_paths.intervalcollection")
-    run_ctcf_example()
+    run_with_reads_filtered_outside()
+    #run_ctcf_example_w_control()
     exit()
     # run_from_max_paths_step("obgraph", "ctcf_q50_with_control_q_values.bdg",
     # "ctcf_q50_with_control_raw_track.bdg")
