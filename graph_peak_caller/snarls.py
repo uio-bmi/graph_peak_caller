@@ -36,6 +36,16 @@ class SnarlGraph(obg.GraphWithReversals):
         assert length > 0
         return length
 
+    def get_all_leaf_node_ids(self):
+        leaf_nodes = [node_id for node_id, obj in self.blocks.items()
+                      if isinstance(obj, obg.Block)]
+        subgraphs = [obj for obj in self.blocks.values()
+                     if isinstance(obj, SnarlGraph)]
+
+        for subgraph in subgraphs:
+            leaf_nodes.extend(subgraph.get_all_leaf_node_ids())
+        return leaf_nodes
+
     def create_children(self):
 
         n_childs = len(self.children)
@@ -167,6 +177,9 @@ class SnarlGraph(obg.GraphWithReversals):
                 start_length = forward_length_dict[-node_id]
                 end_length = back_length_dict[node_id]
             else:
+                logging.error(node_id)
+                logging.error(forward_length_dict)
+                logging.error(back_length_dict)
                 raise Exception()
 
             path_length = start_length + end_length + self.node_size(node_id)

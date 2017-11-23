@@ -8,6 +8,7 @@ from cyclic_graph import get_small_cyclic_graph, get_large_cyclic_graph,\
 import offsetbasedgraph as obg
 from random import randrange, seed
 
+
 class CleanupTester(unittest.TestCase):
     def assertIntervalsGiveSamePileup(self, areas, true_intervals):
         if not areas.areas:
@@ -28,7 +29,6 @@ class CleanupTester(unittest.TestCase):
         print("Pileup from intervals")
         print(true_pileup)
 
-
         self.assertEqual(pileup, true_pileup)
 
 
@@ -37,8 +37,6 @@ class TestCyclicCleanup(CleanupTester):
         self.small_graph = get_small_cyclic_graph()
         self.large_graph = get_large_cyclic_graph()
         self.padded_graph = get_padded_cyclic_graph()
-
-
 
     def test_loop_with_surrounding(self):
         start_intervals = [obg.Interval(
@@ -84,7 +82,7 @@ class CyclicHolesClean(TestCyclicCleanup):
         nodes = {i: obg.Block(100) for i in range(1, 11)}
         edges = {i: [i+1] for i in range(1, 10)}
         self.lin_graph = obg.GraphWithReversals(nodes, edges)
-        edges = {i: [i+1, (i+5) % 5 +1 ] for i in range(1, 5)}
+        edges = {i: [i+1, (i+5) % 5 + 1] for i in range(1, 5)}
         self.double_graph = obg.GraphWithReversals(nodes, edges)
 
     def test_lin(self):
@@ -101,8 +99,6 @@ class CyclicHolesClean(TestCyclicCleanup):
         pileup.threshold(1)
         cleaner = HolesCleaner(pileup, 20)
         areas = cleaner.run()
-        print("!!!!!!!!!!!!!!!!!!")
-        print(areas)
         true_areas = Areas(self.lin_graph,
                            {2: [90, 100],
                             3: [0, 10, 50, 70],
@@ -118,13 +114,24 @@ class CyclicHolesClean(TestCyclicCleanup):
         pileup.threshold(1)
         cleaner = HolesCleaner(pileup, 40)
         areas = cleaner.run()
-        self.assertEqual(areas, Areas(self.padded_graph, {2: [0, 10, 40, 50, 90, 100]}))
+        self.assertEqual(areas, Areas(self.padded_graph,
+                                      {2: [0, 10, 40, 50, 90, 100]}))
         pileup.fill_small_wholes(40)
         true_pileup = SparsePileup.from_intervals(
             self.padded_graph,
             [obg.Interval(0, 100, [2], graph=self.padded_graph)])
         true_pileup.threshold(1)
         self.assertEqual(pileup, true_pileup)
+
+    def test_mid_interval(self):
+        start_intervals = [
+            obg.Interval(10, 90, [2], graph=self.padded_graph)]
+        pileup = SparsePileup.from_intervals(
+            self.lin_graph, start_intervals)
+        pileup.threshold(1)
+        cleaner = HolesCleaner(pileup, 20)
+        areas = cleaner.run()
+        self.assertEqual(areas, Areas(self.lin_graph))
 
     def test_cycle(self):
         start_intervals = [

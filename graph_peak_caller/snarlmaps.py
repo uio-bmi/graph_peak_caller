@@ -1,5 +1,4 @@
 import pickle
-import numpy as np
 from .sparsepileup import ValuedIndexes
 from .linearintervals import LinearIntervalCollection
 

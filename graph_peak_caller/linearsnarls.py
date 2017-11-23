@@ -23,6 +23,7 @@ def create_control_from_objs(linear_map, reads, extension_sizes, fragment_length
     max_pileup = LinearPileup([0], [average_value])
     logging.info("Extending control reads with extension sizes: %s" % extension_sizes)
     for tmp_extension in extension_sizes:
+        print(tmp_extension)
         logging.info("Extension size: %d" % tmp_extension)
         extension = tmp_extension // 2
         extended_reads = mapped_reads.extend(extension)
@@ -71,9 +72,11 @@ class LinearPileup(object):
         return self
 
     def __str__(self):
-        pos = self.indices >= 0
-        return "Indices: %s, values: %s" % (self.indices[pos],
-                                            self.values[pos])
+        i = np.array(self.indices)
+        v = np.array(self.values)
+        pos = i >= 0
+        return "Indices: %s, values: %s" % (i[pos],
+                                            v[pos])
 
     __repr__ = __str__
 

@@ -1,4 +1,4 @@
-from offsetbasedgraph import Interval, Block, Graph, Translation, GraphWithReversals
+from offsetbasedgraph import Interval, Block, Translation, GraphWithReversals
 import numpy as np
 import random
 from math import floor
@@ -23,7 +23,7 @@ class SimulatedGraph():
             interval.graph = self.graph
 
         return trans.translate_interval(interval, inverse=inverse)\
-                .get_single_path_intervals()[0]
+                    .get_single_path_intervals()[0]
 
 
 class GraphSimulator():

@@ -212,11 +212,11 @@ def run_ctcf_example():
 
 
 def run_ctcf_example_w_control():
-     run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
-                  "ENCFF001HNS_haplo1kg50-mhc_filtered_q50.gam",
-                  "haplo1kg50-mhc.json",
-                  out_name="ctcf_q50_with_control_",
-                  has_control=True)
+    run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q30.gam",
+                 "ENCFF001HNS_haplo1kg50-mhc_filtered_q30.gam",
+                 "haplo1kg50-mhc.json",
+                 out_name="ctcf_q30_with_control_",
+                 has_control=True)
 
 if __name__ == "__main__":
     run_ctcf_example()

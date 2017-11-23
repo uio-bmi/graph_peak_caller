@@ -306,10 +306,14 @@ class SparsePileup(Pileup):
             ends = areas.get_ends(node_id)
             for start, end in zip(starts, ends):
                 self.data[node_id].set_interval_value(start, end, True)
-                logging.debug("Filling hole %s, %d, %d" % (node_id, start, end))
+                logging.debug("Filling hole %s, %d, %d" % (
+                    node_id, start, end))
                 n_filled += 1
                 assert end - start <= max_size
-        logging.info("Filled %d small holes (splitted into holes per node)" % n_filled)
+        logging.info(
+            "Filled %d small holes (splitted into holes per node)" % n_filled)
+
+
         self.sanitize()
 
     def sanitize(self):
@@ -570,10 +574,7 @@ class SparseControlSample(SparsePileup):
             for start, end, val in valued_indexes:
                 if val[1] not in p_value_dict[val[0]]:
                     log_p_val = poisson.logsf(val[1], val[0])
-                    # pre_val = poisson.cdf(val[1],  val[0])
-                    # p_val = 1 - pre_val
                     p_value_dict[val[0]][val[1]] = -log_p_val/baseEtoTen
-                    # -np.log10(p_val)
                 p = p_value_dict[val[0]][val[1]]
                 count_dict[p] += end-start
 

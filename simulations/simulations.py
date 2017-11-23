@@ -9,6 +9,7 @@ from graph_peak_caller.peakcollection import PeakCollection
 import logging
 logging.basicConfig(level=logging.INFO)
 
+
 class DummySequenceRetriever(object):
 
     def __init__(self):
@@ -65,14 +66,15 @@ class SimulatedPeakCalling():
 
     def call_peaks(self):
 
-        genome_size = sum(block.length() for block in self.graph.blocks.values())
+        genome_size = sum(block.length() for block in
+                          self.graph.blocks.values())
         experiment_info = ExperimentInfo(genome_size, 50, 20)
         experiment_info.n_sample_reads = self.n_sample_reads
         experiment_info.n_control_reads = self.n_control_reads
 
-
-        snarlbuilder = SnarlGraphBuilder(self.graph.copy(), self.snarls,
-                                         id_counter=self.graph.max_block_id() + 1)
+        snarlbuilder = SnarlGraphBuilder(
+            self.graph.copy(), self.snarls,
+            id_counter=self.graph.max_block_id() + 1)
         snarlgraph = snarlbuilder.build_snarl_graphs()
         linear_map = LinearSnarlMap(snarlgraph, self.graph)
         linear_map.to_file("simulated_snarl_map.tmp")
