@@ -12,6 +12,7 @@ from graph_peak_caller.sparsepileup import SparsePileup, ValuedIndexes
 from peakscomparer import PeaksComparer
 from compareMacs import ValuedInterval
 import numpy as np
+from pyvg.util import vg_gam_file_to_interval_collection
 
 MHC_REGION = LinearRegion("chr6", 28510119, 33480577)
 
@@ -147,9 +148,11 @@ def macs_pileup_to_graph_pileup(ob_graph, linear_path, pileup_file, region):
     graph_intervals = []
     values = []
     graph_pileup = SparsePileup(ob_graph)
+    i = 0
     for line in open(pileup_file):
         if i  % 100 == 0:
             print("Pileup line %d" % i)
+        i += 1
         l = line.split()
         chrom = l[0]
         if chrom != region.chromosome:
@@ -170,10 +173,47 @@ def macs_pileup_to_graph_pileup(ob_graph, linear_path, pileup_file, region):
         graph_intervals.append(graph_interval)
         values.append(value)
 
-    graph_pileup.set_sorted_interval_values(graph_interval, values)
+    graph_pileup.set_sorted_interval_values(graph_intervals, values)
 
     return graph_pileup
     #return SparsePileup.from_intervals(ob_graph, graph_intervals)
+
+
+
+def analyse_pileups():
+    ob_graph = obg.GraphWithReversals.from_file("graph.obg")
+    vg_graph = pyvg.vg.Graph.create_from_file("haplo1kg50-mhc.json")
+    path = create_linear_path(ob_graph, vg_graph)
+
+    #macs_pileup = macs_pileup_to_graph_pileup(ob_graph, path, "macs_without_control_treat_pileup_chr6.bdg", MHC_REGION)
+    #macs_pileup.to_bed_graph("macs_sample_on_graph.bdg")
+    #return
+    macs_pileup = SparsePileup.from_bed_graph(ob_graph, "macs_sample_on_graph.bdg")
+
+    interval = obg.Interval.from_file_line('{"region_paths": [63746, 63747, 63749, 63750, 63752, 63753, 63755, 63756, 63758, 63759, 63761, 63763, 63764, 63765, 63767, 63768, 63770, 63772, 63773, 63775, 63776, 63778, 63779, 63781, 63783, 63784, 63785, 63787, 63788, 63790, 63792, 63794, 500765, 63796, 63798, 63800, 63801, 63802, 63804, 63806, 500768, 63808, 63810, 63811, 63813, 63814, 63816, 63818, 63820, 500772, 63822, 63824], "average_q_value": 66.00805308978333, "end": 2, "start": 82, "direction": 1}')
+
+    #linear_start = path.get_offset_at_position(interval.start_position) + MHC_REGION.start
+    #linear_end = path.get_offset_at_position(interval.end_position) + MHC_REGION.start
+
+    #print(linear_start)
+    #print(linear_end)
+
+
+    sample = SparsePileup.from_bed_graph(ob_graph, "ctcf_q50_without_control_sample_track.bdg")
+    sample2 = SparsePileup.from_bed_graph(ob_graph, "ctcf_q50_with_control_sample_track.bdg")
+    control1 = SparsePileup.from_bed_graph(ob_graph, "ctcf_q50_without_control_scaled_control.bdg")
+    control2 = SparsePileup.from_bed_graph(ob_graph, "ctcf_q50_with_control_scaled_control.bdg")
+
+
+    print(" == Without control == ")
+    for rp in interval.region_paths:
+        print("Sample without:   %d: %s" % (rp, sample.data[rp]))
+        print("Sample with       %d: %s" % (rp, sample2.data[rp]))
+        print("macs sample       %d: %s" % (rp, macs_pileup.data[rp]))
+        print("Control without   %d: %s" % (rp, control1.data[rp]))
+        print("Control with      %d: %s" % (rp, control2.data[rp]))
+        assert sample.data[rp] == sample2.data[rp], "\n%s != \n%s" % (sample.data[rp], sample2.data[rp])
+
 
 def check_macs_pileup_values_for_graph_peaks(graph_peaks_file_name,
                                              macs_pileup_file_Name):
@@ -208,36 +248,42 @@ def analyse_without_control():
     comparer.check_similarity()
 
 
-def analyse_pileups():
-    ob_graph = obg.GraphWithReversals.from_file("graph.obg")
-    vg_graph = pyvg.vg.Graph.create_from_file("haplo1kg50-mhc.json")
-    path = create_linear_path(ob_graph, vg_graph)
+def get_mappings_overlapping_with_interval(mappings, intervals):
+    i = 0
+    n = defaultdict(int)
+    for i, mapping in enumerate(mappings):
 
-    macs_pileup = macs_pileup_to_graph_pileup(ob_graph, path, "macs_without_control_treat_pileup.bdg", MHC_REGION)
-    macs_pileup.to_bed_graph("macs_sample_on_graph.bdg")
-    return
+        for j, interval in enumerate(intervals):
+            if interval.contains_position(mapping.start_position):
+                n[j] += 1
 
-    #interval = obg.Interval.from_file_line('{"region_paths": [461954, 461955, 461957, 461958, 461960, 461962, 461963, 461965, 461966, 461968, 461969, 461971, 461972, 461974, 461975, 461977], "end": 64, "start": 35, "average_q_value": 86.40319972761958, "direction": 1}')
-    interval = obg.Interval.from_file_line('{"region_paths": [63746, 63747, 63749, 63750, 63752, 63753, 63755, 63756, 63758, 63759, 63761, 63763, 63764, 63765, 63767, 63768, 63770, 63772, 63773, 63775, 63776, 63778, 63779, 63781, 63783, 63784, 63785, 63787, 63788, 63790, 63792, 63794, 500765, 63796, 63798, 63800, 63801, 63802, 63804, 63806, 500768, 63808, 63810, 63811, 63813, 63814, 63816, 63818, 63820, 500772, 63822, 63824], "average_q_value": 66.00805308978333, "end": 2, "start": 82, "direction": 1}')
+    return n
 
-    linear_start = path.get_offset_at_position(interval.start_position) + MHC_REGION.start
-    linear_end = path.get_offset_at_position(interval.end_position) + MHC_REGION.start
 
-    print(linear_start)
-    print(linear_end)
-    return
+def check_mappings_in_peaks(peaks_file_name, vg_mapping_file):
+    ob_graph = obg.GraphWithReversals.from_file("haplo1kg50-mhc.obg")
+    mappings = vg_gam_file_to_interval_collection(
+            None, vg_mapping_file, ob_graph)
 
-    sample = SparsePileup.from_bed_graph(ob_graph, "ctcf_q50_without_control_sample_track.bdg")
-    sample2 = SparsePileup.from_bed_graph(ob_graph, "ctcf_q50_with_control_sample_track.bdg")
-    control1 = SparsePileup.from_bed_graph(ob_graph, "ctcf_q50_without_control_scaled_control.bdg")
-    control2 = SparsePileup.from_bed_graph(ob_graph, "ctcf_q50_with_control_scaled_control.bdg")
-    print(" == Without control == ")
-    for rp in interval.region_paths:
-        print("Sample without:   %d: %s" % (rp, sample.data[rp]))
-        print("Sample with       %d: %s" % (rp, sample2.data[rp]))
-        print("Control without   %d: %s" % (rp, control1.data[rp]))
-        print("Control with      %d: %s" % (rp, control2.data[rp]))
-        assert sample.data[rp] == sample2.data[rp], "\n%s != \n%s" % (sample.data[rp], sample2.data[rp])
+    peaks = IntervalCollection.create_list_from_file(peaks_file_name, graph=ob_graph)
+    print(peaks.intervals)
+    n = get_mappings_overlapping_with_interval(mappings, peaks.intervals)
+
+    print(n)
+
+
+def analyse_pileups_on_peaks(ob_graph, pileups_file_names, peak_intervals_file_name):
+    print("Analysing peaks")
+    pileups = {name: SparsePileup.from_bed_graph(ob_graph, pileup) for name, pileup in pileups_file_names.items()}
+    peaks = IntervalCollection.from_file(peak_intervals_file_name, text_file=True)
+
+    for peak in peaks:
+        print()
+        print("Peak %s" % peak)
+        rp = peak.region_paths[0]
+        for name, pileup in pileups.items():
+            pileup_sum = sum(pileup.data[rp].sum() for rp in peak.region_paths)
+            print("Pileup %s: %d" % (name, pileup_sum))
 
 #comparer.compare_q_values_for_similar_peaks()
 
@@ -267,7 +313,19 @@ def analyse_pileups():
 #analyser.count_alignments_on_linear_path()
 
 if __name__ == "__main__":
-    analyse_pileups()
+
+    #analyse_without_control()
+    #exit()
+    check_mappings_in_peaks("not_matching_set2.intervals", "ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam")
+    exit()
+
+    ob_graph = obg.GraphWithReversals.from_file("graph.obg")
+    pileups = {
+        "macs": "macs_sample_on_graph.bdg",
+        "graph": "ctcf_q50_without_control_sample_track.bdg"
+    }
+    analyse_pileups_on_peaks(ob_graph, pileups, "not_matching_set2.intervals")
+
     #find_missing_graph_peaks()
     exit()
     ob_graph = obg.GraphWithReversals.from_file("graph.obg")
