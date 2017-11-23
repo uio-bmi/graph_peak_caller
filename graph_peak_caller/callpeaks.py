@@ -245,13 +245,40 @@ class CallPeaks(object):
 
             yield interval
 
+    def _assert_interval_is_valid(self, interval):
+        #print("Checking that %s is valid" % interval)
+        # Checks that the interval (read) is a valid connected interval
+        direction = None
+        for i, rp in enumerate(interval.region_paths[:-1]):
+            next_rp = interval.region_paths[i+1]
+            if next_rp in self.ob_graph.adj_list[rp]:
+                new_dir = 1
+            elif next_rp in self.ob_graph.reverse_adj_list[rp]:
+                new_dir = -1
+            else:
+                logging.error("Invalid interval: Rp %d of interval %s is not "
+                              "connected in graph to rp %d, which is the next rp"
+                              % (rp, interval, next_rp))
+                raise Exception("Invalid interval")
+
+            if direction is None:
+                direction = new_dir
+            else:
+                if new_dir != direction:
+                    logging.error("Invalid read: Interval %s is going edges in multiple directions.")
+                    raise Exception("Invalid interval")
+
+            #print("  Dir: %d " % direction)
+        return True
+
     def _get_intervals_in_ob_graph(self, intervals):
         # Returns only those intervals that exist in graph
         for interval in intervals:
+            self._assert_interval_is_valid(interval)
             if interval.region_paths[0] in self.ob_graph.blocks:
                 yield interval
             else:
-                yield False
+                raise Exception("Interval not in graph")
 
     def scale_tracks(self, update_saved_files=False):
         logging.info("Scaling tracks to ratio: %d / %d" % (self.info.n_sample_reads,
@@ -260,6 +287,8 @@ class CallPeaks(object):
 
         if self.info.n_sample_reads == self.info.n_control_reads:
             logging.info("Not scaling any tracks because of same amount of reads")
+            self._control_pileup.to_bed_graph(
+                self.out_file_base_name + "scaled_control.bdg")
             return
 
         if ratio > 1:
