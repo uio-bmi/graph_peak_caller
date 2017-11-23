@@ -217,5 +217,60 @@ class TestSparseControlSample(unittest.TestCase):
         self.assertTrue(np.all(filtered_vals == np.array([2, 2, 1])))
 
 
+class TestSparsePileupSetIntervals(unittest.TestCase):
+
+    def setUp(self):
+        self.graph = obg.Graph({i: obg.Block(10) for i in range(1, 5)},
+                               {
+                                   1: [2],
+                                   2: [3],
+                                   3: [4]
+                               })
+        self.pileup = SparsePileup(self.graph)
+
+    def test_simple(self):
+        intervals = [
+            obg.Interval(4, 6, [1]),
+            obg.Interval(6, 8, [1])
+        ]
+        values = [1, 2]
+
+        self.pileup.set_sorted_interval_values(intervals, values)
+        correct = ValuedIndexes([4, 6, 8], [1, 2, 0], 0, 10)
+        print(correct)
+        print(self.pileup.data[1])
+        self.assertEqual(self.pileup.data[1], correct)
+
+    def test_multiple_rps(self):
+        intervals = [
+            obg.Interval(4, 6, [1]),
+            obg.Interval(6, 4, [1, 2])
+        ]
+        values = [1, 2]
+        self.pileup.set_sorted_interval_values(intervals, values)
+        correct = {}
+        correct[1] = ValuedIndexes([4, 6], [1, 2], 0, 10)
+        correct[2] = ValuedIndexes([4], [0], 2, 10)
+        self.assertEqual(self.pileup.data[1], correct[1])
+        self.assertEqual(self.pileup.data[2], correct[2])
+
+
+    def test_multiple_rps2(self):
+        intervals = [
+            obg.Interval(4, 6, [1]),
+            obg.Interval(6, 10, [1, 2, 3])
+        ]
+        values = [1, 2]
+        self.pileup.set_sorted_interval_values(intervals, values)
+        correct = {}
+        correct[1] = ValuedIndexes([4, 6], [1, 2], 0, 10)
+        correct[2] = ValuedIndexes([4], [0], 2, 10)
+        correct[3] = ValuedIndexes([], [], 2, 10)
+        self.assertEqual(self.pileup.data[1], correct[1])
+        self.assertEqual(self.pileup.data[2], correct[2])
+        self.assertEqual(self.pileup.data[3], correct[3])
+
+
+
 if __name__ == "__main__":
     unittest.main()

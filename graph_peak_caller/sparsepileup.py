@@ -114,13 +114,33 @@ class ValuedIndexes(object):
         self.__tmp_end = 0
 
     def set_interval_value(self, start, end, value):
+        # ONly used for filling holes. TODO rename
         if start == 0:
             self.start_value = value
         else:
             idx = np.nonzero(self.indexes == start)
+            assert len(idx) == 1
             self.values[idx] = value
 
-        assert end == self.length or np.any(self.indexes == end)
+            assert end == self.length or np.any(self.indexes[idx[0]+1] == end)
+
+    def set_interval_value_on_right_empty_area(self, start, end, value):
+        # Requires that everything after the end is is empty
+        if start == 0:
+            self.start_value = value
+        else:
+
+            idx = np.where(start == self.indexes)[0]
+            assert len(idx) <= 1
+            if len(idx) == 1:
+                self.values[idx] = value
+            else:
+                self.indexes = np.append(self.indexes, [start])
+                self.values = np.append(self.values, [value])
+
+        if end < self.length:
+            self.indexes = np.append(self.indexes, [end])
+            self.values = np.append(self.values, [0])
 
     def threshold_copy(self, cutoff):
         new_vi = self.__class__(np.copy(self.indexes),
@@ -288,6 +308,7 @@ class SparsePileup(Pileup):
                 self.data[node_id].set_interval_value(start, end, True)
                 logging.debug("Filling hole %s, %d, %d" % (node_id, start, end))
                 n_filled += 1
+                assert end - start <= max_size
         logging.info("Filled %d small holes (splitted into holes per node)" % n_filled)
         self.sanitize()
 
@@ -523,6 +544,18 @@ class SparsePileup(Pileup):
         self.filename = filename
         self.is_written = True
         return filename
+
+    def set_sorted_interval_values(self, intervals, values):
+        # Requires intervals to be sorted within nodes
+        for j, interval in enumerate(intervals):
+            for i, rp in enumerate(interval.region_paths):
+                start = 0
+                if i == 0:
+                    start = interval.start_position.offset
+                end = self.graph.node_size(rp)
+                if i + 1 == len(interval.region_paths):
+                    end = interval.end_position.offset
+                self.data[rp].set_interval_value_on_right_empty_area(start, end, values[j])
 
 
 class SparseControlSample(SparsePileup):
