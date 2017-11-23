@@ -94,11 +94,12 @@ if __name__ == "__main__":
             # "my_peaks": "../tests/ctcf_q50_with_control_sequences.fasta",
             #"my_peaks": "../tests/tmp_sequences",
             # "macs reads remapped": "../tests/real_data_sequences_macs_remapped.fasta",
-            #"macs": "CTCFpFix.fasta",
-            "macs without control": "macs_without_control.fasta",
+            "macs": "CTCFpFix.fasta",
+            "graph": "../tests/ctcf_q30_with_control_sequences.fasta",
+            # "macs without control": "macs_without_control.fasta",
             # "macs with control": "CTCF_filtered.fasta",
             # "graph with control": "../tests/ctcf_q50_sequences.fasta",
-            "graph without control": "../tests/ctcf_without_control_hack_sequences.fasta",
+            # "graph without control": "../tests/ctcf_without_control_hack_sequences.fasta",
             #"graph_peaks_bugfix": "../tests/real_data_sequences_after_bugfix"
             #"macs": "../tests/CTCF_peaks.narrowPeak"
             # "macs": "CTCFpFix.fasta"

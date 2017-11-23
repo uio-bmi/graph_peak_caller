@@ -124,10 +124,6 @@ class ScoredPeak(object):
                 if next_node not in node_ids[1:] and next_node in sums]
             stack.extend(new_items)
 
-        if not global_max_path:
-            print(self._scores)
-            print(self._peak)
-            print(sums)
         start_node = global_max_path[0]
         start_pos = [pos for pos in start_positions if
                      pos.region_path_id == start_node][0]

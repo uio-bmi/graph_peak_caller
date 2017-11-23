@@ -68,7 +68,7 @@ class PeakCollection(obg.IntervalCollection):
         for peak in peaks:
             start = peak.start - graph_start_offset
             end = peak.end - graph_start_offset
-
+            end = min(end, linear_path_interval.length())
             if graph_region is not None:
                 if not cls._is_in_graph(peak, graph_region.chromosome,
                                         graph_region.start,

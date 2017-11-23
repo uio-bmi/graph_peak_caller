@@ -24,8 +24,10 @@ class Cleaner(object):
                 self.starts_dict[node] = int(startends[1])
                 self.ends_dict[-node] = int(startends[1])
             if startends[-1] == self.graph.node_size(node):
-                self.starts_dict[-node] = int(self.graph.node_size(node) - startends[-2])
-                self.ends_dict[node] = int(self.graph.node_size(node) - startends[-2])
+                self.starts_dict[-node] = int(
+                    self.graph.node_size(node) - startends[-2])
+                self.ends_dict[node] = int(
+                    self.graph.node_size(node) - startends[-2])
 
         logging.debug("N starts: %s", len(self.starts_dict))
         logging.debug("N ends: %s", len(self.ends_dict))
@@ -54,7 +56,8 @@ class Cleaner(object):
 
     def run(self):
         self.other_adj_list = self.graph.reverse_adj_list
-        for adj_list in [self.graph.adj_list, self.graph.reverse_adj_list]:
+        for adj_list, name in zip([self.graph.adj_list, self.graph.reverse_adj_list], ("F", "B")):
+            self.cur_dir = name
             self.cur_adj_list = adj_list
             self.directed_run(adj_list)
             self.other_adj_list = self.cur_adj_list
@@ -190,13 +193,14 @@ class HolesCleaner(Cleaner):
         if (len(self.cur_adj_list[node_list[-1]])) == 0:
             if self._is_region_path_covered(node_list[-1]):
                 return False
-            if node_list[-1] in self.starts_dict:
+            if node_list[-1] in self.starts_dict and len(node_list) > 1:
                 self.save(node_list)
                 return True
             return False
 
         if len(extensions) and (len(extensions) == len(self.cur_adj_list[node_list[-1]])):
             return True
+
         self.save(node_list)
         return True
 
