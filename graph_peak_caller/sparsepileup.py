@@ -309,10 +309,11 @@ class SparsePileup(Pileup):
                 logging.debug("Filling hole %s, %d, %d" % (
                     node_id, start, end))
                 n_filled += 1
+                assert end - start <= max_size
         logging.info(
             "Filled %d small holes (splitted into holes per node)" % n_filled)
 
-        assert end - start <= max_size
+
         self.sanitize()
 
     def sanitize(self):
