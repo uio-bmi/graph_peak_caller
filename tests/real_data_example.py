@@ -69,7 +69,7 @@ def run_with_intervals(sample_intervals, control_intervals, out_name, has_contro
         experiment_info=experiment_info,
         out_file_base_name=out_name, has_control=has_control,
         linear_map=linear_map)
-    caller.set_cutoff(0.05)
+    caller.set_cutoff(0.1)
     caller.verbose = True
     caller.run()
     retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
@@ -102,11 +102,12 @@ def run_from_max_paths_step(graph_file_name, pileup_file_name, raw_pileup_file_n
     q_values = SparsePileup.from_bed_graph(ob_graph, pileup_file_name)
     raw_pileup = SparsePileup.from_bed_graph(ob_graph, raw_pileup_file_name)
     fromqvalues = callpeaks.CallPeaksFromQvalues(
-        ob_graph, q_values, experiment_info, "laststep", raw_pileup=raw_pileup)
+        ob_graph, q_values, experiment_info, "laststep_", raw_pileup=raw_pileup)
 
     fromqvalues.callpeaks()
     retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
-    caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
+    fromqvalues.save_max_path_sequences_to_fasta_file("sequences.fasta",
+                                                      retriever)
     # fragment_length = 135
     # graph = obg.Graph.from_file(graph_file_name)
     # peaks = SparsePileup.from_bed_file(graph, pileup_file_name)
@@ -191,27 +192,31 @@ def run_with_macs_filtered_reads_w_control():
 
 
 def run_ctcf_example():
-     run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
-                 "ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
+    run_with_gam("ENCFF001HNI_filtered_q60_r099.gam",
+                 "ENCFF001HNI_filtered_q60_r099.gam",
+                 # "ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
+                 # "ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
                  "haplo1kg50-mhc.json",
                  out_name="ctcf_q50_without_control_",
-                  has_control=False)
+                 has_control=False)
 
 
 def run_ctcf_example_w_control():
-    run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q30.gam",
-                 "ENCFF001HNS_haplo1kg50-mhc_filtered_q30.gam",
+    run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
+                 "ENCFF001HNS_haplo1kg50-mhc_filtered_q50.gam",
                  "haplo1kg50-mhc.json",
-                 out_name="ctcf_q30_with_control_",
+                 out_name="ctcf_q50_with_control_",
                  has_control=True)
 
 if __name__ == "__main__":
     # get_sequences("laststepmax_paths.intervalcollection")
-    run_with_reads_filtered_outside()
-    #run_ctcf_example_w_control()
+    # run_with_reads_filtered_outside()
+    # run_from_max_paths_step("obgraph", "ctcf_q30_with_control_q_values.bdg",
+    #                         "ctcf_q30_with_control_raw_track.bdg")
+    run_ctcf_example()
     exit()
-    # run_from_max_paths_step("obgraph", "ctcf_q50_with_control_q_values.bdg",
-    # "ctcf_q50_with_control_raw_track.bdg")
+    
+
     exit()
 
     dm_folder = "../graph_peak_caller/dm_test_data/"
