@@ -105,11 +105,13 @@ class ScoredPeak(object):
                         for node_id in ends]
         memo = defaultdict(int)
         stack = deque(zip([[e] for e in ends], start_values))
+        assert any(v > 0 for v in start_values), "Peak has only start values 0: %s \n Sums: %s" % (self._peak, sums)
         assert stack, str(self._peak)
         global_max = 0
         global_max_path = None
         while stack:
             node_ids, value = stack.popleft()
+
             if memo[node_ids[-1]] >= value:
                 continue
             if value > global_max:
