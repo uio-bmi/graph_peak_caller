@@ -64,12 +64,12 @@ def run_with_intervals(sample_intervals, control_intervals, out_name, has_contro
 
     linear_map = "haplo1kg50-mhc.lm"
     experiment_info = callpeaks.ExperimentInfo(graph_size, 135, 36)
-    caller = callpeaks.CallPeaksWRawReads(
+    caller = callpeaks.CallPeaks(
         ob_graph, sample_intervals, control_intervals,
         experiment_info=experiment_info,
         out_file_base_name=out_name, has_control=has_control,
         linear_map=linear_map)
-    caller.set_cutoff(0.05)
+    caller.set_cutoff(0.025)
     caller.verbose = True
     caller.run()
     retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
@@ -189,9 +189,9 @@ def run_with_linear_reads_moved_to_graph_without_control():
 
 def run_macs_reads_remapped_without_control():
     run_with_gam("ctcf_mhc.gam",
-                 "ctcf_control_mhc.gam",
+                 "ctcf_mhc.gam",
                  "haplo1kg50-mhc.json",
-                 out_name="ctcf_macs_reads_with_control_",
+                 out_name="ctcf_macs_reads_remapped_without_control_",
                   has_control=False)
 
 
@@ -204,11 +204,12 @@ def run_with_macs_filtered_reads_w_control():
 
 
 def run_ctcf_example():
-     run_with_gam("ENCFF001HNI_filtered_q60_r099.gam",
-                 "ENCFF001HNI_filtered_q60_r099.gam",
+     run_with_gam("vgdata/filtered2.gam",
+                 "vgdata/filtered2.gam",
                  "haplo1kg50-mhc.json",
-                 out_name="ctcf_r099_without_control_",
-                  has_control=False)
+                 #out_name="ctcf_q60_without_control_new_filtering_",
+                 out_name="ctcf_r1_",
+                 has_control=False)
 
 
 def run_ctcf_example_w_control():
@@ -220,6 +221,7 @@ def run_ctcf_example_w_control():
 
 if __name__ == "__main__":
     run_ctcf_example()
+    #run_ctcf_example()
     #run_with_linear_reads_moved_to_graph_without_control()
     # get_sequences("laststepmax_paths.intervalcollection")
     #run_with_reads_filtered_outside()
