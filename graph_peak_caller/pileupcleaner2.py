@@ -51,6 +51,8 @@ class Cleaner(object):
 
         for added_node in extended:
             self.ignored_nodes.discard(added_node[-1])
+            self.ignored_nodes.discard(-added_node[-1])
+            logging.info("Discarding node %d" % added_node[-1])
 
         return extended
 
@@ -127,7 +129,9 @@ class Cleaner(object):
                 areas[-node_id].append(self.graph.node_size(node_id))
 
         for ignored_node in self.ignored_nodes:
-            areas[ignored_node] = [0, self.graph.node_size(ignored_node)]
+            logging.warning("Ignored node: %d" % ignored_node)
+            #assert False, "Should not happen"
+            #areas[ignored_node] = [0, self.graph.node_size(ignored_node)]
 
         self.areas = Areas(self.graph, areas)
 
