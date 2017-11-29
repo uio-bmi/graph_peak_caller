@@ -7,6 +7,7 @@ from .pileup import Pileup
 from .pileupcleaner2 import PeaksCleaner, HolesCleaner
 from .subgraphcollection import SubgraphCollection
 from .eventsorter import DiscreteEventSorter
+from offsetbasedgraph import Interval, IntervalCollection
 
 
 class ValuedIndexes(object):
@@ -297,10 +298,13 @@ class SparsePileup(Pileup):
     def scale(self, scale):
         [vi.scale(scale) for vi in self.data.values()]
 
-    def fill_small_wholes(self, max_size):
+    def fill_small_wholes(self, max_size, write_holes_to_file=None):
         cleaner = HolesCleaner(self, max_size)
         areas = cleaner.run()
         n_filled = 0
+
+        hole_intervals = []
+
         for node_id in areas.areas:
             starts = areas.get_starts(node_id)
             ends = areas.get_ends(node_id)
@@ -310,9 +314,14 @@ class SparsePileup(Pileup):
                     node_id, start, end))
                 n_filled += 1
                 assert end - start <= max_size
+                hole_intervals.append(Interval(start, end, [node_id]))
+
         logging.info(
             "Filled %d small holes (splitted into holes per node)" % n_filled)
 
+        if write_holes_to_file is not None:
+            intervals = IntervalCollection(hole_intervals)
+            intervals.to_file(write_holes_to_file, text_file=True)
 
         self.sanitize()
 
