@@ -51,7 +51,6 @@ def create_linear_map(ob_graph):
     linear_map = LinearSnarlMap(snarlgraph, ob_graph)
     linear_map.to_file("haplo1kg50-mhc.lm")
     linear_map = "haplo1kg50-mhc.lm"
-    #snarlgraph._create_distance_dicts()
 
 
 def run_with_intervals(sample_intervals, control_intervals, out_name, has_control=True):
@@ -205,16 +204,12 @@ def run_with_macs_filtered_reads_w_control():
 
 
 def run_ctcf_example():
-    #run_with_gam("ENCFF001HNI_filtered_q60_r099.gam",
-    #             "ENCFF001HNI_filtered_q60_r099.gam",
-    #             # "ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
-    #             # "ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
-    #             "haplo1kg50-mhc.json",
-    #             out_name="ctcf_q50_without_control_",
-     run_with_gam("vgdata/filtered2.gam",
-                 "vgdata/filtered2.gam",
+    file_name = "vgdata/filtered2.gam"
+    # file_name = "ENCFF001HNI_filtered_q60_r099.gam",
+    # file_name = "ENCFF001HNI_filtered_q60_r30.gam"
+    run_with_gam(file_name,
+                 file_name,
                  "haplo1kg50-mhc.json",
-                 #out_name="ctcf_q60_without_control_new_filtering_",
                  out_name="ctcf_r1_",
                  has_control=False)
 

@@ -118,6 +118,7 @@ class Cleaner(object):
                     new_start_ends.extend([start, end])
             if new_start_ends:
                 areas[node_id] = new_start_ends
+
         for node_id, startend in self.areas_builder.areas.items():
             if abs(node_id) not in areas:
                 areas[abs(node_id)] = []
@@ -125,14 +126,13 @@ class Cleaner(object):
                 areas[node_id].insert(0, startend[1])
                 areas[node_id].insert(0, 0)
             else:
-                areas[-node_id].append(self.graph.node_size(node_id)-startend[1])
+                areas[-node_id].append(
+                    self.graph.node_size(node_id)-startend[1])
                 areas[-node_id].append(self.graph.node_size(node_id))
 
         for ignored_node in self.ignored_nodes:
             logging.warning("Ignored node: %d" % ignored_node)
-            #assert False, "Should not happen"
-            #areas[ignored_node] = [0, self.graph.node_size(ignored_node)]
-
+            # areas[abs(ignored_node)] = [0, self.graph.node_size(ignored_node)]
         self.areas = Areas(self.graph, areas)
 
 

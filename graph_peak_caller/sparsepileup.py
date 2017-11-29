@@ -595,11 +595,14 @@ class SparseControlSample(SparsePileup):
         p_to_q_values = {}
         sorted_p_values = sorted(p_value_counts.keys(), reverse=True)
         rank = 1
-        logN = np.log10(sum(p_value_counts.values()))
+        logN = np.log10(self.graph.get_size())
+        print(self.graph.get_size())
         pre_q = None
         for p_value in sorted_p_values:
             value_count = p_value_counts[p_value]
             q_value = p_value + (np.log10(rank) - logN)
+            if np.isclose(p_value, 2.1326711212014025):
+                print(q_value, logN, rank, np.log10(rank))
             if rank == 1:
                 q_value = max(0.0, q_value)
             else:
@@ -630,7 +633,7 @@ class SparseControlSample(SparsePileup):
 
     @classmethod
     def from_sparse_control_and_sample(cls, control, sample):
-        sparse_pileup = cls(control.graph)
+        sparse_pileup = cls(sample.graph)
         sparse_pileup.data = {
             node_id: ValuedIndexes.combine(
                 control.data[node_id], sample.data[node_id])
@@ -701,13 +704,6 @@ def filter_pileup_duplicated_position(positions, values):
 def starts_and_ends_to_sparse_pileup(starts, ends):
     indices, values = filter_pileup_duplicated_position(
         *DiscreteEventSorter([ends, starts]).pileup())
-    twins = np.where(np.diff(values) == 0)
-    if not np.all(values[twins]):
-        print(starts)
-        print(ends)
-        print(indices)
-        print(values)
-        print("----------")
     return indices, values
     coded_starts = starts * 8 + 5
     coded_ends = ends * 8 + 3
