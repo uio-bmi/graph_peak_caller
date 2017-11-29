@@ -86,8 +86,13 @@ class CallPeaksFromQvalues(object):
 
     def __postprocess(self):
         logging.info("Filling small Holes")
-        self.pre_processed_peaks.fill_small_wholes(self.info.read_length)
+        self.pre_processed_peaks.fill_small_wholes(
+                                    self.info.read_length,
+                                    self.out_file_base_name + "_holes.intervals")
         logging.info("Removing small peaks")
+
+        self.pre_processed_peaks.to_bed_graph(
+            self.out_file_base_name + "_before_small_peaks_removal.bdg")
         self.filtered_peaks = self.pre_processed_peaks.remove_small_peaks(
             self.info.fragment_length)
 
@@ -106,6 +111,8 @@ class CallPeaksFromQvalues(object):
     def __get_subgraphs(self):
         logging.info("Creating subgraphs from peak regions")
         peaks_as_subgraphs = self.filtered_peaks.to_subgraphs()
+        peaks_as_subgraphs.to_file(self.out_file_base_name + "peaks.subgraphs")
+
         logging.info("Found %d subgraphs" % len(peaks_as_subgraphs.subgraphs))
         binary_peaks = [BinaryContinousAreas.from_old_areas(peak) for peak in
                         peaks_as_subgraphs]
@@ -119,9 +126,9 @@ class CallPeaksFromQvalues(object):
         self.__threshold()
         self.__postprocess()
         self.__get_subgraphs()
-        self.__get_max_paths()
         self.filtered_peaks.to_bed_file(
             self.out_file_base_name + "final_peaks.bed")
+        self.__get_max_paths()
 
     def save_max_path_sequences_to_fasta_file(self, file_name, sequence_retriever):
         assert self.max_paths is not None, \

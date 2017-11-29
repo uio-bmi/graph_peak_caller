@@ -75,7 +75,7 @@ class PeaksComparer(object):
                                  graph_peaks_file_name)
         return comparer
 
-    def check_similarity(self, analyse_first_n_peaks=50):
+    def check_similarity(self, analyse_first_n_peaks=250):
         i = 1
         for peak_datasets in [(self.peaks1, self.peaks2),
                               (self.peaks2, self.peaks1)]:
@@ -87,6 +87,7 @@ class PeaksComparer(object):
             peaks1, peaks2 = peak_datasets
             print("Number of peaks in main set: %d" % len(peaks1.intervals))
             not_matching = []
+            matching = []
             counter = 0
             for peak in sorted(peaks1, key=lambda x: x.score, reverse=True)[0:analyse_first_n_peaks]:
                 counter += 1
@@ -99,6 +100,7 @@ class PeaksComparer(object):
                     n_similar += 1
                     tot_n_similar += len(similar_intervals)
                     print(counter, peak.score, peak.start_position)
+                    matching.append(peak)
                     #for j in similar_intervals:
                     #    print("\t", j.score, j.start_position)
                 else:
@@ -109,6 +111,8 @@ class PeaksComparer(object):
 
             not_matching = IntervalCollection(not_matching)
             not_matching.to_file("not_matching_set%d.intervals" % i, text_file=True)
+            matching = IntervalCollection(matching)
+            matching.to_file("matching_set%d.intervals" % i, text_file=True)
 
             print("Total peaks in main set: %d" % n_tot)
             print("N identical to peak in other set: %d " % n_identical)
