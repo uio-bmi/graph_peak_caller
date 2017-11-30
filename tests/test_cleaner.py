@@ -309,7 +309,6 @@ class TestCleanerOnRandomGraphs(CleanupTester):
                 edge_dict[start].append(end)
 
         self.graph = obg.GraphWithReversals(blocks, edge_dict)
-        self.graph = obg.Graph(blocks, edge_dict)
 
     def setUpRandomIntervals(self, with_hole=False):
          # Create random interval
