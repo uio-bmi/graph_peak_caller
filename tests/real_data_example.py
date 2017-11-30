@@ -94,14 +94,17 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
                        out_name=out_name, has_control=has_control)
 
 
-def run_from_max_paths_step(graph_file_name, pileup_file_name, raw_pileup_file_name):
+def run_from_max_paths_step(graph_file_name, pileup_file_name, raw_pileup_file_name=None):
     ob_graph = obg.GraphWithReversals.from_file("obgraph")
     graph_size = sum(block.length() for block in ob_graph.blocks.values())
     experiment_info = callpeaks.ExperimentInfo(graph_size, 135, 36)
     q_values = SparsePileup.from_bed_graph(ob_graph, pileup_file_name)
-    raw_pileup = SparsePileup.from_bed_graph(ob_graph, raw_pileup_file_name)
+    if raw_pileup_file_name is not None:
+        raw_pileup = SparsePileup.from_bed_graph(ob_graph, raw_pileup_file_name)
+    else:
+        raw_pileup = None
     fromqvalues = callpeaks.CallPeaksFromQvalues(
-        ob_graph, q_values, experiment_info, "laststep_", raw_pileup=raw_pileup)
+        ob_graph, q_values, experiment_info, "laststep_", raw_pileup=raw_pileup, cutoff=0.025)
 
     fromqvalues.callpeaks()
     retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
@@ -187,6 +190,7 @@ def run_with_linear_reads_moved_to_graph_without_control():
         out_name="linear_reads_moved_to_graph_"
     )
 
+
 def run_macs_reads_remapped_without_control():
     run_with_gam("ctcf_mhc.gam",
                  "ctcf_mhc.gam",
@@ -221,14 +225,20 @@ def run_ctcf_example_w_control():
                  out_name="ctcf_q50_with_control_",
                  has_control=True)
 
-if __name__ == "__main__":
-    run_ctcf_example()
-    #run_ctcf_example()
-    #run_with_linear_reads_moved_to_graph_without_control()
-    # get_sequences("laststepmax_paths.intervalcollection")
-    run_ctcf_example()
-    exit()
 
+def run_from_q_values(out_name):
+    pileup_name = out_name + "q_values.bdg"
+    run_from_max_paths_step("graph.obg", pileup_name)
+
+if __name__ == "__main__":
+    # run_ctcf_example()
+    # #run_ctcf_example()
+    # #run_with_linear_reads_moved_to_graph_without_control()
+    # # get_sequences("laststepmax_paths.intervalcollection")
+    # # run_ctcf_example()
+    # exit()
+    run_from_q_values("ctcf_r1_")
+    exit()
     dm_folder = "../graph_peak_caller/dm_test_data/"
     # ob_graph = obg.GraphWithReversals.from_file("obgraph")
     # create_linear_map(ob_graph)
