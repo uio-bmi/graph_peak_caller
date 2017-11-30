@@ -151,8 +151,8 @@ class TestCleanerOnRandomGraphs(CleanupTester):
     def setUp(self):
         from collections import defaultdict
 
-        self.n_blocks = 5
-        self.n_edges = self.n_blocks + 2
+        self.n_blocks = 50
+        self.n_edges = self.n_blocks + 20
         blocks = {}
         blocks_list = []
         for i in range(1, self.n_blocks + 1):
