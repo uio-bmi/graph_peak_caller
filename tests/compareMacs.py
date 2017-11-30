@@ -5,7 +5,7 @@ import random
 import re
 import numpy as np
 import logging
- 
+
 from offsetbasedgraph import Block, Position,\
     DirectedInterval, GraphWithReversals
 from offsetbasedgraph.interval import IntervalCollection
@@ -70,7 +70,8 @@ class ValuedInterval(SimpleInterval):
         self.value = value
 
     def __str__(self):
-        return "(%s-%s:%s=%s)" % (self.node_id, self.start, self.end, self.value)
+        return "(%s-%s:%s=%s)" % (
+            self.node_id, self.start, self.end, self.value)
 
     @classmethod
     def from_file_line(cls, line):
@@ -207,7 +208,7 @@ class MACSTests(object):
 
     def _convert_valued_interval(self, interval):
         true_id = abs(interval.node_id)-1
-        interval.start += self.node_size*true_id 
+        interval.start += self.node_size*true_id
         interval.end += self.node_size*true_id
 
     def graph_to_linear_pos(self, pos):
@@ -222,7 +223,7 @@ class MACSTests(object):
         graph_intervals = [self.graph_to_linear_interval(g_interval)
                            for g_interval in graph_intervals]
         assert len(graph_intervals) == len(linear_intervals), \
-                "%d != %d" % (len(graph_intervals), len(linear_intervals))
+            "%d != %d" % (len(graph_intervals), len(linear_intervals))
         for interval in graph_intervals:
             assert interval in linear_intervals
 

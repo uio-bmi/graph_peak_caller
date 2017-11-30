@@ -91,7 +91,7 @@ class CallPeaksFromQvalues(object):
                                     self.out_file_base_name + "_holes.intervals")
         logging.info("Removing small peaks")
 
-        self.pre_processed_peaks.to_bed_graph(
+        self.pre_processed_peaks.to_bed_file(
             self.out_file_base_name + "_before_small_peaks_removal.bdg")
         self.filtered_peaks = self.pre_processed_peaks.remove_small_peaks(
             self.info.fragment_length)
@@ -196,6 +196,8 @@ class CallPeaks(object):
         if self.skip_filter_duplicates:
             logging.info("Not removing duplicates")
 
+        self.create_graph()
+
     def set_cutoff(self, value):
         self.cutoff = value
 
@@ -204,7 +206,6 @@ class CallPeaks(object):
         self.call_peaks()
 
     def run_pre_call_peaks_steps(self):
-        self.create_graph()
         self.preprocess()
         if self.info is None:
             self.info = ExperimentInfo.find_info(
@@ -331,9 +332,10 @@ class CallPeaks(object):
         logging.info("Creating control track using linear map %s" % self.linear_map)
 
         extensions = [self.info.fragment_length, 1000, 10000] if self.has_control else [10000]
-        control_pileup = linearsnarls.create_control(self.linear_map,  self.control_intervals,
-                                                     extensions, self.info.fragment_length)
-
+        control_pileup = linearsnarls.create_control(
+            self.linear_map,  self.control_intervals,
+            extensions, self.info.fragment_length)
+        control_pileup.graph = self.ob_graph
         logging.info("Number of control reads: %d" % self.info.n_control_reads)
 
         if save_to_file:
@@ -354,11 +356,12 @@ class CallPeaks(object):
 
     def call_peaks(self):
 
-        self.q_value_peak_caller = CallPeaksFromQvalues(self.graph,
-                                                   self.q_values,
-                                                   self.info,
-                                                   self.out_file_base_name,
-                                                   self.cutoff)
+        self.q_value_peak_caller = CallPeaksFromQvalues(
+            self.graph,
+            self.q_values,
+            self.info,
+            self.out_file_base_name,
+            self.cutoff)
         self.q_value_peak_caller.callpeaks()
 
     def save_max_path_sequences_to_fasta_file(self, file_name, retriever):

@@ -12,26 +12,17 @@ from random import randrange, seed
 class CleanupTester(unittest.TestCase):
     def assertIntervalsGiveSamePileup(self, areas, true_intervals):
         if not areas.areas:
-            #print(areas)
             self.assertEqual(len(true_intervals), 0)
             return
 
         pileup = SparsePileup.from_areas_collection(
             areas.graph,
             [areas])
-
-        #print("Pileup from areas")
-        #print(pileup)
-
         pileup.threshold(1)
         true_pileup = SparsePileup.from_intervals(
             true_intervals[0].graph,
             true_intervals)
         true_pileup.threshold(1)
-
-        #print("Pileup from intervals")
-        #print(true_pileup)
-
         self.assertEqual(pileup, true_pileup)
 
 
@@ -295,8 +286,8 @@ class TestCleanerOnRandomGraphs(CleanupTester):
     def setUp(self):
         from collections import defaultdict
 
-        self.n_blocks = 40 #  5
-        self.n_edges = self.n_blocks + 70 # +2
+        self.n_blocks = 50
+        self.n_edges = self.n_blocks + 20
         blocks = {}
         blocks_list = []
         for i in range(1, self.n_blocks + 1):
@@ -321,8 +312,7 @@ class TestCleanerOnRandomGraphs(CleanupTester):
             if end not in edge_dict[start]:
                 edge_dict[start].append(end)
 
-        self.graph = obg.Graph(blocks, edge_dict)
-        #print(self.graph)
+        self.graph = obg.GraphWithReversals(blocks, edge_dict)
 
     def setUpRandomIntervals(self, with_hole=False):
          # Create random interval
@@ -381,25 +371,19 @@ class TestCleanerOnRandomGraphs(CleanupTester):
     def test_filter_intervals(self):
         seed(1)
         for i in range(0, 200):
-            #print(" ======== TEst case =======")
             self.setUp()
             self.setUpRandomIntervals()
-            #print(self.graph)
-            #print(self.intervals)
             pileup = SparsePileup.from_intervals(
             self.graph, self.intervals)
             pileup.threshold(1)
             cleaner = PeaksCleaner(pileup, 1)
             areas = cleaner.run()
-            #print("Areas")
-            #print(areas)
             self.assertIntervalsGiveSamePileup(areas, self.intervals)
 
     def test_fill_holes(self):
         seed(1)
         n_cases_checked = 0
         for i in range(0, 200):
-            #print(" ======== TEst case =======")
             self.setUp()
             self.setUpRandomIntervals(True)
 
@@ -411,24 +395,11 @@ class TestCleanerOnRandomGraphs(CleanupTester):
 
             n_cases_checked += 1
 
-            #print(self.graph)
-            #print(self.intervals)
             pileup = SparsePileup.from_intervals(
-            self.graph, self.intervals)
+                self.graph, self.intervals)
             pileup.threshold(1)
             cleaner = HolesCleaner(pileup, 1)
             areas = cleaner.run()
-            """
-            print("--Intervals with hole")
-            print(self.intervals)
-            print("--Intervals without holes")
-            print(self.intervals_without_holes)
-            print("--Hole interval")
-            print(self.hole_interval)
-            print("--Areas")
-            print(areas)
-            """
-
             holes_found = areas.to_simple_intervals()
             correct_holes = [self.hole_interval]
             for hole in correct_holes:
@@ -436,13 +407,6 @@ class TestCleanerOnRandomGraphs(CleanupTester):
 
             for hole in holes_found:
                 self.assertTrue(hole.length() <= 1)
-
-
-            #pileup_correct = SparsePileup.from_intervals(self.graph, self.intervals_without_holes)
-            #print(pileup_correct)
-            #self.assertIntervalsGiveSamePileup(areas, [self.hole_interval])
-
-        #print("Checked %d cases" % n_cases_checked)
 
 
 if __name__ == "__main__":
