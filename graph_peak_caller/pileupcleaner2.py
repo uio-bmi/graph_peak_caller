@@ -51,17 +51,38 @@ class Cleaner(object):
 
         for added_node in extended:
             self.ignored_nodes.discard(added_node[-1])
-            self.ignored_nodes.discard(-added_node[-1])
-            logging.info("Discarding node %d" % added_node[-1])
+            # self.ignored_nodes.discard(-added_node[-1])
+            logging.debug("Discarding node %d" % added_node[-1])
 
         return extended
 
+    def _check_ignored_nodes(self):
+        def is_cyclic(start_node_id):
+            node_id = -start_node_id
+            prev_nodes = []
+            while True:
+                if node_id in prev_nodes:
+                    return True
+                prev_nodes.append(node_id)
+                next_nodes = [next_node for next_node in self.other_adj_list[node_id]
+                              if -next_node in self.ends_dict]
+                if not next_nodes:
+                    return False
+                node_id = next_nodes[0]
+
+        for ignored_node in self.ignored_nodes:
+            assert is_cyclic(ignored_node), "%s: %s,  %s\n%s\n%s" % (ignored_node, self.ignored_nodes, self.ends_dict, self.cur_adj_list, self.other_adj_list) + self.cur_dir
+            self.ignored_list.extend(self.ignored_nodes)
+        self.ignored_nodes = set([])
+
     def run(self):
+        self.ignored_list = []
         self.other_adj_list = self.graph.reverse_adj_list
         for adj_list, name in zip([self.graph.adj_list, self.graph.reverse_adj_list], ("F", "B")):
             self.cur_dir = name
             self.cur_adj_list = adj_list
             self.directed_run(adj_list)
+            self._check_ignored_nodes()
             self.other_adj_list = self.cur_adj_list
         self.finalize()
         return self.areas
@@ -130,9 +151,9 @@ class Cleaner(object):
                     self.graph.node_size(node_id)-startend[1])
                 areas[-node_id].append(self.graph.node_size(node_id))
 
-        for ignored_node in self.ignored_nodes:
-            logging.warning("Ignored node: %d" % ignored_node)
-            # areas[abs(ignored_node)] = [0, self.graph.node_size(ignored_node)]
+        for ignored_node in self.ignored_list:
+            areas[abs(ignored_node)] = [0, self.graph.node_size(ignored_node)]
+
         self.areas = Areas(self.graph, areas)
 
 
@@ -155,6 +176,7 @@ class PeaksCleaner(Cleaner):
         assert node_list[0] in self.ends_dict
         if node_list[-1] in node_list[1:-1]:  # Loop
             self.save(node_list, memo_value=LOOP_VALUE)
+            logging.warning("LOOP DETECTED")
             return False
 
         length = self.get_length(node_list)
@@ -176,6 +198,7 @@ class PeaksCleaner(Cleaner):
 
     def get_init_nodes(self):
         init_nodes = []
+        assert not self.ignored_nodes, self.ignored_nodes
         for node in self.ends_dict.keys():
             if self.is_init_node(node):
                 init_nodes.append([node])
@@ -207,6 +230,9 @@ class HolesCleaner(Cleaner):
 
         self.save(node_list)
         return True
+
+    def _check_ignored_nodes(self):
+        return None
 
     def get_areas(self, pileup):
         return pileup.find_valued_areas(False)

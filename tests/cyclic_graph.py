@@ -16,6 +16,7 @@ def get_large_cyclic_graph():
 
 
 def get_padded_cyclic_graph():
-    nodes = {1: obg.Block(100), 2: obg.Block(100), 3: obg.Block(100), 4: obg.Block(100)}
+    nodes = {1: obg.Block(100), 2: obg.Block(100),
+             3: obg.Block(100), 4: obg.Block(100)}
     adj_list = {1: [2], 2: [3, 4, 2]}
     return Graph(nodes, adj_list)

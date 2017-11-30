@@ -91,7 +91,7 @@ class CallPeaksFromQvalues(object):
                                     self.out_file_base_name + "_holes.intervals")
         logging.info("Removing small peaks")
 
-        self.pre_processed_peaks.to_bed_graph(
+        self.pre_processed_peaks.to_bed_file(
             self.out_file_base_name + "_before_small_peaks_removal.bdg")
         self.filtered_peaks = self.pre_processed_peaks.remove_small_peaks(
             self.info.fragment_length)
@@ -382,7 +382,6 @@ class CallPeaks(object):
             valued_areas.add_binary_areas(area)
         pileup = SparsePileup.from_valued_areas(
             self.ob_graph, valued_areas)
-        print("------------------", self.ob_graph.get_size())
         self._sample_track = self.out_file_base_name + "sample_track.bdg"
         if save_to_file:
             pileup.to_bed_graph(self._sample_track)
