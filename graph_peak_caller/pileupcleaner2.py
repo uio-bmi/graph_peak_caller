@@ -147,9 +147,14 @@ class Cleaner(object):
                 areas[node_id].insert(0, startend[1])
                 areas[node_id].insert(0, 0)
             else:
-                areas[-node_id].append(
-                    self.graph.node_size(node_id)-startend[1])
-                areas[-node_id].append(self.graph.node_size(node_id))
+                start = self.graph.node_size(node_id)-startend[1]
+                end = self.graph.node_size(node_id)
+                if -node_id in self.areas_builder.areas:
+                    if [start, end] == self.areas_builder.areas[-node_id]:
+                        continue  # Already added on positive
+
+                areas[-node_id].append(start)
+                areas[-node_id].append(end)
 
         for ignored_node in self.ignored_list:
             areas[abs(ignored_node)] = [0, self.graph.node_size(ignored_node)]
