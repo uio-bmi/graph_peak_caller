@@ -12,22 +12,25 @@ from random import randrange, seed
 class CleanupTester(unittest.TestCase):
     def assertIntervalsGiveSamePileup(self, areas, true_intervals):
         if not areas.areas:
-            print(areas)
+            #print(areas)
             self.assertEqual(len(true_intervals), 0)
+            return
 
         pileup = SparsePileup.from_areas_collection(
             areas.graph,
             [areas])
+
+        #print("Pileup from areas")
+        #print(pileup)
+
         pileup.threshold(1)
         true_pileup = SparsePileup.from_intervals(
             true_intervals[0].graph,
             true_intervals)
         true_pileup.threshold(1)
 
-        print("Pileup from areas")
-        print(pileup)
-        print("Pileup from intervals")
-        print(true_pileup)
+        #print("Pileup from intervals")
+        #print(true_pileup)
 
         self.assertEqual(pileup, true_pileup)
 
@@ -146,6 +149,137 @@ class CyclicHolesClean(TestCyclicCleanup):
         self.assertEqual(areas, true_areas)
 
 
+class TestNonCyclicPeakCleaner(CleanupTester):
+
+    def setUp(self):
+        self.graph = obg.GraphWithReversals({i: obg.Block(3) for i in range(1, 12)},
+                               {
+                                   -1: [-11],
+                                   1: [2, 3, 7],
+                                   2: [4, 5],
+                                   3: [4, 5],
+                                   4: [-5, 6, 8],
+                                   5: [7],
+                                   6: [-7, 9],
+                                   7: [9],
+                                   9: [10]
+                               })
+
+    def do_asserts(self):
+
+        for interval in self.correct_intervals:
+            interval.graph = self.graph
+
+        pileup = SparsePileup.from_intervals(
+            self.graph, self.intervals)
+        pileup.threshold(1)
+        cleaner = PeaksCleaner(pileup, 5)
+        areas = cleaner.run()
+        self.assertIntervalsGiveSamePileup(areas, self.correct_intervals)
+
+    def test_cleans_all(self):
+        self.intervals = [obg.Interval(0, 3, [1]), obg.Interval(3, 2, [4, 6])]
+        self.correct_intervals = []
+        self.do_asserts()
+
+    def test_single_long_interval(self):
+        self.intervals = [obg.Interval(0, 3, [1, 3, 4, 6, -7, 9, 10])]
+        self.correct_intervals = [obg.Interval(0, 3, [1, 3, 4, 6, -7, 9, 10])]
+        self.do_asserts()
+
+    def test_splitted_long_interval(self):
+        intervals = [obg.Interval(0, 1, [1, 3, 4]),
+                     obg.Interval(2, 3, [6, -7, 9, 10])]
+        self.intervals = intervals
+        self.correct_intervals = intervals
+        self.do_asserts()
+
+    def test_short_and_long_peak(self):
+        intervals = [obg.Interval(0, 1, [1, 3]),
+                     obg.Interval(2, 3, [6, -7, 9, 10])]
+        self.intervals = intervals
+        self.correct_intervals = [obg.Interval(0, 3, [1]),
+                                  intervals[1]]
+        self.do_asserts()
+
+    def test_peak_over_different_edges(self):
+        self.intervals = [
+            obg.Interval(0, 3, [-1, -11]),
+            obg.Interval(0, 2, [7]),
+        ]
+        self.correct_intervals = self.intervals
+        self.do_asserts()
+
+    def test_whole_graph_covered(self):
+        self.intervals = [
+            obg.Interval(0, 3, [i]) for i in range(1, 12)
+        ]
+        self.correct_intervals = self.intervals
+        self.do_asserts()
+
+    def test_subgraph_covered(self):
+        self.intervals = [
+            obg.Interval(1, 2, [3, 4, 8]),
+            obg.Interval(0, 3, [2, 5])
+        ]
+        self.correct_intervals = self.intervals
+        self.do_asserts()
+
+    def test_single_peak_positive_and_negative_node(self):
+        self.intervals = [obg.Interval(0, 3, [6, -7])]
+        self.correct_intervals = self.intervals
+        self.do_asserts()
+
+    def test_single_interval_on_reversed_nodes(self):
+        self.intervals = [obg.Interval(0, 3, [6, -7, -1, -11])]
+        self.correct_intervals = self.intervals
+        self.do_asserts()
+
+
+class TestNonCyclicHolesCleaner(CleanupTester):
+
+    def setUp(self):
+        self.graph = obg.GraphWithReversals({i: obg.Block(3) for i in range(1, 12)},
+                               {
+                                   -1: [-11],
+                                   1: [2, 3, 7],
+                                   2: [4, 5],
+                                   3: [4, 5],
+                                   4: [-5, 6, 8],
+                                   5: [7],
+                                   6: [-7, 9],
+                                   7: [9],
+                                   9: [10]
+                               })
+
+    def do_asserts(self):
+
+        for interval in self.correct_holes:
+            interval.graph = self.graph
+
+        pileup = SparsePileup.from_intervals(
+            self.graph, self.intervals)
+        pileup.threshold(1)
+        cleaner = HolesCleaner(pileup, 2)
+        areas = cleaner.run()
+        print("Areas from cleaner: ")
+        print(areas)
+        self.assertIntervalsGiveSamePileup(areas, self.correct_holes)
+
+    def test_single_hole(self):
+        self.intervals = [obg.Interval(0, 3, [2]),
+                          obg.Interval(1, 3, [4])]
+        self.correct_holes = [obg.Interval(0, 1, [4])]
+        self.do_asserts()
+
+    def test_middle_hole(self):
+        self.intervals = [obg.Interval(0, 1, [2]),
+                          obg.Interval(2, 3, [2]),
+                          obg.Interval(0, 3, [5])]
+        self.correct_holes = [obg.Interval(1, 2, [2])]
+        self.do_asserts()
+
+
 class TestExhaustiveCleaner(unittest.TestCase):
     def setUp(self):
         nodes = {i: obg.Block(10) for i in range(1, 11)}
@@ -184,7 +318,7 @@ class TestCleanerOnRandomGraphs(CleanupTester):
                 edge_dict[start].append(end)
 
         self.graph = obg.Graph(blocks, edge_dict)
-        print(self.graph)
+        #print(self.graph)
 
     def setUpRandomIntervals(self, with_hole=False):
          # Create random interval
@@ -243,7 +377,7 @@ class TestCleanerOnRandomGraphs(CleanupTester):
     def test_filter_intervals(self):
         seed(1)
         for i in range(0, 200):
-            print(" ======== TEst case =======")
+            #print(" ======== TEst case =======")
             self.setUp()
             self.setUpRandomIntervals()
             #print(self.graph)
@@ -261,7 +395,7 @@ class TestCleanerOnRandomGraphs(CleanupTester):
         seed(1)
         n_cases_checked = 0
         for i in range(0, 200):
-            print(" ======== TEst case =======")
+            #print(" ======== TEst case =======")
             self.setUp()
             self.setUpRandomIntervals(True)
 
@@ -304,7 +438,7 @@ class TestCleanerOnRandomGraphs(CleanupTester):
             #print(pileup_correct)
             #self.assertIntervalsGiveSamePileup(areas, [self.hole_interval])
 
-        print("Checked %d cases" % n_cases_checked)
+        #print("Checked %d cases" % n_cases_checked)
 
 
 if __name__ == "__main__":
