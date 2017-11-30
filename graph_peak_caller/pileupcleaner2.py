@@ -109,14 +109,12 @@ class Cleaner(object):
 
     def finalize(self):
         areas = {}
-        print("Areas before finalize: %s" % self.areas)
         for node_id, startends in self.areas.items():
             new_start_ends = []
             for i in range(len(startends) // 2):
                 start = int(startends[i*2])
                 end = int(startends[i*2+1])
                 if self._check_internal_interval(node_id, start, end):
-                    print("Adding internal %d, %d, %d" % (node_id, start, end))
                     new_start_ends.extend([start, end])
             if new_start_ends:
                 areas[node_id] = new_start_ends
