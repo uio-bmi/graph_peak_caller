@@ -291,8 +291,8 @@ class TestCleanerOnRandomGraphs(CleanupTester):
     def setUp(self):
         from collections import defaultdict
 
-        self.n_blocks = 50
-        self.n_edges = self.n_blocks + 20
+        self.n_blocks = 100
+        self.n_edges = self.n_blocks + 50
         blocks = {}
         blocks_list = []
         for i in range(1, self.n_blocks + 1):
@@ -379,7 +379,7 @@ class TestCleanerOnRandomGraphs(CleanupTester):
             self.setUp()
             self.setUpRandomIntervals()
             pileup = SparsePileup.from_intervals(
-            self.graph, self.intervals)
+                self.graph, self.intervals)
             pileup.threshold(1)
             cleaner = PeaksCleaner(pileup, 1)
             areas = cleaner.run()
@@ -388,7 +388,7 @@ class TestCleanerOnRandomGraphs(CleanupTester):
     def test_fill_holes(self):
         seed(1)
         n_cases_checked = 0
-        for i in range(0, 200):
+        for i in range(0, 1000):
             self.setUp()
             self.setUpRandomIntervals(True)
 

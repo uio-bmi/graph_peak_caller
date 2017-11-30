@@ -29,6 +29,9 @@ class Cleaner(object):
                 self.ends_dict[node] = int(
                     self.graph.node_size(node) - startends[-2])
 
+        for node in self.starts_dict:
+            assert self.starts_dict[node] == self.ends_dict[-node]
+
         logging.debug("N starts: %s", len(self.starts_dict))
         logging.debug("N ends: %s", len(self.ends_dict))
 
@@ -66,14 +69,24 @@ class Cleaner(object):
                 prev_nodes.append(node_id)
                 next_nodes = [next_node for next_node in self.other_adj_list[node_id]
                               if -next_node in self.ends_dict]
-                if not next_nodes:
+                f_next_nodes = [
+                    next_node for next_node in next_nodes if
+                    self.ends_dict[-next_node] == self.graph.node_size(next_node)]
+                if not f_next_nodes:
+                    for nn in next_nodes:
+                        print(nn, self.graph.node_size(nn))
+                        print(self.ends_dict[-nn])
+                        print(self.starts_dict[nn])
+                        print(self.areas[abs(nn)])
                     logging.error(prev_nodes)
                     return False
                 node_id = next_nodes[0]
 
         for ignored_node in self.ignored_nodes:
             assert is_cyclic(ignored_node),\
-                "%s: %s" % (ignored_node, self.ignored_nodes)
+                "%s: %s\n%s, %s" % (ignored_node, self.ignored_nodes,
+                                    self.areas[abs(ignored_node)],
+                                    self.other_adj_list[-ignored_node])
             self.ignored_list.extend(self.ignored_nodes)
         self.ignored_nodes = set([])
 
@@ -97,9 +110,6 @@ class Cleaner(object):
         while node_lists:
             logging.debug("N lists: %s", len(node_lists))
             node_list = node_lists.pop()
-
-            if 399346 in node_list:
-                print(node_list)
             extensions = self.extend_node_list(node_list)
             should_extend = self.handle_node_list(node_list, extensions)
             if not should_extend:
@@ -191,7 +201,7 @@ class PeaksCleaner(Cleaner):
 
         length = self.get_length(node_list)
         last_node = node_list[-1]
-        if last_node in self._cur_memo and length <= self._cur_memo[last_node]:
+        if len(node_list) > 1 and last_node in self._cur_memo and length <= self._cur_memo[last_node]:
             if last_node not in self._cur_remain_memo:
                 return False
             my_remain = self._cur_remain_memo[last_node] - self._cur_memo[last_node] + length

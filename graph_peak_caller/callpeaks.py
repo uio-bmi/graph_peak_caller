@@ -93,7 +93,7 @@ class CallPeaksFromQvalues(object):
         logging.info("Removing small peaks")
 
         self.pre_processed_peaks.to_bed_file(
-            self.out_file_base_name + "_before_small_peaks_removal.bdg")
+            self.out_file_base_name + "_before_small_peaks_removal.bed")
         self.filtered_peaks = self.pre_processed_peaks.remove_small_peaks(
             self.info.fragment_length)
 
