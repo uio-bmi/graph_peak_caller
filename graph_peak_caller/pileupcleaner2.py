@@ -109,12 +109,14 @@ class Cleaner(object):
 
     def finalize(self):
         areas = {}
+        print("Areas before finalize: %s" % self.areas)
         for node_id, startends in self.areas.items():
             new_start_ends = []
             for i in range(len(startends) // 2):
                 start = int(startends[i*2])
                 end = int(startends[i*2+1])
                 if self._check_internal_interval(node_id, start, end):
+                    print("Adding internal %d, %d, %d" % (node_id, start, end))
                     new_start_ends.extend([start, end])
             if new_start_ends:
                 areas[node_id] = new_start_ends
@@ -125,8 +127,14 @@ class Cleaner(object):
                 areas[node_id].insert(0, startend[1])
                 areas[node_id].insert(0, 0)
             else:
-                areas[-node_id].append(self.graph.node_size(node_id)-startend[1])
-                areas[-node_id].append(self.graph.node_size(node_id))
+                start = self.graph.node_size(node_id)-startend[1]
+                end = self.graph.node_size(node_id)
+                if -node_id in self.areas_builder.areas:
+                    if [start, end] == self.areas_builder.areas[-node_id]:
+                        continue  # Already added on positive
+
+                areas[-node_id].append(start)
+                areas[-node_id].append(end)
 
         for ignored_node in self.ignored_nodes:
             logging.warning("Ignored node: %d" % ignored_node)
