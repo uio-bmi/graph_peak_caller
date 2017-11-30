@@ -67,11 +67,13 @@ class Cleaner(object):
                 next_nodes = [next_node for next_node in self.other_adj_list[node_id]
                               if -next_node in self.ends_dict]
                 if not next_nodes:
+                    logging.error(prev_nodes)
                     return False
                 node_id = next_nodes[0]
 
         for ignored_node in self.ignored_nodes:
-            assert is_cyclic(ignored_node), "%s: %s,  %s\n%s\n%s" % (ignored_node, self.ignored_nodes, self.ends_dict, self.cur_adj_list, self.other_adj_list) + self.cur_dir
+            assert is_cyclic(ignored_node),\
+                "%s: %s" % (ignored_node, self.ignored_nodes)
             self.ignored_list.extend(self.ignored_nodes)
         self.ignored_nodes = set([])
 
@@ -95,6 +97,9 @@ class Cleaner(object):
         while node_lists:
             logging.debug("N lists: %s", len(node_lists))
             node_list = node_lists.pop()
+
+            if 399346 in node_list:
+                print(node_list)
             extensions = self.extend_node_list(node_list)
             should_extend = self.handle_node_list(node_list, extensions)
             if not should_extend:
