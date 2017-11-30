@@ -1,7 +1,7 @@
 import unittest
 from graph_peak_caller.subgraphcollection import SubgraphCollection, ConnectedAreas
 from graph_peak_caller.extender import Areas
-from offsetbasedgraph import Graph, Block, Interval, Position, GraphWithReversals
+from offsetbasedgraph import GraphWithReversals as Graph, Block, Interval, Position, GraphWithReversals
 import numpy as np
 from graph_peak_caller.sparsepileup import SparsePileup
 

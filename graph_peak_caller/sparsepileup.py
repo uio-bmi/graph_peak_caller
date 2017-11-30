@@ -274,6 +274,7 @@ class SparsePileup(Pileup):
         self.graph = graph
         self.data = {rp: ValuedIndexes.empty(graph.node_size(rp))
                      for rp in self.graph.blocks}
+        self.graph.assert_correct_edge_dicts()
 
     def __eq__(self, other):
         for node_id, vi in other.data.items():

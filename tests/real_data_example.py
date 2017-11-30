@@ -226,7 +226,7 @@ if __name__ == "__main__":
     #run_ctcf_example()
     #run_with_linear_reads_moved_to_graph_without_control()
     # get_sequences("laststepmax_paths.intervalcollection")
-    run_ctcf_example()
+    #run_ctcf_example()
     exit()
 
     dm_folder = "../graph_peak_caller/dm_test_data/"

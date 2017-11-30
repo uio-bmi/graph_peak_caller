@@ -64,7 +64,7 @@ true_pileup = Pileup(None)
 true_pileup.set_count_arrays(true_counts)
 
 
-one_block_graph = offsetbasedgraph.Graph({1: offsetbasedgraph.Block(10)}, {})
+one_block_graph = offsetbasedgraph.GraphWithReversals({1: offsetbasedgraph.Block(10)}, {})
 one_block_pileup1_intervals = [
     offsetbasedgraph.Interval(1, 10, [1], one_block_graph),
     offsetbasedgraph.Interval(1, 5, [1], one_block_graph)]

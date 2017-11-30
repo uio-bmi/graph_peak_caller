@@ -76,6 +76,7 @@ class CallPeaksFromQvalues(object):
         self.out_file_base_name = out_file_base_name
         self.cutoff = cutoff
         self.raw_pileup = raw_pileup
+        self.graph.assert_correct_edge_dicts()
 
     def __threshold(self):
         threshold = -np.log10(self.cutoff)

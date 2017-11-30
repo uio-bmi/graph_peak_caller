@@ -140,7 +140,7 @@ class TestSparseControlSample(unittest.TestCase):
         self.assertTrue(np.all(values == correct_values))
 
     def test_from_intervals(self):
-        graph = obg.Graph({1: obg.Block(10), 2: obg.Block(10)}, {1: [2]})
+        graph = obg.GraphWithReversals({1: obg.Block(10), 2: obg.Block(10)}, {1: [2]})
         intervals = [
             obg.Interval(1, 5, [1]),
             obg.Interval(3, 7, [1]),
@@ -157,7 +157,7 @@ class TestSparseControlSample(unittest.TestCase):
         self.assertTrue(np.all([0, 1, 0] == data[2].values))
 
     def test_from_intervals2(self):
-        graph = obg.Graph({1: obg.Block(10), 2: obg.Block(10), 3: obg.Block(10)}, {1: [2], 2: [3]})
+        graph = obg.GraphWithReversals({1: obg.Block(10), 2: obg.Block(10), 3: obg.Block(10)}, {1: [2], 2: [3]})
         intervals = [
             obg.Interval(1, 5, [1]),
             obg.Interval(3, 7, [1]),
@@ -185,7 +185,7 @@ class TestSparseControlSample(unittest.TestCase):
 
 
     def test_intervals_to_start_and_ends(self):
-        graph = obg.Graph({1: obg.Block(10), 2: obg.Block(10)}, {1: [2]})
+        graph = obg.GraphWithReversals({1: obg.Block(10), 2: obg.Block(10)}, {1: [2]})
         intervals = [
             obg.Interval(1, 5, [1]),
             obg.Interval(3, 7, [1]),
@@ -220,7 +220,7 @@ class TestSparseControlSample(unittest.TestCase):
 class TestSparsePileupSetIntervals(unittest.TestCase):
 
     def setUp(self):
-        self.graph = obg.Graph({i: obg.Block(10) for i in range(1, 5)},
+        self.graph = obg.GraphWithReversals({i: obg.Block(10) for i in range(1, 5)},
                                {
                                    1: [2],
                                    2: [3],
