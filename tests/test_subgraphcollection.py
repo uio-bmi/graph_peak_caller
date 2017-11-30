@@ -52,6 +52,8 @@ class Tester(unittest.TestCase):
         self.middle_closed_area = ConnectedAreas(self.simple_graph, {2: np.array([1, 2])})
         self.middle_left_area = ConnectedAreas(self.simple_graph, {2: np.array([0, 2])})
 
+
+
 class TestSubGraphCollection(Tester):
 
     def test_add_single_area(self):
@@ -147,6 +149,21 @@ class TestSubGraphCollection(Tester):
             self.assertTrue(np.all(areas[1] == [0, 3]))
             self.assertTrue(np.all(areas[2] == [0, 3]))
             self.assertTrue(np.all(areas[3] == [0, 3]))
+
+    def test_special_case(self):
+
+        graph = Graph({i: Block(3) for i in range(1, 7)},
+                    {1: [2, 3],
+                     2: [4],
+                     4: [5],
+                     5: [6]
+                    })
+        intervals = [Interval(0, 3, [1, 2, 4, 5, 6]),
+                     Interval(0, 3, [3])]
+        pileup = SparsePileup.from_intervals(graph, intervals)
+        collection = SubgraphCollection.from_pileup(graph, pileup)
+        print(collection.subgraphs)
+
 
     def test_to_file(self):
         collection = SubgraphCollection(self.simple_graph)
