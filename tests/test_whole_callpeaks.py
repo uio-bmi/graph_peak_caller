@@ -79,7 +79,7 @@ class TestWholeCallpeaksSplitGraph(TestWholeCallPeaks):
         }
         self.snarlgraph = SnarlGraphBuilder(self.graph.copy(), self.snarls,
                                             id_counter=6).build_snarl_graphs()
-        LinearSnarlMap.from_snarl_graph(self.snarlgraph, self.graph).to_file("test_linear_map.tmp")
+        LinearSnarlMap.from_snarl_graph(self.snarlgraph, self.graph).to_json_files("test_linear_map.tmp")
 
     def test_single_peak(self):
         self.peaks = [
@@ -191,7 +191,7 @@ class TestWholeCallPeaksHierarchical(TestWholeCallPeaks):
             end_node=14
         )
 
-        LinearSnarlMap.from_snarl_graph(self.snarlgraph, self.graph).to_file("test_linear_map.tmp")
+        LinearSnarlMap.from_snarl_graph(self.snarlgraph, self.graph).to_json_files("test_linear_map.tmp")
 
     def test_single_peak(self):
         

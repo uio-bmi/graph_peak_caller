@@ -104,11 +104,9 @@ class LinearSnarlMap(object):
         with open(base_name+"starts.json") as f:
             length = int(f.readline().strip())
             starts = json.loads(f.read())
-        with open(base_name+"ends.json"):
+        with open(base_name+"ends.json") as f:
             ends = json.loads(f.read())
-        return cls(length=length,
-                   starts=starts,
-                   ends=ends)
+        return cls(starts, ends, length, graph)
 
     def to_file(self, file_name):
         with open("%s" % file_name, "wb") as f:
