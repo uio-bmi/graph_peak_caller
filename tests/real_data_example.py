@@ -15,6 +15,7 @@ import offsetbasedgraph as obg
 from graph_peak_caller.snarls import SnarlGraph, SnarlGraphBuilder
 from graph_peak_caller.snarlmaps import LinearSnarlMap
 from graph_peak_caller.peakcollection import PeakCollection
+from graph_peak_caller.util import create_linear_map, create_ob_graph_from_vg
 import traceback
 import warnings
 import sys
@@ -27,16 +28,6 @@ def warn_with_traceback(message, category, filename, lineno, file=None, line=Non
     log.write(warnings.formatwarning(message, category, filename, lineno, line))
 
 warnings.showwarning = warn_with_traceback
-
-
-def create_linear_map(ob_graph, snarl_file_name = "haplo1kg50-mhc.snarls", out_file_name="linear_map"):
-    builder = SnarlGraphBuilder.from_vg_snarls(
-        ob_graph.copy(),
-        snarl_file_name)
-    snarlgraph = builder.build_snarl_graphs()
-    # LinearSnarlMap(snarlgraph, ob_graph)
-    linear_map = LinearSnarlMap(snarlgraph, ob_graph.copy())
-    linear_map.to_file(out_file_name)
 
 
 def run_with_intervals(ob_graph,
@@ -111,35 +102,6 @@ def run_from_max_paths_step(graph_file_name, pileup_file_name, raw_pileup_file_n
     fromqvalues.save_max_path_sequences_to_fasta_file("sequences.fasta",
                                                       retriever)
 
-def get_sequences(path_file):
-    max_paths = PeakCollection.from_file(path_file, True)
-    retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
-    sequences = [retriever.get_interval_sequence(max_path)
-                 for max_path in max_paths]
-    f = open("tmp_sequences", "w")
-    i = 0
-    for seq in sequences:
-        f.write(">peak" + str(i) + "\n" + seq + "\n")
-        i += 1
-
-def peak_sequences_to_fasta(vg_graph_file_name, peaks_file_name, fasta_file_name):
-
-    sequence_retriever = SequenceRetriever.from_vg_graph(vg_graph_file_name)
-    peaks = open(peaks_file_name)
-    fasta_file = open(fasta_file_name, "w")
-    for line in peaks.read():
-        l = line.split()
-        node = int(l[0])
-        start = int(l[1])
-        end = int(l[2])
-        sequence = sequence_retriever.get_sequence_on_directed_node()
-
-
-def create_ob_graph_from_vg(vg_json_graph_file_name, ob_graph_file_name="graph.obg"):
-    vg_graph = pyvg.Graph.create_from_file(vg_json_graph_file_name)
-    ob_graph = vg_graph.get_offset_based_graph()
-    ob_graph.to_file(ob_graph_file_name)
-    logging.info("Wrote obgraph to %s" % ob_graph_file_name)
 
 
 def run_with_macs_filtered_reads():
@@ -275,17 +237,24 @@ def run_mhc_using_macs_reads():
                        linear_map="mhc/linear_map.lm"
     )
 
+def run_chr1_example():
+    create_ob_graph_from_vg("vgdata/chr1/graph.json", "vgdata/chr1/graph.obg")
+    ob_graph = obg.Graph.from_file("vgdata/chr1/graph.obg")
+    create_linear_map(ob_graph, "vgdata/chr1/graph.snarls", "vgdata/chr1/linear_map.lm")
+
+
 def run_from_q_values(out_name):
     pileup_name = out_name + "q_values.bdg"
     run_from_max_paths_step("graph.obg", pileup_name)
 
 if __name__ == "__main__":
+    run_chr1_example()
     #run_srf_example()
     #run_mhc_ctcf_example()
     #run_lrc_kir_using_macs_reads()
     #run_mhc_using_macs_reads()
     #run_lrc_kir_ctcf_example()
-    run_mhc_ctcf_example()
+    #run_mhc_ctcf_example()
     #run_ctcf_example_w_control()
     #run_with_linear_reads_moved_to_graph_without_control()
     #run_ctcf_example()

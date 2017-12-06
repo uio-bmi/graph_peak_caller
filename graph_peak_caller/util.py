@@ -5,7 +5,10 @@ from pybedtools import BedTool
 from offsetbasedgraph import IntervalCollection
 from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
 import offsetbasedgraph as obg
-
+from .linearsnarls import LinearSnarlMap
+from .snarls import SnarlGraphBuilder, SnarlGraph
+import pyvg
+import logging
 
 class LinearRegion(object):
     def __init__(self, chromosome, start, end):
@@ -172,6 +175,16 @@ def sanitize_indices_and_values(indices, values):
     return new_indices, new_values
 
 
+def create_linear_map(ob_graph, snarl_file_name = "haplo1kg50-mhc.snarls", out_file_name="linear_map"):
+    builder = SnarlGraphBuilder.from_vg_snarls(
+        ob_graph.copy(),
+        snarl_file_name)
+    snarlgraph = builder.build_snarl_graphs()
+    linear_map = LinearSnarlMap(snarlgraph, ob_graph.copy())
+    linear_map.to_file(out_file_name)
+    logging.info("Created linear snarl map, wrote to file %s" % out_file_name)
+
+
 def filter_ucsc_snps_on_region_output_vcf(bed_file_name, out_file_name,
                                           chromosome, start, end):
     out_file = open(out_file_name, "w")
@@ -205,6 +218,13 @@ def filter_ucsc_snps_on_region_output_vcf(bed_file_name, out_file_name,
         out_file.writelines(["%s\t%d\t%s\t%s\t%s\t%d\t%s\n" % (chr, pos + 1, id, ref, alt, 0, "PASS")])
 
     out_file.close()
+
+
+def create_ob_graph_from_vg(vg_json_graph_file_name, ob_graph_file_name="graph.obg"):
+    vg_graph = pyvg.Graph.create_from_file(vg_json_graph_file_name)
+    ob_graph = vg_graph.get_offset_based_graph()
+    ob_graph.to_file(ob_graph_file_name)
+    logging.info("Wrote obgraph to %s" % ob_graph_file_name)
 
 
 def create_linear_path(ob_graph, vg_graph, path_name="ref"):

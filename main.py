@@ -1,96 +1,156 @@
 import pyvg.util
 import pyvg.vg as vg
-from graph_peak_caller.callpeaks import CallPeaks
 import offsetbasedgraph as obg
-data_folder = "graph_peak_caller/dm_test_data/"
-
-
-from graph_peak_caller.util import sparse_maximum, sanitize_indices_and_values
-import numpy as np
+from pyvg.util import vg_gam_file_to_interval_collection
+from pyvg.sequences import SequenceRetriever
+from graph_peak_caller.util import create_linear_map, create_ob_graph_from_vg
+import logging
+from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo
+import argparse
 import sys
 
-#indices, values = sanitize_indices_and_values(np.array([1, 1, 4, 4]), np.array([4, 4, 2, 2]))
-#print(indices)
-#print(values)
-#sys.exit()
+logging.basicConfig(level=logging.INFO)
+
+def run_with_intervals(ob_graph,
+                       sample_intervals,
+                       control_intervals,
+                       out_name,
+                       has_control=True,
+                       vg_graph_file_name="haplo1kg50-mhc.vg",
+                       fragment_length=135,
+                       read_length=36,
+                       linear_map="haplo1kg50-mhc.lm"):
+    logging.info("Running from intervals")
+    graph_size = sum(block.length() for block in ob_graph.blocks.values())
+    logging.info("Graph size: %d" % graph_size)
+    logging.info("N nodes in graph: %d" % len(ob_graph.blocks))
+
+    experiment_info = ExperimentInfo(graph_size, fragment_length, read_length)
+    caller = CallPeaks(
+        ob_graph, sample_intervals, control_intervals,
+        experiment_info=experiment_info,
+        out_file_base_name=out_name, has_control=has_control,
+        linear_map=linear_map)
+    caller.set_cutoff(0.05)
+    caller.verbose = True
+    caller.run()
+    retriever = SequenceRetriever.from_vg_graph(vg_graph_file_name)
+    caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
 
 
-indices1 = np.array([0, 4])
-values1 = np.array([0, 3])
-indices2 = np.array([0, 4])
-values2 = np.array([1, 2])
+def run_with_gam(ob_graph_file_name,
+                 gam_file_name, gam_control_file,
+                 vg_graph_file_name,
+                 out_name="real_data_",
+                 has_control=True,
+                 limit_to_chromosomes=False,
+                 fragment_length=135, read_length=36,
+                 linear_map_file_name = False):
+
+    logging.info("Running from gam files")
+
+    ob_graph = obg.GraphWithReversals.from_file(ob_graph_file_name)
+    reads_intervals = vg_gam_file_to_interval_collection(
+         None, gam_file_name, ob_graph)
+
+    control_intervals = vg_gam_file_to_interval_collection(
+         None, gam_control_file, ob_graph)
+
+    run_with_intervals(ob_graph, reads_intervals, control_intervals,
+                       out_name=out_name, has_control=has_control,
+                       vg_graph_file_name=vg_graph_file_name,
+                       fragment_length=fragment_length,
+                       read_length=read_length,
+                       linear_map=linear_map_file_name)
 
 
-max_indices, max_values = sparse_maximum(indices1, values1, indices2, values2, 10)
-print(max_indices)
-print(max_values)
+
+def run_mhc_ctcf_example():
+    create_ob_graph_from_vg("tests/mhc/graph.json", "tests/mhc/graph.obg")
+    ob_graph = obg.Graph.from_file("tests/mhc/graph.obg")
+    create_linear_map(ob_graph, "tests/mhc/graph.snarls", "tests/mhc/linear_map.lm")
+
+    run_with_gam(
+        "tests/mhc/graph.obg",
+        "tests/mhc/macs_remapped_mhc.gam",
+        "tests/mhc/macs_remapped_mhc.gam",
+        "tests/mhc/graph.vg",
+        "tests/mhc/macs_reads_remapped_",
+        has_control=False,
+        fragment_length=135,
+        read_length=36,
+        linear_map_file_name="tests/mhc/linear_map.lm"
+    )
+#run_mhc_ctcf_example()
+
+def run_callpeaks(args):
+    out_name = args.out_base_name
+    json_file_name = args.vg_json_graph_file_name
+    obg_file_name = json_file_name.replace(".json", ".obg")
+    create_ob_graph_from_vg(json_file_name, obg_file_name)
+    ob_graph = obg.Graph.from_file(obg_file_name)
+    create_linear_map(ob_graph, args.vg_snarls_file_name, out_name + "linear_map.lm")
+
+    has_control = True
+    if args.with_control == "False":
+        has_control = False
+
+    run_with_gam(
+        obg_file_name,
+        args.sample_reads_file_name,
+        args.control_reads_file_name,
+        args.vg_graph_file_name,
+        args.out_base_name,
+        has_control=has_control,
+        fragment_length=int(args.fragment_length),
+        read_length=int(args.read_length),
+        linear_map_file_name=out_name + "linear_map.lm"
+    )
 
 
+interface = \
+{
+    'callpeaks':
+        {
+            'help': 'Callpeaks',
+            'arguments':
+                [
+                    ('vg_json_graph_file_name', "Json Graph file name (.json)"),
+                    ('vg_graph_file_name', "Graph file name (.vg)"),
+                    ('vg_snarls_file_name', "Snarls file name"),
+                    ('sample_reads_file_name', ' '),
+                    ('control_reads_file_name', ' '),
+                    ('with_control', 'True/False'),
+                    ('out_base_name', 'eg experiment1_'),
+                    ('fragment_length', ''),
+                    ('read_length', '')
+                ],
+            'method': run_callpeaks
+        }
+}
 
+# Create parser
+parser = argparse.ArgumentParser(
+    description='Graph peak caller')
+subparsers = parser.add_subparsers(help='Subcommands')
 
-def create_graphs():
-    pyvg.util.vg_to_offsetbasedgraphs_per_chromosome(
-        data_folder + "x.json", data_folder + "obg")
+for command in interface:
+    example = ""
+    if "example_run" in interface[command]:
+        example = "\nExample: " + interface[command]["example_run"]
 
+    subparser = subparsers.add_parser(command,
+                            help=interface[command]["help"] + example)
+    for argument, help in interface[command]["arguments"]:
+        subparser.add_argument(argument, help=help)
+    subparser.set_defaults(func=interface[command]["method"])
 
-def translate_intervals(interval_file, limimt_to_chromosome=None):
-    vg_graph = vg.Graph.create_from_file(
-        data_folder+"x.json",
-        limit_to_chromosome=limimt_to_chromosome)
-    ob_graph = vg_graph.get_offset_based_graph()
-    pyvg.util.vg_mapping_file_to_interval_file(
-                        data_folder + "intervals_" + limimt_to_chromosome,
-                        vg_graph,
-                        data_folder + interval_file,
-                        ob_graph)
+if len(sys.argv) == 1:
+    parser.print_help()
+    sys.exit(1)
 
-
-if __name__ == "__main__":
-    pass
-    #create_graphs()
-    #chromosome = "chr2R"
-    #translate_intervals("reads3.json", chromosome)
-
-    #obg = obg.Graph.from_file(data_folder+"obg%s.tmp" % chromosome)
-    #caller = CallPeaks(data_folder + "obg%s.tmp" % chromosome,
-    #                   data_folder + "intervals_" + chromosome, verbose=True)
-    #caller.run()
-
-    #caller.create_graph()
-    #
-    #caller.find_info()
-    #caller.determine_shift()
-    #caller.sample_file_name = caller.remove_alignments_not_in_graph(caller.sample_file_name)
-    #caller.sample_file_name = caller.filter_duplicates(caller.sample_file_name)
-
-
-#    print("Creating vg graph")
-#    # vg_graph = vg.Graph.create_from_file(
-#    #"graph_peak_caller/dm_test_data/x.json",
-#    #    limit_to_chromosome="chr4",
-#    #    do_read_paths=False)
-#
-#    # vg_graph.to_file("tmp.vggraph")
-#    vg_graph = vg.Graph.from_file("tmp.vggraph")
-#    print("Creating obg graph")
-#    #ob_graph = vg_graph.get_offset_based_graph()
-#    # ob_graph.to_file("tmp.obgraph")
-#    ob_graph = offsetbasedgraph.Graph.from_file(
-#        "tmp.obgraph")
-#    print("Reading alignments")
-#    f = open("graph_peak_caller/dm_test_data/mapped_reads_sample.json")
-#    jsons = (json.loads(line) for line in f.readlines())
-#    alignments = [vg.Alignment.from_json(json_dict) for json_dict in jsons]
-#    alignments = vg_graph.filter(alignments)
-#    obg_alignments = [alignment.path.to_obg(ob_graph)
-#                      for alignment in alignments]
-#    for alignment in obg_alignments:
-#        print(alignment)
-#    print("Creating pileup")
-#
-#
-#    pileup = Pileup(ob_graph, obg_alignments, shift=50)
-#    pileup.create()
-#    pileup.to_bed_graph("tmp.bdg")
-#    print("#", pileup.summary())
-#     print("#", (sum(interval.length() for interval in obg_alignments)))
+args = parser.parse_args()
+if hasattr(args, 'func'):
+    args.func(args)
+else:
+    parser.help()

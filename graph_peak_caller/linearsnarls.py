@@ -1,7 +1,6 @@
 import numpy as np
 from collections import defaultdict
 from .sparsepileup import SparsePileup
-from .util import sanitize_indices_and_values
 from .eventsorter import EventSorter, EventSort
 from .snarlmaps import LinearSnarlMap
 import logging
