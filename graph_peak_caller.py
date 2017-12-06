@@ -174,4 +174,8 @@ python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json gr
 
 """
 python3 ../../graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls ctcf_filtered_r1.0.2.gam ctcf_filtered_r1.0.2.gam False test_ 136 35 112342
+
+python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls filtered.gam filtered.gam False run1/ 135 36 23739138
+
+
 """
