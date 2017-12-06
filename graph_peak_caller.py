@@ -170,5 +170,5 @@ else:
 
 
 """
-python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls ctcf_filtered_r0.97.gam ctcf_filtered_r0.97.gam run1/ 135 36
+python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls ctcf_filtered_r0.97.gam ctcf_filtered_r0.97.gam False run1/ 135 36
 """
