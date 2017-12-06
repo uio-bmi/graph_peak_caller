@@ -2,6 +2,7 @@ import json
 import offsetbasedgraph as obg
 from pybedtools import BedTool
 import logging
+from offsetbasedgraph import DirectedInterval
 
 
 class Peak(obg.DirectedInterval):
@@ -44,6 +45,44 @@ class Peak(obg.DirectedInterval):
         return cls(object["start"], object["end"], object["region_paths"],
                    direction=object["direction"], graph=graph,
                    score=object["average_q_value"])
+
+
+class ReadCollection(obg.IntervalCollection):
+
+    @classmethod
+    def create_from_linear_intervals_in_bed_file(
+            cls, ob_graph, linear_path_interval, bed_file_name,
+            graph_region=None):
+        peaks = BedTool(bed_file_name)
+        intervals_on_graph = []
+        i = 0
+        graph_start_offset = 0 if graph_region is None else graph_region.start
+        for peak in peaks:
+            start = peak.start - graph_start_offset
+            end = peak.end - graph_start_offset
+            end = min(end, linear_path_interval.length())
+            #print("Peak: %s" % peak)
+            if graph_region is not None:
+                if not PeakCollection._is_in_graph(peak, graph_region.chromosome,
+                                        graph_region.start,
+                                        graph_region.end):
+                    continue
+            if i % 100 == 0:
+                print("Interval %i" % (i))
+            i += 1
+            linear_interval = linear_path_interval.get_subinterval(start, end)
+            assert peak.strand == "+" or peak.strand == "-"
+            if peak.strand == "-":
+                linear_interval = linear_interval.get_reverse()
+
+            linear_interval = DirectedInterval(linear_interval.start_position,
+                                               linear_interval.end_position,
+                                               linear_interval.region_paths,
+                                               ob_graph)
+            print("Adding %s" % linear_interval)
+
+            intervals_on_graph.append(linear_interval)
+        return cls(intervals_on_graph)
 
 
 class PeakCollection(obg.IntervalCollection):

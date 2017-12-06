@@ -5,7 +5,10 @@ from pybedtools import BedTool
 from offsetbasedgraph import IntervalCollection
 from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
 import offsetbasedgraph as obg
-
+from .linearsnarls import LinearSnarlMap
+from .snarls import SnarlGraphBuilder, SnarlGraph
+import pyvg
+import logging
 
 class LinearRegion(object):
     def __init__(self, chromosome, start, end):
@@ -13,6 +16,8 @@ class LinearRegion(object):
         self.start = start
         self.end = end
 
+LRC_REGION = LinearRegion("chr19", 54025634, 55084318)
+MHC_REGION = LinearRegion("chr6", 28510119, 33480577)
 
 def get_average_signal_values_within_peaks(signal_file_name,
                                            peaks_bed_file_name):
@@ -73,10 +78,12 @@ def fasta_sequence_to_linear_path_through_graph(
 
 
 def get_linear_paths_in_graph(ob_graph, vg_graph, write_to_file_name=None):
+    assert ob_graph is not None
     intervals = {}
     for path in vg_graph.paths:
         obg_interval = path.to_obg(ob_graph=ob_graph)
         obg_interval.name = path.name
+        print("Path name: %s" % path.name)
         intervals[obg_interval.name] = obg_interval
 
     if write_to_file_name is not None:
@@ -168,6 +175,16 @@ def sanitize_indices_and_values(indices, values):
     return new_indices, new_values
 
 
+def create_linear_map(ob_graph, snarl_file_name = "haplo1kg50-mhc.snarls", out_file_name="linear_map"):
+    builder = SnarlGraphBuilder.from_vg_snarls(
+        ob_graph.copy(),
+        snarl_file_name)
+    snarlgraph = builder.build_snarl_graphs()
+    linear_map = LinearSnarlMap(snarlgraph, ob_graph.copy())
+    linear_map.to_file(out_file_name)
+    logging.info("Created linear snarl map, wrote to file %s" % out_file_name)
+
+
 def filter_ucsc_snps_on_region_output_vcf(bed_file_name, out_file_name,
                                           chromosome, start, end):
     out_file = open(out_file_name, "w")
@@ -202,6 +219,20 @@ def filter_ucsc_snps_on_region_output_vcf(bed_file_name, out_file_name,
 
     out_file.close()
 
+
+def create_ob_graph_from_vg(vg_json_graph_file_name, ob_graph_file_name="graph.obg"):
+    vg_graph = pyvg.Graph.create_from_file(vg_json_graph_file_name)
+    ob_graph = vg_graph.get_offset_based_graph()
+    ob_graph.to_file(ob_graph_file_name)
+    logging.info("Wrote obgraph to %s" % ob_graph_file_name)
+
+
+def create_linear_path(ob_graph, vg_graph, path_name="ref"):
+    assert ob_graph is not None
+    linear_paths = get_linear_paths_in_graph(ob_graph, vg_graph, "linear_maps")
+    ref_path = linear_paths[path_name].to_indexed_interval()
+    return ref_path
+
 if __name__ == "__main__":
     """
     values = get_average_signal_values_within_peaks("../data/sample1_signal_1.bigwig", "../data/sample1_peaks_1.bed")
@@ -213,19 +244,24 @@ if __name__ == "__main__":
     plt.show()
     #longest_segment("../data/sample1_signal_1.bedGraph")
     """
+    from graph_peak_caller.peakcollection import PeakCollection, ReadCollection
+    from pyvg.vg import Graph
+    import logging
+    logging.basicConfig(level=logging.INFO)
 
-    #filter_ucsc_snps_on_region_output_vcf("snp141_chr6.txt", "snp141_mhc_500k.vcf", "chr6", 28510119, 28510119 + 500000) #, 33480577)
-    ob_graph = obg.GraphWithReversals.from_file("haplo1kg50-mhc.obg")
-    from graph_peak_caller.peakcollection import PeakCollection
-    linear_path = IntervalCollection.create_list_from_file("linear_paths_haplo1kg-50.intervals", ob_graph).intervals[0]
-    linear_path = linear_path.to_indexed_interval()
+    ob_graph = obg.GraphWithReversals.from_file("../tests/mhc/graph.obg")
+    vg_graph = Graph.create_from_file("../tests/mhc/graph.json")
 
+    #print(vg_graph.paths.keys())
 
-    linear_reads = PeakCollection.create_from_linear_intervals_in_bed_file(ob_graph,
-                                                                           linear_path,
-                                                                           #"ctcf_control_reads_mhc.bed",
-                                                                           "ctcf_reads_mhc.bed",
-                                                                           28510119,
-                                                                           33480577)
+    linear_path = create_linear_path(ob_graph, vg_graph, path_name="ref")
 
-    linear_reads.to_file("sample_linear_reads.intervals", text_file=False)
+    linear_reads = \
+        ReadCollection.create_from_linear_intervals_in_bed_file(
+                            ob_graph,
+                            linear_path,
+                            #"../tests/ENCFF639IFG_lrc.bed",
+                            "ENCFF639IFG.bed",
+                            graph_region=MHC_REGION)
+
+    linear_reads.to_file("../tests/mhc/macs_reads_on_graph.intervals", text_file=True)

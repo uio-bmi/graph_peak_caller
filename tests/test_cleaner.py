@@ -270,6 +270,15 @@ class TestNonCyclicHolesCleaner(CleanupTester):
         self.correct_holes = [obg.Interval(1, 2, [2])]
         self.do_asserts()
 
+    def test_edge_holes(self):
+        self.intervals = [obg.Interval(0, 2, [i]) for i in [2, 4, 6]]
+        self.intervals.append(obg.Interval(1, 2, [5]))
+        self.correct_holes = [
+            obg.Interval(2, 1, [4, -5]),
+            obg.Interval(2, 1, [2, 5]),
+        ]
+        self.do_asserts()
+
 
 class TestExhaustiveCleaner(unittest.TestCase):
     def setUp(self):

@@ -274,6 +274,7 @@ class SparsePileup(Pileup):
         self.graph = graph
         self.data = {rp: ValuedIndexes.empty(graph.node_size(rp))
                      for rp in self.graph.blocks}
+        self.graph.assert_correct_edge_dicts()
 
     def __eq__(self, other):
         for node_id, vi in other.data.items():
@@ -326,14 +327,17 @@ class SparsePileup(Pileup):
         self.sanitize()
 
     def sanitize(self):
-        for valued_indexes in self.data.values():
+        for node_id, valued_indexes in self.data.items():
             valued_indexes.sanitize()
+            assert node_id in self.graph.blocks
+
 
     def find_valued_areas(self, value):
         return {node_id: valued_indexes.find_valued_areas(value)
                 for node_id, valued_indexes in self.data.items()}
 
     def set_valued_intervals(self, node_id, valued_indexes):
+        assert node_id in self.graph.blocks
         self.data[node_id] = valued_indexes
 
     @classmethod
@@ -380,6 +384,7 @@ class SparsePileup(Pileup):
     def from_starts_and_ends(cls, graph, starts, ends, dtype=bool):
         pileup = cls(graph)
         for rp in starts:
+            assert rp in graph.blocks
             indexes, values = starts_and_ends_to_sparse_pileup(
                 starts[rp], ends[rp])
             start_value = dtype(False)

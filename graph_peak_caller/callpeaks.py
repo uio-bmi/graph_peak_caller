@@ -76,6 +76,7 @@ class CallPeaksFromQvalues(object):
         self.out_file_base_name = out_file_base_name
         self.cutoff = cutoff
         self.raw_pileup = raw_pileup
+        self.graph.assert_correct_edge_dicts()
 
     def __threshold(self):
         threshold = -np.log10(self.cutoff)
@@ -333,7 +334,9 @@ class CallPeaks(object):
         extensions = [self.info.fragment_length, 1000, 10000] if self.has_control else [10000]
         control_pileup = linearsnarls.create_control(
             self.linear_map,  self.control_intervals,
-            extensions, self.info.fragment_length)
+            extensions, self.info.fragment_length,
+            ob_graph=self.graph
+        )
         control_pileup.graph = self.ob_graph
         logging.info("Number of control reads: %d" % self.info.n_control_reads)
 

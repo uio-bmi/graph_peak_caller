@@ -9,7 +9,7 @@ setup(name='graph_peak_caller',
       license='MIT',
       packages=['graph_peak_caller'],
       zip_safe=False,
-      install_requires=['pymysql', 'numpy', 'future', 'filecache', 'offsetbasedgraph', 'pybedtools'],
+      install_requires=['pymysql', 'numpy', 'future', 'filecache', 'scipy', 'pybedtools', 'pyBigWig'],
       classifiers=[
             'Programming Language :: Python :: 3'
       ]

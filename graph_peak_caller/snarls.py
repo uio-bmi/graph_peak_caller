@@ -50,7 +50,7 @@ class SnarlGraph(obg.GraphWithReversals):
 
         n_childs = len(self.children)
         for i, child in enumerate(self.children):
-            if self.id == "top_level" and (i % 1000 == 0 or i < 10):
+            if self.id == "top_level" and (i % 20000 == 0 or i < 4):
                 logging.info("Snarl %s of %s" % (i, n_childs))
             assert child.id != self.id, "Child ID %d equal as parent" % child.id
             child_blocks, child_graph = SnarlGraph.create_from_simple_snarl(
@@ -285,10 +285,12 @@ class SnarlGraphBuilder:
         self.id_counter = id_counter
 
     def build_snarl_graphs(self):
+        logging.info("Finding top level snarls")
         top_level_snarls = [snarl for snarl in self.snarls.values()
                             if snarl.parent is None]
 
         # Find all snarls with 0 nodes
+        logging.info("Finding snarls with 0 nodes")
         n_zero_nodes = 0
         for snarl in self.snarls.values():
             start = snarl.start
@@ -328,6 +330,7 @@ class SnarlGraphBuilder:
 
         max_graph_id = max([id for id in graph.blocks.keys()])
         id_counter = max_graph_id + 1
+        i = 0
         for snarl in snarls:
 
             assert snarl.start.backward == snarl.end.backward
@@ -344,6 +347,11 @@ class SnarlGraphBuilder:
             start_end_mapping["%d-%d" % (start, end)] = id_counter
             id_counter += 1
 
+            if i % 500000 == 0:
+                logging.info("Reading snarl %d from vg" % i)
+            i += 1
+
+        logging.info("Setting parent snarls")
         # Set parent
         for id, snarl in simple_snarls.items():
             if snarl.parent is not None:
@@ -366,4 +374,5 @@ class SnarlGraphBuilder:
                         logging.warning("Found with parent that is missing")
                         logging.warning(snarl)
 
+        logging.info("Done reading snarls")
         return cls(graph, simple_snarls, id_counter)
