@@ -271,9 +271,12 @@ class BinaryIndexes(object):
 
 class SparsePileup(Pileup):
     def __init__(self, graph):
+        logging.info("Initing sparsepileup")
         self.graph = graph
+
         self.data = {rp: ValuedIndexes.empty(graph.node_size(rp))
                      for rp in self.graph.blocks}
+        logging.info("Sparsepileup inited")
         #self.graph.assert_correct_edge_dicts()
 
     def __eq__(self, other):
@@ -359,7 +362,7 @@ class SparsePileup(Pileup):
         pileup = cls(graph)
         i = 0
         for rp in graph.blocks:
-            if i % 100000 == 10000:
+            if i % 100000 == 0:
                 logging.info("Creating sparse from valued areas for node %d" % i)
             i += 1
             indexes, values = starts_and_ends_to_sparse_pileup(
