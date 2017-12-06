@@ -92,7 +92,8 @@ class TestCreateControl(unittest.TestCase):
             end_node=14
         )
 
-        LinearSnarlMap(self.snarlgraph, self.graph).to_file("test_linear_map.tmp")
+        LinearSnarlMap.from_snarl_graph(
+            self.snarlgraph, self.graph).to_file("test_linear_map.tmp")
 
     def test_single_read_single_extension(self):
         fragment_length = 3
@@ -240,8 +241,7 @@ class _TestCreateControlGraphWithDifferentLengths(unittest.TestCase):
             end_node=14
         )
 
-        LinearSnarlMap(self.snarlgraph, self.graph).to_file("test_linear_map.tmp")
-
+        LinearSnarlMap.from_snarl_graph(self.snarlgraph, self.graph).to_file("test_linear_map.tmp")
 
     def test_single_read(self):
         fragment_length = 3

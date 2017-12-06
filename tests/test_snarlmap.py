@@ -15,7 +15,7 @@ graph = obg.GraphWithReversals(
 
 class TestSnarlMap(unittest.TestCase):
     def setUp(self):
-        self.snarl_map = LinearSnarlMap(snarl_graph2, graph)
+        self.snarl_map = LinearSnarlMap.from_snarl_graph(snarl_graph2, graph)
         self.graph_positions = [obg.Position(5, 4),
                                 obg.Position(3, 4),
                                 obg.Position(12, 4),
