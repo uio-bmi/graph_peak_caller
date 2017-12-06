@@ -89,10 +89,14 @@ def run_callpeaks(args):
     from pyvg.protoparser import json_file_to_obg_graph
     out_name = args.out_base_name
     json_file_name = args.vg_json_graph_file_name
-    obg_file_name = json_file_name.replace(".json", ".obg")
+    obg_file_name = json_file_name.replace(".json", "")
     #create_ob_graph_from_vg(json_file_name, obg_file_name)
-    #ob_graph = json_file_to_obg_graph(json_file_name)
+    ob_graph = json_file_to_obg_graph(json_file_name)
     logging.info("Writing ob graph to file")
+    ob_graph.to_numpy_files(obg_file_name)
+    return
+
+
     #ob_graph.to_file(obg_file_name)
     logging.info("Reading graph from file")
     ob_graph = obg.Graph.from_file(obg_file_name)
