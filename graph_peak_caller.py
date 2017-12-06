@@ -91,12 +91,14 @@ def run_callpeaks(args):
     json_file_name = args.vg_json_graph_file_name
     obg_file_name = json_file_name.replace(".json", ".obg")
     #create_ob_graph_from_vg(json_file_name, obg_file_name)
-    ob_graph = json_file_to_obg_graph(json_file_name)
+    #ob_graph = json_file_to_obg_graph(json_file_name)
     logging.info("Writing ob graph to file")
-    ob_graph.to_file(obg_file_name)
-
+    #ob_graph.to_file(obg_file_name)
+    logging.info("Reading graph from file")
     ob_graph = obg.Graph.from_file(obg_file_name)
+    logging.info("Creating linear map")
     create_linear_map(ob_graph, args.vg_snarls_file_name, out_name + "linear_map.lm")
+    logging.info("Linear map created")
 
     has_control = True
     if args.with_control == "False":

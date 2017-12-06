@@ -328,6 +328,7 @@ class SnarlGraphBuilder:
 
         max_graph_id = max([id for id in graph.blocks.keys()])
         id_counter = max_graph_id + 1
+        i = 0
         for snarl in snarls:
 
             assert snarl.start.backward == snarl.end.backward
@@ -343,6 +344,10 @@ class SnarlGraphBuilder:
 
             start_end_mapping["%d-%d" % (start, end)] = id_counter
             id_counter += 1
+
+            if i % 1000 == 0:
+                logging.info("Reading snarl %d from vg" % i)
+            i += 1
 
         # Set parent
         for id, snarl in simple_snarls.items():
