@@ -91,7 +91,7 @@ def run_callpeaks(args):
     #create_ob_graph_from_vg(json_file_name, obg_file_name)
     ob_graph = json_file_to_obg_graph(json_file_name)
     ob_graph.to_file(obg_file_name)
-    
+
     ob_graph = obg.Graph.from_file(obg_file_name)
     create_linear_map(ob_graph, args.vg_snarls_file_name, out_name + "linear_map.lm")
 
