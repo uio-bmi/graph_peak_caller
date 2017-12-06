@@ -109,7 +109,6 @@ class LinearSnarlMap(object):
         return cls(length=length,
                    starts=starts,
                    ends=ends)
-        
 
     def to_file(self, file_name):
         with open("%s" % file_name, "wb") as f:
