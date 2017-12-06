@@ -9,7 +9,7 @@ from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo
 import argparse
 import sys
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
 def run_with_intervals(ob_graph,
                        sample_intervals,

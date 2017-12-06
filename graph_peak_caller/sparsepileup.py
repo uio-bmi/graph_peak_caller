@@ -357,7 +357,11 @@ class SparsePileup(Pileup):
     @classmethod
     def from_valued_areas(cls, graph, valued_areas):
         pileup = cls(graph)
+        i = 0
         for rp in graph.blocks:
+            if i % 100000 == 10000:
+                logging.info("Creating sparse from valued areas for node %d" % i)
+            i += 1
             indexes, values = starts_and_ends_to_sparse_pileup(
                 valued_areas.get_starts_array(rp),
                 valued_areas.get_ends_array(rp))

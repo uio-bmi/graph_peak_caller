@@ -379,13 +379,19 @@ class CallPeaks(object):
         logging.info("Extending sample reads")
         areas_list = (extender.extend_interval(interval)
                       for interval in alignments)
+        i = 0
         for area in areas_list:
+            if i % 10000 == 0:
+                logging.info("Processing area %d" % i)
+            i += 1
+
             valued_areas.add_binary_areas(area)
         logging.info("Creating sample pileup from valued areas")
         pileup = SparsePileup.from_valued_areas(
             self.ob_graph, valued_areas)
         self._sample_track = self.out_file_base_name + "sample_track.bdg"
         if save_to_file:
+            logging.info("Saving sample pileup to file")
             pileup.to_bed_graph(self._sample_track)
             print("Saved sample pileup to " + self._sample_track)
 
