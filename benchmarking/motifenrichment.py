@@ -78,10 +78,11 @@ def plot_true_positives(peak_file_sets, meme_file_name):
 
 if __name__ == "__main__":
 
-    # collection = NonGraphPeakCollection.from_bed_file("../tests/macs_without_control_peaks.narrowPeak")
-    # collection.filter_peaks_outside_region("chr6", 28510119, 33480577)
-    # collection.set_peak_sequences()
-    # collection.save_to_sorted_fasta("macs_without_control2.fasta")
+    collection = NonGraphPeakCollection.from_bed_file("../tests/macs_without_control_peaks.narrowPeak")
+    #collection.filter_peaks_outside_region("chr6", 28510119, 33480577)
+    collection.filter_peaks_outside_region("chr19", 54025634, 55084318)
+    collection.set_peak_sequences()
+    collection.save_to_sorted_fasta("../tests/lrc_kir/macs_without_control.fasta")
     #import sys
     #sys.exit()
     #matcher = MotifMatcher("../tests/real_data_sequences.fasta", "MA0139.1.meme")
@@ -89,6 +90,47 @@ if __name__ == "__main__":
 
     #print(true_positives)
     #sys.exit()
+
+
+    # SRF
+    """
+    plot_true_positives(
+        {
+            "macs": "macs_srf_without_control.fasta",
+            "graph": "../tests/srf_sequences.fasta"
+        },
+        "MA0083.3.meme"
+    )
+    exit()
+    """
+
+    plot_true_positives({
+        #"graph without control": "../tests/mhc/ctcf_without_control_sequences.fasta",
+        "graph with control": "../tests/ctcf_q50_with_control_sequences.fasta",
+        "graph without control, stricter lambda": "../tests/mhc/ctcf_without_control_hack_sequences.fasta",
+        #"old graph without control": "../tests/ctcf_q50_without_control_sequences.fasta",
+        "macs without control": "macs_no_control_peaks.fasta",
+        "graph using macs reads old": "../tests/linear_reads_moved_to_graph_sequences.fasta",
+        "graph using macs reads": "../tests/mhc_using_macs_reads_sequences.fasta",
+        "graph using macs reads remapepd": "../tests/mhc/macs_reads_remapped_sequences.fasta"
+    },
+    "MA0139.1.meme")
+
+    """
+    plot_true_positives(
+        {
+            "macs": "../tests/lrc_kir/macs_without_control.fasta",
+            "graph without control": "../tests/lrc_kir/ctcf_without_control_sequences.fasta",
+            "graph with control": "../tests/lrc_kir/ctcf_with_control_sequences.fasta",
+            "graph using macs reads": "../tests/lrc_kir_using_macs_reads_sequences.fasta",
+            "graph using macs reads remapped": "../tests/lrc_kir/macs_reads_remapped_sequences.fasta",
+        },
+        "MA0139.1.meme"
+    )
+    """
+    exit()
+
+
     plot_true_positives(
         {
             #"graph peaks2": "../tests/tmp_sequences",
@@ -97,17 +139,20 @@ if __name__ == "__main__":
             #"my_peaks": "../tests/tmp_sequences",
             "macs reads remapped without control": "../tests/ctcf_macs_reads_remapped_without_control_sequences.fasta",
             #"macs": "CTCFpFix.fasta",
-            "macs without control": "macs_without_control2.fasta",
+            "macs without control": "macs_no_control_peaks.fasta",
+            "macs macs_using_graph_reads_peaks": "macs_using_graph_reads_peaks.fasta",
             "graph using macs reads": "../tests/linear_reads_moved_to_graph_sequences.fasta",
             "graph r0.99": "../tests/ctcf_r099_without_control_sequences.fasta",
             # "graph q30 vs q50": "../tests/ctcf_q50_vsq30_without_control_sequences.fasta",
             # "macs without control": "mac_wit.fasta",
             # "macs with control": "CTCF_filtered.fasta",
             # "graph with control": "../tests/ctcf_q50_sequences.fasta",
-            #"graph without control, reads outside removed": "../tests/ctcf_filtered_outside_sequences.fasta",
+            "graph without control, reads outside removed": "../tests/ctcf_filtered_outside_sequences.fasta",
             "graph without control": "../tests/ctcf_q50_without_control_sequences.fasta",
-            "graph without control new filtering": "../tests/ctcf_q60_r30_sequences.fasta",
-            "graph with control": "../tests/ctcf_q50_with_control_sequences.fasta",
+            "graph without control new filtering": "../tests/ctcf_r1_sequences.fasta",
+            "graph without control new filtering 2": "../tests/ctcf_filtered6_sequences.fasta",
+            "graph without control subsampled": "../tests/ctcf_q60_subsampled_sequences.fasta",
+            "graph with control": "../tests/ctcf_q50_with_control_2_sequences.fasta",
             #"graph using macs reads": "../tests/ctcf_macs_reads_without_control_sequences.fasta",
             #"graph using macs reads with control": "../tests/ctcf_macs_reads_with_control_sequences.fasta",
             #"graph_peaks_bugfix": "../tests/real_data_sequences_after_bugfix"
