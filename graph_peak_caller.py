@@ -84,6 +84,7 @@ def run_mhc_ctcf_example():
 #run_mhc_ctcf_example()
 
 def run_callpeaks(args):
+    logging.info("Creating offset based graph")
     from pyvg.protoparser import json_file_to_obg_graph
     out_name = args.out_base_name
     json_file_name = args.vg_json_graph_file_name
@@ -158,3 +159,8 @@ if hasattr(args, 'func'):
     args.func(args)
 else:
     parser.help()
+
+
+"""
+python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls ctcf_filtered_r0.97.gam ctcf_filtered_r0.97.gam run1/ 135 36
+"""
