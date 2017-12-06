@@ -10,7 +10,8 @@ from offsetbasedgraph import Interval
 from graphsimulator import GraphSimulator
 random.seed(1)
 
-class PileupSimulator():
+
+class PileupSimulator:
 
     def __init__(self, simulated_graph, n_peaks, with_control=False):
 
@@ -69,7 +70,6 @@ class PileupSimulator():
         return 100 + random.sample(range(0, self.simulated_graph.n_linear_paths), 1)[0]
 
     def add_background_control_reads(self):
-        #n_to_add = int(self.n_peaks * 10 * 2)
         n_to_add = int(1 * self.simulated_graph.linear_graph_length / self.peak_size)
         peak_locations = random.sample(range(self.peak_size,
                                              self.simulated_graph.linear_graph_length - self.peak_size

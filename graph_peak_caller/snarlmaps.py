@@ -1,13 +1,21 @@
+import json
 import pickle
 from .sparsepileup import ValuedIndexes
 from .linearintervals import LinearIntervalCollection
 
 
 class LinearSnarlMap(object):
-    def __init__(self, snarl_graph, graph):
+    def __init__(self, starts, ends, length, graph):
         self._graph = graph
-        self._length = snarl_graph.length()
-        self._linear_node_starts, self._linear_node_ends = snarl_graph.get_distance_dicts()
+        self._length = length
+        self._linear_node_starts, self._linear_node_ends = starts, ends
+
+    @classmethod
+    def from_snarl_graph(cls, snarl_graph, graph):
+        graph = graph
+        length = snarl_graph.length()
+        starts, ends = snarl_graph.get_distance_dicts()
+        return cls(starts, ends, length, graph)
 
     def get_node_start(self, node_id):
         return self._linear_node_starts[node_id]
@@ -88,6 +96,25 @@ class LinearSnarlMap(object):
             ends.append(end)
         return LinearIntervalCollection(starts, ends)
 
+    def to_json_files(self, base_name):
+        with open(base_name+"starts.json", "w") as f:
+            f.write("%s\n" % self._length)
+            f.write(json.dumps(self._linear_node_starts))
+        with open(base_name+"ends.json", "w") as f:
+            f.write(json.dumps(self._linear_node_ends))
+
+    @classmethod
+    def from_json_files(cls, base_name, graph):
+        with open(base_name+"starts.json") as f:
+            length = int(f.readline().strip())
+            starts = json.loads(f.read())
+        with open(base_name+"ends.json"):
+            ends = json.loads(f.read())
+        return cls(length=length,
+                   starts=starts,
+                   ends=ends)
+        
+
     def to_file(self, file_name):
         with open("%s" % file_name, "wb") as f:
             pickle.dump(self, f)
@@ -98,4 +125,3 @@ class LinearSnarlMap(object):
             obj = pickle.loads(f.read())
             assert isinstance(obj, cls)
             return obj
-

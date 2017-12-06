@@ -83,7 +83,6 @@ def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
     logging.info("Running from gam files")
 
     ob_graph = obg.GraphWithReversals.from_file("graph.obg")
-    # print(ob_graph.blocks)
     reads_intervals = vg_gam_file_to_interval_collection(
          None, gam_file_name, ob_graph)
 
@@ -104,7 +103,7 @@ def run_from_max_paths_step(graph_file_name, pileup_file_name, raw_pileup_file_n
     else:
         raw_pileup = None
     fromqvalues = callpeaks.CallPeaksFromQvalues(
-        ob_graph, q_values, experiment_info, "laststep_", raw_pileup=raw_pileup, cutoff=0.025)
+        ob_graph, q_values, experiment_info, "laststep_", raw_pileup=raw_pileup, cutoff=0.1)
 
     fromqvalues.callpeaks()
     retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
@@ -231,13 +230,14 @@ def run_from_q_values(out_name):
     run_from_max_paths_step("graph.obg", pileup_name)
 
 if __name__ == "__main__":
+    run_ctcf_example_w_control()
     # run_ctcf_example()
     # #run_ctcf_example()
     # #run_with_linear_reads_moved_to_graph_without_control()
     # # get_sequences("laststepmax_paths.intervalcollection")
-    # # run_ctcf_example()
+    # run_ctcf_example()
     # exit()
-    run_from_q_values("ctcf_r1_")
+    # run_from_q_values("ctcf_q50_with_control_")
     exit()
     dm_folder = "../graph_peak_caller/dm_test_data/"
     # ob_graph = obg.GraphWithReversals.from_file("obgraph")

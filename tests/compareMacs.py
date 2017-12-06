@@ -371,7 +371,8 @@ class MACSTests(object):
                 SimpleSnarl(1, self.n_nodes, id=self.n_nodes+2)},
             id_counter=self.n_nodes + 3)
         self.snarlgraph = snarlbuilder.build_snarl_graphs()
-        self.linear_map = LinearSnarlMap(self.snarlgraph, self.graph)
+        self.linear_map = LinearSnarlMap.from_snarl_graph(
+            self.snarlgraph, self.graph)
         self.linear_map.to_file(self.MAP_NAME)
 
     def _get_graph_interval(self, tmp_start, tmp_end, direction):

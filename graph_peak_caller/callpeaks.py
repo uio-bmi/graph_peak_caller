@@ -219,7 +219,7 @@ class CallPeaks(object):
         self.info.n_control_reads = 0
         self.info.n_sample_reads = 0
         self.sample_intervals = self.remove_alignments_not_in_graph(
-                                    self.sample_intervals)
+            self.sample_intervals)
         self.sample_intervals = self.filter_duplicates_and_count_intervals(
                                     self.sample_intervals, is_control=False)
 
@@ -330,7 +330,6 @@ class CallPeaks(object):
 
     def create_control(self, save_to_file=True):
         logging.info("Creating control track using linear map %s" % self.linear_map)
-
         extensions = [self.info.fragment_length, 1000, 10000] if self.has_control else [10000]
         control_pileup = linearsnarls.create_control(
             self.linear_map,  self.control_intervals,
@@ -355,7 +354,6 @@ class CallPeaks(object):
         logging.info("Writing q values to %s" % q_val_file_name)
 
     def call_peaks(self):
-
         self.q_value_peak_caller = CallPeaksFromQvalues(
             self.graph,
             self.q_values,

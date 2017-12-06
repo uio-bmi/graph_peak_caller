@@ -19,11 +19,14 @@ def create_control_from_objs(linear_map, reads, extension_sizes, fragment_length
     linear_size = linear_map._length
     mapped_reads = linear_map.map_interval_collection(reads)
     average_value = mapped_reads.n_intervals*fragment_length / linear_size
-    logging.info("Average control value: %.4f (sum of pileup: %d, linear size: %d)" % (average_value, mapped_reads.n_basepairs_covered(), linear_size))
+    print(len(mapped_reads.starts))
+    logging.info(
+        "Average control value: %.4f (sum of pileup: %d, linear size: %d)" % (
+            average_value, mapped_reads.n_basepairs_covered(), linear_size))
     max_pileup = LinearPileup([0], [average_value])
-    logging.info("Extending control reads with extension sizes: %s" % extension_sizes)
+    logging.info("Extending control reads with extension sizes: %s" %
+                 extension_sizes)
     for tmp_extension in extension_sizes:
-        print(tmp_extension)
         logging.info("Extension size: %d" % tmp_extension)
         extension = tmp_extension // 2
         extended_reads = mapped_reads.extend(extension)
