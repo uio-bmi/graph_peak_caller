@@ -67,6 +67,7 @@ def run_with_gam(ob_graph_file_name,
 
 def run_mhc_ctcf_example():
     create_ob_graph_from_vg("tests/mhc/graph.json", "tests/mhc/graph.obg")
+    logging.info("Reading graph from file")
     ob_graph = obg.Graph.from_file("tests/mhc/graph.obg")
     create_linear_map(ob_graph, "tests/mhc/graph.snarls", "tests/mhc/linear_map.lm")
 
@@ -91,6 +92,7 @@ def run_callpeaks(args):
     obg_file_name = json_file_name.replace(".json", ".obg")
     #create_ob_graph_from_vg(json_file_name, obg_file_name)
     ob_graph = json_file_to_obg_graph(json_file_name)
+    logging.info("Writing ob graph to file")
     ob_graph.to_file(obg_file_name)
 
     ob_graph = obg.Graph.from_file(obg_file_name)
