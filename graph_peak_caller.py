@@ -91,15 +91,14 @@ def run_callpeaks(args):
     json_file_name = args.vg_json_graph_file_name
     obg_file_name = json_file_name.replace(".json", "")
     #create_ob_graph_from_vg(json_file_name, obg_file_name)
-    ob_graph = json_file_to_obg_graph(json_file_name)
+    ob_graph = json_file_to_obg_graph(json_file_name, int(args.n_nodes))
     logging.info("Writing ob graph to file")
     ob_graph.to_numpy_files(obg_file_name)
-    return
 
 
     #ob_graph.to_file(obg_file_name)
     logging.info("Reading graph from file")
-    ob_graph = obg.Graph.from_file(obg_file_name)
+    ob_graph = obg.Graph.from_numpy_files(obg_file_name)
     logging.info("Creating linear map")
     create_linear_map(ob_graph, args.vg_snarls_file_name, out_name + "linear_map.lm")
     logging.info("Linear map created")
@@ -136,7 +135,8 @@ interface = \
                     ('with_control', 'True/False'),
                     ('out_base_name', 'eg experiment1_'),
                     ('fragment_length', ''),
-                    ('read_length', '')
+                    ('read_length', ''),
+                    ('n_nodes', 'Number of nodes in grap')
                 ],
             'method': run_callpeaks
         }
@@ -171,4 +171,8 @@ else:
 
 """
 python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls ctcf_filtered_r0.97.gam ctcf_filtered_r0.97.gam False run1/ 135 36
+"""
+
+"""
+python3 ../../graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls ctcf_filtered_r1.0.2.gam ctcf_filtered_r1.0.2.gam False test_ 136 35 112342
 """
