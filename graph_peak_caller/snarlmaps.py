@@ -83,10 +83,6 @@ class LinearSnarlMap(object):
         else:
             return node_end - scale*position.offset
 
-    @classmethod
-    def from_snarl_graph(cls, snarl_graph):
-        return cls(snarl_graph)
-
     def map_interval_collection(self, interval_collection):
         starts = []
         ends = []
