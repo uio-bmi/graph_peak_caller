@@ -29,72 +29,72 @@ def warn_with_traceback(message, category, filename, lineno, file=None, line=Non
 warnings.showwarning = warn_with_traceback
 
 
-def create_linear_map(ob_graph):
-    builder = SnarlGraphBuilder.from_vg_snarls(ob_graph.copy(), "haplo1kg50-mhc.snarls")
-    snarlgraph = builder.build_snarl_graphs()
-    LinearSnarlMap(snarlgraph, ob_graph)
-    linear_map = LinearSnarlMap(snarlgraph, ob_graph)
-    linear_map.to_file("linear_map")
-
-    # vg_graph = pyvg.Graph.create_from_file(vg_graph_file_name)
-    # ob_graph = vg_graph.get_offset_based_graph()
-    # ob_graph.to_file("obgraph")
-    ob_graph = obg.GraphWithReversals.from_file("graph.obg")
-    #print(ob_graph.node_size(701))
-    #return
-
+def create_linear_map(ob_graph, snarl_file_name = "haplo1kg50-mhc.snarls", out_file_name="linear_map"):
     builder = SnarlGraphBuilder.from_vg_snarls(
         ob_graph.copy(),
-        "haplo1kg50-mhc.snarls")
+        snarl_file_name)
     snarlgraph = builder.build_snarl_graphs()
     # LinearSnarlMap(snarlgraph, ob_graph)
-    linear_map = LinearSnarlMap(snarlgraph, ob_graph)
-    linear_map.to_file("haplo1kg50-mhc.lm")
-    linear_map = "haplo1kg50-mhc.lm"
+    linear_map = LinearSnarlMap(snarlgraph, ob_graph.copy())
+    linear_map.to_file(out_file_name)
 
 
-def run_with_intervals(sample_intervals, control_intervals, out_name, has_control=True):
+def run_with_intervals(ob_graph,
+                       sample_intervals,
+                       control_intervals,
+                       out_name,
+                       has_control=True,
+                       vg_graph_file_name="haplo1kg50-mhc.vg",
+                       fragment_length=135,
+                       read_length=36,
+                       linear_map="haplo1kg50-mhc.lm"):
     logging.info("Running from intervals")
-    retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
-    ob_graph = obg.GraphWithReversals.from_file("graph.obg")
     graph_size = sum(block.length() for block in ob_graph.blocks.values())
     logging.info("Graph size: %d" % graph_size)
     logging.info("N nodes in graph: %d" % len(ob_graph.blocks))
 
-    linear_map = "haplo1kg50-mhc.lm"
-    experiment_info = callpeaks.ExperimentInfo(graph_size, 135, 36)
+    experiment_info = callpeaks.ExperimentInfo(graph_size, fragment_length, read_length)
     caller = callpeaks.CallPeaks(
         ob_graph, sample_intervals, control_intervals,
         experiment_info=experiment_info,
         out_file_base_name=out_name, has_control=has_control,
         linear_map=linear_map)
-    caller.set_cutoff(0.025)
+    caller.set_cutoff(0.05)
     caller.verbose = True
     caller.run()
-    retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
+    retriever = SequenceRetriever.from_vg_graph(vg_graph_file_name)
     caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
 
 
-def run_with_gam(gam_file_name, gam_control_file, vg_graph_file_name,
+def run_with_gam(ob_graph_file_name,
+                 gam_file_name, gam_control_file,
+                 vg_graph_file_name,
                  out_name="real_data_",
                  has_control=True,
-                 limit_to_chromosomes=False):
+                 limit_to_chromosomes=False,
+                 fragment_length=135, read_length=36,
+                 linear_map_file_name = False):
+
     logging.basicConfig(level=logging.INFO)
     logging.info("Running from gam files")
 
-    ob_graph = obg.GraphWithReversals.from_file("graph.obg")
-    # print(ob_graph.blocks)
+    ob_graph = obg.GraphWithReversals.from_file(ob_graph_file_name)
     reads_intervals = vg_gam_file_to_interval_collection(
          None, gam_file_name, ob_graph)
 
     control_intervals = vg_gam_file_to_interval_collection(
          None, gam_control_file, ob_graph)
 
-    run_with_intervals(reads_intervals, control_intervals,
-                       out_name=out_name, has_control=has_control)
+    run_with_intervals(ob_graph, reads_intervals, control_intervals,
+                       out_name=out_name, has_control=has_control,
+                       vg_graph_file_name=vg_graph_file_name,
+                       fragment_length=fragment_length,
+                       read_length=read_length,
+                       linear_map=linear_map_file_name)
 
 
 def run_from_max_paths_step(graph_file_name, pileup_file_name, raw_pileup_file_name=None):
+    raise Exception("Deprecated. Needs to be updated")
     ob_graph = obg.GraphWithReversals.from_file("obgraph")
     graph_size = sum(block.length() for block in ob_graph.blocks.values())
     experiment_info = callpeaks.ExperimentInfo(graph_size, 135, 36)
@@ -110,29 +110,6 @@ def run_from_max_paths_step(graph_file_name, pileup_file_name, raw_pileup_file_n
     retriever = SequenceRetriever.from_vg_graph("haplo1kg50-mhc.vg")
     fromqvalues.save_max_path_sequences_to_fasta_file("sequences.fasta",
                                                       retriever)
-    # fragment_length = 135
-    # graph = obg.Graph.from_file(graph_file_name)
-    # peaks = SparsePileup.from_bed_file(graph, pileup_file_name)
-    # peaks.fill_small_wholes(read_length)
-    # final_track = peaks.remove_small_peaks(fragment_length)
-    # peaks_as_subgraphs = final_track.to_subgraphs()
-    # peaks_as_subgraphs.to_file(
-    #     "last_step_" + "peaks_as_subgraphs")
-    #
-    # p_values = SparsePileup.from_bed_file(graph, "real_data_q_values.bdg")
-    # binary_peaks = (BinaryContinousAreas.from_old_areas(peak) for peak in
-    #                 peaks_as_subgraphs)
-    # scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, p_values)
-    #                 for peak in binary_peaks)
-    # max_paths = [scored_peak.get_max_path() for
-    #              scored_peak in scored_peaks]
-    # max_paths.sort(key=lambda p: p.score, reverse=True)
-    # PeakCollection(max_paths).to_file(
-    #     "last_step_" + "max_paths", text_file=True)
-    #
-    # # IntervalCollection(max_paths).to_text_file(
-    # #             "last_step_max_paths")
-
 
 def get_sequences(path_file):
     max_paths = PeakCollection.from_file(path_file, True)
@@ -208,13 +185,13 @@ def run_with_macs_filtered_reads_w_control():
 
 
 def run_ctcf_example():
-    file_name = "vgdata/filtered2.gam"
+    file_name = "ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam"
     # file_name = "ENCFF001HNI_filtered_q60_r099.gam",
     # file_name = "ENCFF001HNI_filtered_q60_r30.gam"
     run_with_gam(file_name,
                  file_name,
                  "haplo1kg50-mhc.json",
-                 out_name="ctcf_r1_",
+                 out_name="ctcf_q60_subsampled_",
                  has_control=False)
 
 
@@ -222,16 +199,96 @@ def run_ctcf_example_w_control():
     run_with_gam("ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam",
                  "ENCFF001HNS_haplo1kg50-mhc_filtered_q50.gam",
                  "haplo1kg50-mhc.json",
-                 out_name="ctcf_q50_with_control_",
+                 out_name="ctcf_q50_with_control_2_",
                  has_control=True)
 
+def run_srf_example():
+    run_with_gam("vgdata/srf_filtered_r1.0_2.gam",
+                 "vgdata/srf_filtered_r1.0_2.gam",
+                 "haplo1kg50-mhc.json",
+                 out_name="srf_",
+                 has_control=False,
+                 fragment_length=161,
+                 read_length=50)
+
+def run_lrc_kir_ctcf_example():
+    #create_ob_graph_from_vg("lrc_kir/graph.json", "lrc_kir/graph.obg")
+    #ob_graph = obg.Graph.from_file("lrc_kir/graph.obg")
+    #create_linear_map(ob_graph, "lrc_kir/graph.snarls", "lrc_kir/lrc_kir.lm")
+
+    run_with_gam(
+        "lrc_kir/graph.obg",
+        "lrc_kir/macs_reads_remapped.gam",
+        "lrc_kir/macs_reads_remapped.gam",
+        "lrc_kir/graph.vg",
+        "lrc_kir/macs_reads_remapped_",
+        has_control=False,
+        fragment_length=135,
+        read_length=36,
+        linear_map_file_name="lrc_kir/lrc_kir.lm"
+    )
+
+def run_mhc_ctcf_example():
+    create_ob_graph_from_vg("mhc/graph.json", "mhc/graph.obg")
+    ob_graph = obg.Graph.from_file("mhc/graph.obg")
+    create_linear_map(ob_graph, "mhc/graph.snarls", "mhc/linear_map.lm")
+
+    run_with_gam(
+        "mhc/graph.obg",
+        "mhc/macs_remapped_mhc.gam",
+        "mhc/macs_remapped_mhc.gam",
+        "mhc/graph.vg",
+        "mhc/macs_reads_remapped_",
+        has_control=False,
+        fragment_length=135,
+        read_length=36,
+        linear_map_file_name="mhc/linear_map.lm"
+    )
+
+def run_lrc_kir_using_macs_reads():
+    ob_graph = obg.Graph.from_file("lrc_kir/graph.obg")
+    reads1 = IntervalCollection.from_file("lrc_kir/macs_reads_on_graph.intervals", text_file=True, graph=ob_graph)
+    reads2 = IntervalCollection.from_file("lrc_kir/macs_reads_on_graph.intervals", text_file=True, graph=ob_graph)
+
+    run_with_intervals(ob_graph,
+                       reads1, reads2,
+                       "lrc_kir_using_macs_reads_",
+                       has_control=False,
+                       vg_graph_file_name="lrc_kir/graph.vg",
+                       fragment_length=135,
+                       read_length=36,
+                       linear_map="lrc_kir/lrc_kir.lm"
+    )
+
+def run_mhc_using_macs_reads():
+    ob_graph = obg.Graph.from_file("mhc/graph.obg")
+    reads1 = IntervalCollection.from_file("mhc/macs_reads_on_graph.intervals", text_file=True, graph=ob_graph)
+    reads2 = IntervalCollection.from_file("mhc/macs_reads_on_graph.intervals", text_file=True, graph=ob_graph)
+
+    run_with_intervals(ob_graph,
+                       reads1, reads2,
+                       "mhc_using_macs_reads_",
+                       has_control=False,
+                       vg_graph_file_name="mhc/graph.vg",
+                       fragment_length=135,
+                       read_length=36,
+                       linear_map="mhc/linear_map.lm"
+    )
 
 def run_from_q_values(out_name):
     pileup_name = out_name + "q_values.bdg"
     run_from_max_paths_step("graph.obg", pileup_name)
 
 if __name__ == "__main__":
-    run_ctcf_example()
+    #run_srf_example()
+    #run_mhc_ctcf_example()
+    #run_lrc_kir_using_macs_reads()
+    #run_mhc_using_macs_reads()
+    #run_lrc_kir_ctcf_example()
+    run_mhc_ctcf_example()
+    #run_ctcf_example_w_control()
+    #run_with_linear_reads_moved_to_graph_without_control()
+    #run_ctcf_example()
     #run_ctcf_example()
     #run_with_linear_reads_moved_to_graph_without_control()
     # get_sequences("laststepmax_paths.intervalcollection")

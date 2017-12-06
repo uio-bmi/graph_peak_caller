@@ -58,3 +58,8 @@ filter_fasta.py -f input.fasta -o output.fasta ----subject_fasta_fp filtered_out
 
 
 
+MAPPING:
+Denne tar også vare på secondary mappings:
+NB: Krever at det ligger en *.gcsa.lcp fil i samme mappe.
+
+vg map -f fil.fastq.gz -g haplo1kg50-mhc.gcsa -x haplo1kg50-mhc.xg haplo1kg50-mhc.vg -M 2 > mapped3.gam &

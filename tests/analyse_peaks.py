@@ -1,6 +1,7 @@
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import pyvg
+from pyvg.util import vg_gam_file_to_interval_list
 from pyvg.sequences import SequenceRetriever
 import offsetbasedgraph as obg
 from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
@@ -18,6 +19,7 @@ MHC_REGION = LinearRegion("chr6", 28510119, 33480577)
 
 
 def create_linear_path(ob_graph, vg_graph):
+    assert ob_graph is not None
     linear_paths = get_linear_paths_in_graph(ob_graph, vg_graph, "linear_maps")
     ref_path = linear_paths["ref"].to_indexed_interval()
     return ref_path
@@ -92,16 +94,22 @@ class SubgraphComparer():
 
 class AlignmentsAnalyser(object):
     def __init__(self, vg_graph, vg_gam_file_name, ob_graph,
-                 linear_path_interval_file_name):
+                 linear_path):
         self.graph = ob_graph
         self.vg_graph = vg_graph
         print("Reading reads")
-        self.reads = vg_gam_file_to_interval_list(
-            vg_graph, vg_gam_file_name, ob_graph, max_intervals=10000)
-        print("Number of reads: %d" % len(self.reads))
+        #self.reads = vg_gam_file_to_interval_list(
+        #    vg_graph, vg_gam_file_name, ob_graph, max_intervals=10000)
+        self.reads = vg_gam_file_to_interval_collection(
+            vg_graph, vg_gam_file_name, ob_graph, max_intervals=10000).intervals
 
-        self.linear_path = IntervalCollection.create_list_from_file(
-            linear_path_interval_file_name, self.graph).intervals[0]
+        #print("Number of reads: %d" % len(self.reads))
+
+        if isinstance(linear_path, str):
+            self.linear_path = IntervalCollection.create_list_from_file(
+                linear_path, self.graph).intervals[0]
+        else:
+            self.linear_path = linear_path
 
     def count_alignments_on_linear_path(self):
         n_on_path = 0
@@ -141,6 +149,28 @@ class AlignmentsAnalyser(object):
         print("N reads: %d" % i)
         for name, hit in hits.items():
             print("%s: %d " % (name, hit))
+
+    def to_linear_alignments(self):
+        # Returns a list of all aligments as intervals of linear_path
+        # Removes alignments not in linear path
+        n = 0
+        i = 0
+        on_linear = []
+        for read in self.reads:
+            if i % 100 == 0:
+                print(i)
+            i += 1
+            if self.linear_path.contains_in_order_any_direction(read):
+                n += 1
+                #on_linear.append(read)
+                yield read
+            else:
+                continue
+
+        #print(n)
+
+        #collection = IntervalCollection(on_linear)
+        #collection.to_file("graph_reads_on_linear.intervals", text_file=True)
 
 
 def macs_pileup_to_graph_pileup(ob_graph, linear_path, pileup_file, region):
@@ -241,11 +271,12 @@ def analyse_without_control():
     path = create_linear_path(ob_graph, vg_graph)
     comparer = PeaksComparer.create_from_graph_peaks_and_linear_peaks(
         "macs_without_control_peaks.narrowPeak",
-        "ctcf_q50_without_control_max_paths.intervalcollection",
+        #"ctcf_q50_without_control_max_paths.intervalcollection",
+        "ctcf_r1_max_paths.intervalcollection",
         ob_graph,
         path,
         MHC_REGION)
-    comparer.check_similarity()
+    comparer.check_similarity(analyse_first_n_peaks=50)
 
 
 def get_mappings_overlapping_with_interval(mappings, intervals):
@@ -285,6 +316,39 @@ def analyse_pileups_on_peaks(ob_graph, pileups_file_names, peak_intervals_file_n
             pileup_sum = sum(pileup.data[rp].sum() for rp in peak.region_paths)
             print("Pileup %s: %d" % (name, pileup_sum))
 
+
+def vg_alignments_to_linear():
+    ob_graph = obg.GraphWithReversals.from_file("haplo1kg50-mhc.obg")
+    vg_graph = pyvg.vg.Graph.create_from_file("haplo1kg50-mhc.json")
+    path = create_linear_path(ob_graph, vg_graph)
+    analyser = AlignmentsAnalyser(vg_graph, "ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam", ob_graph, path)  # sample reads
+    #linear = analyser.to_linear_alignments()
+    #collection = IntervalCollection(linear)
+    #collection.to_file("graph_reads_on_linear2.intervals")
+
+    linear = IntervalCollection.from_file("graph_reads_on_linear2.intervals").intervals
+    #linear = IntervalCollection.create_list_from_file("graph_reads_on_linear.intervals")
+    f = open("graph_reads_on_linear.bed", "w")
+    path = path.to_indexed_interval()
+    linear_reads = []
+    for read in linear:
+        read.graph = ob_graph
+        assert np.all(np.array(read.region_paths) > 0) or np.all(np.array(read.region_paths) < 0)
+
+        dir = "+"
+        if read.region_paths[0] < 0:
+            dir = "-"
+            read = read.get_reverse()
+
+        graph_start = read.start_position
+        graph_end = read.end_position
+
+        linear_start = MHC_REGION.start + path.get_offset_at_position(graph_start)
+        linear_end = MHC_REGION.start + path.get_offset_at_position(graph_end)
+
+        f.writelines("chr6\t%d\t%d\t.\t0\t%s\n" % (linear_start, linear_end, dir))
+    f.close()
+
 #comparer.compare_q_values_for_similar_peaks()
 
 
@@ -316,7 +380,9 @@ if __name__ == "__main__":
 
     #analyse_without_control()
     #exit()
-    check_mappings_in_peaks("not_matching_set2.intervals", "ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam")
+    #check_mappings_in_peaks("not_matching_set2.intervals", "ENCFF001HNI_haplo1kg50-mhc_filtered_q50.gam")
+    #exit()
+    vg_alignments_to_linear()
     exit()
 
     ob_graph = obg.GraphWithReversals.from_file("graph.obg")
@@ -324,7 +390,7 @@ if __name__ == "__main__":
         "macs": "macs_sample_on_graph.bdg",
         "graph": "ctcf_q50_without_control_sample_track.bdg"
     }
-    analyse_pileups_on_peaks(ob_graph, pileups, "not_matching_set2.intervals")
+    analyse_pileups_on_peaks(ob_graph, pileups, "not_matching_set2.intervals_subset")
 
     #find_missing_graph_peaks()
     exit()
