@@ -7,7 +7,7 @@ import logging
 
 
 def create_control(linear_map_name, *args, **kwargs):
-    linear_map = LinearSnarlMap.from_json_files(linear_map_name)
+    linear_map = LinearSnarlMap.from_json_files(linear_map_name, kwargs["ob_graph"])
     return create_control_from_objs(linear_map, *args, **kwargs)
 
 
