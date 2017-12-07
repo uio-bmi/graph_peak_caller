@@ -99,9 +99,9 @@ def run_callpeaks(args):
 
     #ob_graph.to_file(obg_file_name)
     #ob_graph = obg.GraphWithReversals.from_numpy_files(obg_file_name)
-    logging.info("Creating linear map")
-    create_linear_map(ob_graph, args.vg_snarls_file_name, out_name + "linear_map")
-    logging.info("Linear map created")
+    #logging.info("Creating linear map")
+    #create_linear_map(ob_graph, args.vg_snarls_file_name, out_name + "linear_map")
+    #logging.info("Linear map created")
 
     has_control = True
     if args.with_control == "False":
