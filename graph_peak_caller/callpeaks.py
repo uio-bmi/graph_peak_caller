@@ -69,7 +69,7 @@ class ExperimentInfo(object):
 class CallPeaksFromQvalues(object):
     def __init__(self, graph, q_values_sparse_pileup,
                  experiment_info, out_file_base_name="",
-                 cutoff=0.1, raw_pileup=None):
+                 cutoff=0.1, raw_pileup=None, touched_nodes=None):
         self.graph = graph
         self.q_values = q_values_sparse_pileup
         self.info = experiment_info
@@ -77,6 +77,7 @@ class CallPeaksFromQvalues(object):
         self.cutoff = cutoff
         self.raw_pileup = raw_pileup
         self.graph.assert_correct_edge_dicts()
+        self.touched_nodes = touched_nodes
 
     def __threshold(self):
         threshold = -np.log10(self.cutoff)
@@ -89,7 +90,8 @@ class CallPeaksFromQvalues(object):
         logging.info("Filling small Holes")
         self.pre_processed_peaks.fill_small_wholes(
                                     self.info.read_length,
-                                    self.out_file_base_name + "_holes.intervals")
+                                    self.out_file_base_name + "_holes.intervals",
+                                    touched_nodes=self.touched_nodes)
         logging.info("Removing small peaks")
 
         self.pre_processed_peaks.to_bed_file(
@@ -350,11 +352,14 @@ class CallPeaks(object):
         self._control_pileup = control_pileup
 
     def get_score(self):
+        logging.info("Getting scores. Creating sparse array from sparse control and sample")
         q_values_pileup = SparseControlSample.from_sparse_control_and_sample(
             self._control_pileup, self._sample_pileup)
+        logging.info("Computing q values")
         q_values_pileup.get_scores()
         self.q_values = q_values_pileup
         q_val_file_name = self.out_file_base_name + "q_values.bdg"
+        logging.info("Writing q values to file")
         self.q_values.to_bed_graph(q_val_file_name)
         logging.info("Writing q values to %s" % q_val_file_name)
 
@@ -364,7 +369,9 @@ class CallPeaks(object):
             self.q_values,
             self.info,
             self.out_file_base_name,
-            self.cutoff)
+            self.cutoff,
+            touched_nodes=self.touched_nodes
+        )
         self.q_value_peak_caller.callpeaks()
 
     def save_max_path_sequences_to_fasta_file(self, file_name, retriever):

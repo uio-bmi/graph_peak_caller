@@ -4,7 +4,7 @@ LOOP_VALUE = 3000000000
 
 
 class Cleaner(object):
-    def __init__(self, pileup, threshold):
+    def __init__(self, pileup, threshold, touched_nodes=None):
         self.graph = pileup.graph
         self.areas = self.get_areas(pileup)
         self.areas_builder = AreasBuilder(self.graph)
@@ -12,6 +12,7 @@ class Cleaner(object):
         self.intervals = []
         self.threshold = threshold
         self.ignored_nodes = set([])
+        self.touched_nodes = touched_nodes
 
     def get_starts_and_ends_dict(self, areas):
         self.starts_dict = {}
@@ -245,7 +246,15 @@ class HolesCleaner(Cleaner):
                 return True
             return False
 
-        if len(extensions) and (len(extensions) == len(self.cur_adj_list[node_list[-1]])):
+        len_exts = 0
+        for node in self.cur_adj_list[node_list[-1]]:
+            if False and self.touched_nodes is not None:
+                if abs(node) in self.touched_nodes:
+                    len_exts += 1
+            else:
+                len_exts += 1
+
+        if len(extensions) and (len(extensions) == len_exts):
             return True
 
         self.save(node_list)

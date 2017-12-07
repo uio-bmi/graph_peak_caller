@@ -340,14 +340,18 @@ class SparsePileup(Pileup):
     def scale(self, scale):
         [vi.scale(scale) for vi in self.data.values()]
 
-    def fill_small_wholes(self, max_size, write_holes_to_file=None):
-        cleaner = HolesCleaner(self, max_size)
+    def fill_small_wholes(self, max_size, write_holes_to_file=None, touched_nodes=None):
+        cleaner = HolesCleaner(self, max_size, touched_nodes=touched_nodes)
         areas = cleaner.run()
         n_filled = 0
 
         hole_intervals = []
 
         for node_id in areas.areas:
+            if touched_nodes is not None:
+                if node_id not in touched_nodes:
+                    continue
+
             starts = areas.get_starts(node_id)
             ends = areas.get_ends(node_id)
             for start, end in zip(starts, ends):
