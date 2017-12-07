@@ -14,7 +14,8 @@ def create_control(linear_map_name, *args, **kwargs):
     return create_control_from_objs(linear_map, *args, **kwargs)
 
 
-def create_control_from_objs(linear_map, reads, extension_sizes, fragment_length, ob_graph=None):
+def create_control_from_objs(linear_map, reads, extension_sizes,
+                             fragment_length, ob_graph=None, touched_nodes=None):
     """
     :param snarl_graph: Hierarchical snarl graph
     """
@@ -37,12 +38,15 @@ def create_control_from_objs(linear_map, reads, extension_sizes, fragment_length
         linear_pileup /= (extension*2/fragment_length)
         logging.info("Linear pileup created. Doing maximum")
         max_pileup.maximum(linear_pileup)
-    valued_indexes = max_pileup.to_valued_indexes(linear_map)
 
-    if ob_graph is not None:
-        for node_id in valued_indexes.keys():
-            assert node_id in ob_graph.blocks
+    logging.info("All extensions done. Grating valued indexes from pileup")
+    valued_indexes = max_pileup.to_valued_indexes(linear_map, touched_nodes=touched_nodes)
 
+    #if ob_graph is not None:
+    #    for node_id in valued_indexes.keys():
+    #        assert node_id in ob_graph.blocks
+
+    logging.info("Making sparsepilup from valued indexes")
     graph_pileup = SparsePileup(linear_map._graph)
     graph_pileup.data = valued_indexes
     logging.info("Control pileup created")
@@ -98,10 +102,14 @@ class LinearPileup(object):
         es = EventSort([starts, ends], [1, -1])
         return LinearPileup(es.indices, es.values)
 
-    def to_valued_indexes(self, linear_map):
+    def to_valued_indexes(self, linear_map, touched_nodes=None):
+        logging.info("Getting event sorter")
         event_sorter = self.get_event_sorter(linear_map)
+        logging.info("Getting unmapped indices")
         unmapped_indices = self.from_event_sorter(event_sorter)
-        vi_dict = linear_map.to_graph_pileup(unmapped_indices)
+        logging.info("Mapping linear map to graph pileup")
+        vi_dict = linear_map.to_graph_pileup(unmapped_indices,
+                                             touched_nodes=touched_nodes)
         return vi_dict
 
     def get_event_sorter(self, linear_map):

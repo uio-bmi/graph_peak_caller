@@ -292,6 +292,10 @@ class SparsePileupData(dict):
     def values(self):
         return (self.__getitem__(key) for key in self.graph.blocks)
 
+    def items(self):
+        return ((key, self.__getitem__(key)) for key in self.graph.blocks)
+
+
 
 class SparsePileup(Pileup):
     def __init__(self, graph):
