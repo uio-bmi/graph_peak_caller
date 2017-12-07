@@ -292,8 +292,8 @@ class SparsePileupData(dict):
     def values(self):
         return (self.__getitem__(key) for key in self.graph.blocks)
 
-    def items(self):
-        return ((key, self.__getitem__(key)) for key in self.graph.blocks)
+    # def items(self):
+    #    return ((key, self.__getitem__(key)) for key in self.graph.blocks)
 
 
 
@@ -363,10 +363,14 @@ class SparsePileup(Pileup):
             valued_indexes.sanitize()
             assert node_id in self.graph.blocks
 
-
     def find_valued_areas(self, value):
-        return {node_id: valued_indexes.find_valued_areas(value)
-                for node_id, valued_indexes in self.data.items()}
+        if value:
+            return {node_id: self.data[node_id].find_valued_areas(value)
+                    for node_id, valued_indexes in self.data.items()}
+        return {node_id: (self.data[node_id].find_valued_areas(value)
+                          if node_id in self.data
+                          else [0, self.graph.node_size(node_id)])
+                for node_id in self.graph.blocks}
 
     def set_valued_intervals(self, node_id, valued_indexes):
         assert node_id in self.graph.blocks

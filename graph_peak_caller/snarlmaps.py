@@ -45,28 +45,13 @@ class LinearSnarlMap(object):
         offset = self.get_node_start(node_id)
         return scale, offset
 
-    def to_graph_pileup(self, unmapped_indices_dict, touched_nodes=None):
+    def to_graph_pileup(self, unmapped_indices_dict):
         vi_dict = {}
-        if False and touched_nodes is not None:
-            nodes = touched_nodes
-        else:
-            logging.warning("Touched nodes is None. Missing speedup.")
-            nodes = unmapped_indices_dict.keys()
-
         i = 0
-        for node_id in nodes:
-
-            # Speedup: Ignore nodes not touched by sample pileup. Set control high for these nodes
-            if touched_nodes is not None:
-                if node_id not in touched_nodes:
-                    vi_dict[node_id] = ValuedIndexes([], [], 10, self._graph.node_size(node_id))
-                    continue
-
+        for node_id, unmapped_indices in unmapped_indices_dict.items():
             if i % 100000 == 0:
                 logging.info("Processing node %d" % i)
             i += 1
-
-            unmapped_indices = unmapped_indices_dict[node_id]
 
             scale, offset = self.get_scale_and_offset(node_id)
             new_idxs = (unmapped_indices.get_index_array()-offset) / scale
@@ -76,12 +61,7 @@ class LinearSnarlMap(object):
                 new_idxs[1:], unmapped_indices.get_values_array()[1:],
                 unmapped_indices.values[0],
                 self._graph.node_size(node_id))
-            if vi.indexes.size:
-                if not vi.indexes[-1] <= vi.length:
-                    print(node_id, scale, offset)
-                    print(unmapped_indices)
-                    print(new_idxs)
-                    raise
+            assert (not vi.indexes.size) or vi.indexes[-1] <= vi.length
             vi.sanitize_indices()
             vi.sanitize()
             vi_dict[node_id] = vi

@@ -104,16 +104,15 @@ class LinearPileup(object):
 
     def to_valued_indexes(self, linear_map, touched_nodes=None):
         logging.info("Getting event sorter")
-        event_sorter = self.get_event_sorter(linear_map)
+        event_sorter = self.get_event_sorter(linear_map, touched_nodes)
         logging.info("Getting unmapped indices")
         unmapped_indices = self.from_event_sorter(event_sorter)
         logging.info("Mapping linear map to graph pileup")
-        vi_dict = linear_map.to_graph_pileup(unmapped_indices,
-                                             touched_nodes=touched_nodes)
+        vi_dict = linear_map.to_graph_pileup(unmapped_indices)
         return vi_dict
 
-    def get_event_sorter(self, linear_map):
-        node_start_values = [node_id for node_id in linear_map._graph.blocks]
+    def get_event_sorter(self, linear_map, touched_nodes=None):
+        node_start_values = [node_id for node_id in (linear_map._graph.blocks if touched_nodes is None else touched_nodes)]
         node_end_values = node_start_values[:]
         node_starts_idxs = [linear_map.get_node_start(node_id)
                             for node_id in node_start_values]
@@ -129,7 +128,8 @@ class LinearPileup(object):
                                                         ])
         return event_sorter
 
-    def from_event_sorter(self, event_sorter):
+    @staticmethod
+    def from_event_sorter(event_sorter):
         unmapped_indices = defaultdict(UnmappedIndices)
         cur_nodes = set([])
         cur_index = 0
@@ -145,25 +145,10 @@ class LinearPileup(object):
                 cur_value = value
                 cur_index = index
             elif code == event_sorter.NODE_END:
-                try:
-                    cur_nodes.remove(int(value))
-                except:
-                    raise
+                cur_nodes.remove(int(value))
             else:
                 raise Exception("Coding Error")
         return unmapped_indices
-
-    def to_graph_pileup(self):
-        cur_nodes = []
-        for idx, event in self.events.items():
-            if isinstance(event, tuple):
-                if event[0] > 0:
-                    cur_nodes.append(event[1])
-                else:
-                    cur_nodes.remove(event[1])
-            else:
-                [node.append((idx, value))
-                 for node in cur_nodes]
 
     def continuous_sparse_maximum(self, other):
         indices1 = self.indices

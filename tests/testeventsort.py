@@ -11,16 +11,3 @@ def test_event_sorter():
                             (5, 1, 6),
                             (9, 1, 7),
                             (10, 0, 2)]
-
-
-if __name__ == "__main__":
-    import random
-    import cProfile
-    N = 10000000
-    indices = [[random.random() for _ in range(N)],
-               [random.random() for _ in range(N)]]
-
-    values = [[random.random() for _ in range(N)],
-              [random.random() for _ in range(N)]]
-    cProfile.run("EventSorter(indices, values)")
-
