@@ -10,6 +10,7 @@ class DiscreteEventSorter(object):
         n_types = len(index_lists)
         coded_index_list = [np.array(index_list)*n_types + r
                             for r, index_list in enumerate(index_lists)]
+
         coded_indices = np.concatenate(coded_index_list)
         sorted_args = np.argsort(coded_indices)
         coded_indices = coded_indices[sorted_args]

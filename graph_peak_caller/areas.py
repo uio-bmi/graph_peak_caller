@@ -189,6 +189,17 @@ class ValuedAreas(Areas):
         self.internal_starts = defaultdict(list)
         self.internal_ends = defaultdict(list)
 
+    def has_anything_on_node(self, node_id):
+        if node_id in self.full_areas:
+            return True
+        if node_id in self.starts:
+            return True
+        if node_id in self.internal_ends:
+            return True
+        if node_id in self.internal_starts:
+            return True
+        return False
+
     def add_binary_areas(self, areas):
         for node_id in areas.full_areas:
             self.full_areas[node_id] += 1
@@ -198,15 +209,31 @@ class ValuedAreas(Areas):
         for node_id, start in areas.starts.items():
             self.starts[node_id].append(start)
 
-    def get_starts_array(self, node_id):
-        node_size = self.graph.node_size(node_id)
+    def get_starts_array(self, node_id, node_size=None):
+        if node_size is None:
+            node_size = self.graph.node_size(node_id)
+        """
+        length_starts_full = len(self.starts[node_id])+self.full_areas[node_id]
+        length_internal = len(self.internal_starts[node_id])
+        length_starts = len(self.starts[-node_id])
+        out = np.zeros(length_starts_full + length_internal + length_starts)
+        b = length_starts_full+length_internal
+        out[length_starts_full:b] = self.internal_starts[node_id]
+        out[b:] = self.starts[-node_id]
+        out[b:] *= -1
+        out[b:] += node_size
+        return out
+        """
+
         starts = [0]*(len(self.starts[node_id])+self.full_areas[node_id])
         starts.extend(self.internal_starts[node_id])
         starts.extend([node_size-start for start in self.starts[-node_id]])
         return np.array(starts, dtype="int")
 
-    def get_ends_array(self, node_id):
-        node_size = self.graph.node_size(node_id)
+    def get_ends_array(self, node_id, node_size=None):
+        if node_size is None:
+            node_size = self.graph.node_size(node_id)
+
         ends = self.starts[node_id][:]
         ends.extend(self.internal_ends[node_id])
         ends.extend([node_size]*(
