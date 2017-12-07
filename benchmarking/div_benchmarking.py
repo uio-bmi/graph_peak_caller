@@ -29,12 +29,12 @@ def run_create_sample_pileup(intervals):
 
     areas_list = (extender.extend_interval(interval)
                   for interval in intervals)
-
+    touched_nodes = set()  # Speedup thing, keep track of nodes where areas are on
     for area in areas_list:
-        valued_areas.add_binary_areas(area)
+        valued_areas.add_binary_areas(area, touched_nodes)
 
     pileup = SparsePileup.from_valued_areas(
-        graph, valued_areas)
+        graph, valued_areas, touched_nodes)
 
     #print(pileup)
 

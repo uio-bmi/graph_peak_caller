@@ -380,15 +380,18 @@ class CallPeaks(object):
         areas_list = (extender.extend_interval(interval)
                       for interval in alignments)
         i = 0
+
+        touched_nodes = set()  # Speedup thing, keep track of nodes where areas are on
         for area in areas_list:
             if i % 10000 == 0:
                 logging.info("Processing area %d" % i)
             i += 1
 
-            valued_areas.add_binary_areas(area)
+            valued_areas.add_binary_areas(area, touched_nodes)
+        print(touched_nodes)
         logging.info("Creating sample pileup from valued areas")
         pileup = SparsePileup.from_valued_areas(
-            self.ob_graph, valued_areas)
+            self.ob_graph, valued_areas, touched_nodes=touched_nodes)
         self._sample_track = self.out_file_base_name + "sample_track.bdg"
         if save_to_file:
             logging.info("Saving sample pileup to file")

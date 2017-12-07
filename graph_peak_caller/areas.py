@@ -200,14 +200,17 @@ class ValuedAreas(Areas):
             return True
         return False
 
-    def add_binary_areas(self, areas):
+    def add_binary_areas(self, areas, touched_nodes=None):
         for node_id in areas.full_areas:
             self.full_areas[node_id] += 1
+            touched_nodes.add(abs(node_id))
         for node_id, internal_intervals in areas.internal_intervals.items():
             self.internal_starts[node_id].append(internal_intervals[0])
             self.internal_ends[node_id].append(internal_intervals[1])
+            touched_nodes.add(abs(node_id))
         for node_id, start in areas.starts.items():
             self.starts[node_id].append(start)
+            touched_nodes.add(abs(node_id))
 
     def get_starts_array(self, node_id, node_size=None):
         if node_size is None:

@@ -383,10 +383,16 @@ class SparsePileup(Pileup):
                                         ends_dict, dtype=int)
 
     @classmethod
-    def from_valued_areas(cls, graph, valued_areas):
+    def from_valued_areas(cls, graph, valued_areas, touched_nodes = None):
         pileup = cls(graph)
         i = 0
-        for rp in graph.blocks:
+
+        if touched_nodes is None:
+            nodes = graph.blocks
+        else:
+            nodes = touched_nodes
+
+        for rp in nodes:
             if i % 100000 == 0:
                 logging.info("Creating sparse from valued areas for node %d" % i)
             i += 1
