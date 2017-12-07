@@ -198,6 +198,7 @@ class CallPeaks(object):
             logging.info("Not removing duplicates")
 
         self.create_graph()
+        self.touched_nodes = None  # Nodes touched by sample pileup
 
     def set_cutoff(self, value):
         self.cutoff = value
@@ -332,10 +333,12 @@ class CallPeaks(object):
     def create_control(self, save_to_file=True):
         logging.info("Creating control track using linear map %s" % self.linear_map)
         extensions = [self.info.fragment_length, 1000, 10000] if self.has_control else [10000]
+        assert self.touched_nodes is not None
         control_pileup = linearsnarls.create_control(
             self.linear_map,  self.control_intervals,
             extensions, self.info.fragment_length,
-            ob_graph=self.graph
+            ob_graph=self.graph,
+            touched_nodes=self.touched_nodes
         )
         control_pileup.graph = self.ob_graph
         logging.info("Number of control reads: %d" % self.info.n_control_reads)
@@ -388,7 +391,7 @@ class CallPeaks(object):
             i += 1
 
             valued_areas.add_binary_areas(area, touched_nodes)
-        print(touched_nodes)
+        self.touched_nodes = touched_nodes
         logging.info("Creating sample pileup from valued areas")
         pileup = SparsePileup.from_valued_areas(
             self.ob_graph, valued_areas, touched_nodes=touched_nodes)

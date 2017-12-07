@@ -2,7 +2,7 @@ import json
 import pickle
 from .sparsepileup import ValuedIndexes
 from .linearintervals import LinearIntervalCollection
-
+import logging
 
 class LinearSnarlMap(object):
     def __init__(self, starts, ends, length, graph):
@@ -45,9 +45,29 @@ class LinearSnarlMap(object):
         offset = self.get_node_start(node_id)
         return scale, offset
 
-    def to_graph_pileup(self, unmapped_indices_dict):
+    def to_graph_pileup(self, unmapped_indices_dict, touched_nodes=None):
         vi_dict = {}
-        for node_id, unmapped_indices in unmapped_indices_dict.items():
+        if False and touched_nodes is not None:
+            nodes = touched_nodes
+        else:
+            logging.warning("Touched nodes is None. Missing speedup.")
+            nodes = unmapped_indices_dict.keys()
+
+        i = 0
+        for node_id in nodes:
+
+            # Speedup: Ignore nodes not touched by sample pileup. Set control high for these nodes
+            if touched_nodes is not None:
+                if node_id not in touched_nodes:
+                    vi_dict[node_id] = ValuedIndexes([], [], 10, self._graph.node_size(node_id))
+                    continue
+
+            if i % 100000 == 0:
+                logging.info("Processing node %d" % i)
+            i += 1
+
+            unmapped_indices = unmapped_indices_dict[node_id]
+
             scale, offset = self.get_scale_and_offset(node_id)
             new_idxs = (unmapped_indices.get_index_array()-offset) / scale
             new_idxs = new_idxs.astype("int")

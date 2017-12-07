@@ -14,10 +14,12 @@ def create_control(linear_map_name, *args, **kwargs):
     return create_control_from_objs(linear_map, *args, **kwargs)
 
 
-def create_control_from_objs(linear_map, reads, extension_sizes, fragment_length, ob_graph=None):
+def create_control_from_objs(linear_map, reads, extension_sizes,
+                             fragment_length, ob_graph=None, touched_nodes=None):
     """
     :param snarl_graph: Hierarchical snarl graph
     """
+    assert touched_nodes is not None
     linear_size = linear_map._length
     mapped_reads = linear_map.map_interval_collection(reads)
     average_value = mapped_reads.n_intervals*fragment_length / linear_size
@@ -39,7 +41,7 @@ def create_control_from_objs(linear_map, reads, extension_sizes, fragment_length
         max_pileup.maximum(linear_pileup)
 
     logging.info("All extensions done. Grating valued indexes from pileup")
-    valued_indexes = max_pileup.to_valued_indexes(linear_map)
+    valued_indexes = max_pileup.to_valued_indexes(linear_map, touched_nodes=touched_nodes)
 
     #if ob_graph is not None:
     #    for node_id in valued_indexes.keys():
@@ -101,10 +103,14 @@ class LinearPileup(object):
         es = EventSort([starts, ends], [1, -1])
         return LinearPileup(es.indices, es.values)
 
-    def to_valued_indexes(self, linear_map):
+    def to_valued_indexes(self, linear_map, touched_nodes=None):
+        logging.info("Getting event sorter")
         event_sorter = self.get_event_sorter(linear_map)
+        logging.info("Getting unmapped indices")
         unmapped_indices = self.from_event_sorter(event_sorter)
-        vi_dict = linear_map.to_graph_pileup(unmapped_indices)
+        logging.info("Mapping linear map to graph pileup")
+        vi_dict = linear_map.to_graph_pileup(unmapped_indices,
+                                             touched_nodes=touched_nodes)
         return vi_dict
 
     def get_event_sorter(self, linear_map):

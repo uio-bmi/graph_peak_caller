@@ -5,7 +5,8 @@ from graph_peak_caller.callpeaks import ExperimentInfo, CallPeaks
 from graph_peak_caller.snarls import SnarlGraph, SnarlGraphBuilder, SimpleSnarl
 from graph_peak_caller.linearsnarls import LinearSnarlMap
 from graph_peak_caller.sparsepileup import SparsePileup
-
+import logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
 class TestWholeCallPeaks(unittest.TestCase):
     def get_caller(self, sample_intervals, control_intervals, has_control=False):
@@ -34,7 +35,7 @@ class TestWholeCallPeaks(unittest.TestCase):
     def assert_final_peaks_equals_input_peaks(self):
         final_peaks = IntervalCollection.create_list_from_file("test_max_paths.intervalcollection")
         for peak in self.peaks:
-            self.assertTrue(peak in final_peaks.intervals)
+            self.assertTrue(peak in final_peaks.intervals, "Peak %s not in final peaks. Final peaks: \n%s" % (peak, final_peaks.intervals))
         self.assertEqual(len(self.peaks), len(final_peaks.intervals))
 
     def setUp(self):
