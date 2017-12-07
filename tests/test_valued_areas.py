@@ -7,6 +7,7 @@ from graph_peak_caller.areas import ValuedAreas,\
 
 class TestValuedAreas(unittest.TestCase):
     def test_add_binary_areas(self):
+        touched_nodes = set()
         graph = obg.Graph({1: obg.Block(100)}, {})
         starts = np.array([0] + [i*10 for i in range(9)])
         ends = np.array([100] + [(i+2)*10 for i in range(9)])
@@ -18,7 +19,7 @@ class TestValuedAreas(unittest.TestCase):
             bin_areas.append(binary_connected_areas)
         valued_areas = ValuedAreas(graph)
         for bin_area in bin_areas:
-            valued_areas.add_binary_areas(bin_area)
+            valued_areas.add_binary_areas(bin_area, touched_nodes=touched_nodes)
 
         self.assertTrue(np.all(
             valued_areas.get_starts_array(1) == np.sort(starts)))
@@ -27,6 +28,7 @@ class TestValuedAreas(unittest.TestCase):
             valued_areas.get_ends_array(1) == np.sort(ends)))
 
     def test_add_pos_and_negbinary_areas(self):
+        touched_nodes = set()
         graph = obg.Graph({1: obg.Block(100)}, {})
         pos_starts = np.array([0] + [i*10 for i in range(9)])
         pos_ends = np.array([100] + [(i+2)*10 for i in range(9)])
@@ -45,7 +47,7 @@ class TestValuedAreas(unittest.TestCase):
             bin_areas.append(binary_connected_areas)
         valued_areas = ValuedAreas(graph)
         for bin_area in bin_areas:
-            valued_areas.add_binary_areas(bin_area)
+            valued_areas.add_binary_areas(bin_area, touched_nodes=touched_nodes)
 
         true_starts = np.sort(np.concatenate(
             [pos_starts, 100-neg_ends]))

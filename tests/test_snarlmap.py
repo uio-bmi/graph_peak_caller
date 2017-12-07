@@ -5,7 +5,7 @@ from test_snarls import snarl_graph2
 from graph_peak_caller.linearsnarls import UnmappedIndices, LinearPileup,\
     create_control_from_objs
 from graph_peak_caller.snarlmaps import LinearSnarlMap
-from graph_peak_caller.sparsepileup import ValuedIndexes, SparsePileup
+from graph_peak_caller.sparsepileup import ValuedIndexes, SparsePileup, SparsePileupData
 
 graph = obg.GraphWithReversals(
     {3: obg.Block(20), 5: obg.Block(10),
@@ -39,11 +39,14 @@ class TestSnarlMap(unittest.TestCase):
         graph_pileup = SparsePileup(graph)
         graph_pileup.data = valued_indexes
         true_sparse_pileup = SparsePileup(graph)
-        true_sparse_pileup.data = {3: ValuedIndexes([], [], 2, 20),
-                                   12: ValuedIndexes([], [], 2, 20),
-                                   13: ValuedIndexes([], [], 2, 21),
-                                   5: ValuedIndexes([], [], 2, 10)}
-        print(graph_pileup)
+        true_data = {3: ValuedIndexes([], [], 2, 20),
+                       12: ValuedIndexes([], [], 2, 20),
+                       13: ValuedIndexes([], [], 2, 21),
+                       5: ValuedIndexes([], [], 2, 10)}
+        true_sparse_pileup.data = SparsePileupData([(key, val) for key, val in true_data.items()], graph=graph)
+        print(true_sparse_pileup.data)
+
+        print(true_sparse_pileup)
         self.assertEqual(graph_pileup, true_sparse_pileup)
 
     def test_graph_position_to_linear(self):
@@ -82,6 +85,9 @@ class TestSnarlMap(unittest.TestCase):
             val[0][1:].astype("int"), val[1][1:],
             val[1][0], graph.node_size(node_id))
                for node_id, val in vis.items()}
+
+        vis = SparsePileupData([(key, val) for key, val in vis.items()], graph=graph)
+
         mapped_vis = self.snarl_map.to_graph_pileup(unmapped_indices)
         self.assertEqual(mapped_vis, vis)
 

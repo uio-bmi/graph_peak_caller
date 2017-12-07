@@ -1,8 +1,9 @@
 import json
 import pickle
-from .sparsepileup import ValuedIndexes
+from .sparsepileup import ValuedIndexes, SparsePileupData
 from .linearintervals import LinearIntervalCollection
 import logging
+
 
 class LinearSnarlMap(object):
     def __init__(self, starts, ends, length, graph):
