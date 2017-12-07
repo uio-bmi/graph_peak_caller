@@ -274,15 +274,20 @@ class SparsePileupData(dict):
     def __init__(self, *args, **kwargs):
         self.graph = kwargs["graph"]
         self.min_value = 0
-        super(SparsePileupData, self).__init__()
+        del kwargs["graph"]
+        super(SparsePileupData, self).__init__(*args, **kwargs)
+        self.default_value = 0
 
     def __getitem__(self, item):
         if item not in self:
             value = ValuedIndexes.empty(self.graph.node_size(item))
-            value.start_value = self.min_value
+            value.start_value = max(self.min_value, self.default_value)
             self.__setitem__(item, value)
 
         return super(SparsePileupData, self).__getitem__(item)
+
+    def __setitem__(self, key, value):
+        super(SparsePileupData, self).__setitem__(key, value)
 
     def trunctate(self, min_value):
         for key in self.keys():
@@ -293,6 +298,10 @@ class SparsePileupData(dict):
         return (self.__getitem__(key) for key in self.graph.blocks)
 
     def items(self):
+        return ((key, self.__getitem__(key)) for key in self.graph.blocks)
+
+    def all_items(self):
+        # Also gives rps with zero
         return ((key, self.__getitem__(key)) for key in self.graph.blocks)
 
 
@@ -309,7 +318,7 @@ class SparsePileup(Pileup):
         #self.graph.assert_correct_edge_dicts()
 
     def __eq__(self, other):
-        for node_id, vi in other.data.items():
+        for node_id, vi in other.data.all_items():
             if self.data[node_id] != vi:
                 return False
         return True
