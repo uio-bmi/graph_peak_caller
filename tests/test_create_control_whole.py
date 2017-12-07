@@ -93,7 +93,7 @@ class TestCreateControl(unittest.TestCase):
         )
 
         LinearSnarlMap.from_snarl_graph(
-            self.snarlgraph, self.graph).to_file("test_linear_map.tmp")
+            self.snarlgraph, self.graph).to_json_files("test_linear_map.tmp")
 
     def test_single_read_single_extension(self):
         fragment_length = 3
@@ -173,7 +173,7 @@ class TestCreateControl(unittest.TestCase):
         self.assertEqual(control, correct_pileup)
 
 
-class _TestCreateControlGraphWithDifferentLengths(unittest.TestCase):
+class _TestCreateControlGraphWithDifferentLengths():
 
     def setUp(self):
         self.graph = GraphWithReversals(
@@ -242,7 +242,7 @@ class _TestCreateControlGraphWithDifferentLengths(unittest.TestCase):
             end_node=14
         )
 
-        LinearSnarlMap.from_snarl_graph(self.snarlgraph, self.graph).to_file("test_linear_map.tmp")
+        LinearSnarlMap.from_snarl_graph(self.snarlgraph, self.graph).to_json_files("test_linear_map.tmp")
 
     def test_single_read(self):
         fragment_length = 3
