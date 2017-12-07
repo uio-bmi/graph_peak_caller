@@ -93,19 +93,21 @@ class LinearSnarlMap(object):
         return LinearIntervalCollection(starts, ends)
 
     def to_json_files(self, base_name):
-        with open(base_name+"starts.json", "w") as f:
-            f.write("%s\n" % self._length)
-            f.write(json.dumps(self._linear_node_starts))
-        with open(base_name+"ends.json", "w") as f:
-            f.write(json.dumps(self._linear_node_ends))
+        with open(base_name+".length", "w") as f:
+            f.write("%s" % self._length)
+        with open(base_name+"starts.pickle", "wb") as f:
+            pickle.dump(self._linear_node_starts, f)
+        with open(base_name+"ends.pickle", "wb") as f:
+            pickle.dump(self._linear_node_ends, f)
 
     @classmethod
     def from_json_files(cls, base_name, graph):
-        with open(base_name+"starts.json") as f:
-            length = int(f.readline().strip())
-            starts = json.loads(f.read())
-        with open(base_name+"ends.json") as f:
-            ends = json.loads(f.read())
+        with open(base_name+".length") as f:
+            length = int(f.read().strip())
+        with open(base_name+"starts.pickle", "rb") as f:
+            starts = pickle.loads(f.read())
+        with open(base_name+"ends.pickle", "rb") as f:
+            ends = pickle.loads(f.read())
         return cls(starts, ends, length, graph)
 
     def to_file(self, file_name):

@@ -99,7 +99,8 @@ class TestCreateControl(unittest.TestCase):
         fragment_length = 3
         reads = [Interval(0, 3, [2])]
         extension_sizes = [8]
-        control = create_control("test_linear_map.tmp", reads, extension_sizes, fragment_length)
+        control = create_control("test_linear_map.tmp", reads, extension_sizes,
+                                 fragment_length, ob_graph=self.graph)
 
         expected_bakground = len(reads) * fragment_length / self.linear_length
         value_in_extension = 1 * fragment_length / (extension_sizes[0])
@@ -120,7 +121,7 @@ class TestCreateControl(unittest.TestCase):
         fragment_length = 3
         reads = [Interval(0, 3, [2])]
         extension_sizes = [2, 8]
-        control = create_control("test_linear_map.tmp", reads, extension_sizes, fragment_length)
+        control = create_control("test_linear_map.tmp", reads, extension_sizes, fragment_length, ob_graph=self.graph)
 
         expected_bakground = len(reads) * fragment_length / self.linear_length
         value_in_extensions = 1 * fragment_length / (np.array(extension_sizes))
@@ -144,7 +145,7 @@ class TestCreateControl(unittest.TestCase):
         fragment_length = 3
         reads = [Interval(0, 3, [2]), Interval(1, 1, [8, 9])]
         extension_sizes = [2, 8]
-        control = create_control("test_linear_map.tmp", reads, extension_sizes, fragment_length)
+        control = create_control("test_linear_map.tmp", reads, extension_sizes, fragment_length, ob_graph=self.graph)
 
         expected_bakground = len(reads) * fragment_length / self.linear_length
         value_in_extensions = 1 * fragment_length / (np.array(extension_sizes))
@@ -247,8 +248,7 @@ class _TestCreateControlGraphWithDifferentLengths(unittest.TestCase):
         fragment_length = 3
         reads = [Interval(0, 3, [2])]
         extension_sizes = [8]
-        control = create_control("test_linear_map.tmp", reads, extension_sizes, fragment_length)
-
+        control = create_control("test_linear_map.tmp", reads, extension_sizes, fragment_length, ob_graph=self.graph)
         expected_bakground = len(reads) * fragment_length / self.linear_length
         value_in_extension = 1 * fragment_length / (extension_sizes[0])
 
