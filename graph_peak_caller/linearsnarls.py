@@ -19,7 +19,6 @@ def create_control_from_objs(linear_map, reads, extension_sizes,
     """
     :param snarl_graph: Hierarchical snarl graph
     """
-    assert touched_nodes is not None
     linear_size = linear_map._length
     mapped_reads = linear_map.map_interval_collection(reads)
     average_value = mapped_reads.n_intervals*fragment_length / linear_size
