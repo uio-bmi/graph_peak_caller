@@ -7,7 +7,10 @@ import logging
 
 
 def create_control(linear_map_name, *args, **kwargs):
-    linear_map = LinearSnarlMap.from_json_files(linear_map_name, kwargs["ob_graph"])
+    #linear_map = LinearSnarlMap.from_json_files(linear_map_name, kwargs["ob_graph"])
+    logging.info("Reading linear map from file")
+    linear_map = LinearSnarlMap.from_file(linear_map_name)
+    logging.info("Linear map read from file")
     return create_control_from_objs(linear_map, *args, **kwargs)
 
 
@@ -32,6 +35,7 @@ def create_control_from_objs(linear_map, reads, extension_sizes, fragment_length
         linear_pileup = LinearPileup.create_from_starts_and_ends(
                 extended_reads.starts, extended_reads.ends)
         linear_pileup /= (extension*2/fragment_length)
+        logging.info("Linear pileup created. Doing maximum")
         max_pileup.maximum(linear_pileup)
     valued_indexes = max_pileup.to_valued_indexes(linear_map)
 
@@ -41,6 +45,7 @@ def create_control_from_objs(linear_map, reads, extension_sizes, fragment_length
 
     graph_pileup = SparsePileup(linear_map._graph)
     graph_pileup.data = valued_indexes
+    logging.info("Control pileup created")
 
     return graph_pileup
 
@@ -89,6 +94,7 @@ class LinearPileup(object):
 
     @classmethod
     def create_from_starts_and_ends(cls, starts, ends):
+        logging.info("Creating linear pileup from starts and ends")
         es = EventSort([starts, ends], [1, -1])
         return LinearPileup(es.indices, es.values)
 

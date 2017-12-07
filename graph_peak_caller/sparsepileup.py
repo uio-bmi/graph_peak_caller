@@ -269,12 +269,40 @@ class BinaryIndexes(object):
         self.starts.sort
 
 
+class SparsePileupData(dict):
+
+    def __init__(self, *args, **kwargs):
+        self.graph = kwargs["graph"]
+        self.min_value = 0
+        super(SparsePileupData, self).__init__()
+
+    def __getitem__(self, item):
+        if item not in self:
+            value = ValuedIndexes.empty(self.graph.node_size(item))
+            value.start_value = self.min_value
+            self.__setitem__(item, value)
+
+        return super(SparsePileupData, self).__getitem__(item)
+
+    def trunctate(self, min_value):
+        for key in self.keys():
+            self.__getitem__(key).trunctate()
+        self.min_value = max(self.min_value, min_value)
+
+    def values(self):
+        return (self.__getitem__(key) for key in self.graph.blocks)
+
+
 class SparsePileup(Pileup):
     def __init__(self, graph):
+        logging.info("Initing sparsepileup")
         self.graph = graph
-        self.data = {rp: ValuedIndexes.empty(graph.node_size(rp))
-                     for rp in self.graph.blocks}
-        self.graph.assert_correct_edge_dicts()
+        self.data = SparsePileupData(graph=self.graph)
+
+        #self.data = {rp: ValuedIndexes.empty(graph.node_size(rp))
+        #             for rp in self.graph.blocks}
+        logging.info("Sparsepileup inited")
+        #self.graph.assert_correct_edge_dicts()
 
     def __eq__(self, other):
         for node_id, vi in other.data.items():
@@ -355,16 +383,36 @@ class SparsePileup(Pileup):
                                         ends_dict, dtype=int)
 
     @classmethod
-    def from_valued_areas(cls, graph, valued_areas):
+    def from_valued_areas(cls, graph, valued_areas, touched_nodes = None):
         pileup = cls(graph)
-        for rp in graph.blocks:
+        i = 0
+
+        if touched_nodes is None:
+            nodes = graph.blocks
+        else:
+            nodes = touched_nodes
+
+        for rp in nodes:
+            if i % 100000 == 0:
+                logging.info("Creating sparse from valued areas for node %d" % i)
+            i += 1
+
+            length = graph.blocks[rp].length()
+            starts = valued_areas.get_starts_array(rp, node_size=length)
+            if len(starts) == 0:
+                continue
+
+            ends = valued_areas.get_ends_array(rp, node_size=length)
+            if len(starts) == 0 and len(ends) == 0:
+                continue
+
             indexes, values = starts_and_ends_to_sparse_pileup(
-                valued_areas.get_starts_array(rp),
-                valued_areas.get_ends_array(rp))
+                starts,
+                ends)
             if not indexes.size:
+                #assert not valued_areas.has_anything_on_node(rp)
                 continue
             start_value = 0
-            length = graph.blocks[rp].length()
             if indexes[0] == 0:
                 start_value = values[0]
                 indexes = indexes[1:]
@@ -550,8 +598,12 @@ class SparsePileup(Pileup):
                 valued_indexes, other.data[key])
 
     def update_max_value(self, min_value):
-        for valued_indexes in self.data.values():
-            valued_indexes.trunctate(min_value)
+
+        if isinstance(self.data, SparsePileupData):
+            self.data.trunctate(min_value)
+        else:
+            for valued_indexes in self.data.values():
+                valued_indexes.trunctate(min_value)
 
     def to_bed_graph(self, filename):
         f = open(filename, "w")
@@ -710,13 +762,4 @@ def starts_and_ends_to_sparse_pileup(starts, ends):
     indices, values = filter_pileup_duplicated_position(
         *DiscreteEventSorter([ends, starts]).pileup())
     return indices, values
-    coded_starts = starts * 8 + 5
-    coded_ends = ends * 8 + 3
-
-    pileup_encoded_positions = np.concatenate((coded_starts, coded_ends))
-    pileup_encoded_positions.sort()
-    event_codes = (pileup_encoded_positions % 8) - 4  # Containing -1s and 1s
-    pileup_values = np.add.accumulate(event_codes)
-    pileup_positions = pileup_encoded_positions // 8
-    return filter_pileup_duplicated_position(pileup_positions, pileup_values)
 

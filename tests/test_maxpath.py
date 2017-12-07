@@ -27,6 +27,8 @@ class TestMaxPath(unittest.TestCase):
 
         binary_peak = BinaryContinousAreas.from_old_areas(peak)
         qvalues = SparsePileup.from_base_value(graph, 10)
+        print("q values")
+        print(qvalues)
         scored_peak = ScoredPeak.from_peak_and_pileup(binary_peak, qvalues)
 
         max_path = scored_peak.get_max_path()

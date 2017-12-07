@@ -371,20 +371,30 @@ class CallPeaks(object):
 
     def create_sample_pileup(self, save_to_file=True):
         logging.debug("In sample pileup")
-        if self.verbose:
-            print("Create sample pileup")
+        logging.info("Creating sample pileup")
         alignments = self.sample_intervals
-        logging.debug(self.sample_intervals)
+        logging.info(self.sample_intervals)
         extender = Extender(self.ob_graph, self.info.fragment_length)
         valued_areas = ValuedAreas(self.ob_graph)
+        logging.info("Extending sample reads")
         areas_list = (extender.extend_interval(interval)
                       for interval in alignments)
+        i = 0
+
+        touched_nodes = set()  # Speedup thing, keep track of nodes where areas are on
         for area in areas_list:
-            valued_areas.add_binary_areas(area)
+            if i % 10000 == 0:
+                logging.info("Processing area %d" % i)
+            i += 1
+
+            valued_areas.add_binary_areas(area, touched_nodes)
+        print(touched_nodes)
+        logging.info("Creating sample pileup from valued areas")
         pileup = SparsePileup.from_valued_areas(
-            self.ob_graph, valued_areas)
+            self.ob_graph, valued_areas, touched_nodes=touched_nodes)
         self._sample_track = self.out_file_base_name + "sample_track.bdg"
         if save_to_file:
+            logging.info("Saving sample pileup to file")
             pileup.to_bed_graph(self._sample_track)
             print("Saved sample pileup to " + self._sample_track)
 
