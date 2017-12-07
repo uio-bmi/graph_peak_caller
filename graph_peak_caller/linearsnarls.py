@@ -127,8 +127,8 @@ class LinearPileup(object):
         cur_index = 0
         cur_value = 0
         for index, code, value in event_sorter:
-            value = int(value)
             if code == event_sorter.NODE_START:
+                value = int(value)
                 cur_nodes.add(value)
                 unmapped_indices[value].add_indexvalue(cur_index, cur_value)
             elif code == event_sorter.PILEUP_CHANGE:
@@ -138,7 +138,7 @@ class LinearPileup(object):
                 cur_index = index
             elif code == event_sorter.NODE_END:
                 try:
-                    cur_nodes.remove(value)
+                    cur_nodes.remove(int(value))
                 except:
                     raise
             else:
