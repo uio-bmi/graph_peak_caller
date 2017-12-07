@@ -37,12 +37,15 @@ def create_control_from_objs(linear_map, reads, extension_sizes, fragment_length
         linear_pileup /= (extension*2/fragment_length)
         logging.info("Linear pileup created. Doing maximum")
         max_pileup.maximum(linear_pileup)
+
+    logging.info("All extensions done. Grating valued indexes from pileup")
     valued_indexes = max_pileup.to_valued_indexes(linear_map)
 
-    if ob_graph is not None:
-        for node_id in valued_indexes.keys():
-            assert node_id in ob_graph.blocks
+    #if ob_graph is not None:
+    #    for node_id in valued_indexes.keys():
+    #        assert node_id in ob_graph.blocks
 
+    logging.info("Making sparsepilup from valued indexes")
     graph_pileup = SparsePileup(linear_map._graph)
     graph_pileup.data = valued_indexes
     logging.info("Control pileup created")
