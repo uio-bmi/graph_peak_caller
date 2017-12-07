@@ -29,9 +29,27 @@ class DiscreteEventSorter(object):
 
 
 class EventSorter(object):
+
+    def np_init(self, index_lists, values_lists):
+        all_indices = np.concatenate(index_lists)
+        all_values = np.concatenate(values_lists)
+        codes = np.empty(all_indices.shape, dtype="uint8")
+        start = 0
+        for i, index_list in enumerate(index_lists):
+            codes[start:start+len(index_list)] = i
+            start += len(index_list)
+        args = np.lexsort((codes, all_indices))
+        self.values = all_values[args]
+        self.indices = all_indices[args]
+        self.codes = codes[args]
+        self.n_codes = len(index_lists)
+
     def __init__(self, index_lists, values_lists, names=None):
+
         if names is not None:
             [setattr(self, name.upper(), i) for i, name in enumerate(names)]
+
+        return self.np_init(index_lists, values_lists)
 
         self.tuples = []
         i = 0
@@ -46,7 +64,10 @@ class EventSorter(object):
         return "EventSorter(\n" +"\n".join(str(t) for t in self) + ")"
 
     def __iter__(self):
-        return self.tuples.__iter__()
+        # return self.tuples.__iter__()
+        return zip(self.indices, self.codes, self.values)
+
+
 
 
 class EventSort(object):

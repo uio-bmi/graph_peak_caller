@@ -11,6 +11,7 @@ import sys
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
+
 def run_with_intervals(ob_graph,
                        sample_intervals,
                        control_intervals,
@@ -64,7 +65,6 @@ def run_with_gam(ob_graph_file_name,
                        linear_map=linear_map_file_name)
 
 
-
 def run_mhc_ctcf_example():
     create_ob_graph_from_vg("tests/mhc/graph.json", "tests/mhc/graph.obg")
     logging.info("Reading graph from file")
@@ -82,7 +82,7 @@ def run_mhc_ctcf_example():
         read_length=36,
         linear_map_file_name="tests/mhc/linear_map.lm"
     )
-#run_mhc_ctcf_example()
+
 
 def run_callpeaks(args):
     logging.info("Creating offset based graph")
@@ -116,7 +116,7 @@ def run_callpeaks(args):
         has_control=has_control,
         fragment_length=int(args.fragment_length),
         read_length=int(args.read_length),
-        linear_map_file_name=out_name + "linear_map.lm"
+        linear_map_file_name=out_name + "linear_map"
     )
 
 

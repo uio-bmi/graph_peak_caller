@@ -7,10 +7,10 @@ import logging
 
 
 def create_control(linear_map_name, *args, **kwargs):
-    #linear_map = LinearSnarlMap.from_json_files(linear_map_name, kwargs["ob_graph"])
     logging.info("Reading linear map from file")
-    linear_map = LinearSnarlMap.from_file(linear_map_name)
-    logging.info("Linear map read from file")
+    linear_map = LinearSnarlMap.from_json_files(linear_map_name, kwargs["ob_graph"])
+    # linear_map = LinearSnarlMap.from_file(linear_map_name)
+    # logging.info("Linear map read from file")
     return create_control_from_objs(linear_map, *args, **kwargs)
 
 
@@ -127,6 +127,7 @@ class LinearPileup(object):
         cur_index = 0
         cur_value = 0
         for index, code, value in event_sorter:
+            value = int(value)
             if code == event_sorter.NODE_START:
                 cur_nodes.add(value)
                 unmapped_indices[value].add_indexvalue(cur_index, cur_value)
