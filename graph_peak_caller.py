@@ -112,7 +112,7 @@ def run_callpeaks(args):
         has_control = False
 
     run_with_gam(
-        obg_file_name,
+        ob_graph,
         args.sample_reads_file_name,
         args.control_reads_file_name,
         args.vg_graph_file_name,
@@ -174,8 +174,12 @@ else:
 
 
 """
-python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls ctcf_filtered_r0.97.gam ctcf_filtered_r0.97.gam False run1/ 135 36 23739138"""
+python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls filtered_short.gam filtered_short.gam False run1/ 135 36 23739138
 
+Chr 19:
+python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls filtered_short.gam filtered_short.gam False run1/ 135 36 6373453
+
+"""
 """
 python3 ../../graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls ctcf_filtered_r1.0.2.gam ctcf_filtered_r1.0.2.gam False test_ 136 35 112342
 
