@@ -87,21 +87,25 @@ def run_mhc_ctcf_example():
 def run_callpeaks(args):
     logging.info("Creating offset based graph")
     from pyvg.protoparser import json_file_to_obg_graph
+    import os
     out_name = args.out_base_name
     json_file_name = args.vg_json_graph_file_name
     obg_file_name = json_file_name.replace(".json", ".obg")
-    #create_ob_graph_from_vg(json_file_name, obg_file_name)
-    #ob_graph = json_file_to_obg_graph(json_file_name, int(args.n_nodes))
-    #logging.info("Writing ob graph to file")
-    #ob_graph.to_numpy_files(obg_file_name)
-    logging.info("Reading graph from file")
-    ob_graph = obg.GraphWithReversals.from_file(obg_file_name)
 
-    #ob_graph.to_file(obg_file_name)
-    #ob_graph = obg.GraphWithReversals.from_numpy_files(obg_file_name)
-    #logging.info("Creating linear map")
-    #create_linear_map(ob_graph, args.vg_snarls_file_name, out_name + "linear_map")
-    #logging.info("Linear map created")
+    if not os.path.isfile(obg_file_name + ".npy"):
+        ob_graph = json_file_to_obg_graph(json_file_name, int(args.n_nodes))
+        logging.info("Writing ob graph to file")
+        ob_graph.to_numpy_files(obg_file_name)
+    else:
+        logging.info("Reading graph from file (graph already existing on disk")
+        ob_graph = obg.GraphWithReversals.from_numpy_files(obg_file_name)
+
+    if not os.path.isfile(out_name + "linear_map" + "starts.pickle"):
+        logging.info("Creating linear map")
+        create_linear_map(ob_graph, args.vg_snarls_file_name, out_name + "linear_map")
+        logging.info("Linear map created")
+    else:
+        logging.info("Not creating linear map. Already existing")
 
     has_control = True
     if args.with_control == "False":

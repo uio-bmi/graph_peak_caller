@@ -1,6 +1,7 @@
 from .extender import Areas
 import numpy as np
 import pickle
+import logging
 
 
 class ConnectedAreas(Areas):
@@ -66,8 +67,13 @@ class SubgraphCollection(object):
     @classmethod
     def from_pileup(cls, graph, pileup):
         collection = cls(graph)
+        logging.info("Finding valued areas")
         areas = pileup.find_valued_areas(1)
+        n = 0
         for node_id, starts_and_ends in areas.items():
+            if n % 50000 == 0:
+                logging.info("Adding node %d to subgraph" % n)
+            n += 1
             for i in range(0, len(starts_and_ends) // 2):
                 collection.add_area(node_id,
                                     starts_and_ends[i*2],

@@ -114,6 +114,7 @@ class CallPeaksFromQvalues(object):
     def __get_subgraphs(self):
         logging.info("Creating subgraphs from peak regions")
         peaks_as_subgraphs = self.filtered_peaks.to_subgraphs()
+        logging.info("Writing subgraphs to file")
         peaks_as_subgraphs.to_file(self.out_file_base_name + "peaks.subgraphs")
 
         logging.info("Found %d subgraphs" % len(peaks_as_subgraphs.subgraphs))
