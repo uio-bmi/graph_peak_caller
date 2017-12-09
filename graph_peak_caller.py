@@ -92,7 +92,7 @@ def run_callpeaks(args):
     json_file_name = args.vg_json_graph_file_name
     obg_file_name = json_file_name.replace(".json", ".obg")
 
-    if not os.path.isfile(obg_file_name + ".npy"):
+    if True or not os.path.isfile(obg_file_name + ".npy"):
         ob_graph = json_file_to_obg_graph(json_file_name, int(args.n_nodes))
         logging.info("Writing ob graph to file")
         ob_graph.to_numpy_files(obg_file_name)
