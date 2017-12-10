@@ -499,7 +499,11 @@ class SparsePileup(Pileup):
         return pileup
 
     def threshold(self, cutoff):
+        n = 0
         for valued_indexes in self.data.values():
+            if n % 25000 == 0:
+                logging.info("Node %d" % n)
+            n += 1
             valued_indexes.threshold(cutoff)
             valued_indexes.sanitize()
 
@@ -613,6 +617,7 @@ class SparsePileup(Pileup):
         areas = cleaner.run()
         logging.info("Creating pileup using results from cleaner")
         pileup = self.from_areas_collection(self.graph, [areas])
+        logging.info("Tresholding")
         pileup.threshold(0.5)
         return pileup
 
