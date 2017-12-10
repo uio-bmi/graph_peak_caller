@@ -99,8 +99,10 @@ class CallPeaksFromQvalues(object):
 
         self.pre_processed_peaks.to_bed_file(
             self.out_file_base_name + "_before_small_peaks_removal.bed")
+        logging.info("Preprocessed peaks written to bed file")
         self.filtered_peaks = self.pre_processed_peaks.remove_small_peaks(
             self.info.fragment_length)
+        logging.info("Small peaks removed")
 
     def __get_max_paths(self):
         _pileup = self.raw_pileup if self.raw_pileup is not None else self.q_values

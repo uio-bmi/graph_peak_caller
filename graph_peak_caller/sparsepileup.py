@@ -391,7 +391,6 @@ class SparsePileup(Pileup):
 
     @classmethod
     def from_areas_collection(cls, graph, areas_list):
-        logging.debug(areas_list)
         starts_dict = defaultdict(list)
         ends_dict = defaultdict(list)
         for areas in areas_list:
@@ -607,8 +606,11 @@ class SparsePileup(Pileup):
             print(i)
         return self.from_intervals(self.graph, large_intervals)
         """
+        logging.info("Initing cleaner")
         cleaner = PeaksCleaner(self, min_size)
+        logging.info("Running cleaner")
         areas = cleaner.run()
+        logging.info("Creating pileup using results from cleaner")
         pileup = self.from_areas_collection(self.graph, [areas])
         pileup.threshold(0.5)
         return pileup
