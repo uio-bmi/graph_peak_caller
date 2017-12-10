@@ -8,6 +8,7 @@ from .pileupcleaner2 import PeaksCleaner, HolesCleaner
 from .subgraphcollection import SubgraphCollection
 from .eventsorter import DiscreteEventSorter
 from offsetbasedgraph import Interval, IntervalCollection
+import pickle
 
 
 class ValuedIndexes(object):
@@ -650,6 +651,19 @@ class SparsePileup(Pileup):
                 if i + 1 == len(interval.region_paths):
                     end = interval.end_position.offset
                 self.data[rp].set_interval_value_on_right_empty_area(start, end, values[j])
+
+    @classmethod
+    def from_pickle(cls, file_name, graph):
+        with open("%s" % file_name, "rb") as f:
+            data = pickle.loads(f.read())
+            #assert isinstance(SparsePileupData, cls)
+            obj = cls(graph)
+            obj.data = data
+            return obj
+
+    def to_pickle(self, file_name):
+        with open("%s" % file_name, "wb") as f:
+            pickle.dump(self.data, f)
 
 
 class SparseControlSample(SparsePileup):

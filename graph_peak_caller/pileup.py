@@ -101,7 +101,6 @@ class Pileup(object):
             start = int(data[1])
             end = int(data[2])
             value = float(data[3])
-
             pileup.add_area(block_id, start, end, value)
 
         file.close()

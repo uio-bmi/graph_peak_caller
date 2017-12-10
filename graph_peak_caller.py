@@ -5,9 +5,11 @@ from pyvg.util import vg_gam_file_to_interval_collection
 from pyvg.sequences import SequenceRetriever
 from graph_peak_caller.util import create_linear_map, create_ob_graph_from_vg
 import logging
-from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo
+from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo, CallPeaksFromQvalues
 import argparse
 import sys
+from graph_peak_caller.sparsepileup import SparsePileup
+import pickle
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
@@ -85,6 +87,32 @@ def run_mhc_ctcf_example():
     )
 
 
+def run_callpeaks_from_q_values(args):
+    name = args.out_base_name
+    logging.info("Reading obgraph from file")
+    ob_graph = obg.GraphWithReversals.from_file(args.obg_file_name)
+
+    logging.info("Creating q values pileup from file")
+    q_values = SparsePileup.from_pickle(name + "q_values.pickle", ob_graph)
+    logging.info("Getting touched nodes and exp info from file")
+    with open(name + "touched_nodes.pickle", "rb") as f:
+        touched_nodes = pickle.loads(f.read())
+
+    experiment_info = ExperimentInfo.from_file(name + "experiment_info.pickle")
+    logging.info("All prev data fetched")
+
+    caller = CallPeaksFromQvalues(
+        ob_graph,
+        q_values,
+        experiment_info,
+        args.out_base_name,
+        touched_nodes=touched_nodes,
+        graph_is_partially_ordered=True
+    )
+    caller.callpeaks()
+
+
+
 def run_callpeaks(args):
     logging.info("Creating offset based graph")
     from pyvg.protoparser import json_file_to_obg_graph
@@ -146,6 +174,16 @@ interface = \
                     ('n_nodes', 'Number of nodes in grap')
                 ],
             'method': run_callpeaks
+        },
+    'callpeaks_from_qvalues':
+        {
+            'help': '...',
+            'arguments':
+                [
+                    ('obg_file_name', 'Offsetbased graph file name'),
+                    ('out_base_name', 'Out base name used on previous run (Used to fetch tmp files)')
+                ],
+            'method': run_callpeaks_from_q_values
         }
 }
 
@@ -187,6 +225,10 @@ python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json gr
 python3 ../../graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls ctcf_filtered_r1.0.2.gam ctcf_filtered_r1.0.2.gam False test_ 136 35 112342
 
 python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls filtered.gam filtered.gam False run1/ 135 36 23739138
+
+
+
+python3 ../../graph_peak_caller.py callpeaks_from_qvalues graph.obg run1/q_values.bdg 136 35 1098808 run1/
 
 
 """

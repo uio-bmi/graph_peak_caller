@@ -1,6 +1,6 @@
 import logging
 import numpy as np
-
+import pickle
 from offsetbasedgraph import IntervalCollection, DirectedInterval
 import pyvg as vg
 import offsetbasedgraph
@@ -66,6 +66,16 @@ class ExperimentInfo(object):
         return cls(genome_size,
                    fragment_length, read_length)
 
+    def to_file(self, file_name):
+        with open("%s" % file_name, "wb") as f:
+            pickle.dump(self, f)
+
+    @classmethod
+    def from_file(cls, file_name):
+        with open("%s" % file_name, "rb") as f:
+            data = pickle.loads(f.read())
+            return data
+
 
 class CallPeaksFromQvalues(object):
     def __init__(self, graph, q_values_sparse_pileup,
@@ -78,9 +88,11 @@ class CallPeaksFromQvalues(object):
         self.out_file_base_name = out_file_base_name
         self.cutoff = cutoff
         self.raw_pileup = raw_pileup
-        self.graph.assert_correct_edge_dicts()
+        #self.graph.assert_correct_edge_dicts()
         self.touched_nodes = touched_nodes
         self.graph_is_partially_ordered = graph_is_partially_ordered
+
+        self.info.to_file(self.out_file_base_name + "experiment_info.pickle")
 
     def __threshold(self):
         threshold = -np.log10(self.cutoff)
@@ -385,6 +397,10 @@ class CallPeaks(object):
         q_val_file_name = self.out_file_base_name + "q_values.bdg"
         logging.info("Writing q values to file")
         self.q_values.to_bed_graph(q_val_file_name)
+        logging.info("Writing q values to pickle")
+        self.q_values.to_pickle(self.out_file_base_name + "q_values.pickle")
+
+
         logging.info("Writing q values to %s" % q_val_file_name)
 
     def call_peaks(self):
@@ -422,6 +438,11 @@ class CallPeaks(object):
 
             valued_areas.add_binary_areas(area, touched_nodes)
         self.touched_nodes = touched_nodes
+
+        logging.info("Writing touched nodes to file")
+        with open(self.out_file_base_name + "touched_nodes.pickle", "wb") as f:
+            pickle.dump(touched_nodes, f)
+
         logging.info("Creating sample pileup from valued areas")
         pileup = SparsePileup.from_valued_areas(
             self.ob_graph, valued_areas, touched_nodes=touched_nodes)
