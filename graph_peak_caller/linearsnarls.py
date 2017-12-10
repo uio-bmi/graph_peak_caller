@@ -35,6 +35,7 @@ def create_control_from_objs(linear_map, reads, extension_sizes,
         extended_reads = mapped_reads.extend(extension)
         linear_pileup = LinearPileup.create_from_starts_and_ends(
                 extended_reads.starts, extended_reads.ends)
+        assert isinstance(linear_pileup, LinearPileup)
         linear_pileup /= (extension*2/fragment_length)
         logging.info("Linear pileup created. Doing maximum")
         max_pileup.maximum(linear_pileup)
@@ -98,7 +99,7 @@ class LinearPileup(object):
 
     @classmethod
     def create_from_starts_and_ends(cls, starts, ends):
-        logging.info("Creating linear pileup from starts and ends")
+        logging.info("Creating linear pileup from starts and ends %s and %s" % (starts, ends))
         es = EventSort([starts, ends], [1, -1])
         return LinearPileup(es.indices, es.values)
 

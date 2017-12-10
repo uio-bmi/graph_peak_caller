@@ -24,14 +24,15 @@ def run_with_intervals(ob_graph,
     logging.info("Running from intervals")
     graph_size = sum(block.length() for block in ob_graph.blocks.values())
     logging.info("Graph size: %d" % graph_size)
-    logging.info("N nodes in graph: %d" % len(ob_graph.blocks))
+    #logging.info("N nodes in graph: %d" % len(ob_graph.blocks))
 
     experiment_info = ExperimentInfo(graph_size, fragment_length, read_length)
     caller = CallPeaks(
         ob_graph, sample_intervals, control_intervals,
         experiment_info=experiment_info,
         out_file_base_name=out_name, has_control=has_control,
-        linear_map=linear_map)
+        linear_map=linear_map,
+        graph_is_partially_ordered=True)
     caller.set_cutoff(0.05)
     caller.verbose = True
     caller.run()
@@ -92,13 +93,15 @@ def run_callpeaks(args):
     json_file_name = args.vg_json_graph_file_name
     obg_file_name = json_file_name.replace(".json", ".obg")
 
-    if not os.path.isfile(obg_file_name + ".npy"):
+    if True or not os.path.isfile(obg_file_name + ".npy"):
         ob_graph = json_file_to_obg_graph(json_file_name, int(args.n_nodes))
         logging.info("Writing ob graph to file")
-        ob_graph.to_numpy_files(obg_file_name)
+        #ob_graph.to_numpy_files(obg_file_name)
+        ob_graph.to_file(obg_file_name)
     else:
         logging.info("Reading graph from file (graph already existing on disk")
-        ob_graph = obg.GraphWithReversals.from_numpy_files(obg_file_name)
+        #ob_graph = obg.GraphWithReversals.from_numpy_files(obg_file_name)
+        ob_graph = obg.GraphWithReversals.from_file(obg_file_name)
 
     if not os.path.isfile(out_name + "linear_map" + "starts.pickle"):
         logging.info("Creating linear map")

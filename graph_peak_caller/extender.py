@@ -153,10 +153,10 @@ class Areas(object):
             return True
         graph = self.graph
         for in_node in graph.adj_list[node] + graph.reverse_adj_list[node]:
-            if in_node in self.areas:
+            if in_node in self.areas and len(self.areas[in_node]) > 0:
                 if self.areas[in_node][0] == 0:
                     return False
-            elif -in_node in self.areas:
+            elif -in_node in self.areas and len(self.areas[-in_node]) > 0:
                 if self.areas[-in_node][-1] == graph.node_size(in_node):
                     return False
 
@@ -168,11 +168,11 @@ class Areas(object):
 
         graph = self.graph
         for in_node in graph.adj_list[-node] + graph.reverse_adj_list[-node]:
-            if in_node in self.areas:
+            if in_node in self.areas and len(self.areas[in_node]) > 0:
                 if self.areas[in_node][0] == 0:
                     return False
 
-            elif -in_node in self.areas:
+            elif -in_node in self.areas and len(self.areas[-in_node]) > 0:
                 if self.areas[-in_node][-1] == graph.node_size(in_node):
                     return False
 

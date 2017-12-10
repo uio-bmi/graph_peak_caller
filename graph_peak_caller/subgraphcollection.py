@@ -2,7 +2,9 @@ from .extender import Areas
 import numpy as np
 import pickle
 import logging
-
+from collections import OrderedDict
+from .areas import BinaryContinousAreas
+from .extender import Areas
 
 class ConnectedAreas(Areas):
     def __init__(self, graph, areas=None):
@@ -144,4 +146,118 @@ class SubgraphCollection(object):
 
 
 class SubgraphCollectionPartiallyOrderedGraph(SubgraphCollection):
-    pass
+    @classmethod
+    def create_from_pileup(cls, graph, pileup):
+        builder = SubgraphCollectionPartiallyOrderedGraphBuilder(
+                    graph, pileup)
+        return builder.build()
+
+
+class SingleArea:
+    def __init__(self, node, start, end, is_start, is_end):
+        self.node = node
+        self.start = start
+        self.end = end
+        self.is_start = is_start
+        self.is_end = is_end
+
+    def __str__(self):
+        return "Node %d, start/end: %d/%d. Is start: %s, is end:%s" % \
+               (self.node, self.start, self.end, self.is_start, self.is_end)
+
+    def __repr__(self):
+        return self.__str__()
+
+class SubgraphCollectionPartiallyOrderedGraphBuilder():
+
+    def __init__(self, graph, pileup):
+        self.graph = graph
+        self.pileup = pileup
+        from .sparsepileup import SparsePileupData
+        assert isinstance(self.pileup.data, SparsePileupData)
+
+        areas = pileup.find_valued_areas(1)
+        #print(areas)
+        self.areas = Areas(self.graph, areas)
+        self.single_areas = []
+
+    def _make_single_areas(self):
+        logging.info("Making single areas")
+        sorted_nodes = sorted(self.areas.areas.keys())
+        n = 0
+        for node_id in sorted_nodes: #, starts_and_ends in self.areas.areas.items():
+            starts_and_ends = self.areas.areas[node_id]
+            if n % 50000 == 0:
+                logging.info("Adding node %d to subgraph" % n)
+            n += 1
+            for i in range(0, len(starts_and_ends) // 2):
+                start = starts_and_ends[i*2]
+                end = starts_and_ends[i*2+1]
+                is_start = self.areas._is_start_position(node_id, start)
+                #print("Checking end %d, %d" % (node_id, end))
+                is_end = self.areas._is_end_position(node_id, end)
+                self.single_areas.append(SingleArea(node_id, start, end, is_start, is_end))
+
+    def _create_subgraphs(self):
+        logging.info("Creating subgraphs after single areas are created")
+        peaks = []
+        current_peak = BinaryContinousAreas(self.graph)
+        n_single_areas = len(self.single_areas)
+        prev_was_end = False
+        for single_area in self.single_areas:
+            #print("Checking single area %s " % single_area)
+            if single_area.is_start and prev_was_end:
+                # Store this peak. Create new
+                peaks.append(current_peak)
+                current_peak = BinaryContinousAreas(self.graph)
+
+            # Always add what we have to current peak
+            current_peak.add(single_area.node,
+                             single_area.start,
+                             single_area.end)
+            #print("  Adding %d, %d, %d" % (single_area.node, single_area.start, single_area.end))
+
+            if single_area.is_end:
+                prev_was_end = True
+
+        peaks.append(current_peak)
+
+        return peaks
+
+    def build(self):
+        self._make_single_areas()
+        return self._create_subgraphs()
+
+
+    """
+    def build(self):
+        sorted_nodes = sorted(self.areas.keys())
+
+        starts = OrderedDict()
+        ends = OrderedDict()
+
+        for node in sorted_nodes:
+            starts_ends = self.areas[node]
+            assert len(starts_ends) == 2 or len(starts_ends) == 4
+
+            if self.areas._is_start_position(node, starts_ends[0]):
+                starts[node] = starts_ends[:2]
+
+            if self.areas._is_end_position(node, starts_ends[-1]):
+                ends[node] = starts_ends[-2:]
+
+
+        # Iterate sorted nodes. Count number of starts and number of ends
+        in_peak = False
+        prev_status = in_peak
+        peaks = []
+        current_peak = BinaryContinousAreas(self.graph)
+        for node in sorted_nodes:
+            start_ends = self.areas[node]
+            assert len(start_ends) == 2 or len(starts_ends) == 4
+            is_start = node in starts
+            is_end = node in ends
+
+            if is_start and is_end:
+                current_peak.add(node, start_ends[0:2])
+    """

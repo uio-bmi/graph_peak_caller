@@ -12,6 +12,7 @@ from .peakscores import ScoredPeak
 from .peakcollection import PeakCollection
 from . import linearsnarls
 IntervalCollection.interval_class = DirectedInterval
+from .subgraphcollection import SubgraphCollectionPartiallyOrderedGraph
 
 
 def enable_filewrite(func):
@@ -69,7 +70,8 @@ class ExperimentInfo(object):
 class CallPeaksFromQvalues(object):
     def __init__(self, graph, q_values_sparse_pileup,
                  experiment_info, out_file_base_name="",
-                 cutoff=0.1, raw_pileup=None, touched_nodes=None):
+                 cutoff=0.1, raw_pileup=None, touched_nodes=None,
+                 graph_is_partially_ordered=False):
         self.graph = graph
         self.q_values = q_values_sparse_pileup
         self.info = experiment_info
@@ -78,6 +80,7 @@ class CallPeaksFromQvalues(object):
         self.raw_pileup = raw_pileup
         self.graph.assert_correct_edge_dicts()
         self.touched_nodes = touched_nodes
+        self.graph_is_partially_ordered = graph_is_partially_ordered
 
     def __threshold(self):
         threshold = -np.log10(self.cutoff)
@@ -112,18 +115,34 @@ class CallPeaksFromQvalues(object):
         self.max_paths = max_paths
 
     def __get_subgraphs(self):
-        logging.info("Creating subgraphs from peak regions")
-        peaks_as_subgraphs = self.filtered_peaks.to_subgraphs()
-        logging.info("Writing subgraphs to file")
-        peaks_as_subgraphs.to_file(self.out_file_base_name + "peaks.subgraphs")
 
-        logging.info("Found %d subgraphs" % len(peaks_as_subgraphs.subgraphs))
-        binary_peaks = [BinaryContinousAreas.from_old_areas(peak) for peak in
-                        peaks_as_subgraphs]
-        logging.info("Finding max path through subgraphs")
-        BCACollection(binary_peaks).to_file(
-            self.out_file_base_name + "bcapeaks.subgraphs")
-        self.binary_peaks = binary_peaks
+        if not self.graph_is_partially_ordered:
+            logging.info("Creating subgraphs from peak regions")
+            peaks_as_subgraphs = self.filtered_peaks.to_subgraphs()
+            logging.info("Writing subgraphs to file")
+            peaks_as_subgraphs.to_file(self.out_file_base_name + "peaks.subgraphs")
+
+            logging.info("Found %d subgraphs" % len(peaks_as_subgraphs.subgraphs))
+            binary_peaks = [BinaryContinousAreas.from_old_areas(peak) for peak in
+                            peaks_as_subgraphs]
+            logging.info("Finding max path through subgraphs")
+            BCACollection(binary_peaks).to_file(
+                self.out_file_base_name + "bcapeaks.subgraphs")
+            self.binary_peaks = binary_peaks
+        else:
+            logging.info("Assuming graph is partially ordered!")
+            logging.info("Creating subgraphs from peak regions")
+            peaks_as_subgraphs = \
+                SubgraphCollectionPartiallyOrderedGraph.create_from_pileup(self.graph, self.filtered_peaks)
+            #logging.info("Writing subgraphs to file")
+            #peaks_as_subgraphs.to_file(self.out_file_base_name + "peaks.subgraphs")
+
+            logging.info("Found %d subgraphs" % len(peaks_as_subgraphs))
+            binary_peaks = peaks_as_subgraphs
+            logging.info("Writing binary continous peaks to file")
+            BCACollection(binary_peaks).to_file(
+                self.out_file_base_name + "bcapeaks.subgraphs")
+            self.binary_peaks = binary_peaks
 
     def callpeaks(self):
         logging.info("Calling peaks")
@@ -153,7 +172,8 @@ class CallPeaks(object):
     def __init__(self, graph, sample_intervals,
                  control_intervals=None, experiment_info=None,
                  verbose=False, out_file_base_name="", has_control=True,
-                 linear_map=None, skip_filter_duplicates=False):
+                 linear_map=None, skip_filter_duplicates=False,
+                 graph_is_partially_ordered=False):
         """
         :param sample_intervals: Either an interval collection or file name
         :param control_intervals: Either an interval collection or a file name
@@ -202,6 +222,7 @@ class CallPeaks(object):
 
         self.create_graph()
         self.touched_nodes = None  # Nodes touched by sample pileup
+        self.graph_is_partially_ordered = graph_is_partially_ordered
 
     def set_cutoff(self, value):
         self.cutoff = value

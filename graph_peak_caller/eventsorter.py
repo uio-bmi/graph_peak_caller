@@ -72,6 +72,7 @@ class EventSorter(object):
 
 class EventSort(object):
     def __init__(self, index_lists, codes, names=None):
+        print("Running eventnsorter for indexes %s with codes %s" % (index_lists, codes))
         if names is not None:
             [setattr(self, name.upper(), i) for i, name in enumerate(names)]
         self.tuples = []
@@ -87,6 +88,7 @@ class EventSort(object):
 
         self.indices[1:] = indices[new_values]
         self.indices[0] = indices[0]
+
         self.values[1:] = values[new_values]
         self.values[0] = values[0]
 
