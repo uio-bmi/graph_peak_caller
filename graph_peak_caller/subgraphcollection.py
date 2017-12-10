@@ -144,3 +144,4 @@ class SubgraphCollection(object):
 
 
 class SubgraphCollectionPartiallyOrderedGraph(SubgraphCollection):
+    pass
