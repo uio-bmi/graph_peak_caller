@@ -141,3 +141,6 @@ class SubgraphCollection(object):
     def to_pickle(self, file_name):
         with open("%s" % file_name, "wb") as f:
             pickle.dump(self, f)
+
+
+class SubgraphCollectionPartiallyOrderedGraph(SubgraphCollection):

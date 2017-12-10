@@ -39,7 +39,7 @@ def run_with_intervals(ob_graph,
     caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
 
 
-def run_with_gam(ob_graph_file_name,
+def run_with_gam(ob_graph,
                  gam_file_name, gam_control_file,
                  vg_graph_file_name,
                  out_name="real_data_",
@@ -50,7 +50,7 @@ def run_with_gam(ob_graph_file_name,
 
     logging.info("Running from gam files")
 
-    ob_graph = obg.GraphWithReversals.from_file(ob_graph_file_name)
+    #ob_graph = obg.GraphWithReversals.from_file(ob_graph_file_name)
     reads_intervals = vg_gam_file_to_interval_collection(
          None, gam_file_name, ob_graph)
 
@@ -92,7 +92,7 @@ def run_callpeaks(args):
     json_file_name = args.vg_json_graph_file_name
     obg_file_name = json_file_name.replace(".json", ".obg")
 
-    if True or not os.path.isfile(obg_file_name + ".npy"):
+    if not os.path.isfile(obg_file_name + ".npy"):
         ob_graph = json_file_to_obg_graph(json_file_name, int(args.n_nodes))
         logging.info("Writing ob graph to file")
         ob_graph.to_numpy_files(obg_file_name)
