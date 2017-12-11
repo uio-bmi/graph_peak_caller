@@ -6,13 +6,14 @@ LOOP_VALUE = 3000000000
 class Cleaner(object):
     def __init__(self, pileup, threshold, touched_nodes=None):
         self.graph = pileup.graph
+        logging.info("Size of pileup used in cleaner: %d" % len(pileup.data))
+        self.touched_nodes = touched_nodes
         self.areas = self.get_areas(pileup)
         self.areas_builder = AreasBuilder(self.graph)
         self.get_starts_and_ends_dict(self.areas)
         self.intervals = []
         self.threshold = threshold
         self.ignored_nodes = set([])
-        self.touched_nodes = touched_nodes
 
     def get_starts_and_ends_dict(self, areas):
         self.starts_dict = {}
@@ -21,7 +22,7 @@ class Cleaner(object):
         i = 0
         for node, startends in areas.items():
             if i % 50000 == 0:
-                print("Node %d" % i)
+                logging.info("Getting starts/ends dicts for node %d" % i)
             i += 1
 
             if not startends:
@@ -192,6 +193,7 @@ class PeaksCleaner(Cleaner):
                          if -prev_node in self.ends_dict])
 
     def get_areas(self, pileup):
+        logging.info("Getting True areas from pileup")
         return pileup.find_valued_areas(True)
 
     def _check_internal_interval(self, node_id, start, end):

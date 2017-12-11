@@ -117,6 +117,7 @@ class CallPeaksFromQvalues(object):
         logging.info("Small peaks removed")
 
     def __get_max_paths(self):
+        logging.info("Getting maxpaths")
         _pileup = self.raw_pileup if self.raw_pileup is not None else self.q_values
         scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, _pileup)
                         for peak in self.binary_peaks)
@@ -125,6 +126,7 @@ class CallPeaksFromQvalues(object):
         PeakCollection(max_paths).to_file(
             self.out_file_base_name + "max_paths.intervalcollection",
             text_file=True)
+        logging.info("Wrote max paths to file")
 
         self.max_paths = max_paths
 
