@@ -128,7 +128,7 @@ def run_callpeaks(args):
         #ob_graph.to_numpy_files(obg_file_name)
         ob_graph.to_file(obg_file_name)
     else:
-        logging.info("Reading graph from file (graph already existing on disk")
+        logging.info("Reading graph from file (graph already existing on disk)")
         #ob_graph = obg.GraphWithReversals.from_numpy_files(obg_file_name)
         ob_graph = obg.GraphWithReversals.from_file(obg_file_name)
 
@@ -216,14 +216,23 @@ else:
 
 
 """
+Run on server from start:
 python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls filtered_short.gam filtered_short.gam False run1/ 135 36 23739138
 
+Using chr1, run4 and full dataset, without control:
+cd data/chr1
+python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls ctcf_filtered_r0.97_e0.3-2.gam ctcf_filtered_r0.97_e0.3-2.gam False run4/ 135 36 23739138
+
+
 Chr 19:
+cd data/chr19
 python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls filtered_short.gam filtered_short.gam False run1/ 135 36 6373453
 
 """
 """
+Lrc_kir local:
 python3 ../../graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls ctcf_filtered_r1.0.2.gam ctcf_filtered_r1.0.2.gam False test_ 136 35 112342
+
 
 python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls filtered.gam filtered.gam False run1/ 135 36 23739138
 

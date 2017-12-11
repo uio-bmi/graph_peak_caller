@@ -412,7 +412,8 @@ class CallPeaks(object):
             self.info,
             self.out_file_base_name,
             self.cutoff,
-            touched_nodes=self.touched_nodes
+            touched_nodes=self.touched_nodes,
+            graph_is_partially_ordered=self.graph_is_partially_ordered
         )
         self.q_value_peak_caller.callpeaks()
 
