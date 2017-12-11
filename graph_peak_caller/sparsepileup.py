@@ -306,6 +306,30 @@ class SparsePileupData(dict):
         return ((key, self.__getitem__(key)) for key in self.graph.blocks)
 
 
+class SparseAreasDict(dict):
+    """
+    Used as return object in SparsePileup.get_valued_areas() to speedup.
+    Assumes value in empty nodes
+    """
+    def __init__(self, *args, **kwargs):
+        self.graph = kwargs["graph"]
+        self.min_value = 0
+        del kwargs["graph"]
+        super(SparseAreasDict, self).__init__(*args, **kwargs)
+
+    def __getitem__(self, item):
+        if item not in self:
+            value = [0, self.graph.node_size(item)]
+            self.__setitem__(item, value)
+
+        return super(SparseAreasDict, self).__getitem__(item)
+
+    def values(self):
+        raise NotImplementedError()
+
+    def items(self):
+        return ((key, self.__getitem__(key)) for key in self.graph.blocks)
+
 
 class SparsePileup(Pileup):
     def __init__(self, graph):
@@ -377,14 +401,26 @@ class SparsePileup(Pileup):
             valued_indexes.sanitize()
             assert node_id in self.graph.blocks
 
-    def find_valued_areas(self, value):
+    def find_valued_areas(self, value, only_check_nodes=None):
         if value:
             return {node_id: self.data[node_id].find_valued_areas(value)
                     for node_id, valued_indexes in self.data.items()}
-        return {node_id: (self.data[node_id].find_valued_areas(value)
-                          if node_id in self.data
-                          else [0, self.graph.node_size(node_id)])
-                for node_id in self.graph.blocks}
+        else:
+
+            if only_check_nodes is not None:
+                nodes = only_check_nodes
+            else:
+                nodes = self.graph.blocks
+
+            return SparseAreasDict({node_id: self.data[node_id].find_valued_areas(value)
+                                   for node_id in self.data
+                                    }, graph=self.graph)
+            """
+            return {node_id: (self.data[node_id].find_valued_areas(value)
+                              if node_id in self.data
+                              else [0, self.graph.node_size(node_id)])
+                    for node_id in nodes}
+            """
 
     def set_valued_intervals(self, node_id, valued_indexes):
         assert node_id in self.graph.blocks
