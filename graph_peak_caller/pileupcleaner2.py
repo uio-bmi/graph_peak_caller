@@ -17,7 +17,13 @@ class Cleaner(object):
     def get_starts_and_ends_dict(self, areas):
         self.starts_dict = {}
         self.ends_dict = {}
+        logging.info("Getting starts and ends dicts")
+        i = 0
         for node, startends in areas.items():
+            if i % 50000 == 0:
+                print("Node %d" % i)
+            i += 1
+
             if not startends:
                 continue
             node = int(node)

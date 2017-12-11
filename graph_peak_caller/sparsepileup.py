@@ -471,6 +471,7 @@ class SparsePileup(Pileup):
             pileup.data[rp] = ValuedIndexes(
                 indexes, values, start_value, length)
 
+        logging.info("Number of elements in pileup: %d" % len(pileup.data))
         return pileup
 
     @classmethod
@@ -500,9 +501,10 @@ class SparsePileup(Pileup):
 
     def threshold(self, cutoff):
         n = 0
-        for valued_indexes in self.data.values():
+        logging.info("Thresholding. Number of nodes to threshold: %d" % len(self.data))
+        for node, valued_indexes in self.data.items():
             if n % 25000 == 0:
-                logging.info("Node %d" % n)
+                logging.info("Thresholding node %d" % n)
             n += 1
             valued_indexes.threshold(cutoff)
             valued_indexes.sanitize()
@@ -533,6 +535,7 @@ class SparsePileup(Pileup):
         vi.tmp_set_interval_value(start, end, value)
 
     def fix_tmp_values(self):
+        logging.info("Fixing tmp values")
         for vi in self.data.values():
             vi.fix_tmp_values()
 
@@ -615,6 +618,11 @@ class SparsePileup(Pileup):
         cleaner = PeaksCleaner(self, min_size)
         logging.info("Running cleaner")
         areas = cleaner.run()
+        logging.info("Removing emty areas")
+        #for node, startends in areas.areas.items():
+        #    if len(startends) == 0:
+        #        del areas[node]
+
         logging.info("Creating pileup using results from cleaner")
         pileup = self.from_areas_collection(self.graph, [areas])
         logging.info("Tresholding")

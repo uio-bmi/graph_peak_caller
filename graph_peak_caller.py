@@ -91,6 +91,7 @@ def run_callpeaks_from_q_values(args):
     name = args.out_base_name
     logging.info("Reading obgraph from file")
     ob_graph = obg.GraphWithReversals.from_file(args.obg_file_name)
+    logging.info("Number of nodes in graph: %d" %  len(ob_graph.blocks))
 
     logging.info("Creating q values pileup from file")
     q_values = SparsePileup.from_pickle(name + "q_values.pickle", ob_graph)
@@ -229,6 +230,12 @@ python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json gr
 
 
 python3 ../../graph_peak_caller.py callpeaks_from_qvalues graph.obg run1/q_values.bdg 136 35 1098808 run1/
+
+Run on server from q values:
+python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks_from_qvalues graph.obg run2/
+
+Run lrc_kir from qvalues:
+/../graph_peak_caller.py callpeaks_from_qvalues graph.obg test2_
 
 
 """
