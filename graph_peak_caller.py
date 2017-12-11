@@ -113,6 +113,14 @@ def run_callpeaks_from_q_values(args):
     caller.callpeaks()
 
 
+def intervals_to_fasta(args):
+    logging.info("Getting sequence retriever")
+    retriever = SequenceRetriever.from_vg_graph(args.vg_graph_file_name)
+    logging.info("Getting intervals")
+    intervals = obg.IntervalCollection.create_generator_from_file(args.intervals_file_name)
+    logging.info("Writing to fasta")
+    CallPeaksFromQvalues.intervals_to_fasta_file(intervals, args.out_file_name, retriever)
+
 
 def run_callpeaks(args):
     logging.info("Creating offset based graph")
@@ -185,6 +193,17 @@ interface = \
                     ('out_base_name', 'Out base name used on previous run (Used to fetch tmp files)')
                 ],
             'method': run_callpeaks_from_q_values
+        },
+    'intervals_to_fasta':
+        {
+            'help': 'Get sequences for intervals in interval file. Write to fasta',
+            'arguments':
+                [
+                    ('vg_graph_file_name', ''),
+                    ('intervals_file_name', ''),
+                    ('out_file_name', '')
+                ],
+            'method': intervals_to_fasta
         }
 }
 

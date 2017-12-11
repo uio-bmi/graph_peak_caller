@@ -776,6 +776,8 @@ class SparseControlSample(SparsePileup):
 
     @classmethod
     def from_sparse_control_and_sample(cls, control, sample):
+        logging.info("Creating pileup by combining control and sample")
+        logging.info("N nodes in control: %d" % len(control.data))
         sparse_pileup = cls(sample.graph)
         sparse_pileup.data = {
             node_id: ValuedIndexes.combine(

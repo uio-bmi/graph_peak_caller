@@ -109,9 +109,10 @@ class CallPeaksFromQvalues(object):
                                     touched_nodes=self.touched_nodes)
         logging.info("Removing small peaks")
 
-        self.pre_processed_peaks.to_bed_file(
-            self.out_file_base_name + "_before_small_peaks_removal.bed")
-        logging.info("Preprocessed peaks written to bed file")
+        # This is slow:
+        #self.pre_processed_peaks.to_bed_file(
+        #    self.out_file_base_name + "_before_small_peaks_removal.bed")
+        #logging.info("Preprocessed peaks written to bed file")
         self.filtered_peaks = self.pre_processed_peaks.remove_small_peaks(
             self.info.fragment_length)
         logging.info("Small peaks removed")
@@ -181,8 +182,21 @@ class CallPeaksFromQvalues(object):
             f.write(">peak" + str(i) + " " +
                     max_path.to_file_line() + "\n" + seq + "\n")
             i += 1
+        f.close()
         logging.info("Wrote max path sequences to fasta file: %s" % (self.out_file_base_name + file_name))
 
+    @staticmethod
+    def intervals_to_fasta_file(interval_collection, out_fasta_file_name, sequence_retriever):
+        f = open(out_fasta_file_name, "w")
+        i = 0
+        for max_path in interval_collection.intervals:
+            seq = sequence_retriever.get_interval_sequence(max_path)
+            f.write(">peak" + str(i) + " " +
+                    max_path.to_file_line() + "\n" + seq + "\n")
+            i += 1
+            if i % 100 == 0:
+                logging.info("Writing sequence # %d" % i)
+        f.close()
 
 class CallPeaks(object):
     def __init__(self, graph, sample_intervals,
