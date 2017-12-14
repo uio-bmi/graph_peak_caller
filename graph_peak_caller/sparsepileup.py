@@ -43,7 +43,7 @@ class ValuedIndexes(object):
 
     @property
     def indexes(self):
-        assert np.all(self.__indexes == self._all_indexes[1:-1])
+        #assert np.all(self.__indexes == self._all_indexes[1:-1])
         return self.__indexes
 
     @indexes.setter
@@ -61,14 +61,16 @@ class ValuedIndexes(object):
     @values.setter
     def values(self, new_values):
         self.__values = new_values
-        if len(new_values) != len(self._all_values) - 1:
+        if len(new_values) != len(self._all_values) - 1 or new_values.ndim != self._all_values.ndim:
             if new_values.ndim == 2:
                 self._all_values = np.zeros((len(new_values)+1, 2))
             else:
                 self._all_values = np.zeros(len(new_values)+1)
 
+            self._all_values[0] = self.start_value
+
         self._all_values[1:] = new_values
-        self._all_values[0] = self.start_value
+
 
     @property
     def start_value(self):
@@ -811,12 +813,15 @@ class SparseControlSample(SparsePileup):
                 self.p_value_dict[x[0]][x[1]]]
         # f = np.vectorize(translation)
         for valued_indexes in self.data.values():
-            if valued_indexes.values.size:
-                valued_indexes.values = np.apply_along_axis(
-                    translation, 1, valued_indexes.values)
 
             valued_indexes.start_value = translation(
                 valued_indexes.start_value)
+
+            if valued_indexes.values.size:
+                new_values = np.apply_along_axis(
+                    translation, 1, valued_indexes.values)
+                valued_indexes.values = new_values
+
             valued_indexes.sanitize()
 
     def get_scores(self):
