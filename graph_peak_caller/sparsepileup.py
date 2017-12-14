@@ -71,7 +71,6 @@ class ValuedIndexes(object):
 
         self._all_values[1:] = new_values
 
-
     @property
     def start_value(self):
         return self.__start_value
@@ -80,6 +79,10 @@ class ValuedIndexes(object):
     def start_value(self, value):
         self._all_values[0] = value
         self.__start_value = value
+
+    def set_single_value(self, index, value):
+        self.__values[index] = value
+        self._all_values[index+1] = value
 
     def all_values(self):
         return self._all_values
@@ -179,7 +182,9 @@ class ValuedIndexes(object):
         else:
             idx = np.nonzero(self.indexes == start)
             assert len(idx) == 1
-            self.values[idx] = value
+            idx = idx[0]
+            #self.values[idx] = value
+            self.set_single_value(idx, value)
 
             assert end == self.length or np.any(self.indexes[idx[0]+1] == end)
 
@@ -214,9 +219,15 @@ class ValuedIndexes(object):
         self.start_value = self.start_value >= cutoff
 
     def sanitize(self):
-        diffs = np.diff(np.insert(self.values, 0, self.start_value))
-        #diffs = np.diff(self.all_values())
+        #diffs = np.diff(np.insert(self.values, 0, self.start_value))
+        #assert np.all(self.all_values() == np.insert(self.values, 0, self.start_value))
+        all_vals = self.all_values()
+
+        diffs = np.diff(all_vals)
         changes = np.where(diffs != 0)[0]
+        if len(self.values) == 0:
+            return
+
         self.values = self.values[changes]
         self.indexes = self.indexes[changes]
 
