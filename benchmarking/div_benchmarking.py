@@ -3,6 +3,7 @@ from graph_peak_caller.extender import Extender
 from graph_peak_caller.sparsepileup import SparsePileup, ValuedIndexes, SparseControlSample
 from graph_peak_caller.areas import ValuedAreas
 import logging
+import sys
 import numpy as np
 graph = GraphWithReversals({
             i: Block(30) for i in range(1, 10010)

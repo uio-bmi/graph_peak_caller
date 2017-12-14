@@ -24,13 +24,68 @@ class ValuedIndexes(object):
         assert type(indexes) == np.ndarray
         assert type(values) == np.ndarray
         # assert indexes.size == values.size
+        self.length = length
+        self.__values = None
+        self.__indexes = None
+        self.__start_value = 0
+        self._all_values = np.zeros(0)
+        self._all_indexes = np.zeros(0)
+
         self.values = values
         self.indexes = indexes
         self.start_value = start_value
-        self.length = length
+
+        self._all_values[0] = start_value
+
         self.__tmp_starts = []
         self.__tmp_values = []
         self.__tmp_end = 0
+
+    @property
+    def indexes(self):
+        assert np.all(self.__indexes == self._all_indexes[1:-1])
+        return self.__indexes
+
+    @indexes.setter
+    def indexes(self, new_indexes):
+        self.__indexes = new_indexes
+        if len(new_indexes) != len(self._all_indexes) - 2:
+            self._all_indexes = np.zeros(len(new_indexes)+2, dtype=np.int)
+        self._all_indexes[1:-1] = new_indexes
+        self._all_indexes[-1] = self.length
+
+    @property
+    def values(self):
+        return self.__values
+
+    @values.setter
+    def values(self, new_values):
+        self.__values = new_values
+        if len(new_values) != len(self._all_values) - 1:
+            if new_values.ndim == 2:
+                self._all_values = np.zeros((len(new_values)+1, 2))
+            else:
+                self._all_values = np.zeros(len(new_values)+1)
+
+        self._all_values[1:] = new_values
+        self._all_values[0] = self.start_value
+
+    @property
+    def start_value(self):
+        return self.__start_value
+
+    @start_value.setter
+    def start_value(self, value):
+        self._all_values[0] = value
+        self.__start_value = value
+
+    def all_values(self):
+        return self._all_values
+        #return np.insert(self.values, 0, self.start_value)
+
+    def all_idxs(self):
+        return self._all_indexes
+        #return np.append(np.insert(self.indexes, 0, 0), self.length)
 
     def __eq__(self, other):
         if not np.allclose(self.values, other.values):
@@ -158,6 +213,7 @@ class ValuedIndexes(object):
 
     def sanitize(self):
         diffs = np.diff(np.insert(self.values, 0, self.start_value))
+        #diffs = np.diff(self.all_values())
         changes = np.where(diffs != 0)[0]
         self.values = self.values[changes]
         self.indexes = self.indexes[changes]
@@ -170,12 +226,6 @@ class ValuedIndexes(object):
         self.indexes = indexes[diffs[1:]]
         self.values = values[diffs[1:]]
         self.start_value = values[diffs[0]]
-
-    def all_values(self):
-        return np.insert(self.values, 0, self.start_value)
-
-    def all_idxs(self):
-        return np.append(np.insert(self.indexes, 0, 0), self.length)
 
     def find_valued_areas(self, value):
         all_indexes = self.all_idxs()
