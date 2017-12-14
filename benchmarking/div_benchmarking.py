@@ -5,6 +5,9 @@ from graph_peak_caller.areas import ValuedAreas
 import logging
 import sys
 import numpy as np
+from graph_peak_caller.pileupcleaner2 import PeaksCleaner
+
+
 graph = GraphWithReversals({
             i: Block(30) for i in range(1, 10010)
         },
@@ -18,10 +21,18 @@ pileup1.data[1] =  ValuedIndexes([4, 7, 15], [2, 5, 3], 1, 30)
 pileup2 = SparsePileup(single_block_graph)
 pileup2.data[1] =  ValuedIndexes([1, 10, 17], [1, 3, 7], 2, 30)
 
+def get_random_areas(graph):
+    areas = {}
+    for i in range(0, 200):
+        rp = np.random.randint(1, 2000)
+
+        areas[rp] = [np.random.randint(0, 10), np.random.randint(25, 31)]
+
+    return areas
 
 def get_random_intervals(graph):
     intervals = []
-    for i in range(0, 200):
+    for i in range(0, 50):
         rp = np.random.randint(1, 2000)
 
         intervals.append(
@@ -50,6 +61,9 @@ def run_create_sample_pileup(intervals):
 def combine_sparsepileups(pileup1, pileup2):
     pileup = SparseControlSample.from_sparse_control_and_sample(pileup1, pileup2)
 
+def run_peakscleaner(graph, pileup):
+    cleaner = PeaksCleaner(pileup, 30)
+
 
 
 if __name__ == "__main__":
@@ -59,7 +73,12 @@ if __name__ == "__main__":
     for i in range(50):
         run_create_sample_pileup(intervals)
     """
+    pileup = SparsePileup.from_intervals(graph, get_random_intervals(graph))
+    for i in range(2000):
+        run_peakscleaner(graph, pileup)
+
+    """
     for i in range(10000):
         combine_sparsepileups(pileup1, pileup2)
-
+    """
 

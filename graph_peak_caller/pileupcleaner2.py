@@ -1,5 +1,6 @@
 from .extender import AreasBuilder, Areas
 import logging
+import numpy as np
 LOOP_VALUE = 3000000000
 
 
@@ -18,6 +19,9 @@ class Cleaner(object):
     def get_starts_and_ends_dict(self, areas):
         self.starts_dict = {}
         self.ends_dict = {}
+        #self.starts_dict = np.zeros(self.graph._id + 1)
+        #self.ends_dict = np.zeros(self.graph._id + 1)
+
         logging.info("Getting starts and ends dicts")
         i = 0
         for node, startends in areas.items():
@@ -28,17 +32,19 @@ class Cleaner(object):
             if not startends:
                 continue
             node = int(node)
-            if startends[0] == 0:
-                self.starts_dict[node] = int(startends[1])
-                self.ends_dict[-node] = int(startends[1])
-            if startends[-1] == self.graph.node_size(node):
-                self.starts_dict[-node] = int(
-                    self.graph.node_size(node) - startends[-2])
-                self.ends_dict[node] = int(
-                    self.graph.node_size(node) - startends[-2])
+            node_size = self.graph.node_size(node)
 
-        for node in self.starts_dict:
-            assert self.starts_dict[node] == self.ends_dict[-node]
+            if startends[0] == 0:
+                val = startends[1]
+                self.starts_dict[node] = val
+                self.ends_dict[-node] = val
+            if startends[-1] == node_size:
+                val = node_size - startends[-2]
+                self.starts_dict[-node] = val
+                self.ends_dict[node] = val
+
+        #for node in self.starts_dict:
+        #    assert self.starts_dict[node] == self.ends_dict[-node]
 
         logging.debug("N starts: %s", len(self.starts_dict))
         logging.debug("N ends: %s", len(self.ends_dict))

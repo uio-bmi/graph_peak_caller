@@ -372,13 +372,14 @@ class SparsePileupData(dict):
 class SparseAreasDict(dict):
     """
     Used as return object in SparsePileup.get_valued_areas() to speedup.
-    Assumes value in empty nodes
+    Assumes value in empty nodes, i.e. nodes not in dict are completely filled
     """
     def __init__(self, *args, **kwargs):
         self.graph = kwargs["graph"]
         self.min_value = 0
         del kwargs["graph"]
         super(SparseAreasDict, self).__init__(*args, **kwargs)
+
 
     def __getitem__(self, item):
         if item not in self:
@@ -478,6 +479,7 @@ class SparsePileup(Pileup):
             return SparseAreasDict({node_id: self.data[node_id].find_valued_areas(value)
                                    for node_id in self.data
                                     }, graph=self.graph)
+
             """
             return {node_id: (self.data[node_id].find_valued_areas(value)
                               if node_id in self.data

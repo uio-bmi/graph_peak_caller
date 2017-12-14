@@ -91,10 +91,11 @@ if __name__ == "__main__":
     #print(true_positives)
     #sys.exit()
     plot_true_positives({
-        "macs with control": "../tests/macs_with_control_sequences_chr1.fasta",
-        "graph with control": "../tests/chr1_ctcf_with_control_sequences.fasta",
-        #"graph": "../tests/chr1_ctcf_sequences.fasta",
-        #"macs": "../tests/macs_chr1.fasta"
+        #"macs with control": "../tests/macs_with_control_sequences_chr1.fasta",
+        #"graph with control": "../tests/chr1_ctcf_with_control_sequences.fasta",
+        "graph": "../tests/chr1_ctcf_sequences.fasta",
+        "graph using trimmed sequences": "../tests/using_trimmed_sequences.fasta",
+        "macs": "../tests/macs_chr1.fasta"
     },
     "MA0139.1.meme")
     exit()
