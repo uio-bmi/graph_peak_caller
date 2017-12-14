@@ -163,6 +163,14 @@ def run_callpeaks(args):
         linear_map_file_name=out_name + "linear_map"
     )
 
+def linear_peaks_to_fasta(args):
+    from benchmarking.nongraphpeaks import NonGraphPeakCollection
+    collection = NonGraphPeakCollection.from_bed_file(args.linear_reads_file_name)
+    #collection.filter_peaks_outside_region("chr6", 28510119, 33480577)
+    collection.set_peak_sequences()
+    collection.save_to_sorted_fasta(args.out_file_name)
+    logging.info("Saved sequences to %s" % args.out_file_name)
+
 
 interface = \
 {
@@ -204,6 +212,16 @@ interface = \
                     ('out_file_name', '')
                 ],
             'method': intervals_to_fasta
+        },
+    'linear_peaks_to_fasta':
+        {
+            'help': 'Converts a linear peaks file (eg. from macs) to fasta',
+            'arguments':
+                [
+                    ('linear_reads_file_name', ''),
+                    ('out_file_name', '')
+                ],
+            'method': linear_peaks_to_fasta
         }
 }
 
@@ -264,6 +282,10 @@ python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks_from_qvalues 
 
 Run lrc_kir from qvalues:
 /../graph_peak_caller.py callpeaks_from_qvalues graph.obg test2_
+
+
+python3 ../graph_peak_caller.py linear_peaks_to_fasta macs_with_control_peaks_chr1.narrowPeak macs_with_control_sequences_chr1.fasta
+
 
 
 """
