@@ -96,18 +96,18 @@ class LinearSnarlMap(object):
     def to_json_files(self, base_name):
         with open(base_name+".length", "w") as f:
             f.write("%s" % self._length)
-        with open(base_name+"starts.pickle", "wb") as f:
+        with open(base_name+"_starts.pickle", "wb") as f:
             pickle.dump(self._linear_node_starts, f)
-        with open(base_name+"ends.pickle", "wb") as f:
+        with open(base_name+"_ends.pickle", "wb") as f:
             pickle.dump(self._linear_node_ends, f)
 
     @classmethod
     def from_json_files(cls, base_name, graph):
         with open(base_name+".length") as f:
             length = int(f.read().strip())
-        with open(base_name+"starts.pickle", "rb") as f:
+        with open(base_name+"_starts.pickle", "rb") as f:
             starts = pickle.loads(f.read())
-        with open(base_name+"ends.pickle", "rb") as f:
+        with open(base_name+"_ends.pickle", "rb") as f:
             ends = pickle.loads(f.read())
         return cls(starts, ends, length, graph)
 

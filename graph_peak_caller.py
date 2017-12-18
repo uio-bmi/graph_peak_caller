@@ -142,7 +142,7 @@ def run_callpeaks(args):
         ob_graph = obg.GraphWithReversals.from_file(obg_file_name)
 
 
-    if not os.path.isfile(args.linear_map_base_name + "starts.pickle"):
+    if not os.path.isfile(args.linear_map_base_name + "_starts.pickle"):
         logging.info("Creating linear map")
         create_linear_map(ob_graph, args.vg_snarls_file_name, args.linear_map_base_name)
         logging.info("Linear map created")
@@ -184,7 +184,14 @@ def create_ob_graph(args):
     ob_graph = json_file_to_obg_graph(args.vg_json_file_name, 0)
     logging.info("Writing ob graph to file")
     ob_graph.to_file(args.out_file_name)
-    
+
+
+def create_linear_map_interface(args):
+    logging.info("Reading ob graph from file")
+    ob_graph = obg.GraphWithReversals.from_file(args.obg_file_name)
+    logging.info("Creating linear map")
+    create_linear_map(ob_graph, args.vg_snarls_file_name, args.out_file_base_name)
+
 
 interface = \
 {
@@ -247,6 +254,17 @@ interface = \
                     ('out_file_name', 'E.g. graph.obg')
                 ],
             'method': create_ob_graph
+        },
+    'create_linear_map':
+        {
+            'help': 'Creates a linear map using a vg snarls file and an ob graph',
+            'arguments':
+                [
+                    ('obg_file_name', ''),
+                    ('vg_snarls_file_name', ''),
+                    ('out_file_base_name', ''),
+                ],
+            'method': create_linear_map_interface
         }
 }
 
