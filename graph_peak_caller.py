@@ -242,32 +242,35 @@ def split_vg_json_reads_into_chromosomes(args):
 
     reads_file = open(args.vg_json_reads_file_name)
     i = 0
+    import re
+    regex = re.compile(r"node_id\": ([0-9]+)")
+
+    def get_mapped_chrom(node):
+        for chrom in chromosomes:
+            if node >= chromosome_limits[chrom][0] and node <= chromosome_limits[chrom][1]:
+                mapped_chrom = chrom
+                break
+        assert mapped_chrom is not None, "Found no match for node id %d" % node
+        return mapped_chrom
+
     for line in reads_file:
         if i % 100000 == 0:
             logging.info("Line #%d" % i)
         i += 1
 
-        json_object = json.loads(line)
-        path = json_object["path"]
-        if "mapping" in path:
-            first_mapping = path["mapping"][0]
-            # Check only first mapping
-            start_pos = first_mapping["position"]
-            node = start_pos["node_id"]
-            #print("Node", node)
-
-            mapped_chrom = None
-            for chrom in chromosomes:
-                if node >= chromosome_limits[chrom][0] and node <= chromosome_limits[chrom][1]:
-                    mapped_chrom = chrom
-                    break
-            assert mapped_chrom is not None, "Found no match for node id %d" % node
-            #print("Found chrom %s" % mapped_chrom)
-            out_files[mapped_chrom].writelines(line)
-
+        groups = regex.search(line).groups()
+        if len(groups) > 0:
+            node = int(groups[0])
+            mapped_chrom = get_mapped_chrom(node)
+            out_files[mapped_chrom].writelines([line])
+        else:
+            print("No groups fond")
+        
 
     for file in out_files.values():
         file.close()
+
+    logging.info("Done")
 
 interface = \
 {
