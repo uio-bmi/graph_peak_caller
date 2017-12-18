@@ -192,7 +192,7 @@ def run_callpeaks(args):
         has_control=has_control,
         fragment_length=int(args.fragment_length),
         read_length=int(args.read_length),
-        linear_map_file_name=out_name + "linear_map"
+        linear_map_file_name=args.linear_map_base_name
     )
 
 
