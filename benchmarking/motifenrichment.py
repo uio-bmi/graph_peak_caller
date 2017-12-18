@@ -93,8 +93,9 @@ if __name__ == "__main__":
     plot_true_positives({
         #"macs with control": "../tests/macs_with_control_sequences_chr1.fasta",
         #"graph with control": "../tests/chr1_ctcf_with_control_sequences.fasta",
-        "graph": "../tests/chr1_ctcf_sequences.fasta",
-        "graph using trimmed sequences": "../tests/using_trimmed_sequences.fasta",
+        #"graph": "../tests/chr1_ctcf_sequences.fasta",
+        "graph mapped to whole genome": "../tests/sequences_mapped_whole_genome.fasta",
+        #"graph using trimmed sequences": "../tests/using_trimmed_sequences.fasta",
         "macs": "../tests/macs_chr1.fasta"
     },
     "MA0139.1.meme")

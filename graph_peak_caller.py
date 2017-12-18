@@ -140,9 +140,10 @@ def run_callpeaks(args):
         #ob_graph = obg.GraphWithReversals.from_numpy_files(obg_file_name)
         ob_graph = obg.GraphWithReversals.from_file(obg_file_name)
 
-    if not os.path.isfile(out_name + "linear_map" + "starts.pickle"):
+
+    if not os.path.isfile(args.linear_map_base_name + "starts.pickle"):
         logging.info("Creating linear map")
-        create_linear_map(ob_graph, args.vg_snarls_file_name, out_name + "linear_map")
+        create_linear_map(ob_graph, args.vg_snarls_file_name, args.linear_map_base_name)
         logging.info("Linear map created")
     else:
         logging.info("Not creating linear map. Already existing")
@@ -182,6 +183,7 @@ interface = \
                     ('vg_json_graph_file_name', "Json Graph file name (.json)"),
                     ('vg_graph_file_name', "Graph file name (.vg)"),
                     ('vg_snarls_file_name', "Snarls file name"),
+                    ('linear_map_base_name', "Set to desired base name. Will be used if exists, created if not."),
                     ('sample_reads_file_name', ' '),
                     ('control_reads_file_name', ' '),
                     ('with_control', 'True/False'),
@@ -287,5 +289,9 @@ Run lrc_kir from qvalues:
 python3 ../graph_peak_caller.py linear_peaks_to_fasta macs_with_control_peaks_chr1.narrowPeak macs_with_control_sequences_chr1.fasta
 
 
+
+Max TF chr1 på server
+cd ~/data/chr1
+python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls ~/data/tfs/max/filtered_r1.0.gam ~/data/tfs/max/filtered_r1.0.gam False max_without_control/ 183 50 23739138
 
 """
