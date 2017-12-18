@@ -226,7 +226,7 @@ def split_vg_json_reads_into_chromosomes(args):
     import json
     reads_base_name = args.vg_json_reads_file_name.split(".")[0]
 
-    chromosomes = [str(i) for i in range(1, 22)] + ["X", "Y"]
+    chromosomes = [str(i) for i in range(1, 23)] + ["X", "Y"]
     chromosome_limits = {}
     logging.info("Found the following chromosome ranges:")
     for chrom in chromosomes:
