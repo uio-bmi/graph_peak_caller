@@ -10,6 +10,9 @@ import argparse
 import sys
 from graph_peak_caller.sparsepileup import SparsePileup
 import pickle
+import subprocess
+from pyvg.protoparser import json_file_to_obg_graph
+import os
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
@@ -124,8 +127,6 @@ def intervals_to_fasta(args):
 
 def run_callpeaks(args):
     logging.info("Creating offset based graph")
-    from pyvg.protoparser import json_file_to_obg_graph
-    import os
     out_name = args.out_base_name
     json_file_name = args.vg_json_graph_file_name
     obg_file_name = json_file_name.replace(".json", ".obg")
@@ -164,6 +165,7 @@ def run_callpeaks(args):
         linear_map_file_name=out_name + "linear_map"
     )
 
+
 def linear_peaks_to_fasta(args):
     from benchmarking.nongraphpeaks import NonGraphPeakCollection
     collection = NonGraphPeakCollection.from_bed_file(args.linear_reads_file_name)
@@ -172,6 +174,17 @@ def linear_peaks_to_fasta(args):
     collection.save_to_sorted_fasta(args.out_file_name)
     logging.info("Saved sequences to %s" % args.out_file_name)
 
+
+def create_ob_graph(args):
+    # Get node count
+    #command = ["vg", "stats", "--node-count", args.vg_json_file_name]
+    #result = subprocess.check_output(command, shell=True)
+    #n_nodes = int(result)
+    logging.info("Creating obgraph")
+    ob_graph = json_file_to_obg_graph(args.vg_json_file_name, 0)
+    logging.info("Writing ob graph to file")
+    ob_graph.to_file(args.out_file_name)
+    
 
 interface = \
 {
@@ -224,6 +237,16 @@ interface = \
                     ('out_file_name', '')
                 ],
             'method': linear_peaks_to_fasta
+        },
+    'create_ob_graph':
+        {
+            'help': 'Creates and stores an obgraph from a vg json graph',
+            'arguments':
+                [
+                    ('vg_json_file_name', 'Vg json file name (created by running vg view -Vj graph.vg > graph.json'),
+                    ('out_file_name', 'E.g. graph.obg')
+                ],
+            'method': create_ob_graph
         }
 }
 
