@@ -261,12 +261,10 @@ def split_vg_json_reads_into_chromosomes(args):
                 if node >= chromosome_limits[chrom][0] and node <= chromosome_limits[chrom][1]:
                     mapped_chrom = chrom
                     break
-            assert mapped_chrom is not None
+            assert mapped_chrom is not None, "Found no match for node id %d" % node
             #print("Found chrom %s" % mapped_chrom)
             out_files[mapped_chrom].writelines(line)
 
-        else:
-            print("No mapping")
 
     for file in out_files.values():
         file.close()
