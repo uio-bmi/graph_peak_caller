@@ -243,7 +243,7 @@ def split_vg_json_reads_into_chromosomes(args):
     reads_file = open(args.vg_json_reads_file_name)
     i = 0
     for line in reads_file:
-        if i % 10w000 == 0:
+        if i % 100000 == 0:
             logging.info("Line #%d" % i)
         i += 1
 
