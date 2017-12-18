@@ -1,7 +1,7 @@
 import pyvg.util
 import pyvg.vg as vg
 import offsetbasedgraph as obg
-from pyvg.util import vg_gam_file_to_interval_collection
+from pyvg.util import vg_gam_file_to_interval_collection, vg_json_file_to_interval_collection
 from pyvg.sequences import SequenceRetriever
 from graph_peak_caller.util import create_linear_map, create_ob_graph_from_vg
 import logging
@@ -71,6 +71,32 @@ def run_with_gam(ob_graph,
                        linear_map=linear_map_file_name)
 
 
+def run_with_json(ob_graph,
+                 json_file_name, json_control_file,
+                 vg_graph_file_name,
+                 out_name="real_data_",
+                 has_control=True,
+                 limit_to_chromosomes=False,
+                 fragment_length=135, read_length=36,
+                 linear_map_file_name = False):
+
+    logging.info("Running from gam files")
+
+    #ob_graph = obg.GraphWithReversals.from_file(ob_graph_file_name)
+    reads_intervals = vg_json_file_to_interval_collection(
+         None, json_file_name, ob_graph)
+
+    control_intervals = vg_json_file_to_interval_collection(
+         None, json_control_file, ob_graph)
+
+    run_with_intervals(ob_graph, reads_intervals, control_intervals,
+                       out_name=out_name, has_control=has_control,
+                       vg_graph_file_name=vg_graph_file_name,
+                       fragment_length=fragment_length,
+                       read_length=read_length,
+                       linear_map=linear_map_file_name)
+
+
 def run_mhc_ctcf_example():
     create_ob_graph_from_vg("tests/mhc/graph.json", "tests/mhc/graph.obg")
     logging.info("Reading graph from file")
@@ -124,7 +150,9 @@ def intervals_to_fasta(args):
     logging.info("Writing to fasta")
     CallPeaksFromQvalues.intervals_to_fasta_file(intervals, args.out_file_name, retriever)
 
+#from memory_profiler import profile
 
+#@profile
 def run_callpeaks(args):
     logging.info("Creating offset based graph")
     out_name = args.out_base_name
@@ -153,7 +181,7 @@ def run_callpeaks(args):
     if args.with_control == "False":
         has_control = False
 
-    run_with_gam(
+    run_with_json(
         ob_graph,
         args.sample_reads_file_name,
         args.control_reads_file_name,
@@ -311,7 +339,7 @@ python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json gr
 """
 """
 Lrc_kir local:
-python3 ../../graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls ctcf_filtered_r1.0.2.gam ctcf_filtered_r1.0.2.gam False test_ 136 35 112342
+python3 ../../graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls linear_map ctcf_filtered_r1.0.2.gam ctcf_filtered_r1.0.2.gam False test_ 136 35 112342
 
 
 python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls filtered.gam filtered.gam False run1/ 135 36 23739138
