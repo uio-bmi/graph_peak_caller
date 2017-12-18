@@ -160,8 +160,9 @@ def run_callpeaks(args):
     json_file_name = args.vg_json_graph_file_name
     obg_file_name = json_file_name.replace(".json", ".obg")
 
+    n_nodes = 0  # args.n_nodes
     if not os.path.isfile(obg_file_name):
-        ob_graph = json_file_to_obg_graph(json_file_name, int(args.n_nodes))
+        ob_graph = json_file_to_obg_graph(json_file_name, n_nodes)
         logging.info("Writing ob graph to file")
         #ob_graph.to_numpy_files(obg_file_name)
         ob_graph.to_file(obg_file_name)
@@ -265,7 +266,7 @@ def split_vg_json_reads_into_chromosomes(args):
             out_files[mapped_chrom].writelines([line])
         else:
             print("No groups fond")
-        
+
 
     for file in out_files.values():
         file.close()
@@ -281,15 +282,13 @@ interface = \
                 [
                     ('vg_json_graph_file_name', "Json Graph file name (.json)"),
                     ('vg_graph_file_name', "Graph file name (.vg)"),
-                    ('vg_snarls_file_name', "Snarls file name"),
                     ('linear_map_base_name', "Set to desired base name. Will be used if exists, created if not."),
                     ('sample_reads_file_name', ' '),
                     ('control_reads_file_name', ' '),
                     ('with_control', 'True/False'),
                     ('out_base_name', 'eg experiment1_'),
                     ('fragment_length', ''),
-                    ('read_length', ''),
-                    ('n_nodes', 'Number of nodes in grap')
+                    ('read_length', '')
                 ],
             'method': run_callpeaks
         },
