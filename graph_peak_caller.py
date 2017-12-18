@@ -13,6 +13,7 @@ import pickle
 import subprocess
 from pyvg.protoparser import json_file_to_obg_graph
 import os
+from collections import defaultdict
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
@@ -221,6 +222,55 @@ def create_linear_map_interface(args):
     create_linear_map(ob_graph, args.vg_snarls_file_name, args.out_file_base_name)
 
 
+def split_vg_json_reads_into_chromosomes(args):
+    import json
+    reads_base_name = args.vg_json_reads_file_name.split(".")[0]
+
+    chromosomes = [str(i) for i in range(1, 22)] + ["X", "Y"]
+    chromosome_limits = {}
+    logging.info("Found the following chromosome ranges:")
+    for chrom in chromosomes:
+        start_end = open(args.range_files_base_name + "node_range_" + chrom + ".txt")
+        start_end= start_end.read().split(":")
+        start = int(start_end[0])
+        end = int(start_end[1])
+        chromosome_limits[chrom] = (start, end)
+        logging.info("   Chr%s: %d-%d" % (chrom, start, end))
+
+    out_files = {chrom: open(reads_base_name + "_" + chrom + ".json", "w")
+                 for chrom in chromosomes}
+
+    reads_file = open(args.vg_json_reads_file_name)
+    i = 0
+    for line in reads_file:
+        if i % 10w000 == 0:
+            logging.info("Line #%d" % i)
+        i += 1
+
+        json_object = json.loads(line)
+        path = json_object["path"]
+        if "mapping" in path:
+            first_mapping = path["mapping"][0]
+            # Check only first mapping
+            start_pos = first_mapping["position"]
+            node = start_pos["node_id"]
+            #print("Node", node)
+
+            mapped_chrom = None
+            for chrom in chromosomes:
+                if node >= chromosome_limits[chrom][0] and node <= chromosome_limits[chrom][1]:
+                    mapped_chrom = chrom
+                    break
+            assert mapped_chrom is not None
+            #print("Found chrom %s" % mapped_chrom)
+            out_files[mapped_chrom].writelines(line)
+
+        else:
+            print("No mapping")
+
+    for file in out_files.values():
+        file.close()
+
 interface = \
 {
     'callpeaks':
@@ -293,6 +343,17 @@ interface = \
                     ('out_file_base_name', ''),
                 ],
             'method': create_linear_map_interface
+        },
+    'split_vg_json_reads_into_chromosomes':
+        {
+            'help': "Splits intervals from interval collection into one file for each chromsome."
+                    "Requires node_range_[chrom ID].txt to exist for each chromosome.",
+            'arguments':
+                [
+                    ('vg_json_reads_file_name', ''),
+                    ('range_files_base_name', 'Base name, e.g. dir, to range files')
+                ],
+            'method': split_vg_json_reads_into_chromosomes
         }
 }
 
