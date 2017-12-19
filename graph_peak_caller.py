@@ -200,7 +200,7 @@ def linear_peaks_to_fasta(args):
     from benchmarking.nongraphpeaks import NonGraphPeakCollection
     collection = NonGraphPeakCollection.from_bed_file(args.linear_reads_file_name)
     #collection.filter_peaks_outside_region("chr6", 28510119, 33480577)
-    collection.set_peak_sequences()
+    collection.set_peak_sequences_using_fasta(fasta_file_location=args.fasta_file)
     collection.save_to_sorted_fasta(args.out_file_name)
     logging.info("Saved sequences to %s" % args.out_file_name)
 
@@ -319,6 +319,7 @@ interface = \
             'arguments':
                 [
                     ('linear_reads_file_name', ''),
+                    ('fasta_file', ''),
                     ('out_file_name', '')
                 ],
             'method': linear_peaks_to_fasta

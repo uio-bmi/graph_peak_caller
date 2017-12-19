@@ -1,7 +1,9 @@
-from gendatafetcher.sequences import get_sequence_ucsc
+#from gendatafetcher.sequences import get_sequence_ucsc
 from Bio import Seq, SeqIO, SeqRecord
 from pybedtools import BedTool, Interval
 import logging
+from pyfaidx import Fasta
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -15,6 +17,10 @@ class NonGraphPeak():
 
     def set_sequence(self):
         self.sequence = get_sequence_ucsc(self.chromosome, self.start, self.end)
+
+    def set_sequence_using_fasta_index(self, fasta_index):
+        print("Chromosome: %s" % self.chromosome)
+        self.sequence = str(fasta_index[self.chromosome][self.start:self.end])
 
     def __str__(self):
         return "Peak(%s, %d, %d, score=%.3f)" % (self.chromosome,
@@ -58,7 +64,7 @@ class NonGraphPeakCollection(object):
 
     def to_fasta(self, file_name):
         lines = (SeqRecord.SeqRecord(Seq.Seq(peak.sequence),
-                 id=str(i), description=str(peak))
+                                     id=str(i), description=str(peak))
                  for i, peak in enumerate(self.peaks))
 
         SeqIO.write(lines, file_name, "fasta")
@@ -69,6 +75,16 @@ class NonGraphPeakCollection(object):
             logging.info("Set sequence for peak %d/%d" % (i, len(self.peaks)))
             i += 1
             peak.set_sequence()
+
+    def set_peak_sequences_using_fasta(self, fasta_file_location="grch38.fasta"):
+        logging.info("Set peak sequences using fasta index")
+        genome = Fasta(fasta_file_location)
+        i = 0
+        for peak in self.peaks:
+            logging.info("Set sequence for peak %d/%d" % (i, len(self.peaks)))
+            i += 1
+            peak.set_sequence_using_fasta_index(genome)
+
 
     def save_to_sorted_fasta(self, file_name):
         self._sort_on_score_descending()
