@@ -2,6 +2,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 from .nongraphpeaks import NonGraphPeak, NonGraphPeakCollection
 import subprocess
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 
