@@ -12,6 +12,7 @@ from graph_peak_caller.sparsepileup import SparsePileup
 import pickle
 import subprocess
 from pyvg.protoparser import json_file_to_obg_graph
+from graph_peak_caller.peakcollection import Peak
 import os
 from collections import defaultdict
 
@@ -273,6 +274,44 @@ def split_vg_json_reads_into_chromosomes(args):
 
     logging.info("Done")
 
+
+def concatenate_sequence_files(args):
+    chromosomes = args.chromosomes.split(",")
+    out_file_name = args.out_file_name
+
+    all_fasta_entries = []
+    for chromosome in chromosomes:
+        logging.info("Processing chromosome %s" % chromosome)
+        fasta_file = open("chr" + chromosome + "_sequences.fasta")
+        for line in fasta_file:
+            if line.startswith(">"):
+                all_fasta_entries.append([line, None])
+            else:
+                # This is sequence, add to prev entry
+                all_fasta_entries[-1][1] = line
+
+    peaks = []
+    for fasta_entry in all_fasta_entries:
+        header = fasta_entry[0].rstrip()
+        sequence = fasta_entry[1].rstrip()
+
+        interval_json = "{%s" % header.split(" {")[1]
+        interval = Peak.from_file_line(interval_json)
+        interval.sequence = sequence
+        peaks.append(interval)
+
+    peaks = sorted(peaks, key=lambda s: -s.score)
+    out_fasta = open(out_file_name, "w")
+    i = 0
+    for peak in peaks:
+        out_fasta.writelines([">peak%d %s\n" % (i, peak.to_file_line())])
+        out_fasta.writelines(["%s\n" % peak.sequence])
+        i += 1
+    out_fasta.close()
+
+    logging.info("Wrote all peaks in sorted order to %s" % out_file_name)
+
+
 interface = \
 {
     'callpeaks':
@@ -355,6 +394,16 @@ interface = \
                     ('range_files_base_name', 'Base name, e.g. dir, to range files')
                 ],
             'method': split_vg_json_reads_into_chromosomes
+        },
+    'concatenate_sequence_files':
+        {
+            'help': "Merge multiple *_sequence.fasta files from the peak caller into one single sorted file.",
+            'arguments':
+                [
+                    ('chromosomes', 'comma delimted, e.g 1,2,3, used to fetch files of type chr1_sequences.fasta, ...'),
+                    ('out_file_name', '')
+                ],
+            'method': concatenate_sequence_files
         }
 }
 
