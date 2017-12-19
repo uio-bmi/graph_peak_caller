@@ -312,6 +312,22 @@ def concatenate_sequence_files(args):
     logging.info("Wrote all peaks in sorted order to %s" % out_file_name)
 
 
+def plot_motif_enrichment(args):
+    from benchmarking.motifenrichment import MotifMatcher, plot_true_positives
+    fasta1 = args.fasta1
+    fasta2 = args.fasta2
+    meme = args.meme_motif_file
+
+    plot_true_positives(
+        {
+            "file1": fasta1,
+            "file2": fasta2
+        },
+        meme,
+        save_to_file=args.out_figure_file_name
+    )
+
+
 interface = \
 {
     'callpeaks':
@@ -404,6 +420,18 @@ interface = \
                     ('out_file_name', '')
                 ],
             'method': concatenate_sequence_files
+        },
+    'plot_motif_enrichment':
+        {
+            'help': "Plots motif enrichments using fimo. Requires fimo to be installed and in path.",
+            'arguments':
+                [
+                    ('fasta1', ''),
+                    ('fasta2', ''),
+                    ('meme_motif_file', 'something.meme'),
+                    ('out_figure_file_name', '')
+                ],
+            'method': plot_motif_enrichment
         }
 }
 

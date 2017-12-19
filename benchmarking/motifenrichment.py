@@ -3,7 +3,7 @@ from Bio import Seq, SeqIO, SeqRecord
 from pybedtools import BedTool, Interval
 import logging
 logging.basicConfig(level=logging.INFO)
-from nongraphpeaks import NonGraphPeak, NonGraphPeakCollection
+from .nongraphpeaks import NonGraphPeak, NonGraphPeakCollection
 import subprocess
 import matplotlib.pyplot as plt
 
@@ -62,7 +62,7 @@ class MotifMatcher():
         return true_positives
 
 
-def plot_true_positives(peak_file_sets, meme_file_name):
+def plot_true_positives(peak_file_sets, meme_file_name, save_to_file=None):
     for name, fasta_file_name in peak_file_sets.items():
         matcher = MotifMatcher(fasta_file_name, meme_file_name)
         true_positives = matcher.compute_true_positives()
@@ -73,7 +73,12 @@ def plot_true_positives(peak_file_sets, meme_file_name):
         print("True positives for %s: %d / %d = %.3f" % (name, n_matching, n_tot, n_matching/n_tot))
         plt.plot(true_positives, label=name + " (%.2f)" % (100 * n_matching/n_tot))
     plt.legend()
-    plt.show()
+    if save_to_file is not None:
+        plt.savefig(save_to_file)
+        print("Saved figure to %s" % save_to_file)
+    else:
+        plt.show()
+
 
 
 if __name__ == "__main__":
