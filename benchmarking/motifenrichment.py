@@ -1,6 +1,3 @@
-from gendatafetcher.sequences import get_sequence_ucsc
-from Bio import Seq, SeqIO, SeqRecord
-from pybedtools import BedTool, Interval
 import logging
 logging.basicConfig(level=logging.INFO)
 from .nongraphpeaks import NonGraphPeak, NonGraphPeakCollection
