@@ -11,10 +11,11 @@ import sys
 from graph_peak_caller.sparsepileup import SparsePileup
 import pickle
 import subprocess
-from pyvg.protoparser import json_file_to_obg_graph
+from pyvg.protoparser import json_file_to_obg_graph, json_file_to_obg_numpy_graph
 from graph_peak_caller.peakcollection import Peak
 import os
 from collections import defaultdict
+from memory_profiler import profile
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
@@ -72,7 +73,7 @@ def run_with_gam(ob_graph,
                        read_length=read_length,
                        linear_map=linear_map_file_name)
 
-
+#@profile
 def run_with_json(ob_graph,
                  json_file_name, json_control_file,
                  vg_graph_file_name,
@@ -152,9 +153,7 @@ def intervals_to_fasta(args):
     logging.info("Writing to fasta")
     CallPeaksFromQvalues.intervals_to_fasta_file(intervals, args.out_file_name, retriever)
 
-#from memory_profiler import profile
 
-#@profile
 def run_callpeaks(args):
     logging.info("Creating offset based graph")
     out_name = args.out_base_name
@@ -172,6 +171,36 @@ def run_callpeaks(args):
         #ob_graph = obg.GraphWithReversals.from_numpy_files(obg_file_name)
         ob_graph = obg.GraphWithReversals.from_file(obg_file_name)
 
+
+    if not os.path.isfile(args.linear_map_base_name + "_starts.pickle"):
+        logging.info("Creating linear map")
+        create_linear_map(ob_graph, args.vg_snarls_file_name, args.linear_map_base_name)
+        logging.info("Linear map created")
+    else:
+        logging.info("Not creating linear map. Already existing")
+
+    has_control = True
+    if args.with_control == "False":
+        has_control = False
+
+    run_with_json(
+        ob_graph,
+        args.sample_reads_file_name,
+        args.control_reads_file_name,
+        args.vg_graph_file_name,
+        args.out_base_name,
+        has_control=has_control,
+        fragment_length=int(args.fragment_length),
+        read_length=int(args.read_length),
+        linear_map_file_name=args.linear_map_base_name
+    )
+
+
+def run_callpeaks_with_numpy_graph(args):
+    logging.info("Read offset based graph")
+
+
+    ob_graph = obg.GraphWithReversals.from_numpy_files(args.numpy_graph_base_name)
 
     if not os.path.isfile(args.linear_map_base_name + "_starts.pickle"):
         logging.info("Creating linear map")
@@ -215,6 +244,14 @@ def create_ob_graph(args):
     ob_graph = json_file_to_obg_graph(args.vg_json_file_name, 0)
     logging.info("Writing ob graph to file")
     ob_graph.to_file(args.out_file_name)
+
+
+def create_ob_numpy_graph(args):
+    logging.info("Creating obgraph")
+    ob_graph = json_file_to_obg_numpy_graph(args.vg_json_file_name, 0)
+
+    logging.info("Writing ob graph to file")
+    ob_graph.to_numpy_files(args.out_file_name)
 
 
 def create_linear_map_interface(args):
@@ -347,6 +384,23 @@ interface = \
                 ],
             'method': run_callpeaks
         },
+    'callpeaks_with_numpy_graph':
+        {
+            'help': 'Callpeaks',
+            'arguments':
+                [
+                    ('numpy_graph_base_name', ""),
+                    ('vg_graph_file_name', "Graph file name (.vg)"),
+                    ('linear_map_base_name', "Set to desired base name. Will be used if exists, created if not."),
+                    ('sample_reads_file_name', ' '),
+                    ('control_reads_file_name', ' '),
+                    ('with_control', 'True/False'),
+                    ('out_base_name', 'eg experiment1_'),
+                    ('fragment_length', ''),
+                    ('read_length', '')
+                ],
+            'method': run_callpeaks_with_numpy_graph
+        },
     'callpeaks_from_qvalues':
         {
             'help': '...',
@@ -388,6 +442,16 @@ interface = \
                     ('out_file_name', 'E.g. graph.obg')
                 ],
             'method': create_ob_graph
+        },
+    'create_ob_numpy_graph':
+        {
+            'help': 'Creates and stores an obgraph from a vg json graph (using numpy data structures)',
+            'arguments':
+                [
+                    ('vg_json_file_name', 'Vg json file name (created by running vg view -Vj graph.vg > graph.json'),
+                    ('out_file_name', 'E.g. graph.obg')
+                ],
+            'method': create_ob_numpy_graph
         },
     'create_linear_map':
         {
@@ -478,7 +542,7 @@ python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json gr
 """
 """
 Lrc_kir local:
-python3 ../../graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls linear_map ctcf_filtered_r1.0.2.gam ctcf_filtered_r1.0.2.gam False test_ 136 35 112342
+python3 ../../graph_peak_caller.py callpeaks graph.json graph.vg linear_map reads.json reads.json False test_ 136 35
 
 
 python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls filtered.gam filtered.gam False run1/ 135 36 23739138

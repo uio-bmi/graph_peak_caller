@@ -5,6 +5,7 @@ from offsetbasedgraph.interval import Position
 from .areas import BinaryContinousAreas
 import offsetbasedgraph as obg
 import numpy as np
+import itertools
 # logging.basicConfig(level=logging.DEBUG)
 
 
@@ -152,7 +153,7 @@ class Areas(object):
         if offset < self.graph.node_size(node):
             return True
         graph = self.graph
-        for in_node in graph.adj_list[node] + graph.reverse_adj_list[node]:
+        for in_node in itertools.chain(graph.adj_list[node], graph.reverse_adj_list[node]):
             if in_node in self.areas and len(self.areas[in_node]) > 0:
                 if self.areas[in_node][0] == 0:
                     return False
@@ -167,7 +168,7 @@ class Areas(object):
             return True
 
         graph = self.graph
-        for in_node in graph.adj_list[-node] + graph.reverse_adj_list[-node]:
+        for in_node in itertools.chain(graph.adj_list[-node], graph.reverse_adj_list[-node]):
             if in_node in self.areas and len(self.areas[in_node]) > 0:
                 if self.areas[in_node][0] == 0:
                     return False

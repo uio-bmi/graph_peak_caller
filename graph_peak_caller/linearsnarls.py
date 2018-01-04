@@ -4,7 +4,7 @@ from .sparsepileup import SparsePileup
 from .eventsorter import EventSorter, EventSort
 from .snarlmaps import LinearSnarlMap
 import logging
-
+from memory_profiler import profile
 
 def create_control(linear_map_name, *args, **kwargs):
     logging.info("Reading linear map from file")

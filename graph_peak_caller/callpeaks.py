@@ -13,7 +13,7 @@ from .peakcollection import PeakCollection
 from . import linearsnarls
 IntervalCollection.interval_class = DirectedInterval
 from .subgraphcollection import SubgraphCollectionPartiallyOrderedGraph
-
+from memory_profiler import profile
 
 def enable_filewrite(func):
     def wrapper(*args, **kwargs):
@@ -261,6 +261,7 @@ class CallPeaks(object):
         self.run_pre_call_peaks_steps()
         self.call_peaks()
 
+    #@profile
     def run_pre_call_peaks_steps(self):
         self.preprocess()
         if self.info is None:
@@ -342,6 +343,7 @@ class CallPeaks(object):
             if interval.region_paths[0] in self.ob_graph.blocks:
                 yield interval
             else:
+                logging.warning("Interval: %s" % interval)
                 raise Exception("Interval not in graph")
 
     def scale_tracks(self, update_saved_files=False):
@@ -393,6 +395,10 @@ class CallPeaks(object):
             ob_graph=self.graph,
             touched_nodes=self.touched_nodes
         )
+
+        # Delete linear map
+        self.linear_map = None
+
         control_pileup.graph = self.ob_graph
         logging.info("Number of control reads: %d" % self.info.n_control_reads)
 
@@ -403,10 +409,18 @@ class CallPeaks(object):
 
         self._control_pileup = control_pileup
 
+        # Delete control pileup
+        self.control_intervals = None
+
     def get_score(self):
         logging.info("Getting scores. Creating sparse array from sparse control and sample")
         q_values_pileup = SparseControlSample.from_sparse_control_and_sample(
             self._control_pileup, self._sample_pileup)
+
+        # Delete sample and control pileups
+        self._control_pileup = None
+        self._sample_pileup = None
+
         logging.info("Computing q values")
         q_values_pileup.get_scores()
         self.q_values = q_values_pileup
@@ -449,7 +463,7 @@ class CallPeaks(object):
 
         touched_nodes = set()  # Speedup thing, keep track of nodes where areas are on
         for area in areas_list:
-            if i % 10000 == 0:
+            if i % 5000 == 0:
                 logging.info("Processing area %d" % i)
             i += 1
 
@@ -470,6 +484,9 @@ class CallPeaks(object):
             print("Saved sample pileup to " + self._sample_track)
 
         self._sample_pileup = pileup
+
+        # Delete sample intervals
+        self.sample_intervals = None
 
     def _write_vg_alignments_as_intervals_to_bed_file(self):
         pass
