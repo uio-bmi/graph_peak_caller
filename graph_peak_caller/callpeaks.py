@@ -449,6 +449,7 @@ class CallPeaks(object):
         self.q_value_peak_caller.\
             save_max_path_sequences_to_fasta_file(file_name, retriever)
 
+    @profile
     def create_sample_pileup(self, save_to_file=True):
         logging.debug("In sample pileup")
         logging.info("Creating sample pileup")
