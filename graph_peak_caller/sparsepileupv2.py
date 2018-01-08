@@ -9,11 +9,21 @@ from .subgraphcollection import SubgraphCollection
 from .eventsorter import DiscreteEventSorter
 from offsetbasedgraph import Interval, IntervalCollection
 import pickle
-from .sparsepileup import SparseAreasDict, starts_and_ends_to_sparse_pileup
+from .sparsepileup import SparseAreasDict, starts_and_ends_to_sparse_pileup, intervals_to_start_and_ends
+
+
+class SimpleValuedIndexes():
+    def __init__(self, indexes, values):
+        self.indexes = indexes
+        self.values = values
+
+    def sum(self):
+        lengths = np.diff(self.indexes)
+        return np.sum(lengths*self.values)
 
 
 class SparsePileupData:
-    def __init__(self, node_ids, lengths, ndim=1):
+    def __init__(self, node_ids, lengths, ndim=1, graph=None, default_value=0):
 
         self._node_indexes = None  # Mapping from node id to index in indexes/values
         self._indexes = None
@@ -21,8 +31,12 @@ class SparsePileupData:
         self._lengths = None
         self.min_node = None
         self.min_value = 0
+        self.default_value = default_value
+        self.graph = graph
+        self.nodes = set()
 
-        self._create_empty(node_ids, lengths, ndim)
+        if len(node_ids) > 0:
+            self._create_empty(node_ids, lengths, ndim)
 
     def _create_empty(self, node_ids, lengths, ndim):
 
@@ -55,12 +69,19 @@ class SparsePileupData:
             offset += lengths[i]
 
     def copy(self):
-        new = SparsePileupData([], [])
-        new._indexes = self.indexes.copy()
-        new._values = self.values.copy()
+        new = SparsePileupData([], [], graph=self.graph,
+                               default_value=self.default_value)
+        new._indexes = self._indexes.copy()
+        new._values = self._values.copy()
         new._node_indexes= self._node_indexes.copy()
         new._lengths = self._lengths.copy()
-        new.min_node = self.min_node.copy()
+        new.min_node = self.min_node
+        new.nodes = self.nodes.copy()
+
+        return new
+
+    def __len__(self):
+        return len(self.nodes)
 
     def set_min_value(self, value):
         self.min_value = value
@@ -75,26 +96,27 @@ class SparsePileupData:
         self._values[start:end] = values
 
     def set_indexes(self, node_id, indexes):
+        index = node_id - self.min_node
+        if len(indexes) == 0:
+            self._lengths[index] = 2
+            return
+
+        assert np.all(np.diff(indexes) > 0), "Invalid indexes %s" % indexes
         # First index is always 0. Last index is always length
         # This method sets everything else than first index
         assert node_id in self.nodes, "Only allowed to set for already initiated nodes"
-        index = node_id - self.min_node
         start = self._node_indexes[index] + 1
         end = start + len(indexes)
         assert len(indexes) <= self._lengths[index]
-        print(start)
-        print(end)
-        print(type(start))
+        #assert self._indexes[end] == 0 or self._indexes[end] > indexes[-1], "Next index is %d when setting indexes %s" % (self._indexes[end], indexes)
         self._indexes[start:end] = indexes
-
-        #print(self._values)
-        #print(self._indexes)
-        #print(self._lengths)
-        #print(self._node_indexes)
-
+        self._lengths[index] = len(indexes) + 2  # Can be removed if handled in
+                                                 # special cases outside (when more space is allocated than needed)
         assert self._indexes[start-1] == 0, "Start index should be 0, is %d" % self._indexes[start-1]
 
         assert np.all(self.indexes(node_id)[1:-1] == indexes), "%s != %s" % (self.indexes(node_id)[1:-1], indexes)
+
+        assert np.all(np.diff(self.indexes(node_id)[:-1]) > 0), "Invalid indexes %s after setting indexes %s" % (self.indexes(node_id), indexes)
 
     def set_end_index(self, node_id, i):
         # Used to set "length" of node. End should always be length
@@ -102,10 +124,10 @@ class SparsePileupData:
         start = self._node_indexes[index]
         end = start + self._lengths[index]
 
-        for idx in self.indexes(node_id):
+        for idx in self.indexes(node_id)[:-1]:
             assert i > idx, "Trying to set end idx %d which is <= already existing index %d. All indexes: %s" % (i, idx, self.indexes(node_id))
 
-        assert self._indexes[end-1] == 0, "End index already has something"
+        #assert self._indexes[end-1] == 0, "End index already has something"
         self._indexes[end-1] = i
         assert self._indexes[end-1] == i, "%d != %d" % (self._indexes[end-1], i)
 
@@ -119,10 +141,10 @@ class SparsePileupData:
         self._values[start] = val
 
     def indexes(self, node_id):
-        index = node_id - self.min_node
+        if node_id not in self.nodes:
+            return np.array([0, self.graph.node_size(node_id)])
 
-        if index < 0 or index >= len(self._node_indexes):
-            return np.array([])
+        index = node_id - self.min_node
 
         length = self._lengths[index]
         assert length >= 2
@@ -131,9 +153,8 @@ class SparsePileupData:
         return self._indexes[start:end]
 
     def values(self, node_id):
-        index = node_id - self.min_node
-        if index < 0 or index >= len(self._node_indexes):
-            return np.array([])
+        if node_id not in self.nodes:
+            return np.array([self.default_value])
 
         index = node_id - self.min_node
         start = self._node_indexes[index]
@@ -150,18 +171,143 @@ class SparsePileupData:
     def fill_existing_hole(self, node, index, value):
         # Fills an existing hole starting at index in node
         idx = np.nonzero(self.indexes(node) == index)
+        assert len(idx) == 1, "There should be only one index matching the hole"
+        #assert idx == len(self.indexes) -1], "Trying to set value for end index (has no value)"
         old_values = self.values(node)
+        assert old_values[idx] == 0
         old_values[idx] = value
-        self.set_values(node, old_values)
+        if idx == 0:
+            self.set_start_value(value)
+        else:
+            self.set_values(node, old_values[1:])
 
-    def sanitize_node(self, node_id):
+    def sanitize_node_indices(self, node_id):
         indexes = self.indexes(node_id)
         values = self.values(node_id)
+        #print("Sanitizing")
+        #print("INdexes: %s" % indexes)
+        #print("Values: %s" % values)
         diffs = np.where(np.diff(indexes) > 0)[0]
+        #print("New indexes: %s" % indexes[diffs])
+        self.set_indexes(node_id, indexes[diffs[1:]])
+        self.set_end_index(node_id, indexes[-1])
+        self.set_values(node_id, values[diffs[1:]])
+        #self._lengths[node_id - self.min_node] = len(diffs)
 
-        self.set_indexes(indexes[diffs])
-        self.set_values(indexes[diffs[1:]])
-        self._lengths[node_id - self.min_node] = len(diffs)
+    def sanitize_node(self, node_id):
+        all_vals = self.values(node_id)
+        indexes = self.indexes(node_id)
+        assert len(indexes) >= 2
+        #print("Old indices: %s" % indexes)
+        #print("Old values: %s" % all_vals)
+
+        diffs = np.diff(all_vals)
+        changes = np.where(diffs != 0)[0]
+        if len(all_vals) == 0:
+            return
+
+        new_indexes = indexes[changes+1]
+        new_values = all_vals[changes+1]
+        #print("New indices: %s" % new_indexes)
+        #print("New values: %s" % new_values)
+        self.set_values(node_id, new_values)
+        self.set_indexes(node_id, new_indexes)
+        self.set_end_index(node_id, indexes[-1])
+
+        new_indexes = self.indexes(node_id)
+        assert len(new_indexes) >= 2
+        assert new_indexes[0] == 0
+        assert new_indexes[-1] == indexes[-1]
+
+    def get_flat_numpy_array(self, node_id):
+        indexes = self.indexes(node_id)
+        flat = np.zeros(indexes[-1])
+        for s, e, value in self.index_value_pairs(node_id):
+            flat[s:e] = value
+        return flat
+
+    def get_subset_max_value(self, node_id, start, end):
+        return np.max(self.get_flat_numpy_array(node_id)[start:end])
+
+    def get_subset_sum(self, node_id, start, end):
+        return np.sum(self.get_flat_numpy_array(node_id)[start:end])
+
+    def score(self, node_id, start, end):
+        return self.get_subset_max_value(node_id, start, end), \
+               self.get_subset_sum(node_id, start, end)
+
+    def get_subset(self, node_id, start, end):
+        assert start >= 0
+        assert end <= self.indexes(node_id)[-1]
+        indexes = self.indexes(node_id)
+        if len(indexes) == 2:
+            return SimpleValuedIndexes(self.indexes, self.values)
+
+        values = self.values(node_id)
+
+        length = end-start
+        indexes = indexes[1:-1]-start
+        above_mask = indexes > 0
+        above = np.nonzero(above_mask)[0]
+
+        if not above.size:
+            start_value = values[-1] if values.size else values[0]
+        elif above[0] == 0:
+            start_value = values[0]
+        else:
+            start_value = self.values[1:][above[0]-1]
+
+        if not above.size:
+            return SimpleValuedIndexes(np.array([0, length], dtype="int"),
+                                       np.array([start_value]))
+
+        inside_mask = np.logical_and(above_mask,
+                                     indexes < length)
+        subset_indexes = indexes[inside_mask]
+
+        """
+        if subset_indexes[0] != 0:
+            subset_indexes = np.insert(subset_indexes, 0, 0)
+        if subset_indexes[-1] != length:
+            subset_indexes = np.append(subset_indexes, length)
+        """
+
+        subset_values = values[1:][inside_mask]
+        subset_values = np.insert(subset_values, 0, start_value)
+
+        return SimpleValuedIndexes(subset_indexes, subset_values)
+
+    def get_max_value_between(self, node_id, start, end):
+        assert node_id is not None
+        assert start >= 0
+        assert end <= self.indexes(node_id)[-1]
+
+        max_val = 0
+        for s, e, value in self.index_value_pairs(node_id):
+            if s <= start and e > start:
+                max_val = max(max_val, value)
+            elif end > s and end <= e:
+                max_val = max(max_val, value)
+
+        return max_val
+
+    def get_max_value_between_old(self, node_id, start, end):
+        assert node_id is not None
+        assert start >= 0
+        assert end <= self.indexes(node_id)[-1]
+
+        indexes = self.indexes(node_id)[1:]
+        values = self.values(node_id)
+
+        length = end-start
+        indexes = indexes - start
+        above_mask = indexes >= 0
+        inside_mask = np.logical_and(above_mask,
+                                     indexes <= length)
+        subset_indexes = indexes[inside_mask]
+        subset_values = values[inside_mask]
+        return np.max(subset_values)
+        #return subset_indexes, subset_values
 
     def find_valued_areas(self, node, value):
         all_indexes = self.indexes(node)
@@ -176,6 +322,9 @@ class SparsePileupData:
         new = self.copy()
         new._values = new._values >= cutoff
         return new
+
+    def threshold(self, cutoff):
+        self._values = self._values >= cutoff
 
     def index_value_pairs(self, node):
         indexes = self.indexes(node)
@@ -238,7 +387,7 @@ class SparsePileup(Pileup):
     @classmethod
     def from_base_value(cls, graph, base_value):
         pileup = cls(graph)
-        pileup.data.set_min_value(base_value)
+        pileup.data = SparsePileupData([], [], graph=graph, default_value=base_value)
         return pileup
 
     def sum(self):
@@ -267,8 +416,12 @@ class SparsePileup(Pileup):
             starts = areas.get_starts(node_id)
             ends = areas.get_ends(node_id)
             for start, end in zip(starts, ends):
-                logging.debug("Filling hole %s, %d, %d" % (
-                    node_id, start, end))
+                logging.info("Filling hole %s, %d, %d. Node size: %d" % (
+                    node_id, start, end, self.graph.node_size(node_id)))
+
+                if start == end:
+                    logging.warning("Trying to fill hole of 0 length")
+                    continue
 
                 self.data.fill_existing_hole(node_id, start, True)
 
@@ -288,6 +441,10 @@ class SparsePileup(Pileup):
     def sanitize(self):
         for node in self.data.nodes:
             self.data.sanitize_node(node)
+
+    def sanitize_indices(self):
+        for node in self.data.nodes:
+            self.data.sanitize_node_indices(node)
 
     def find_valued_areas(self, value, only_check_nodes=None):
         if value:
@@ -415,6 +572,11 @@ class SparsePileup(Pileup):
         return pileup
 
     @classmethod
+    def from_intervals(cls, graph, intervals):
+        starts, ends = intervals_to_start_and_ends(graph, intervals)
+        return cls.from_starts_and_ends(graph, starts, ends)
+
+    @classmethod
     def from_starts_and_ends(cls, graph, starts, ends, dtype=bool):
         pileup = cls(graph)
 
@@ -434,7 +596,7 @@ class SparsePileup(Pileup):
                 length -= 1
             lengths.append(length)
 
-        data = SparsePileupData(node_ids, lengths)
+        data = SparsePileupData(node_ids, lengths, graph=graph)
 
         for rp in starts:
             assert rp in graph.blocks
@@ -477,8 +639,13 @@ class SparsePileup(Pileup):
 
     def threshold_copy(self, cutoff):
         new_pileup = self.__class__(self.graph)
-        new_pileup.data = self.data.treshold_copy(cutoff)
+        new_pileup.data = self.data.threshold_copy(cutoff)
+        new_pileup.sanitize()
         return new_pileup
+
+    def threshold(self, cutoff):
+        self.data.threshold(cutoff)
+        self.sanitize()
 
     def add_area(self, region_path, start, end, value):
         """
@@ -565,21 +732,50 @@ class SparsePileup(Pileup):
         with open("%s" % file_name, "wb") as f:
             pickle.dump(self.data, f)
 
+    @classmethod
+    def create_from_old_sparsepileup(cls, old_pileup):
+        # TMP method for tests to pass
+        graph = old_pileup.graph
+        nodes = []
+        lengths = []
+
+        for node in old_pileup.data:
+            nodes.append(node)
+            lengths.append(len(old_pileup.data[node].all_idxs()))
+
+        pileupdata = SparsePileupData(nodes, lengths, graph=graph)
+        for node in old_pileup.data:
+            values = old_pileup.data[node].all_values()
+            indexes = old_pileup.data[node].all_idxs()
+
+            pileupdata.set_indexes(node, indexes[1:-1])
+            pileupdata.set_end_index(node, indexes[-1])
+            pileupdata.set_values(node, values[1:])
+            pileupdata.set_start_value(node, values[0])
+
+        pileup = SparsePileup(graph)
+        pileup.data = pileupdata
+        pileup.data.default_value = old_pileup
+
+        return pileup
+
+
 
 class SparseControlSample(SparsePileup):
     def get_p_dict(self):
         p_value_dict = defaultdict(dict)
         count_dict = defaultdict(int)
         baseEtoTen = np.log(10)
-        for node_id, valued_indexes in self.data.items():
-            start = 0
-            val = valued_indexes.start_value
-            for start, end, val in valued_indexes:
+        for node in self.data.nodes:
+            for start, end, val in self.data.index_value_pairs(node):
                 if val[1] not in p_value_dict[val[0]]:
                     log_p_val = poisson.logsf(val[1], val[0])
                     p_value_dict[val[0]][val[1]] = -log_p_val/baseEtoTen
                 p = p_value_dict[val[0]][val[1]]
                 count_dict[p] += end-start
+
+        p_value_dict[0.0][0.0] = -1
+        count_dict[-1] = 0
 
         self.p_value_dict = p_value_dict
         self.count_dict = count_dict
@@ -611,6 +807,7 @@ class SparseControlSample(SparsePileup):
             return self.p_to_q_values[
                 self.p_value_dict[x[0]][x[1]]]
         # f = np.vectorize(translation)
+        """
         for valued_indexes in self.data.values():
 
             valued_indexes.start_value = translation(
@@ -622,6 +819,11 @@ class SparseControlSample(SparsePileup):
                 valued_indexes.values = new_values
 
             valued_indexes.sanitize()
+        """
+        print(self.data._values)
+        new_values = np.apply_along_axis(translation, 1, self.data._values)
+        self.data._values = new_values
+        self.sanitize()
 
     def get_scores(self):
         self.get_p_dict()
@@ -638,11 +840,12 @@ class SparseControlSample(SparsePileup):
         for node in all_nodes:
             all_indexes = np.append(control.data.indexes(node), sample.data.indexes(node))
             unique = np.unique(all_indexes)
-            print("UNique: %s" % unique)
+            #print("UNique: %s" % unique)
+            assert len(unique) >= 2
             lengths.append(len(unique))
-            print("Node %d has length %d" % (node, len(unique)))
+            #print("Node %d has length %d" % (node, len(unique)))
 
-        pileupdata = SparsePileupData(all_nodes, lengths, ndim=2)
+        pileupdata = SparsePileupData(all_nodes, lengths, ndim=2, graph=sample.graph)
 
         sparse_pileup = cls(sample.graph)
         for node in all_nodes:
@@ -652,10 +855,10 @@ class SparseControlSample(SparsePileup):
                 sample.data.indexes(node),
                 sample.data.values(node)
             )
-            print("Combined values:")
-            print(value_pairs)
-            print("Combined indices:")
-            print(indexes)
+            #print("Combined values:")
+            #print(value_pairs)
+            #print("Combined indices:")
+            #print(indexes)
 
             pileupdata.set_indexes(node, indexes[1:])
             pileupdata.set_end_index(node, sample.graph.node_size(node))

@@ -5,7 +5,7 @@ from offsetbasedgraph import IntervalCollection, DirectedInterval
 import pyvg as vg
 import offsetbasedgraph
 from graph_peak_caller import get_shift_size_on_offset_based_graph
-from .sparsepileup import SparseControlSample
+from .sparsepileupv2 import SparseControlSample
 from .sparsepileupv2 import SparsePileup
 from .extender import Extender
 from .areas import ValuedAreas, BinaryContinousAreas, BCACollection
@@ -121,7 +121,7 @@ class CallPeaksFromQvalues(object):
     def __get_max_paths(self):
         logging.info("Getting maxpaths")
         _pileup = self.raw_pileup if self.raw_pileup is not None else self.q_values
-        scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, _pileup)
+        scored_peaks = (ScoredPeak.from_peak_and_numpy_pileup(peak, _pileup)
                         for peak in self.binary_peaks)
         max_paths = [peak.get_max_path() for peak in scored_peaks]
         max_paths.sort(key=lambda p: p.score, reverse=True)

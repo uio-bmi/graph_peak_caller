@@ -2,7 +2,7 @@ import unittest
 from graph_peak_caller.subgraphcollection import SubgraphCollection, ConnectedAreas
 from offsetbasedgraph import GraphWithReversals as Graph, Block, Interval
 from graph_peak_caller.areas import BinaryContinousAreas, Areas
-from graph_peak_caller.sparsepileup import SparsePileup
+from graph_peak_caller.sparsepileupv2 import SparsePileup
 from graph_peak_caller.peakscores import ScoredPeak
 
 
@@ -65,7 +65,11 @@ class TestMaxPath(unittest.TestCase):
                     Interval(7, 2, [1, 3, 4])  # Giving higher qvalue
                                                 # through this path
                 ])
+
+        print(qvalues)
+
         scored_peak = ScoredPeak.from_peak_and_pileup(binary_peak, qvalues)
+        print(scored_peak)
 
         max_path = scored_peak.get_max_path()
         self.assertEqual(max_path, Interval(5, 3, [1, 3, 4]))

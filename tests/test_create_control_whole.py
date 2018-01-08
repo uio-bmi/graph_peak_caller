@@ -4,7 +4,8 @@ from offsetbasedgraph import GraphWithReversals, Block, \
 from graph_peak_caller.callpeaks import ExperimentInfo, CallPeaks
 from graph_peak_caller.snarls import SnarlGraph, SnarlGraphBuilder, SimpleSnarl
 from graph_peak_caller.linearsnarls import LinearSnarlMap, create_control
-from graph_peak_caller.sparsepileup import SparsePileup, ValuedIndexes
+from graph_peak_caller.sparsepileup import SparsePileup as OldSparsePileup, ValuedIndexes
+from graph_peak_caller.sparsepileupv2 import SparsePileup
 import numpy as np
 
 
@@ -105,7 +106,8 @@ class TestCreateControl(unittest.TestCase):
         expected_bakground = len(reads) * fragment_length / self.linear_length
         value_in_extension = 1 * fragment_length / (extension_sizes[0])
 
-        correct_pileup = SparsePileup.from_base_value(self.graph, expected_bakground)
+        correct_pileup = OldSparsePileup.from_base_value(self.graph, expected_bakground)
+        print("Base value: %.4f" % expected_bakground)
         for rp in [2, 3, 1]:
             correct_pileup.data[rp] = ValuedIndexes([], [], value_in_extension, 3)
 
@@ -115,6 +117,10 @@ class TestCreateControl(unittest.TestCase):
         for rp in [11]:
             correct_pileup.data[rp] = ValuedIndexes([2], [value_in_extension], expected_bakground, 3)
 
+        print(correct_pileup)
+        correct_pileup = SparsePileup.create_from_old_sparsepileup(correct_pileup)
+        print(correct_pileup)
+        print(control)
         self.assertEqual(control, correct_pileup)
 
     def test_single_read_two_extensions(self):
@@ -126,7 +132,7 @@ class TestCreateControl(unittest.TestCase):
         expected_bakground = len(reads) * fragment_length / self.linear_length
         value_in_extensions = 1 * fragment_length / (np.array(extension_sizes))
 
-        correct_pileup = SparsePileup.from_base_value(self.graph, expected_bakground)
+        correct_pileup = OldSparsePileup.from_base_value(self.graph, expected_bakground)
         for rp in [2, 3]:
             correct_pileup.data[rp] = ValuedIndexes([1], [value_in_extensions[1]], value_in_extensions[0], 3)
 
@@ -139,6 +145,8 @@ class TestCreateControl(unittest.TestCase):
         for rp in [11]:
             correct_pileup.data[rp] = ValuedIndexes([2], [value_in_extensions[1]], expected_bakground, 3)
 
+        correct_pileup = SparsePileup.create_from_old_sparsepileup(correct_pileup)
+
         self.assertEqual(control, correct_pileup)
 
     def test_two_reads_two_extensions(self):
@@ -149,7 +157,7 @@ class TestCreateControl(unittest.TestCase):
 
         expected_bakground = len(reads) * fragment_length / self.linear_length
         value_in_extensions = 1 * fragment_length / (np.array(extension_sizes))
-        correct_pileup = SparsePileup.from_base_value(self.graph, expected_bakground)
+        correct_pileup = OldSparsePileup.from_base_value(self.graph, expected_bakground)
         for rp in [2, 3]:
             correct_pileup.data[rp] = ValuedIndexes([1], [value_in_extensions[1]*2], value_in_extensions[0], 3)
 
@@ -170,6 +178,7 @@ class TestCreateControl(unittest.TestCase):
         for i in range(1, 13):
             self.assertEqual(control.data[i], correct_pileup.data[i], "%d not equal" % i)
 
+        correct_pileup = SparsePileup.create_from_old_sparsepileup(correct_pileup)
         self.assertEqual(control, correct_pileup)
 
 

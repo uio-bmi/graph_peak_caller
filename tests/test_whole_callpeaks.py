@@ -101,7 +101,7 @@ class TestWholeCallpeaksSplitGraph(TestWholeCallPeaks):
             DirectedInterval(7, 12, [4], self.graph),
             DirectedInterval(14, 4, [3, 4], self.graph),
         ]
-        self.run()
+        self.do_asserts()
 
 
 class TestWholeCallPeaksHierarchical(TestWholeCallPeaks):
