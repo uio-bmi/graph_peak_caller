@@ -97,6 +97,7 @@ class LinearSnarlMap(object):
             length = self._graph.node_size(node_id)
             indexes = new_idxs
             values = unmapped_indices.get_values_array()
+            print("=== Node %d ===" % node_id)
             print("Found indexes from unmapped: %s" % indexes)
             print("Values from unmapped: %s" % values)
 
@@ -111,7 +112,7 @@ class LinearSnarlMap(object):
             pileup_data.set_indexes(node_id, indexes)
             pileup_data.set_end_index(node_id, length)
             pileup_data.set_start_value(node_id, start_value)
-            pileup_data.set_values(node_id, values[1:])
+            pileup_data.set_values(node_id, values)
 
         pileup = SparsePileup(self._graph)
         pileup.data = pileup_data
