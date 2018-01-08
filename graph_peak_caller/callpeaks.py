@@ -262,7 +262,7 @@ class CallPeaks(object):
         self.run_pre_call_peaks_steps()
         self.call_peaks()
 
-    #@profile
+    @profile
     def run_pre_call_peaks_steps(self):
         self.preprocess()
         if self.info is None:

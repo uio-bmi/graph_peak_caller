@@ -196,6 +196,7 @@ def run_callpeaks(args):
     )
 
 
+@profile
 def run_callpeaks_with_numpy_graph(args):
     logging.info("Read offset based graph")
 

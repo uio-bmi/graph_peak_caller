@@ -6,6 +6,7 @@ from graph_peak_caller.linearsnarls import UnmappedIndices, LinearPileup,\
     create_control_from_objs
 from graph_peak_caller.snarlmaps import LinearSnarlMap
 from graph_peak_caller.sparsepileup import ValuedIndexes, SparsePileup as OldSparsePileup, SparsePileupData as OldSparsePileupData
+from graph_peak_caller.sparsepileupv2 import SparsePileup
 
 graph = obg.GraphWithReversals(
     {3: obg.Block(20), 5: obg.Block(10),
@@ -88,14 +89,17 @@ class TestSnarlMap(unittest.TestCase):
             val[1][0], graph.node_size(node_id))
                for node_id, val in vis.items()}
 
-        vis = OldSparsePileupData([(key, val) for key, val in vis.items()], graph=graph)
+        correct_pileup = OldSparsePileup(graph)
+        correct_pileup.data = OldSparsePileupData([(key, val) for key, val in vis.items()], graph=graph)
+        correct_pileup = SparsePileup.create_from_old_sparsepileup(correct_pileup)
 
-        mapped_vis = self.snarl_map.to_graph_pileup(unmapped_indices)
-        self.assertEqual(mapped_vis, vis)
+        pileup = self.snarl_map.to_numpy_sparse_pileup(unmapped_indices)
+        self.assertEqual(pileup, correct_pileup)
 
 
-class TestLinearPileupMap(TestSnarlMap):
-    def test_to_valued_indexes(self):
+# Needs to be rewritten. To valued indexes does not exist anymore
+class _TestLinearPileupMap(TestSnarlMap):
+    def _test_to_valued_indexes(self):
         """[0, 5, 10, 15, 20, 25, 30]"""
         all_indices = [0, 5, 10, 15, 20, 25, 30]
         linear_pileup = LinearPileup(np.array(all_indices),

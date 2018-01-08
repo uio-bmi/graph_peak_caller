@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 from graph_peak_caller.sparsepileup import SparsePileup, ValuedIndexes
+from graph_peak_caller.sparsepileupv2 import SparsePileup as SparsePileupV2
 from graph_peak_caller.areas import BinaryContinousAreas
 from graph_peak_caller.peakscores import ScoredPeak
 import offsetbasedgraph as obg
@@ -22,6 +23,8 @@ class TestScoredPeak(unittest.TestCase):
         self.pileup = SparsePileup(self.graph)
         self.pileup.data = data
 
+        self.pileup = SparsePileupV2.create_from_old_sparsepileup(self.pileup)
+
         flat_data = {node_id: ValuedIndexes(
             np.array([], dtype="int"),
             np.array([]),
@@ -30,6 +33,7 @@ class TestScoredPeak(unittest.TestCase):
 
         self.flat_pileup = SparsePileup(self.graph)
         self.flat_pileup.data = flat_data
+        self.flat_pileup = SparsePileupV2.create_from_old_sparsepileup(self.flat_pileup)
 
         self.peak = BinaryContinousAreas(self.graph)
         self.peak.add_full(2)
@@ -92,8 +96,8 @@ class TestScoredPeak(unittest.TestCase):
     def test_from_peak_and_pileup_flat(self):
         scored_peak = ScoredPeak.from_peak_and_pileup(
             self.peak, self.flat_pileup)
-        print(scored_peak)
-        print(self.flat_scored_peak)
+        #print(scored_peak)
+        print(self.flat_pileup)
         self.assertEqual(scored_peak, self.flat_scored_peak)
 
     def test_get_max_path(self):

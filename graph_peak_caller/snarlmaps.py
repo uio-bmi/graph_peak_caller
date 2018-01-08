@@ -47,31 +47,7 @@ class LinearSnarlMap(object):
         offset = self.get_node_start(node_id)
         return scale, offset
 
-    def to_graph_pileup(self, unmapped_indices_dict):
-        vi_dict = {}
-        i = 0
-        for node_id, unmapped_indices in unmapped_indices_dict.items():
-            if i % 100000 == 0:
-                logging.info("Processing node %d" % i)
-            i += 1
-
-            scale, offset = self.get_scale_and_offset(node_id)
-            new_idxs = (unmapped_indices.get_index_array()-offset) / scale
-            new_idxs = new_idxs.astype("int")
-            new_idxs[0] = max(0, new_idxs[0])
-            vi = ValuedIndexes(
-                new_idxs[1:], unmapped_indices.get_values_array()[1:],
-                unmapped_indices.values[0],
-                self._graph.node_size(node_id))
-            assert (not vi.indexes.size) or vi.indexes[-1] <= vi.length
-            vi.sanitize_indices()
-            vi.sanitize()
-            vi_dict[node_id] = vi
-        return vi_dict
-
     def to_numpy_sparse_pileup(self, unmapped_indices_dict):
-        print("Unmapped indices")
-        print(unmapped_indices_dict)
         nodes = unmapped_indices_dict.keys()
         lengths = []
         assert self._graph is not None
@@ -98,17 +74,11 @@ class LinearSnarlMap(object):
             length = self._graph.node_size(node_id)
             indexes = new_idxs
             values = unmapped_indices.get_values_array()
-            print("=== Node %d ===" % node_id)
-            print("Found indexes from unmapped: %s" % indexes)
-            print("Values from unmapped: %s" % values)
-
             start_value = values[0]
             # Sanitize indexes
             diffs = np.where(np.diff(indexes) > 0)[0]
             indexes = indexes[diffs+1]
             values = values[diffs+1]
-            print("Indexes after sanitizing: %s" % indexes)
-            print("Values after sanitizing: %s" % values)
 
             pileup_data.set_indexes(node_id, indexes)
             pileup_data.set_end_index(node_id, length)

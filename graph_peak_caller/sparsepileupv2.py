@@ -22,6 +22,30 @@ class SimpleValuedIndexes():
         return np.sum(lengths*self.values)
 
 
+class RpScore:
+    def __init__(self, max_score, sum_score):
+        self.sum_score = sum_score
+        self.max_score = max_score
+
+    def __getitem__(self, item):
+        if item == 0:
+            return self.max_score
+        elif item == 1:
+            return self.sum_score
+        else:
+            raise NotImplementedError()
+
+    def sum(self):
+        return self.sum_score
+
+    def max_value(self):
+        return self.max_score
+
+    @classmethod
+    def from_valued_indexes(cls, vi):
+        return cls(np.max(vi.all_values()), vi.sum())
+
+
 class SparsePileupData:
     def __init__(self, node_ids, lengths, ndim=1, graph=None, default_value=0):
 
@@ -252,8 +276,8 @@ class SparsePileupData:
         return np.sum(self.get_flat_numpy_array(node_id)[start:end])
 
     def score(self, node_id, start, end):
-        return self.get_subset_max_value(node_id, start, end), \
-               self.get_subset_sum(node_id, start, end)
+        return RpScore(self.get_subset_max_value(node_id, start, end), \
+               self.get_subset_sum(node_id, start, end))
 
     def get_subset(self, node_id, start, end):
         assert start >= 0
@@ -453,7 +477,7 @@ class SparsePileup(Pileup):
             starts = areas.get_starts(node_id)
             ends = areas.get_ends(node_id)
             for start, end in zip(starts, ends):
-                logging.info("Filling hole %s, %d, %d. Node size: %d" % (
+                logging.debug("Filling hole %s, %d, %d. Node size: %d" % (
                     node_id, start, end, self.graph.node_size(node_id)))
 
                 if start == end:
@@ -476,10 +500,13 @@ class SparsePileup(Pileup):
         self.sanitize()
 
     def sanitize(self):
+        logging.info("Sanitizing sparse pileup")
         for node in self.data.nodes:
             self.data.sanitize_node(node)
+        logging.info("Sanitize done")
 
     def sanitize_indices(self):
+        raise NotImplementedError()
         for node in self.data.nodes:
             self.data.sanitize_node_indices(node)
 
@@ -863,8 +890,11 @@ class SparseControlSample(SparsePileup):
         self.sanitize()
 
     def get_scores(self):
+        logging.info("Creating p dict")
         self.get_p_dict()
+        logging.info("Creating mapping from p-values to q-values")
         self.get_p_to_q_values()
+        logging.info("Computing q values")
         self.get_q_values()
 
     @classmethod

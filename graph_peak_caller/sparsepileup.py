@@ -118,6 +118,9 @@ class ValuedIndexes(object):
         lengths = np.diff(self.all_idxs())
         return np.sum(lengths*self.all_values())
 
+    def max_value(self):
+        return np.max(self.all_values())
+
     def mean(self):
         return self.sum()/self.length
 

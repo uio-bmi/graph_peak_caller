@@ -1,6 +1,8 @@
 from collections import deque, defaultdict
 import numpy as np
 from .peakcollection import Peak
+from .sparsepileupv2 import SparsePileup, RpScore
+from .sparsepileup import ValuedIndexes
 
 
 class ScoredPeak(object):
@@ -12,9 +14,17 @@ class ScoredPeak(object):
     def __eq__(self, other):
         if self._peak != other._peak:
             return False
-        if self._scores == other._scores:
-            return True
-        return False
+
+        for node, scores in self._scores.items():
+            if isinstance(scores, ValuedIndexes):
+                scores = RpScore.from_valued_indexes(scores)
+            if isinstance(other._scores[node], ValuedIndexes):
+                scores = RpScore.from_valued_indexes(other._scores[node])
+
+            if scores != scores:
+                return False
+
+        return True
 
     @staticmethod
     def _from_valued_indexes(valued_indexes, start, end):
@@ -41,9 +51,6 @@ class ScoredPeak(object):
             node_scores = pileup.data.score(node_id, startend[0], startend[1])
 
             scores[node_id] = node_scores
-
-        for score in scores.values():
-            assert len(score) == 2
 
         return cls(peak, scores)
 
@@ -82,7 +89,7 @@ class ScoredPeak(object):
                 sums[node_id] = max_finite_value+1
 
     def get_max_path(self):
-        sums = {node_id: float(scores[1]) for node_id, scores
+        sums = {node_id: float(scores.sum()) for node_id, scores
                 in self._scores.items()}
 
         # Handle peaks that are on one node
@@ -92,7 +99,7 @@ class ScoredPeak(object):
             interval = Peak(start_end[0], start_end[1],
                             [node], graph=self._graph)
             score = sums[node]
-            interval.set_score(self._scores[node][0]) # score / interval.length())
+            interval.set_score(self._scores[node].max_value()) # score / interval.length())
             return interval
 
         self.__clean_sums(sums)
@@ -138,19 +145,18 @@ class ScoredPeak(object):
         end_node = global_max_path[-1]
         end_offset = self._peak.starts[end_node] if end_node in self._peak.starts else self._peak.graph.node_size(end_node)
         if -global_max_path[0] in self._scores:
-            max_score_in_peak = self._scores[-global_max_path[0]][0]
+            max_score_in_peak = self._scores[-global_max_path[0]].max_value()
         else:
-            max_score_in_peak = self._scores[global_max_path[0]][0]
+            max_score_in_peak = self._scores[global_max_path[0]].max_value()
 
         for node in global_max_path[1:-1]:
-            max_score_in_peak = max(
-                max_score_in_peak,
-                self._scores[abs(node)][0])
+            max_in_node = self._scores[abs(node)].max_value()
+            max_score_in_peak = max(max_score_in_peak, max_in_node)
 
         if len(global_max_path) > 1:
             max_score_in_peak = max(
                 max_score_in_peak,
-                self._scores[global_max_path[-1]][0])
+                self._scores[global_max_path[-1]].max_value())
 
         max_path_peak = Peak(
             int(start_offset), int(end_offset),
