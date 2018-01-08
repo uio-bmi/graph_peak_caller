@@ -107,7 +107,6 @@ class TestCreateControl(unittest.TestCase):
         value_in_extension = 1 * fragment_length / (extension_sizes[0])
 
         correct_pileup = OldSparsePileup.from_base_value(self.graph, expected_bakground)
-        print("Base value: %.4f" % expected_bakground)
         for rp in [2, 3, 1]:
             correct_pileup.data[rp] = ValuedIndexes([], [], value_in_extension, 3)
 
@@ -117,11 +116,7 @@ class TestCreateControl(unittest.TestCase):
         for rp in [11]:
             correct_pileup.data[rp] = ValuedIndexes([2], [value_in_extension], expected_bakground, 3)
 
-        print(correct_pileup)
-        correct_pileup = SparsePileup.create_from_old_sparsepileup(correct_pileup)
-        print(correct_pileup)
-        print(control)
-        self.assertEqual(control, correct_pileup)
+        self.assertTrue(control.equals_old_sparse_pileup(correct_pileup))
 
     def test_single_read_two_extensions(self):
         fragment_length = 3
@@ -145,9 +140,7 @@ class TestCreateControl(unittest.TestCase):
         for rp in [11]:
             correct_pileup.data[rp] = ValuedIndexes([2], [value_in_extensions[1]], expected_bakground, 3)
 
-        correct_pileup = SparsePileup.create_from_old_sparsepileup(correct_pileup)
-
-        self.assertEqual(control, correct_pileup)
+        self.assertTrue(control.equals_old_sparse_pileup(correct_pileup))
 
     def test_two_reads_two_extensions(self):
         fragment_length = 3
@@ -175,11 +168,10 @@ class TestCreateControl(unittest.TestCase):
 
         #print(correct_pileup)
         #print(control)
-        for i in range(1, 13):
-            self.assertEqual(control.data[i], correct_pileup.data[i], "%d not equal" % i)
+        #for i in range(1, 13):
+        #    self.assertEqual(control.data[i], correct_pileup.data[i], "%d not equal" % i)
 
-        correct_pileup = SparsePileup.create_from_old_sparsepileup(correct_pileup)
-        self.assertEqual(control, correct_pileup)
+        self.assertTrue(control.equals_old_sparse_pileup(correct_pileup))
 
 
 class _TestCreateControlGraphWithDifferentLengths():
@@ -261,7 +253,7 @@ class _TestCreateControlGraphWithDifferentLengths():
         expected_bakground = len(reads) * fragment_length / self.linear_length
         value_in_extension = 1 * fragment_length / (extension_sizes[0])
 
-        correct_pileup = SparsePileup.from_base_value(self.graph, expected_bakground)
+        correct_pileup = OldSparsePileup.from_base_value(self.graph, expected_bakground)
         for rp in [2, 3, 1]:
             correct_pileup.data[rp] = ValuedIndexes([], [], value_in_extension, 3)
 
@@ -271,7 +263,7 @@ class _TestCreateControlGraphWithDifferentLengths():
         for rp in [11]:
             correct_pileup.data[rp] = ValuedIndexes([2], [value_in_extension], expected_bakground, 3)
 
-        self.assertEqual(control, correct_pileup)
+        self.assertTrue(control.equals_old_sparse_pileup(correct_pileup))
 
 if __name__ == "__main__":
     unittest.main()

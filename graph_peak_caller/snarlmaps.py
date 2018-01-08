@@ -70,7 +70,8 @@ class LinearSnarlMap(object):
         return vi_dict
 
     def to_numpy_sparse_pileup(self, unmapped_indices_dict):
-
+        print("Unmapped indices")
+        print(unmapped_indices_dict)
         nodes = unmapped_indices_dict.keys()
         lengths = []
         assert self._graph is not None
@@ -143,6 +144,7 @@ class LinearSnarlMap(object):
             start, end = self.map_graph_interval(interval)
             starts.append(start)
             ends.append(end)
+            #print("Mapping interval %s to %d, %d" % (interval, start, end))
         return LinearIntervalCollection(starts, ends)
 
     def to_json_files(self, base_name):

@@ -22,7 +22,6 @@ def create_control_from_objs(linear_map, reads, extension_sizes,
     linear_size = linear_map._length
     mapped_reads = linear_map.map_interval_collection(reads)
     average_value = mapped_reads.n_intervals*fragment_length / linear_size
-    print(len(mapped_reads.starts))
     logging.info(
         "Average control value: %.4f (sum of pileup: %d, linear size: %d)" % (
             average_value, mapped_reads.n_basepairs_covered(), linear_size))

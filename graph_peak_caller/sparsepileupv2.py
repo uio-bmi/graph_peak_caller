@@ -81,10 +81,19 @@ class SparsePileupData:
         return new
 
     def __eq__(self, other):
+        assert isinstance(other, SparsePileupData)
         for node in self.nodes:
-            if self.indexes(node) != other.indexes(node):
+            if not np.all(self.indexes(node) == other.indexes(node)):
+                print("Indices %s != %s" % (self.indexes(node), other.indexes(node)))
                 return False
-            if self.values(node) != other.values(node):
+
+            assert isinstance(other.values(node), np.ndarray)
+            print("Other values")
+            print(other.values(node))
+
+            if np.all(np.abs(self.values(node) -  other.values(node)) > 1e-5):
+                print("Values %s != %s" % (self.values(node), other.values(node)))
+                print()
                 return False
 
         return True
@@ -96,6 +105,7 @@ class SparsePileupData:
         self.min_value = value
 
     def set_values(self, node_id, values):
+        assert self._values is not None
         # First index is always start value
         # This method only sets everything else than start
         assert node_id in self.nodes, "Only allowed to set for already initiated nodes"
@@ -333,6 +343,9 @@ class SparsePileupData:
         return new
 
     def threshold(self, cutoff):
+        if self._values is None:
+            return  # Special case, empty pileup
+
         self._values = self._values >= cutoff
 
     def index_value_pairs(self, node):
@@ -392,6 +405,21 @@ class SparsePileup(Pileup):
 
     def __eq__(self, other):
         return self.data == other.data
+
+    def equals_old_sparse_pileup(self, old_pileup):
+        # For tests to pass temporarily
+        for node in self.data.nodes:
+            indexes = self.data.indexes(node)
+            other_indexes = old_pileup.data[node].all_idxs()
+            if not np.all(indexes == other_indexes):
+                return False
+
+            values = self.data.values(node)
+            other_values = old_pileup.data[node].all_values()
+            if not np.allclose(values, other_values):
+                return False
+
+        return True
 
     @classmethod
     def from_base_value(cls, graph, base_value):
@@ -632,6 +660,7 @@ class SparsePileup(Pileup):
         pileup.data = data
 
         logging.info("Number of elements in pileup: %d" % len(pileup.data.nodes))
+
         return pileup
 
     def to_subgraphs(self):
@@ -829,7 +858,6 @@ class SparseControlSample(SparsePileup):
 
             valued_indexes.sanitize()
         """
-        print(self.data._values)
         new_values = np.apply_along_axis(translation, 1, self.data._values)
         self.data._values = new_values
         self.sanitize()

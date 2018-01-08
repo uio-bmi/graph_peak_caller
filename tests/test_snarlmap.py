@@ -5,7 +5,7 @@ from test_snarls import snarl_graph2
 from graph_peak_caller.linearsnarls import UnmappedIndices, LinearPileup,\
     create_control_from_objs
 from graph_peak_caller.snarlmaps import LinearSnarlMap
-from graph_peak_caller.sparsepileup import ValuedIndexes, SparsePileup, SparsePileupData
+from graph_peak_caller.sparsepileup import ValuedIndexes, SparsePileup as OldSparsePileup, SparsePileupData as OldSparsePileupData
 
 graph = obg.GraphWithReversals(
     {3: obg.Block(20), 5: obg.Block(10),
@@ -35,19 +35,21 @@ class TestSnarlMap(unittest.TestCase):
         linear_pileup = LinearPileup.create_from_starts_and_ends(
             mapped_intervals.starts,
             mapped_intervals.ends)
-        valued_indexes = linear_pileup.to_valued_indexes(self.snarl_map)
-        graph_pileup = SparsePileup(graph)
-        graph_pileup.data = valued_indexes
-        true_sparse_pileup = SparsePileup(graph)
+        graph_pileup = linear_pileup.to_sparse_pileup(self.snarl_map)
+
+        true_sparse_pileup = OldSparsePileup(graph)
         true_data = {3: ValuedIndexes([], [], 2, 20),
                        12: ValuedIndexes([], [], 2, 20),
                        13: ValuedIndexes([], [], 2, 21),
                        5: ValuedIndexes([], [], 2, 10)}
-        true_sparse_pileup.data = SparsePileupData([(key, val) for key, val in true_data.items()], graph=graph)
-        print(true_sparse_pileup.data)
+        true_sparse_pileup.data = OldSparsePileupData([(key, val) for key, val in true_data.items()], graph=graph)
+        #print(true_sparse_pileup.data)
 
+        print(graph_pileup)
+        print("True")
         print(true_sparse_pileup)
-        self.assertEqual(graph_pileup, true_sparse_pileup)
+
+        self.assertTrue(graph_pileup.equals_old_sparse_pileup(true_sparse_pileup))
 
     def test_graph_position_to_linear(self):
         for graph_pos, lin_pos in zip(self.graph_positions,
@@ -86,7 +88,7 @@ class TestSnarlMap(unittest.TestCase):
             val[1][0], graph.node_size(node_id))
                for node_id, val in vis.items()}
 
-        vis = SparsePileupData([(key, val) for key, val in vis.items()], graph=graph)
+        vis = OldSparsePileupData([(key, val) for key, val in vis.items()], graph=graph)
 
         mapped_vis = self.snarl_map.to_graph_pileup(unmapped_indices)
         self.assertEqual(mapped_vis, vis)
