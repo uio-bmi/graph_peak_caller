@@ -80,6 +80,15 @@ class SparsePileupData:
 
         return new
 
+    def __eq__(self, other):
+        for node in self.nodes:
+            if self.indexes(node) != other.indexes(node):
+                return False
+            if self.values(node) != other.values(node):
+                return False
+
+        return True
+
     def __len__(self):
         return len(self.nodes)
 
@@ -382,7 +391,7 @@ class SparsePileup(Pileup):
         self.data = None
 
     def __eq__(self, other):
-        pass
+        return self.data == other.data
 
     @classmethod
     def from_base_value(cls, graph, base_value):
