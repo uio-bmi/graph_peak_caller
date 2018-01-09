@@ -204,7 +204,8 @@ class CallPeaks(object):
                  control_intervals=None, experiment_info=None,
                  verbose=False, out_file_base_name="", has_control=True,
                  linear_map=None, skip_filter_duplicates=False,
-                 graph_is_partially_ordered=False):
+                 graph_is_partially_ordered=False,
+                 skip_read_validation=False):
         """
         :param sample_intervals: Either an interval collection or file name
         :param control_intervals: Either an interval collection or a file name
@@ -244,6 +245,7 @@ class CallPeaks(object):
         self.pre_processed_peaks = None
         self.filtered_peaks = None
         self.skip_filter_duplicates = skip_filter_duplicates
+        self.skip_read_validation = skip_read_validation
 
         self.max_paths = None
         self.peaks_as_subgraphs = None
@@ -262,7 +264,6 @@ class CallPeaks(object):
         self.run_pre_call_peaks_steps()
         self.call_peaks()
 
-    @profile
     def run_pre_call_peaks_steps(self):
         self.preprocess()
         if self.info is None:
@@ -276,12 +277,19 @@ class CallPeaks(object):
     def preprocess(self):
         self.info.n_control_reads = 0
         self.info.n_sample_reads = 0
-        self.sample_intervals = self.remove_alignments_not_in_graph(
-            self.sample_intervals)
+
+        if not self.skip_read_validation:
+            self.sample_intervals = self.remove_alignments_not_in_graph(
+                                        self.sample_intervals)
+        else:
+            logging.warning("Skipping validation of reads. Not checking whether reads are valid"
+                            " or inside the graph.")
+
         self.sample_intervals = self.filter_duplicates_and_count_intervals(
                                     self.sample_intervals, is_control=False)
 
-        self.control_intervals = self.remove_alignments_not_in_graph(
+        if not self.skip_read_validation:
+            self.control_intervals = self.remove_alignments_not_in_graph(
                                     self.control_intervals, is_control=True)
         self.control_intervals = self.filter_duplicates_and_count_intervals(
                                     self.control_intervals, is_control=True)
@@ -298,12 +306,14 @@ class CallPeaks(object):
         n_duplicates = 0
         n_reads_left = 0
         for interval in intervals:
-            hash = interval.hash()
-            if hash in interval_hashes and not self.skip_filter_duplicates:
-                n_duplicates += 1
-                continue
+            if not self.skip_filter_duplicates:
+                hash = interval.hash()
+                if hash in interval_hashes:
+                    n_duplicates += 1
+                    continue
 
-            interval_hashes[hash] = True
+                interval_hashes[hash] = True
+
             if is_control:
                 self.info.n_control_reads += 1
             else:
@@ -450,7 +460,7 @@ class CallPeaks(object):
         self.q_value_peak_caller.\
             save_max_path_sequences_to_fasta_file(file_name, retriever)
 
-    @profile
+    #@profile
     def create_sample_pileup(self, save_to_file=True):
         logging.debug("In sample pileup")
         logging.info("Creating sample pileup")
@@ -462,7 +472,7 @@ class CallPeaks(object):
         areas_list = (extender.extend_interval(interval)
                       for interval in alignments)
         i = 0
-
+        logging.info("Processing areas")
         touched_nodes = set()  # Speedup thing, keep track of nodes where areas are on
         for area in areas_list:
             if i % 5000 == 0:

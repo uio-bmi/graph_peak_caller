@@ -40,7 +40,11 @@ def run_with_intervals(ob_graph,
         experiment_info=experiment_info,
         out_file_base_name=out_name, has_control=has_control,
         linear_map=linear_map,
-        graph_is_partially_ordered=True)
+        graph_is_partially_ordered=True,
+        skip_filter_duplicates=False,
+        skip_read_validation=True
+    )
+
     caller.set_cutoff(0.05)
     caller.verbose = True
     caller.run()
@@ -196,7 +200,7 @@ def run_callpeaks(args):
     )
 
 
-@profile
+#@profile
 def run_callpeaks_with_numpy_graph(args):
     logging.info("Read offset based graph")
 
