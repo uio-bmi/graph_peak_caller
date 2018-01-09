@@ -72,13 +72,13 @@ class SparsePileupData:
         span = max_node - self.min_node + 1
 
         n_elements = sum(lengths)
-        self._indexes = np.zeros(n_elements, dtype=np.uint32)
+        self._indexes = np.zeros(n_elements, dtype=np.uint16)
         if ndim > 1:
-            self._values = np.zeros((n_elements, ndim))
+            self._values = np.zeros((n_elements, ndim), dtype=np.float16)
         else:
             self._values = np.zeros(n_elements)
         self._node_indexes = np.zeros(span, dtype=np.uint32)
-        self._lengths = np.zeros(span, dtype=np.uint32)
+        self._lengths = np.zeros(span, dtype=np.uint16)
 
         logging.info("N nodes in sparse pileup: %d" % len(self.nodes))
 
@@ -150,7 +150,7 @@ class SparsePileupData:
         assert node_id in self.nodes, "Only allowed to set for already initiated nodes"
         start = self._node_indexes[index] + 1
         end = start + len(indexes)
-        assert len(indexes) <= self._lengths[index]
+        assert len(indexes) <= self._lengths[index] , "Maybe allocate space for higher np.integers in _lengths"
         #assert self._indexes[end] == 0 or self._indexes[end] > indexes[-1], "Next index is %d when setting indexes %s" % (self._indexes[end], indexes)
         self._indexes[start:end] = indexes
         self._lengths[index] = len(indexes) + 2  # Can be removed if handled in
@@ -557,7 +557,7 @@ class SparsePileup(Pileup):
         # First create empty data
         for rp in nodes:
             if i % 100000 == 0:
-                logging.info("Creating sparse from valued areas for node %d" % i)
+                logging.info("Initing sparse from valued areas for node %d" % i)
             i += 1
 
             length = graph.blocks[rp].length()
@@ -574,18 +574,13 @@ class SparsePileup(Pileup):
                 ends)
 
             length = len(indexes) + 2
-            if indexes[-1] == graph.blocks[rp].length():
-                length -= 1
-            if indexes[0] == 0:
-                length -= 1
-
-            assert length >= 2
 
             data_nodes.append(rp)
             data_lengths.append(length)
 
         pileup_data = SparsePileupData(data_nodes, data_lengths)
 
+        i = 0
         # Fill pileup_data
         for rp in nodes:
             if i % 100000 == 0:
