@@ -272,8 +272,7 @@ class CallPeaks(object):
             self.info = ExperimentInfo.find_info(
                 self.ob_graph, self.sample_intervals, self.control_intervals)
         self.create_sample_pileup()
-        import sys
-        sys.exit()
+        
         self.create_control(True)
         self.scale_tracks()
         self.get_score()
