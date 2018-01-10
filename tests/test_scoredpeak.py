@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from graph_peak_caller.sparsepileup import SparsePileup, ValuedIndexes
-from graph_peak_caller.sparsepileupv2 import SparsePileup as SparsePileupV2
+from graph_peak_caller.densepileup import DensePileup
 from graph_peak_caller.areas import BinaryContinousAreas
 from graph_peak_caller.peakscores import ScoredPeak
 import offsetbasedgraph as obg
@@ -23,7 +23,7 @@ class TestScoredPeak(unittest.TestCase):
         self.pileup = SparsePileup(self.graph)
         self.pileup.data = data
 
-        self.pileup = SparsePileupV2.create_from_old_sparsepileup(self.pileup)
+        self.pileup = DensePileup.create_from_old_sparsepileup(self.pileup)
 
         flat_data = {node_id: ValuedIndexes(
             np.array([], dtype="int"),
@@ -33,7 +33,7 @@ class TestScoredPeak(unittest.TestCase):
 
         self.flat_pileup = SparsePileup(self.graph)
         self.flat_pileup.data = flat_data
-        self.flat_pileup = SparsePileupV2.create_from_old_sparsepileup(self.flat_pileup)
+        self.flat_pileup = DensePileup.create_from_old_sparsepileup(self.flat_pileup)
 
         self.peak = BinaryContinousAreas(self.graph)
         self.peak.add_full(2)

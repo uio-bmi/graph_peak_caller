@@ -101,6 +101,9 @@ class CallPeaksFromQvalues(object):
         threshold = -np.log10(self.cutoff)
         logging.info("Thresholding peaks on q value %.4f" % threshold)
         self.pre_processed_peaks = self.q_values.threshold_copy(threshold)
+        print("Pre processed")
+        print(self.pre_processed_peaks)
+
         self.pre_processed_peaks.to_bed_file(
                 self.out_file_base_name + "pre_postprocess.bed")
 
@@ -110,6 +113,7 @@ class CallPeaksFromQvalues(object):
                                     self.info.read_length,
                                     self.out_file_base_name + "_holes.intervals",
                                     touched_nodes=self.touched_nodes)
+        print(self.pre_processed_peaks)
         logging.info("Removing small peaks")
 
         # This is slow:
@@ -118,6 +122,8 @@ class CallPeaksFromQvalues(object):
         #logging.info("Preprocessed peaks written to bed file")
         self.filtered_peaks = self.pre_processed_peaks.remove_small_peaks(
             self.info.fragment_length)
+        print("After small peaks removed")
+        print(self.filtered_peaks)
         logging.info("Small peaks removed")
 
     def __get_max_paths(self):
@@ -272,7 +278,7 @@ class CallPeaks(object):
             self.info = ExperimentInfo.find_info(
                 self.ob_graph, self.sample_intervals, self.control_intervals)
         self.create_sample_pileup()
-        
+
         self.create_control(True)
         self.scale_tracks()
         self.get_score()
@@ -430,7 +436,12 @@ class CallPeaks(object):
         logging.info("Getting scores. Creating sparse array from sparse control and sample")
         q_values_pileup = DenseControlSample.from_sparse_control_and_sample(
             self._control_pileup, self._sample_pileup)
-
+        print("Sample pileup")
+        print(self._sample_pileup)
+        print("Control pileup")
+        print(self._control_pileup)
+        print("Combined pileup")
+        print(q_values_pileup)
         # Delete sample and control pileups
         self._control_pileup = None
         self._sample_pileup = None
@@ -438,6 +449,8 @@ class CallPeaks(object):
         logging.info("Computing q values")
         q_values_pileup.get_scores()
         self.q_values = q_values_pileup
+        print("Q values")
+        print(q_values_pileup)
         q_val_file_name = self.out_file_base_name + "q_values.bdg"
         logging.info("Writing q values to file")
         self.q_values.to_bed_graph(q_val_file_name)

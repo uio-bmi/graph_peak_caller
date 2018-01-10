@@ -46,8 +46,8 @@ class Cleaner(object):
         #for node in self.starts_dict:
         #    assert self.starts_dict[node] == self.ends_dict[-node]
 
-        logging.debug("N starts: %s", len(self.starts_dict))
-        logging.debug("N ends: %s", len(self.ends_dict))
+        #logging.debug("N starts: %s", len(self.starts_dict))
+        #logging.debug("N ends: %s", len(self.ends_dict))
 
     def is_end_included(self, node_id):
         pass
@@ -69,7 +69,7 @@ class Cleaner(object):
         for added_node in extended:
             self.ignored_nodes.discard(added_node[-1])
             # self.ignored_nodes.discard(-added_node[-1])
-            logging.debug("Discarding node %d" % added_node[-1])
+            #logging.debug("Discarding node %d" % added_node[-1])
 
         return extended
 
@@ -92,7 +92,7 @@ class Cleaner(object):
                         print(self.ends_dict[-nn])
                         print(self.starts_dict[nn])
                         print(self.areas[abs(nn)])
-                    logging.error(prev_nodes)
+                    #logging.error(prev_nodes)
                     return False
                 node_id = next_nodes[0]
 
@@ -122,7 +122,7 @@ class Cleaner(object):
         node_lists = self.get_init_nodes()
         assert all(node_list[0] in self.ends_dict for node_list in node_lists)
         while node_lists:
-            logging.debug("N lists: %s", len(node_lists))
+            #logging.debug("N lists: %s", len(node_lists))
             node_list = node_lists.pop()
             extensions = self.extend_node_list(node_list)
             should_extend = self.handle_node_list(node_list, extensions)
@@ -200,7 +200,10 @@ class PeaksCleaner(Cleaner):
 
     def get_areas(self, pileup):
         logging.info("Getting True areas from pileup")
-        return pileup.find_valued_areas(True)
+        pileup = pileup.find_valued_areas(True)
+        print("=== Areas = true ===")
+        print(pileup)
+        return pileup
 
     def _check_internal_interval(self, node_id, start, end):
         if start == 0 or end == self.graph.node_size(node_id):

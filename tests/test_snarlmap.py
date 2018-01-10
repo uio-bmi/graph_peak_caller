@@ -6,7 +6,7 @@ from graph_peak_caller.linearsnarls import UnmappedIndices, LinearPileup,\
     create_control_from_objs
 from graph_peak_caller.snarlmaps import LinearSnarlMap
 from graph_peak_caller.sparsepileup import ValuedIndexes, SparsePileup as OldSparsePileup, SparsePileupData as OldSparsePileupData
-from graph_peak_caller.sparsepileupv2 import SparsePileup
+from graph_peak_caller.densepileup import DensePileup
 
 graph = obg.GraphWithReversals(
     {3: obg.Block(20), 5: obg.Block(10),
@@ -90,17 +90,33 @@ class TestSnarlMap(unittest.TestCase):
                for node_id, val in vis.items()}
 
         correct_pileup = OldSparsePileup(graph)
-        correct_pileup.data = OldSparsePileupData([(key, val) for key, val in vis.items()], graph=graph)
-        correct_pileup = SparsePileup.create_from_old_sparsepileup(correct_pileup)
 
-        pileup = self.snarl_map.to_numpy_sparse_pileup(unmapped_indices)
+        print("Old sparse pileup")
+        print(correct_pileup)
+
+        correct_pileup.data = OldSparsePileupData([(key, val) for key, val in vis.items()], graph=graph)
+        print("Correct pileup data")
+        print(correct_pileup.data)
+        print("Correct pileup")
+        print(correct_pileup)
+        correct_pileup = DensePileup.create_from_old_sparsepileup(correct_pileup)
+
+        pileup = self.snarl_map.to_dense_pileup(unmapped_indices)
+
+        print("Pileup from test")
+        print(pileup)
+
+        print("Correct pileup")
+        print(correct_pileup)
+
         self.assertEqual(pileup, correct_pileup)
 
 
 # Needs to be rewritten. To valued indexes does not exist anymore
-class _TestLinearPileupMap(TestSnarlMap):
+"""
+class TestLinearPileupMap(TestSnarlMap):
     def _test_to_valued_indexes(self):
-        """[0, 5, 10, 15, 20, 25, 30]"""
+        #[0, 5, 10, 15, 20, 25, 30]
         all_indices = [0, 5, 10, 15, 20, 25, 30]
         linear_pileup = LinearPileup(np.array(all_indices),
                                      np.array(list(range(7))))
@@ -117,7 +133,7 @@ class _TestLinearPileupMap(TestSnarlMap):
                for node_id, val in vis.items()}
         mapped_vis = linear_pileup.to_valued_indexes(self.snarl_map)
         self.assertEqual(mapped_vis, vis)
-
+"""
 
 if __name__ == "__main__":
     unittest.main()

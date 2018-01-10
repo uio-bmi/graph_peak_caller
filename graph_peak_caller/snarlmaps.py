@@ -73,6 +73,7 @@ class LinearSnarlMap(object):
             for start, end in zip(indexes[:-1], indexes[1:]):
                 value = values[j]
                 pileup.data.set_values(node_id, start, end, value)
+                j += 1
 
         return pileup
 

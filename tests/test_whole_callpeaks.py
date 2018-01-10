@@ -52,6 +52,7 @@ class TestWholeCallPeaks(unittest.TestCase):
                                       control_reads,
                                       has_control=False)
         self.caller.run()
+        print(self.caller._sample_pileup)
 
     def do_asserts(self):
         for peak in self.peaks:

@@ -173,8 +173,8 @@ class SubgraphCollectionPartiallyOrderedGraphBuilder():
     def __init__(self, graph, pileup):
         self.graph = graph
         self.pileup = pileup
-        from .sparsepileupv2 import SparsePileupData
-        assert isinstance(self.pileup.data, SparsePileupData)
+        from .densepileup import DensePileupData
+        assert isinstance(self.pileup.data, DensePileupData)
 
         areas = pileup.find_valued_areas(1)
         #print(areas)

@@ -23,7 +23,7 @@ class DensePileupData:
         self._touched_nodes = set()
         self.ndim = ndim
 
-        self._create_empty(ndim, base_value=0)
+        self._create_empty(ndim, base_value=base_value)
 
     def _create_empty(self, ndim=1, base_value=0):
         self._nodes = sorted(self._graph.blocks.keys())
@@ -170,6 +170,7 @@ class DensePileupData:
     def copy(self):
         new = DensePileupData(self._graph)
         new._values = self._values
+        new._touched_nodes = self._touched_nodes
         return new
 
     def threshold_copy(self, cutoff):
@@ -202,6 +203,23 @@ class DensePileupData:
     def __len__(self):
         return len(self.nodes())
 
+    def __eq__(self, other):
+        for node in self.nodes():
+            indexes, values = self.get_sparse_indexes_and_values(node)
+            other_indexes, other_values = other.get_sparse_indexes_and_values(node)
+            if not np.all(indexes == other_indexes):
+                print("Indices %s != %s" % (indexes, other_indexes))
+                return False
+
+            assert isinstance(other.values(node), np.ndarray)
+
+            if np.all(np.abs(values -  other_values) > 1e-5):
+                print("Values %s != %s" % (values, other_values))
+                print()
+                return False
+
+        return True
+
 class DensePileup(Pileup):
     def __init__(self, graph, ndim=1, base_value=0):
         logging.info("Initing sparsepileup")
@@ -215,13 +233,16 @@ class DensePileup(Pileup):
 
     def __str__(self):
         out = "Densepileup \n"
-        for node in self.data.nodes():
+        for node in self.data._graph.blocks:
             out += "  Node %d: %s, %s\n" % (node, self.data.values(node), self.data.get_sparse_indexes_and_values(node))
 
         return out
 
     def __repr__(self):
         return self.__str__
+
+    def __eq__(self, other):
+        return self.data == other.data
 
     def sum(self):
         return self.data.sum()
@@ -297,7 +318,6 @@ class DensePileup(Pileup):
         return pileup
 
     def to_subgraphs(self):
-        raise NotImplementedError()
         # Returns a list of areas which each is a subgraph
         collection = SubgraphCollection.from_pileup(self.graph, self)
         return collection
@@ -334,6 +354,18 @@ class DensePileup(Pileup):
 
         return pileup
 
+    @classmethod
+    def from_areas_collection(cls, graph, areas_list):
+        starts_dict = defaultdict(list)
+        ends_dict = defaultdict(list)
+        for areas in areas_list:
+            for rp in areas.areas:
+                starts_dict[rp].extend(areas.get_starts(rp))
+                ends_dict[rp].extend(areas.get_ends(rp))
+        starts_dict = {rp: np.array(v) for rp, v in starts_dict.items()}
+        ends_dict = {rp: np.array(v) for rp, v in ends_dict.items()}
+        return cls.from_starts_and_ends(graph, starts_dict,
+                                        ends_dict, dtype=int)
 
     def threshold_copy(self, cutoff):
         new_pileup = self.__class__(self.graph)
@@ -362,9 +394,15 @@ class DensePileup(Pileup):
         logging.info("Removing emty areas")
 
         logging.info("Creating pileup using results from cleaner")
+        print("Areas from cleaner")
+        print(areas)
         pileup = self.from_areas_collection(self.graph, [areas])
         logging.info("Tresholding")
+        print("Pileup before threshold")
+        print(pileup)
         pileup.threshold(0.5)
+        print("Pileup after threshold")
+        print(self)
         return pileup
 
     def to_bed_graph(self, filename):
@@ -400,6 +438,48 @@ class DensePileup(Pileup):
                 f.write("%s\t%s\t%s\t.\t.\t.\n" % interval)
         f.close()
         return filename
+
+    def equals_old_sparse_pileup(self, old_pileup):
+        # For tests to pass temporarily
+        for node in self.data.nodes():
+            indexes, values = self.data.get_sparse_indexes_and_values(node)
+            other_indexes = old_pileup.data[node].all_idxs()
+            if not np.all(indexes == other_indexes):
+                return False
+
+            values = self.data.values(node)
+            other_values = old_pileup.data[node].all_values()
+            if not np.allclose(values, other_values):
+                return False
+
+        return True
+
+    @classmethod
+    def create_from_old_sparsepileup(cls, old_pileup):
+        # TMP method for tests to pass
+        graph = old_pileup.graph
+        pileup = DensePileup(graph)
+
+        print("Creating dense pileup from old pileup")
+        print("Old pileup")
+        print(old_pileup)
+
+        for node in old_pileup.data:
+
+            values = old_pileup.data[node].all_values()
+            indexes = old_pileup.data[node].all_idxs()
+
+            i = 0
+            for start, end in zip(indexes[0:-1], indexes[1:]):
+                value = values[i]
+                print("  Setting node %d, %d, %d, %d" % (node, start, end, value))
+                pileup.data.set_values(node, start, end, value)
+                i += 1
+
+        print("Result")
+        print(pileup)
+
+        return pileup
 
 class DenseControlSample(DensePileup):
     def get_p_dict(self):
