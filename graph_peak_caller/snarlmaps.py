@@ -1,6 +1,7 @@
 import json
 import pickle
 from .sparsepileupv2 import SparsePileupData, SparsePileup
+from .densepileup import DensePileup
 from .linearintervals import LinearIntervalCollection
 import logging
 import numpy as np
@@ -46,6 +47,34 @@ class LinearSnarlMap(object):
         scale = linear_length/node_length
         offset = self.get_node_start(node_id)
         return scale, offset
+
+    def to_dense_pileup(self, unmapped_indices_dict):
+        pileup = DensePileup(self._graph)
+        i = 0
+        for node_id, unmapped_indices in unmapped_indices_dict.items():
+            if i % 100000 == 0:
+                logging.info("Processing node %d" % i)
+            i += 1
+
+            scale, offset = self.get_scale_and_offset(node_id)
+            new_idxs = (unmapped_indices.get_index_array()-offset) / scale
+            new_idxs = new_idxs.astype("int")
+            new_idxs[0] = max(0, new_idxs[0])
+
+            length = self._graph.node_size(node_id)
+            indexes = new_idxs
+            values = unmapped_indices.get_values_array()
+
+            diffs = np.where(np.diff(indexes) > 0)[0]
+            indexes = indexes[diffs+1]
+            values = values[diffs+1]
+
+            j = 0
+            for start, end in zip(indexes[:-1], indexes[1:]):
+                value = values[j]
+                pileup.data.set_values(node_id, start, end, value)
+
+        return pileup
 
     def to_numpy_sparse_pileup(self, unmapped_indices_dict):
         nodes = unmapped_indices_dict.keys()

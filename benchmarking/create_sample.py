@@ -4,13 +4,14 @@ from graph_peak_caller.extender import Extender
 from graph_peak_caller.areas import ValuedAreas
 from graph_peak_caller.sparsepileupv2 import SparsePileup
 from graph_peak_caller.sparsepileup import SparsePileup as OldSparsePileup
+from graph_peak_caller.densepileup import DensePileup
 import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
 
 ob_graph = obg.GraphWithReversals.from_numpy_files("graph__")
 #intervals = vg_gam_file_to_interval_collection(None, "reads.gam", ob_graph)
-intervals = vg_json_file_to_interval_collection(None, "../tests/lrc_kir/small.json", ob_graph)
+intervals = vg_json_file_to_interval_collection(None, "../tests/lrc_kir/reads.json", ob_graph)
 
 i = 0
 
@@ -40,7 +41,7 @@ def run_extender():
 
         valued_areas.add_binary_areas(area, touched_nodes)
 
-    pileup = SparsePileup.from_valued_areas(
+    pileup = DensePileup.from_valued_areas(
             ob_graph, valued_areas, touched_nodes=touched_nodes)
 
 

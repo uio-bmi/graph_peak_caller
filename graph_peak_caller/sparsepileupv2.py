@@ -421,6 +421,7 @@ class SparsePileupData:
         #          values[:, 0], vi_a.length)
         #return obj
 
+
 class SparsePileup(Pileup):
     def __init__(self, graph):
         logging.info("Initing sparsepileup")

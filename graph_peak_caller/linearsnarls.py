@@ -103,7 +103,8 @@ class LinearPileup(object):
         logging.info("Getting unmapped indices")
         unmapped_indices = self.from_event_sorter(event_sorter)
         logging.info("Mapping linear map to graph pileup")
-        return linear_map.to_numpy_sparse_pileup(unmapped_indices)
+        #return linear_map.to_numpy_sparse_pileup(unmapped_indices)
+        return linear_map.to_dense_pileup(unmapped_indices)
 
     def to_valued_indexes(self, linear_map, touched_nodes=None):
         logging.info("Getting event sorter")

@@ -5,8 +5,10 @@ from offsetbasedgraph import IntervalCollection, DirectedInterval
 import pyvg as vg
 import offsetbasedgraph
 from graph_peak_caller import get_shift_size_on_offset_based_graph
-from .sparsepileupv2 import SparseControlSample
-from .sparsepileupv2 import SparsePileup
+#from .sparsepileupv2 import SparseControlSample
+#from .sparsepileupv2 import SparsePileup
+from .densepileup import DensePileup, DenseControlSample
+
 from .extender import Extender
 from .areas import ValuedAreas, BinaryContinousAreas, BCACollection
 from .peakscores import ScoredPeak
@@ -270,6 +272,8 @@ class CallPeaks(object):
             self.info = ExperimentInfo.find_info(
                 self.ob_graph, self.sample_intervals, self.control_intervals)
         self.create_sample_pileup()
+        import sys
+        sys.exit()
         self.create_control(True)
         self.scale_tracks()
         self.get_score()
@@ -425,7 +429,7 @@ class CallPeaks(object):
 
     def get_score(self):
         logging.info("Getting scores. Creating sparse array from sparse control and sample")
-        q_values_pileup = SparseControlSample.from_sparse_control_and_sample(
+        q_values_pileup = DenseControlSample.from_sparse_control_and_sample(
             self._control_pileup, self._sample_pileup)
 
         # Delete sample and control pileups
@@ -487,7 +491,7 @@ class CallPeaks(object):
             pickle.dump(touched_nodes, f)
 
         logging.info("Creating sample pileup from valued areas")
-        pileup = SparsePileup.from_valued_areas(
+        pileup = DensePileup.from_valued_areas(
             self.ob_graph, valued_areas, touched_nodes=touched_nodes)
         self._sample_track = self.out_file_base_name + "sample_track.bdg"
         if save_to_file:
