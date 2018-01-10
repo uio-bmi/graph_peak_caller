@@ -298,7 +298,7 @@ class DensePileup(Pileup):
 
     def find_valued_areas(self, value):
         return SparseAreasDict({node_id: self.data.find_valued_areas(node_id, value)
-                               for node_id in self.data.nodes()
+                               for node_id in self.data._graph.blocks
                                 }, graph=self.graph)
 
     @classmethod
