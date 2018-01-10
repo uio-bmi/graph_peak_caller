@@ -60,6 +60,8 @@ class LinearSnarlMap(object):
             lengths.append(n_indices)
 
         pileup_data = SparsePileupData(nodes, lengths, graph=self._graph)
+        del lengths
+
         i = 0
         for node_id, unmapped_indices in unmapped_indices_dict.items():
             if i % 100000 == 0:

@@ -10,7 +10,7 @@ from .eventsorter import DiscreteEventSorter
 from offsetbasedgraph import Interval, IntervalCollection
 import pickle
 from .sparsepileup import SparseAreasDict, starts_and_ends_to_sparse_pileup, intervals_to_start_and_ends
-
+from memory_profiler import profile
 
 class SimpleValuedIndexes():
     def __init__(self, indexes, values):
@@ -164,15 +164,14 @@ class SparsePileupData:
     def set_end_index(self, node_id, i):
         # Used to set "length" of node. End should always be length
         index = node_id - self.min_node
-        start = self._node_indexes[index]
-        end = start + self._lengths[index]
+        pos =  self._node_indexes[index] + self._lengths[index] - 1
 
-        for idx in self.indexes(node_id)[:-1]:
-            assert i > idx, "Trying to set end idx %d which is <= already existing index %d. All indexes: %s" % (i, idx, self.indexes(node_id))
+        #for idx in self.indexes(node_id)[:-1]:
+        #    assert i > idx, "Trying to set end idx %d which is <= already existing index %d. All indexes: %s" % (i, idx, self.indexes(node_id))
 
         #assert self._indexes[end-1] == 0, "End index already has something"
-        self._indexes[end-1] = i
-        assert self._indexes[end-1] == i, "%d != %d" % (self._indexes[end-1], i)
+        self._indexes[pos] = i
+        assert self._indexes[pos] == i, "%d != %d" % (self._indexes[pos], i)
 
         assert self.indexes(node_id)[-1] == i, "End index %d is not %d. All indexes: %s" % \
             (i, self.indexes(node_id)[-1], self.indexes(node_id))
@@ -364,6 +363,7 @@ class SparsePileupData:
     def threshold_copy(self, cutoff):
         new = self.copy()
         new._values = new._values >= cutoff
+        logging.info("Thresholding done.")
         return new
 
     def threshold(self, cutoff):
@@ -541,47 +541,45 @@ class SparsePileup(Pileup):
         return cls.from_starts_and_ends(graph, starts_dict,
                                         ends_dict, dtype=int)
 
+
+    @classmethod
+    def init_sparsepileupdata_from_valued_ares(cls, graph, nodes, valued_areas):
+        # Creates empty sparsepileupdata with correct size for each node
+        data_lengths = []
+        node_size = graph.blocks.node_size
+        i = 0
+        for rp in nodes:
+            if i % 100000 == 0:
+                logging.info("Initing sparse from valued areas for node %d" % i)
+            i += 1
+
+            length = node_size(rp)
+            starts = valued_areas.get_starts_array(rp, node_size=length)
+            ends = valued_areas.get_ends_array(rp, node_size=length)
+            indexes, values = starts_and_ends_to_sparse_pileup(
+                starts,
+                ends)
+            length = len(indexes) + 2
+            data_lengths.append(length)
+
+        pileup_data = SparsePileupData(nodes, data_lengths)
+        del data_lengths
+        return pileup_data
+
     @classmethod
     def from_valued_areas(cls, graph, valued_areas, touched_nodes = None):
         pileup = cls(graph)
-        i = 0
 
         if touched_nodes is None:
             nodes = graph.blocks
         else:
             nodes = touched_nodes
 
-        data_nodes = []
-        data_lengths = []
-
-        # First create empty data
-        for rp in nodes:
-            if i % 100000 == 0:
-                logging.info("Initing sparse from valued areas for node %d" % i)
-            i += 1
-
-            length = graph.blocks[rp].length()
-            starts = valued_areas.get_starts_array(rp, node_size=length)
-            if len(starts) == 0:
-                continue
-
-            ends = valued_areas.get_ends_array(rp, node_size=length)
-            if len(starts) == 0 and len(ends) == 0:
-                continue
-
-            indexes, values = starts_and_ends_to_sparse_pileup(
-                starts,
-                ends)
-
-            length = len(indexes) + 2
-
-            data_nodes.append(rp)
-            data_lengths.append(length)
-
-        pileup_data = SparsePileupData(data_nodes, data_lengths)
+        pileup_data = cls.init_sparsepileupdata_from_valued_ares(graph, nodes, valued_areas)
 
         i = 0
         # Fill pileup_data
+        logging.info("N nodes to process: %d" % len(nodes))
         for rp in nodes:
             if i % 100000 == 0:
                 logging.info("Creating sparse from valued areas for node %d" % i)
@@ -899,6 +897,7 @@ class SparseControlSample(SparsePileup):
         # Create new empty sparse pileup with enough space for each node (sum of lengths)
         all_nodes = list(control.data.nodes.union(sample.data.nodes))
         lengths = []
+        logging.info("Allocating space for pileup")
         for node in all_nodes:
             all_indexes = np.append(control.data.indexes(node), sample.data.indexes(node))
             unique = np.unique(all_indexes)
