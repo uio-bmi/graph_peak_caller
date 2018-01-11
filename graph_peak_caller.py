@@ -42,7 +42,8 @@ def run_with_intervals(ob_graph,
         linear_map=linear_map,
         graph_is_partially_ordered=True,
         skip_filter_duplicates=False,
-        skip_read_validation=True
+        skip_read_validation=True,
+        save_tmp_results_to_file=False
     )
 
     caller.set_cutoff(0.05)

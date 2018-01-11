@@ -305,6 +305,7 @@ class DensePileup(Pileup):
         logging.info("Sanitize done")
 
     def find_valued_areas(self, value):
+        logging.info("Finding valued areas equal to %d" % value)
         if value:
             return SparseAreasDict({node_id: self.data.find_valued_areas(node_id, value)
                                for node_id in self.data._graph.blocks
@@ -637,7 +638,7 @@ class QValuesFinder:
             rank += value_count
 
         self.p_to_q_values = p_to_q_values
-        
+
     def get_q_values(self):
         def translation(x):
             if x == 0:

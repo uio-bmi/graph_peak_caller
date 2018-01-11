@@ -84,7 +84,8 @@ class CallPeaksFromQvalues(object):
     def __init__(self, graph, q_values_sparse_pileup,
                  experiment_info, out_file_base_name="",
                  cutoff=0.1, raw_pileup=None, touched_nodes=None,
-                 graph_is_partially_ordered=False):
+                 graph_is_partially_ordered=False,
+                 save_tmp_results_to_file=True):
         self.graph = graph
         self.q_values = q_values_sparse_pileup
         self.info = experiment_info
@@ -94,6 +95,7 @@ class CallPeaksFromQvalues(object):
         #self.graph.assert_correct_edge_dicts()
         self.touched_nodes = touched_nodes
         self.graph_is_partially_ordered = graph_is_partially_ordered
+        self.save_tmp_results_to_file = save_tmp_results_to_file
 
         self.info.to_file(self.out_file_base_name + "experiment_info.pickle")
 
@@ -102,7 +104,8 @@ class CallPeaksFromQvalues(object):
         logging.info("Thresholding peaks on q value %.4f" % threshold)
         self.pre_processed_peaks = self.q_values.threshold_copy(threshold)
 
-        self.pre_processed_peaks.to_bed_file(
+        if self.save_tmp_results_to_file:
+            self.pre_processed_peaks.to_bed_file(
                 self.out_file_base_name + "pre_postprocess.bed")
 
     def __postprocess(self):
@@ -209,7 +212,8 @@ class CallPeaks(object):
                  verbose=False, out_file_base_name="", has_control=True,
                  linear_map=None, skip_filter_duplicates=False,
                  graph_is_partially_ordered=False,
-                 skip_read_validation=False):
+                 skip_read_validation=False,
+                 save_tmp_results_to_file=True):
         """
         :param sample_intervals: Either an interval collection or file name
         :param control_intervals: Either an interval collection or a file name
@@ -250,6 +254,7 @@ class CallPeaks(object):
         self.filtered_peaks = None
         self.skip_filter_duplicates = skip_filter_duplicates
         self.skip_read_validation = skip_read_validation
+        self.save_tmp_results_to_file = save_tmp_results_to_file
 
         self.max_paths = None
         self.peaks_as_subgraphs = None
@@ -275,7 +280,7 @@ class CallPeaks(object):
                 self.ob_graph, self.sample_intervals, self.control_intervals)
         self.create_sample_pileup()
 
-        self.create_control(True)
+        self.create_control()
         self.scale_tracks()
         self.get_score()
 
@@ -402,7 +407,7 @@ class CallPeaks(object):
             self.ob_graph = self.graph
             logging.info("Graph already created")
 
-    def create_control(self, save_to_file=True):
+    def create_control(self):
         logging.info("Creating control track using linear map %s" % self.linear_map)
         extensions = [self.info.fragment_length, 1000, 10000] if self.has_control else [10000]
         control_pileup = linearsnarls.create_control(
@@ -418,7 +423,7 @@ class CallPeaks(object):
         control_pileup.graph = self.ob_graph
         logging.info("Number of control reads: %d" % self.info.n_control_reads)
 
-        if save_to_file:
+        if self.save_tmp_results_to_file:
             self._control_track = self.out_file_base_name + "control_track.bdg"
             control_pileup.to_bed_graph(self._control_track)
             logging.info("Saved control pileup to " + self._control_track)
@@ -444,14 +449,13 @@ class CallPeaks(object):
         #logging.info("Computing q values")
         #q_values_pileup.get_scores()
         self.q_values = q_values_pileup
-        q_val_file_name = self.out_file_base_name + "q_values.bdg"
-        logging.info("Writing q values to file")
-        self.q_values.to_bed_graph(q_val_file_name)
-        logging.info("Writing q values to pickle")
-        self.q_values.to_pickle(self.out_file_base_name + "q_values.pickle")
 
-
-        logging.info("Writing q values to %s" % q_val_file_name)
+        if self.save_tmp_results_to_file:
+            q_val_file_name = self.out_file_base_name + "q_values.bdg"
+            logging.info("Writing q values to file")
+            self.q_values.to_bed_graph(q_val_file_name)
+            logging.info("Writing q values to pickle")
+            self.q_values.to_pickle(self.out_file_base_name + "q_values.pickle")
 
     def call_peaks(self):
         self.q_value_peak_caller = CallPeaksFromQvalues(
@@ -461,7 +465,8 @@ class CallPeaks(object):
             self.out_file_base_name,
             self.cutoff,
             touched_nodes=self.touched_nodes,
-            graph_is_partially_ordered=self.graph_is_partially_ordered
+            graph_is_partially_ordered=self.graph_is_partially_ordered,
+            save_tmp_results_to_file=self.save_tmp_results_to_file
         )
         self.q_value_peak_caller.callpeaks()
 
@@ -470,7 +475,7 @@ class CallPeaks(object):
             save_max_path_sequences_to_fasta_file(file_name, retriever)
 
     #@profile
-    def create_sample_pileup(self, save_to_file=True):
+    def create_sample_pileup(self):
         logging.debug("In sample pileup")
         logging.info("Creating sample pileup")
         alignments = self.sample_intervals
@@ -487,16 +492,6 @@ class CallPeaks(object):
         pileup = DensePileup.create_from_binary_continous_areas(
                     self.ob_graph, areas_list)
         touched_nodes = pileup.data._touched_nodes
-
-        """
-        touched_nodes = set()  # Speedup thing, keep track of nodes where areas are on
-        for area in areas_list:
-            if i % 5000 == 0:
-                logging.info("Processing area %d" % i)
-            i += 1
-
-            valued_areas.add_binary_areas(area, touched_nodes)
-        """
         self.touched_nodes = touched_nodes
 
         logging.info("Writing touched nodes to file")
@@ -504,14 +499,10 @@ class CallPeaks(object):
             pickle.dump(touched_nodes, f)
 
         logging.info("N touched nodes: %d" % len(touched_nodes))
-        """
-        logging.info("Creating sample pileup from valued areas")
-        pileup = DensePileup.from_valued_areas(
-            self.ob_graph, valued_areas, touched_nodes=touched_nodes)
-        """
+
 
         self._sample_track = self.out_file_base_name + "sample_track.bdg"
-        if save_to_file:
+        if self.save_tmp_results_to_file:
             logging.info("Saving sample pileup to file")
             pileup.to_bed_graph(self._sample_track)
             logging.info("Saved sample pileup to " + self._sample_track)
@@ -523,42 +514,6 @@ class CallPeaks(object):
 
     def _write_vg_alignments_as_intervals_to_bed_file(self):
         pass
-
-
-class CallPeaksWRawReads(CallPeaks):
-    def __handle_sample_read(self, sample_read):
-        extended_area = self.__extender.extend_interval(sample_read)
-        raw_area = BinaryContinousAreas(self.graph)
-        try:
-            raw_area.filled_interval(sample_read)
-        except:
-            print(sample_read)
-            raise
-        raw_area.sanitize()
-        self.__valued_areas.add_binary_areas(extended_area)
-        self.__raw_valued_areas.add_binary_areas(raw_area)
-
-    def create_sample_pileup(self, save_to_file=True):
-        logging.debug("In sample pileup")
-        logging.debug(self.sample_intervals)
-        self.__extender = Extender(self.ob_graph, self.info.fragment_length)
-        self.__valued_areas = ValuedAreas(self.ob_graph)
-        self.__raw_valued_areas = ValuedAreas(self.ob_graph)
-        for read in self.sample_intervals:
-            self.__handle_sample_read(read)
-
-        pileup = SparsePileup.from_valued_areas(
-            self.ob_graph, self.__valued_areas)
-        self.raw_pileup = SparsePileup.from_valued_areas(
-            self.ob_graph, self.__raw_valued_areas)
-
-        self._sample_track = self.out_file_base_name + "sample_track.bdg"
-        if save_to_file:
-            pileup.to_bed_graph(self._sample_track)
-            self.raw_pileup.to_bed_graph(
-                self.out_file_base_name + "raw_track.bdg")
-            print("Saved sample pileup to " + self._sample_track)
-        self._sample_pileup = pileup
 
 
 if __name__ == "__main__":
