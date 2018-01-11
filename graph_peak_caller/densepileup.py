@@ -85,6 +85,13 @@ class DensePileupData:
         self._values[array_start:array_end] += value
         self._touched_nodes.add(node)
 
+    def add_value_to_full_node(self, node, value):
+        index = node - self.min_node
+        array_start = self._node_indexes[index]
+        array_end = array_start + self.node_size(node)
+        self._values[array_start:array_end] += value
+        self._touched_nodes.add(node)
+
     def get_subset_max_value(self, node_id, start, end):
         return np.max(self.values(node_id)[start:end])
 
@@ -206,14 +213,15 @@ class DensePileupData:
     def __eq__(self, other):
         for node in self.nodes():
             indexes, values = self.get_sparse_indexes_and_values(node)
+            #print("   Checking node %d" % node)
             other_indexes, other_values = other.get_sparse_indexes_and_values(node)
+            #print("   Values: %s / %s" % (values, other_values))
             if not np.all(indexes == other_indexes):
                 print("Indices %s != %s" % (indexes, other_indexes))
                 return False
 
-            assert isinstance(other.values(node), np.ndarray)
 
-            if np.all(np.abs(values -  other_values) > 1e-5):
+            if np.any(np.abs(values -  other_values) > 1e-5):
                 print("Values %s != %s" % (values, other_values))
                 print()
                 return False
@@ -233,8 +241,9 @@ class DensePileup(Pileup):
 
     def __str__(self):
         out = "Densepileup \n"
-        for node in self.data._graph.blocks:
-            out += "  Node %d: %s, %s\n" % (node, self.data.values(node), self.data.get_sparse_indexes_and_values(node))
+        for node in self.data._touched_nodes:
+            #out += "  Node %d: %s, %s\n" % (node, self.data.values(node), self.data.get_sparse_indexes_and_values(node))
+            out += "  Node %d: %s\n" % (node, self.data.get_sparse_indexes_and_values(node))
 
         return out
 
@@ -468,6 +477,36 @@ class DensePileup(Pileup):
                 i += 1
 
         return pileup
+
+    @classmethod
+    def create_from_binary_continous_areas(cls, graph, areas_list):
+        pileup = cls(graph)
+        for areas in areas_list:
+            #print("   Processing area \n%s" % areas)
+            for node_id in areas.full_areas:
+                pileup.data.add_value_to_full_node(node_id, 1)
+                #touched_nodes.add(abs(node_id))
+
+            for node_id, internal_intervals in areas.internal_intervals.items():
+                assert node_id > 0
+                pileup.data.add_value(node_id, internal_intervals[0], internal_intervals[1], 1)
+                #touched_nodes.add(abs(node_id))
+
+            for node_id, start in areas.starts.items():
+                node_size = graph.node_size(node_id)
+                pileup_end = start
+                pileup_start = 0
+                if node_id < 0:
+                    pileup_end = node_size
+                    pileup_start = node_size - start
+                    node_id = -node_id
+
+                #print("   Processing start %d for node %d, adding start-end %d-%d" % (start, node_id, pileup_start, pileup_end))
+                pileup.data.add_value(node_id, pileup_start, pileup_end, 1)
+                #touched_nodes.add(abs(node_id))
+
+        return pileup
+
 
 class DenseControlSample(DensePileup):
     def get_p_dict(self):

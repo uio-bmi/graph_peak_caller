@@ -202,6 +202,7 @@ class CallPeaksFromQvalues(object):
                 logging.info("Writing sequence # %d" % i)
         f.close()
 
+
 class CallPeaks(object):
     def __init__(self, graph, sample_intervals,
                  control_intervals=None, experiment_info=None,
@@ -477,6 +478,13 @@ class CallPeaks(object):
                       for interval in alignments)
         i = 0
         logging.info("Processing areas")
+
+        #touched_nodes = set()  # Speedup thing, keep track of nodes where areas are on
+        pileup = DensePileup.create_from_binary_continous_areas(
+                    self.ob_graph, areas_list)
+        touched_nodes = pileup.data._touched_nodes
+
+        """
         touched_nodes = set()  # Speedup thing, keep track of nodes where areas are on
         for area in areas_list:
             if i % 5000 == 0:
@@ -484,15 +492,20 @@ class CallPeaks(object):
             i += 1
 
             valued_areas.add_binary_areas(area, touched_nodes)
+        """
         self.touched_nodes = touched_nodes
 
         logging.info("Writing touched nodes to file")
         with open(self.out_file_base_name + "touched_nodes.pickle", "wb") as f:
             pickle.dump(touched_nodes, f)
 
+        logging.info("N touched nodes: %d" % len(touched_nodes))
+        """
         logging.info("Creating sample pileup from valued areas")
         pileup = DensePileup.from_valued_areas(
             self.ob_graph, valued_areas, touched_nodes=touched_nodes)
+        """
+
         self._sample_track = self.out_file_base_name + "sample_track.bdg"
         if save_to_file:
             logging.info("Saving sample pileup to file")

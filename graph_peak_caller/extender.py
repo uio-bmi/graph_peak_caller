@@ -291,6 +291,7 @@ class Extender(object):
             interval, pos_length, neg_length)
         is_pos = interval.can_be_on_positive_strand()
         is_neg = interval.can_be_on_negative_strand()
+        #print(" Extending interval %s. Can be on pos/neg: %d/%d" % (interval, is_pos, is_neg))
         if pos_remain:
             if is_pos:
                 self.get_areas_from_node(

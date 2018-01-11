@@ -11,22 +11,10 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s, %(levelname)s: %(me
 
 ob_graph = obg.GraphWithReversals.from_numpy_files("graph__")
 #intervals = vg_gam_file_to_interval_collection(None, "reads.gam", ob_graph)
-intervals = vg_json_file_to_interval_collection(None, "../tests/lrc_kir/reads.json", ob_graph)
-
-i = 0
-
-def check_get_intervals_time():
-    i = 0
-    for interval in intervals:
-        #print(interval)
-        if i % 5000 == 0:
-            print("Interval %d" % i)
-
-        i += 1
-
-
+#intervals = vg_json_file_to_interval_collection(None, "../tests/lrc_kir/reads.json", ob_graph)
 
 def run_extender():
+    intervals = vg_json_file_to_interval_collection(None, "../tests/lrc_kir/small.json", ob_graph)
     extender = Extender(ob_graph, 140)
     valued_areas = ValuedAreas(ob_graph)
     areas_list = (extender.extend_interval(interval)
@@ -44,6 +32,22 @@ def run_extender():
     pileup = DensePileup.from_valued_areas(
             ob_graph, valued_areas, touched_nodes=touched_nodes)
 
+    return pileup
 
+def run_extender2():
+    intervals = vg_json_file_to_interval_collection(None, "../tests/lrc_kir/small.json", ob_graph)
+    extender = Extender(ob_graph, 140)
+    valued_areas = ValuedAreas(ob_graph)
+    areas_list = (extender.extend_interval(interval)
+                  for interval in intervals)
 
-run_extender()
+    pileup = DensePileup.create_from_binary_continous_areas(
+            ob_graph, areas_list)
+
+    return pileup
+
+pileup1 = run_extender()
+pileup2 = run_extender2()
+
+print(pileup1)
+print(pileup2)
