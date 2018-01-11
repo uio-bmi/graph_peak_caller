@@ -7,6 +7,7 @@ LOOP_VALUE = 3000000000
 class Cleaner(object):
     def __init__(self, pileup, threshold, touched_nodes=None):
         self.graph = pileup.graph
+        logging.info("Init cleaner with threshold %d" % threshold)
         logging.info("Size of pileup used in cleaner: %d" % len(pileup.data))
         self.touched_nodes = touched_nodes
         self.areas = self.get_areas(pileup)
@@ -201,9 +202,8 @@ class PeaksCleaner(Cleaner):
     def get_areas(self, pileup):
         logging.info("Getting True areas from pileup")
         pileup = pileup.find_valued_areas(True)
-        print("Areas from find_valued_areas")
-        print(pileup)
         return pileup
+
     def _check_internal_interval(self, node_id, start, end):
         if start == 0 or end == self.graph.node_size(node_id):
             return False
@@ -280,7 +280,8 @@ class HolesCleaner(Cleaner):
         return None
 
     def get_areas(self, pileup):
-        return pileup.find_valued_areas(False)
+        areas = pileup.find_valued_areas(False)
+        return areas
 
     def is_init_node(self, node):
         if self.ends_dict[node] < self.graph.node_size(node):

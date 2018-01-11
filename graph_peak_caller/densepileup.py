@@ -261,7 +261,6 @@ class DensePileup(Pileup):
         n_filled = 0
 
         hole_intervals = []
-
         for node_id in areas.areas:
             if touched_nodes is not None:
                 if node_id not in touched_nodes:
@@ -297,10 +296,14 @@ class DensePileup(Pileup):
         logging.info("Sanitize done")
 
     def find_valued_areas(self, value):
-        return SparseAreasDict({node_id: self.data.find_valued_areas(node_id, value)
+        if value:
+            return SparseAreasDict({node_id: self.data.find_valued_areas(node_id, value)
                                for node_id in self.data._graph.blocks
                                 }, graph=self.graph)
-
+        else:
+            return SparseAreasDict({node_id: self.data.find_valued_areas(node_id, value)
+                                   for node_id in self.data._touched_nodes
+                                    }, graph=self.graph)
     @classmethod
     def from_intervals(cls, graph, intervals):
         starts, ends = intervals_to_start_and_ends(graph, intervals)
@@ -394,15 +397,9 @@ class DensePileup(Pileup):
         logging.info("Removing emty areas")
 
         logging.info("Creating pileup using results from cleaner")
-        print("Areas from cleaner")
-        print(areas)
         pileup = self.from_areas_collection(self.graph, [areas])
         logging.info("Tresholding")
-        print("Pileup before threshold")
-        print(pileup)
         pileup.threshold(0.5)
-        print("Pileup after threshold")
-        print(self)
         return pileup
 
     def to_bed_graph(self, filename):
@@ -447,7 +444,6 @@ class DensePileup(Pileup):
             if not np.all(indexes == other_indexes):
                 return False
 
-            values = self.data.values(node)
             other_values = old_pileup.data[node].all_values()
             if not np.allclose(values, other_values):
                 return False
@@ -460,10 +456,6 @@ class DensePileup(Pileup):
         graph = old_pileup.graph
         pileup = DensePileup(graph)
 
-        print("Creating dense pileup from old pileup")
-        print("Old pileup")
-        print(old_pileup)
-
         for node in old_pileup.data:
 
             values = old_pileup.data[node].all_values()
@@ -472,12 +464,8 @@ class DensePileup(Pileup):
             i = 0
             for start, end in zip(indexes[0:-1], indexes[1:]):
                 value = values[i]
-                print("  Setting node %d, %d, %d, %d" % (node, start, end, value))
                 pileup.data.set_values(node, start, end, value)
                 i += 1
-
-        print("Result")
-        print(pileup)
 
         return pileup
 

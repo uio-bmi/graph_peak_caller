@@ -116,6 +116,8 @@ class TestCreateControl(unittest.TestCase):
         for rp in [11]:
             correct_pileup.data[rp] = ValuedIndexes([2], [value_in_extension], expected_bakground, 3)
 
+        print(control)
+        print(correct_pileup)
         self.assertTrue(control.equals_old_sparse_pileup(correct_pileup))
 
     def test_single_read_two_extensions(self):

@@ -64,14 +64,20 @@ class LinearSnarlMap(object):
             length = self._graph.node_size(node_id)
             indexes = new_idxs
             values = unmapped_indices.get_values_array()
-
+            start_value = values[0]
+            # Sanitize indexes
             diffs = np.where(np.diff(indexes) > 0)[0]
             indexes = indexes[diffs+1]
             values = values[diffs+1]
 
+            indexes = np.insert(indexes, 0, 0)
+            indexes = np.append(indexes, length)
+            values = np.insert(values, 0, start_value)
+
             j = 0
             for start, end in zip(indexes[:-1], indexes[1:]):
                 value = values[j]
+                #print("    Setting %d, %d, %d, %d" % (node_id, start, end, value))
                 pileup.data.set_values(node_id, start, end, value)
                 j += 1
 
