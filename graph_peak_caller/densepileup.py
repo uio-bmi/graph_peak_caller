@@ -230,7 +230,7 @@ class DensePileupData:
 
 class DensePileup(Pileup):
     def __init__(self, graph, ndim=1, base_value=0):
-        logging.info("Initing sparsepileup")
+        logging.info("Initing dense pileup")
         self.graph = graph
         self.data = DensePileupData(graph, ndim=ndim, base_value=base_value)
 
@@ -481,7 +481,11 @@ class DensePileup(Pileup):
     @classmethod
     def create_from_binary_continous_areas(cls, graph, areas_list):
         pileup = cls(graph)
+        i = 0
         for areas in areas_list:
+            if i % 5000 == 0:
+                logging.info("Processing read %d" % i)
+            i += 1
             #print("   Processing area \n%s" % areas)
             for node_id in areas.full_areas:
                 pileup.data.add_value_to_full_node(node_id, 1)
