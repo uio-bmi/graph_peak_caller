@@ -7,7 +7,7 @@ import offsetbasedgraph
 from graph_peak_caller import get_shift_size_on_offset_based_graph
 #from .sparsepileupv2 import SparseControlSample
 #from .sparsepileupv2 import SparsePileup
-from .densepileup import DensePileup, DenseControlSample
+from .densepileup import DensePileup, DenseControlSample, QValuesFinder
 
 from .extender import Extender
 from .areas import ValuedAreas, BinaryContinousAreas, BCACollection
@@ -430,15 +430,19 @@ class CallPeaks(object):
 
     def get_score(self):
         logging.info("Getting scores. Creating sparse array from sparse control and sample")
-        q_values_pileup = DenseControlSample.from_sparse_control_and_sample(
-            self._control_pileup, self._sample_pileup)
+        #q_values_pileup = DenseControlSample.from_sparse_control_and_sample(
+        #    self._control_pileup, self._sample_pileup)
+
+        q_values_finder = QValuesFinder(self._sample_pileup, self._control_pileup)
+        q_values_pileup = q_values_finder.get_q_values_pileup()
+
 
         # Delete sample and control pileups
         self._control_pileup = None
         self._sample_pileup = None
 
-        logging.info("Computing q values")
-        q_values_pileup.get_scores()
+        #logging.info("Computing q values")
+        #q_values_pileup.get_scores()
         self.q_values = q_values_pileup
         q_val_file_name = self.out_file_base_name + "q_values.bdg"
         logging.info("Writing q values to file")

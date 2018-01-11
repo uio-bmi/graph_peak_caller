@@ -582,3 +582,78 @@ class DenseControlSample(DensePileup):
         pileup.data._touched_nodes = sample.data._touched_nodes.union(control.data._touched_nodes)
         return pileup
 
+
+class QValuesFinder:
+
+    def __init__(self, sample_pileup, control_pileup):
+        self.sample = sample_pileup
+        self.control = control_pileup
+
+    def get_q_values_pileup(self):
+
+        self.get_p_values()
+        self.get_p_to_q_values()
+        q_values = self.get_q_values()
+        pileup = DensePileup(self.sample.graph)
+        pileup.data._values = q_values
+        pileup.data._touched_nodes = \
+            self.sample.data._touched_nodes.union(self.control.data._touched_nodes)
+
+        return pileup
+
+    def get_p_values(self):
+        self.p_values = poisson.logsf(self.sample.data._values,
+                                self.control.data._values)
+        baseEtoTen = np.log(10)
+        self.p_values = -self.p_values / baseEtoTen
+
+        # Only using p-values where sample is not 0
+        non_zero_indices = np.nonzero(self.sample.data._values)
+        zero_indices = np.where(self.sample.data._values == 0)[0]
+        self.p_values[zero_indices] = 0
+
+        sorted_p_values = sorted(self.p_values[non_zero_indices], reverse=True)
+        unique, counts = np.unique(sorted_p_values, return_counts=True)
+        sorting = np.argsort(-unique)
+        self.unique_p_values = unique[sorting]
+        self.counts = counts[sorting]
+
+    def get_p_to_q_values(self):
+        p_value_counts = self.counts
+        p_to_q_values = {}
+        rank = 1
+        logN = np.log10(sum(p_value_counts))
+        pre_q = None
+        for i, p_value in enumerate(self.unique_p_values):
+            value_count = p_value_counts[i]
+            q_value = p_value + (np.log10(rank) - logN)
+            if rank == 1:
+                q_value = max(0.0, q_value)
+            else:
+                q_value = max(0.0, min(pre_q, q_value))
+
+            p_to_q_values[p_value] = q_value
+            pre_q = q_value
+            rank += value_count
+
+        self.p_to_q_values = p_to_q_values
+        
+    def get_q_values(self):
+        def translation(x):
+            if x == 0:
+                return 0
+            return self.p_to_q_values[x]
+
+        trans = np.vectorize(translation, otypes=[np.float])
+        new_values = trans(self.p_values)  # np.apply_along_axis(translation, 0, self.p_values)
+        assert len(new_values) == len(self.sample.data._values)
+
+        return new_values
+
+    def get_scores(self):
+        logging.info("Creating p dict")
+        self.get_p_dict()
+        logging.info("Creating mapping from p-values to q-values")
+        self.get_p_to_q_values()
+        logging.info("Computing q values")
+        self.get_q_values()
