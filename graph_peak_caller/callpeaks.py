@@ -163,9 +163,11 @@ class CallPeaksFromQvalues(object):
 
             logging.info("Found %d subgraphs" % len(peaks_as_subgraphs))
             binary_peaks = peaks_as_subgraphs
-            logging.info("Writing binary continous peaks to file")
-            BCACollection(binary_peaks).to_file(
-                self.out_file_base_name + "bcapeaks.subgraphs")
+
+            if self.save_tmp_results_to_file:
+                logging.info("Writing binary continous peaks to file")
+                BCACollection(binary_peaks).to_file(
+                    self.out_file_base_name + "bcapeaks.subgraphs")
             self.binary_peaks = binary_peaks
 
     def callpeaks(self):
