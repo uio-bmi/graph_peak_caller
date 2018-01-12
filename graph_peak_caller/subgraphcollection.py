@@ -187,7 +187,7 @@ class SubgraphCollectionPartiallyOrderedGraphBuilder():
         n = 0
         for node_id in sorted_nodes: #, starts_and_ends in self.areas.areas.items():
             starts_and_ends = self.areas.areas[node_id]
-            if n % 50000 == 0:
+            if n % 1000000 == 0:
                 logging.info("Adding node %d to subgraph" % n)
             n += 1
             for i in range(0, len(starts_and_ends) // 2):

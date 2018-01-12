@@ -15,13 +15,14 @@ from .sparsepileupv2 import RpScore, SimpleValuedIndexes
 
 class DensePileupData:
 
-    def __init__(self, graph, ndim=1, base_value=0):
+    def __init__(self, graph, ndim=1, base_value=0, dtype=None):
         self._values = None
         self._node_indexes = None
         self._graph = graph
         self.min_node = None
         self._touched_nodes = set()
         self.ndim = ndim
+        self.dtype = dtype
 
         self._create_empty(ndim, base_value=base_value)
 
@@ -36,7 +37,10 @@ class DensePileupData:
         if ndim > 1:
             self._values = np.zeros((n_elements, ndim), dtype=np.float16)
         else:
-            self._values = np.zeros(n_elements)
+            if self.dtype is not None:
+                self._values = np.zeros(n_elements)
+            else:
+                self._values = np.zeros(n_elements)
 
         if base_value > 0:
             self._values += base_value
@@ -229,10 +233,10 @@ class DensePileupData:
         return True
 
 class DensePileup(Pileup):
-    def __init__(self, graph, ndim=1, base_value=0):
+    def __init__(self, graph, ndim=1, base_value=0, dtype=None):
         logging.info("Initing dense pileup")
         self.graph = graph
-        self.data = DensePileupData(graph, ndim=ndim, base_value=base_value)
+        self.data = DensePileupData(graph, ndim=ndim, base_value=base_value, dtype=dtype)
 
     @classmethod
     def from_base_value(cls, graph, base_value):
@@ -481,7 +485,7 @@ class DensePileup(Pileup):
 
     @classmethod
     def create_from_binary_continous_areas(cls, graph, areas_list):
-        pileup = cls(graph)
+        pileup = cls(graph, dtype=np.uint8)
         i = 0
         for areas in areas_list:
             if i % 5000 == 0:
@@ -650,11 +654,3 @@ class QValuesFinder:
         assert len(new_values) == len(self.sample.data._values)
 
         return new_values
-
-    def get_scores(self):
-        logging.info("Creating p dict")
-        self.get_p_dict()
-        logging.info("Creating mapping from p-values to q-values")
-        self.get_p_to_q_values()
-        logging.info("Computing q values")
-        self.get_q_values()

@@ -49,7 +49,7 @@ class LinearSnarlMap(object):
         return scale, offset
 
     def to_dense_pileup(self, unmapped_indices_dict):
-        pileup = DensePileup(self._graph)
+        pileup = DensePileup(self._graph, dtype=np.uint8)
         i = 0
         for node_id, unmapped_indices in unmapped_indices_dict.items():
             if i % 100000 == 0:

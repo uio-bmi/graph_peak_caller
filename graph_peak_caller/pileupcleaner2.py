@@ -26,7 +26,7 @@ class Cleaner(object):
         logging.info("Getting starts and ends dicts")
         i = 0
         for node, startends in areas.items():
-            if i % 50000 == 0:
+            if i % 200000 == 0:
                 logging.info("Getting starts/ends dicts for node %d" % i)
             i += 1
 
