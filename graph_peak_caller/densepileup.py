@@ -96,6 +96,13 @@ class DensePileupData:
         self._values[array_start:array_end] += value
         self._touched_nodes.add(node)
 
+    def set_full_node_value(self, node, value):
+        index = node - self.min_node
+        array_start = self._node_indexes[index]
+        array_end = array_start + self.node_size(node)
+        self._values[array_start:array_end] = value
+        self._touched_nodes.add(node)
+
     def get_subset_max_value(self, node_id, start, end):
         return np.max(self.values(node_id)[start:end])
 
@@ -232,6 +239,26 @@ class DensePileupData:
 
         return True
 
+    def get_interval_values(self, interval):
+
+        values = np.zeros(interval.length())
+        offset = 0
+        for i, rp in enumerate(interval.region_paths):
+            assert rp > 0, "Currently only implemented for forward directed intervals"
+            start = 0
+            end = self._graph.node_size(rp)
+            if i == 0:
+                start = interval.start_position.offset
+            if i == len(interval.region_paths) - 1:
+                end = interval.end_position.offset
+
+            values_in_rp = self.values_in_range(rp, start, end)
+            values[offset:offset + (end - start)] = values_in_rp
+
+            offset += end-start
+
+        return values
+
     def value_indexes_to_nodes_and_offsets(self, indexes):
         """
         Takes indexes referring to positions in self._values
@@ -251,7 +278,7 @@ class DensePileupData:
             node_size = self.node_size(current_node)
             next_node_start = length_offset + node_size
 
-            print("Checking index %d. Current node: %d" % (index, current_node))
+            #print("Checking index %d. Current node: %d" % (index, current_node))
 
             if index >= next_node_start:
                 current_node_index += 1
@@ -300,6 +327,13 @@ class DensePileup(Pileup):
 
     def scale(self, scale):
         self.data.scale()
+
+    def fill_small_wholes2(self, max_size, write_holes_to_file=None, touched_nodes=None):
+        from .dagholecleaner import DagHoleCleaner
+        logging.info("Cleaning holes using Dag Hole Cleaner")
+        cleaner = DagHoleCleaner(self, max_size)
+        cleaner.run()
+        logging.info("Done cleaning holes")
 
     def fill_small_wholes(self, max_size, write_holes_to_file=None, touched_nodes=None):
         cleaner = HolesCleaner(self, max_size, touched_nodes=touched_nodes)
@@ -516,6 +550,68 @@ class DensePileup(Pileup):
 
         return pileup
 
+    def set_area_to_value(self, areas, value):
+        for node_id in areas.full_areas:
+            self.data.set_full_node_value(node_id, value)
+
+        for node_id, internal_intervals in areas.internal_intervals.items():
+            assert node_id > 0
+            self.data.set_values(node_id, internal_intervals[0], internal_intervals[1], value)
+
+        for node_id, start in areas.starts.items():
+            node_size = self.graph.node_size(node_id)
+            pileup_end = start
+            pileup_start = 0
+            if node_id < 0:
+                pileup_end = node_size
+                pileup_start = node_size - start
+                node_id = -node_id
+
+            #print("   Processing start %d for node %d, adding start-end %d-%d" % (start, node_id, pileup_start, pileup_end))
+            self.data.set_values(node_id, pileup_start, pileup_end, value)
+
+    def area_is_not_empty(self, areas):
+        # Returns true if area is covered by anything anywhere.
+        # Areas is Binary cont areas dict
+        for node_id in areas.full_areas:
+            self.data.add_value_to_full_node(node_id, 1)
+
+        for node_id, internal_intervals in areas.internal_intervals.items():
+            assert node_id > 0
+            self.data.add_value(node_id, internal_intervals[0], internal_intervals[1], 1)
+
+        for node_id, start in areas.starts.items():
+            node_size = self.graph.node_size(node_id)
+            pileup_end = start
+            pileup_start = 0
+            if node_id < 0:
+                pileup_end = node_size
+                pileup_start = node_size - start
+                node_id = -node_id
+
+            #print("   Processing start %d for node %d, adding start-end %d-%d" % (start, node_id, pileup_start, pileup_end))
+            self.data.add_value(node_id, pileup_start, pileup_end, 1)
+
+    def add_area(self, areas):
+        for node_id in areas.full_areas:
+            self.data.add_value_to_full_node(node_id, 1)
+
+        for node_id, internal_intervals in areas.internal_intervals.items():
+            assert node_id > 0
+            self.data.add_value(node_id, internal_intervals[0], internal_intervals[1], 1)
+
+        for node_id, start in areas.starts.items():
+            node_size = self.graph.node_size(node_id)
+            pileup_end = start
+            pileup_start = 0
+            if node_id < 0:
+                pileup_end = node_size
+                pileup_start = node_size - start
+                node_id = -node_id
+
+            #print("   Processing start %d for node %d, adding start-end %d-%d" % (start, node_id, pileup_start, pileup_end))
+            self.data.add_value(node_id, pileup_start, pileup_end, 1)
+
     @classmethod
     def create_from_binary_continous_areas(cls, graph, areas_list):
         pileup = cls(graph, dtype=np.uint8)
@@ -524,28 +620,7 @@ class DensePileup(Pileup):
             if i % 5000 == 0:
                 logging.info("Processing read %d" % i)
             i += 1
-            #print("   Processing area \n%s" % areas)
-            for node_id in areas.full_areas:
-                pileup.data.add_value_to_full_node(node_id, 1)
-                #touched_nodes.add(abs(node_id))
-
-            for node_id, internal_intervals in areas.internal_intervals.items():
-                assert node_id > 0
-                pileup.data.add_value(node_id, internal_intervals[0], internal_intervals[1], 1)
-                #touched_nodes.add(abs(node_id))
-
-            for node_id, start in areas.starts.items():
-                node_size = graph.node_size(node_id)
-                pileup_end = start
-                pileup_start = 0
-                if node_id < 0:
-                    pileup_end = node_size
-                    pileup_start = node_size - start
-                    node_id = -node_id
-
-                #print("   Processing start %d for node %d, adding start-end %d-%d" % (start, node_id, pileup_start, pileup_end))
-                pileup.data.add_value(node_id, pileup_start, pileup_end, 1)
-                #touched_nodes.add(abs(node_id))
+            pileup.add_area(areas)
 
         return pileup
 

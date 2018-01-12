@@ -110,7 +110,7 @@ class CallPeaksFromQvalues(object):
 
     def __postprocess(self):
         logging.info("Filling small Holes")
-        self.pre_processed_peaks.fill_small_wholes(
+        self.pre_processed_peaks.fill_small_wholes2(
                                     self.info.read_length,
                                     self.out_file_base_name + "_holes.intervals",
                                     touched_nodes=self.touched_nodes)
@@ -124,13 +124,55 @@ class CallPeaksFromQvalues(object):
             self.info.fragment_length)
         logging.info("Small peaks removed")
 
+    def trim_max_path_intervals(self, intervals, end_to_trim=-1):
+        # Right trim max path intervals, remove right end where q values are 0
+        # If last base pair in interval has 0 in p-value, remove hole size
+        logging.info("Trimming max path intervals. End: %d" % end_to_trim)
+        new_intervals = []
+        n_intervals_trimmed = 0
+        for interval in intervals:
+            pileup_values = self.q_values.data.get_interval_values(interval)
+            assert len(pileup_values) == interval.length()
+
+            if end_to_trim == 1:
+                pileup_values = pileup_values[::-1]
+
+            cumsum = np.cumsum(pileup_values)
+            n_zeros_beginning = np.sum(cumsum == 0)
+
+            if end_to_trim == -1:
+                new_interval = interval.get_subinterval(n_zeros_beginning, interval.length())
+            else:
+                new_interval = interval.get_subinterval(0, interval.length() - n_zeros_beginning)
+
+            if new_interval.length() != interval.length():
+                n_intervals_trimmed += 1
+                #print("Trimmed interval into: ")
+                #print("   %s" % interval)
+                #print("   %s" % new_interval)
+
+            new_interval.score = interval.score
+
+            if new_interval.length() < self.info.fragment_length:
+                print("Not keeping too short interval: %s" % new_interval)
+                continue
+
+            new_intervals.append(new_interval)
+
+        logging.info("Trimmed in total %d intervals" % n_intervals_trimmed)
+        logging.info("N intervals left: %d" % len(new_intervals))
+        return new_intervals
+
     def __get_max_paths(self):
         logging.info("Getting maxpaths")
         _pileup = self.raw_pileup if self.raw_pileup is not None else self.q_values
         scored_peaks = (ScoredPeak.from_peak_and_numpy_pileup(peak, _pileup)
                         for peak in self.binary_peaks)
         max_paths = [peak.get_max_path() for peak in scored_peaks]
+        max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1)
+        max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1)
         max_paths.sort(key=lambda p: p.score, reverse=True)
+
         PeakCollection(max_paths).to_file(
             self.out_file_base_name + "max_paths.intervalcollection",
             text_file=True)

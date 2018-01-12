@@ -1,5 +1,5 @@
 from graph_peak_caller.densepileup import DensePileupData, DensePileup
-from offsetbasedgraph import GraphWithReversals as Graph, Block
+from offsetbasedgraph import GraphWithReversals as Graph, Block, DirectedInterval as Interval
 import unittest
 import numpy as np
 
@@ -62,6 +62,19 @@ class TestDensePileup(unittest.TestCase):
 
         positions = pileup.data.value_indexes_to_nodes_and_offsets([15, 25])
         self.assertEqual(positions, [(2, 5), (3, 5)])
+
+    def test_get_interval_values(self):
+        pileup = DensePileup.from_intervals(graph,
+                                            [
+                                                Interval(5, 5, [1, 2], graph),
+                                                Interval(7, 3, [1, 2], graph)
+                                            ])
+        values = pileup.data.get_interval_values(Interval(5, 5, [1, 2], graph))
+        self.assertTrue(np.all(values == [1, 1, 2, 2, 2, 2, 2, 2, 1, 1]))
+
+        values = pileup.data.get_interval_values(Interval(3, 6, [1], graph))
+        self.assertTrue(np.all(values == [0, 0, 1]))
+
 
 if __name__ == "__main__":
     unittest.main()
