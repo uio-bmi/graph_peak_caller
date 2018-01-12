@@ -146,8 +146,6 @@ class TestDagHoleCleaner(unittest.TestCase):
                                              Interval(2, 5, [2])]
                                             )
         pileup.threshold(0.5)
-        print("Orig pileup")
-        print(pileup)
 
         cleaner = DagHoleCleaner(pileup, 5)
         pileup = cleaner.run()
@@ -161,7 +159,7 @@ class TestDagHoleCleaner(unittest.TestCase):
         )
         print(pileup)
 
-        #self.assertEqual(pileup, correct_pileup)
+        self.assertEqual(pileup, correct_pileup)
 
 
 

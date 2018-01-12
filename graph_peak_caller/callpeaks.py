@@ -126,8 +126,11 @@ class CallPeaksFromQvalues(object):
         #self.pre_processed_peaks.to_bed_file(
         #    self.out_file_base_name + "_before_small_peaks_removal.bed")
         #logging.info("Preprocessed peaks written to bed file")
+
+
         self.filtered_peaks = self.pre_processed_peaks.remove_small_peaks(
             self.info.fragment_length)
+        #self.filtered_peaks = self.pre_processed_peaks
         logging.info("Small peaks removed")
 
     def trim_max_path_intervals(self, intervals, end_to_trim=-1):
@@ -160,7 +163,7 @@ class CallPeaksFromQvalues(object):
             new_interval.score = interval.score
 
             if new_interval.length() < self.info.fragment_length:
-                print("Not keeping too short interval: %s" % new_interval)
+                #print("Not keeping too short interval: %s" % new_interval)
                 continue
 
             new_intervals.append(new_interval)

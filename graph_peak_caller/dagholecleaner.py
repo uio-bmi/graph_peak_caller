@@ -29,6 +29,7 @@ class DagHoleCleaner(object):
         Add all left hole side that are at beginning of node by
         explicitly checking all node starts
         """
+        logging.info("Getting left side of holes")
         node_lengths = [self.pileup.data.node_size(node) for node in self.pileup.data._nodes[0:-1]]
         start_node_indices = np.cumsum(node_lengths)
         #print("Start node indices: %s" % start_node_indices)
@@ -40,20 +41,26 @@ class DagHoleCleaner(object):
         #print("First positions: %s" % positions)
 
         # Check all node starts
+        logging.info("Adding node starts")
         is_hole = set(np.where(self.pileup.data._values == False)[0])
         is_hole_and_start = is_hole.intersection(set(start_node_indices))
         is_hole_and_start = sorted(list(is_hole_and_start))
         start_positions = self.pileup.data.value_indexes_to_nodes_and_offsets(is_hole_and_start)
 
+        logging.info("Going through each start")
         for start_position in start_positions:
             #print("Checking start node position %d, %d" % (start_position))
             node = start_position[0]
             is_start_of_hole = True
+            if len(self._graph.reverse_adj_list[-node]) == 0:
+                continue  # Start of grap, not hole
+
             for in_node in self._graph.reverse_adj_list[-node]:
                 values = self.pileup.data.values(-in_node)
                 #print("  Checking in-node %d with values %s" % (-in_node, values))
                 if not values[-1]:
                     is_start_of_hole = False
+                    #print("   Is not start of hole")
                     break
 
             if is_start_of_hole:
@@ -62,10 +69,18 @@ class DagHoleCleaner(object):
         return positions
 
     def expand_hole_sides_to_right(self, positions):
+        #print("Positions to expand")
+        #print(positions)
+
         logging.info("Number of holes to expand: %d" % len(positions))
         extender = Extender(self._graph, self.hole_size)
 
+        i = 0
         for position in positions:
+            if i % 500 == 0:
+                logging.info("Expanding hole %d/%d" % (i, len(positions)))
+            i += 1
+
             node = position[0]
             offset = position[1]
             interval = obg.DirectedInterval(int(offset), int(offset) + 1, [node])
@@ -75,6 +90,9 @@ class DagHoleCleaner(object):
             self.pileup.set_area_to_value(areas, True)
 
         self.pileup.threshold(0.5)
+
+        #print("Pileup after hole expansion")
+        #print(self.pileup)
 
     def expand_back(self, positions):
         extender = Extender(self._graph, self.hole_size+1)
