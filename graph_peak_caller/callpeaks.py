@@ -110,10 +110,16 @@ class CallPeaksFromQvalues(object):
 
     def __postprocess(self):
         logging.info("Filling small Holes")
-        self.pre_processed_peaks.fill_small_wholes2(
+
+        if isinstance(self.pre_processed_peaks, DensePileup):
+            self.pre_processed_peaks.fill_small_wholes_on_dag(
+                                    self.info.read_length)
+        else:
+            self.pre_processed_peaks.fill_small_wholes(
                                     self.info.read_length,
                                     self.out_file_base_name + "_holes.intervals",
                                     touched_nodes=self.touched_nodes)
+
         logging.info("Removing small peaks")
 
         # This is slow:
@@ -169,8 +175,11 @@ class CallPeaksFromQvalues(object):
         scored_peaks = (ScoredPeak.from_peak_and_numpy_pileup(peak, _pileup)
                         for peak in self.binary_peaks)
         max_paths = [peak.get_max_path() for peak in scored_peaks]
-        max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1)
-        max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1)
+
+        if isinstance(self.q_values, DensePileup):
+            max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1)
+            max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1)
+
         max_paths.sort(key=lambda p: p.score, reverse=True)
 
         PeakCollection(max_paths).to_file(

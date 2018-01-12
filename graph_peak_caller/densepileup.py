@@ -328,7 +328,7 @@ class DensePileup(Pileup):
     def scale(self, scale):
         self.data.scale()
 
-    def fill_small_wholes2(self, max_size, write_holes_to_file=None, touched_nodes=None):
+    def fill_small_wholes_on_dag(self, max_size):
         from .dagholecleaner import DagHoleCleaner
         logging.info("Cleaning holes using Dag Hole Cleaner")
         cleaner = DagHoleCleaner(self, max_size)
