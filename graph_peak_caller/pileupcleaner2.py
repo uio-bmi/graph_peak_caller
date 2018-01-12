@@ -201,8 +201,8 @@ class PeaksCleaner(Cleaner):
 
     def get_areas(self, pileup):
         logging.info("Getting True areas from pileup")
-        pileup = pileup.find_valued_areas(True)
-        return pileup
+        areas_dict = pileup.find_valued_areas(True)
+        return areas_dict
 
     def _check_internal_interval(self, node_id, start, end):
         if start == 0 or end == self.graph.node_size(node_id):

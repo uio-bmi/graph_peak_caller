@@ -14,7 +14,7 @@ ob_graph = obg.GraphWithReversals.from_numpy_files("graph__")
 #intervals = vg_json_file_to_interval_collection(None, "../tests/lrc_kir/reads.json", ob_graph)
 
 def run_extender():
-    intervals = vg_json_file_to_interval_collection(None, "../tests/lrc_kir/small.json", ob_graph)
+    intervals = vg_json_file_to_interval_collection(None, "../tests/lrc_kir/reads.json", ob_graph)
     extender = Extender(ob_graph, 140)
     valued_areas = ValuedAreas(ob_graph)
     areas_list = (extender.extend_interval(interval)
@@ -24,10 +24,10 @@ def run_extender():
     touched_nodes = set()
     for area in areas_list:
         if i % 5000 == 0:
-            print("Processing area %d" % i)
+            logging.info("Processing area %d" % i)
         i += 1
 
-        valued_areas.add_binary_areas(area, touched_nodes)
+        #valued_areas.add_binary_areas(area, touched_nodes)
 
     pileup = DensePileup.from_valued_areas(
             ob_graph, valued_areas, touched_nodes=touched_nodes)
@@ -35,9 +35,8 @@ def run_extender():
     return pileup
 
 def run_extender2():
-    intervals = vg_json_file_to_interval_collection(None, "../tests/lrc_kir/small.json", ob_graph)
+    intervals = vg_json_file_to_interval_collection(None, "../tests/lrc_kir/reads.json", ob_graph)
     extender = Extender(ob_graph, 140)
-    valued_areas = ValuedAreas(ob_graph)
     areas_list = (extender.extend_interval(interval)
                   for interval in intervals)
 
@@ -48,6 +47,3 @@ def run_extender2():
 
 pileup1 = run_extender()
 pileup2 = run_extender2()
-
-print(pileup1)
-print(pileup2)

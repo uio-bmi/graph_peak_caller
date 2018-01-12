@@ -496,11 +496,6 @@ class CallPeaks(object):
         touched_nodes = pileup.data._touched_nodes
         self.touched_nodes = touched_nodes
 
-        logging.info("Writing touched nodes to file")
-        with open(self.out_file_base_name + "touched_nodes.pickle", "wb") as f:
-            pickle.dump(touched_nodes, f)
-
-        logging.info("N touched nodes: %d" % len(touched_nodes))
 
 
         self._sample_track = self.out_file_base_name + "sample_track.bdg"
@@ -508,6 +503,12 @@ class CallPeaks(object):
             logging.info("Saving sample pileup to file")
             pileup.to_bed_graph(self._sample_track)
             logging.info("Saved sample pileup to " + self._sample_track)
+
+            logging.info("Writing touched nodes to file")
+            with open(self.out_file_base_name + "touched_nodes.pickle", "wb") as f:
+                pickle.dump(touched_nodes, f)
+
+            logging.info("N touched nodes: %d" % len(touched_nodes))
 
         self._sample_pileup = pileup
 
