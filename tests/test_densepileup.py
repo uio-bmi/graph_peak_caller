@@ -48,5 +48,20 @@ class TestDensePileup(unittest.TestCase):
         self.assertTrue(np.all(values == [1]))
         self.assertTrue(np.all(indexes == [0, 10]))
 
+
+    def test_indexes_to_positions(self):
+        starts = {1: [3, 5]}
+        ends = {1: [7, 9]}
+        pileup = DensePileup.from_starts_and_ends(graph, starts, ends)
+
+        positions = pileup.data.value_indexes_to_nodes_and_offsets([0, 1, 10, 11, 15])
+        self.assertEqual(positions, [(1, 0), (1, 1), (2, 0), (2, 1), (2, 5)])
+
+        positions = pileup.data.value_indexes_to_nodes_and_offsets([15])
+        self.assertEqual(positions, [(2, 5)])
+
+        positions = pileup.data.value_indexes_to_nodes_and_offsets([15, 25])
+        self.assertEqual(positions, [(2, 5), (3, 5)])
+
 if __name__ == "__main__":
     unittest.main()

@@ -232,6 +232,39 @@ class DensePileupData:
 
         return True
 
+    def value_indexes_to_nodes_and_offsets(self, indexes):
+        """
+        Takes indexes referring to positions in self._values
+        and returns list of (node, offset).
+        Indexes must be sorted
+        """
+
+        positions = []
+        # Map indexes to node and offset
+        length_offset = 0
+        nodes = self._nodes
+        current_node_index = 0
+        i = 0
+        while i < len(indexes):
+            index = indexes[i]
+            current_node = nodes[current_node_index]
+            node_size = self.node_size(current_node)
+            next_node_start = length_offset + node_size
+
+            print("Checking index %d. Current node: %d" % (index, current_node))
+
+            if index >= next_node_start:
+                current_node_index += 1
+                length_offset += node_size
+                continue
+
+            if index < next_node_start:
+                positions.append((current_node, index - length_offset))
+
+            i += 1
+        return positions
+
+
 class DensePileup(Pileup):
     def __init__(self, graph, ndim=1, base_value=0, dtype=None):
         logging.info("Initing dense pileup")
