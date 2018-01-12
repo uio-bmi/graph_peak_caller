@@ -128,9 +128,12 @@ class CallPeaksFromQvalues(object):
         #logging.info("Preprocessed peaks written to bed file")
 
 
-        self.filtered_peaks = self.pre_processed_peaks.remove_small_peaks(
-            self.info.fragment_length)
-        #self.filtered_peaks = self.pre_processed_peaks
+        if isinstance(self.pre_processed_peaks, DensePileup):
+            # If dense pileup, we are filtering small peaks while trimming later
+            self.filtered_peaks = self.pre_processed_peaks
+        else:
+            self.filtered_peaks = self.pre_processed_peaks.remove_small_peaks(
+                self.info.fragment_length)
         logging.info("Small peaks removed")
 
     def trim_max_path_intervals(self, intervals, end_to_trim=-1):
@@ -140,8 +143,16 @@ class CallPeaksFromQvalues(object):
         new_intervals = []
         n_intervals_trimmed = 0
         for interval in intervals:
-            pileup_values = self.q_values.data.get_interval_values(interval)
-            assert len(pileup_values) == interval.length()
+            if np.all([rp < 0 for rp in interval.region_paths]):
+                use_interval = interval.get_reverse()
+                use_interval.score = interval.score
+            else:
+                use_interval = interval
+                assert np.all([rp > 0 for rp in interval.region_paths]), \
+                "This method only supports intervals with single rp direction"
+
+            pileup_values = self.q_values.data.get_interval_values(use_interval)
+            assert len(pileup_values) == use_interval.length()
 
             if end_to_trim == 1:
                 pileup_values = pileup_values[::-1]
@@ -150,17 +161,17 @@ class CallPeaksFromQvalues(object):
             n_zeros_beginning = np.sum(cumsum == 0)
 
             if end_to_trim == -1:
-                new_interval = interval.get_subinterval(n_zeros_beginning, interval.length())
+                new_interval = use_interval.get_subinterval(n_zeros_beginning, use_interval.length())
             else:
-                new_interval = interval.get_subinterval(0, interval.length() - n_zeros_beginning)
+                new_interval = use_interval.get_subinterval(0, use_interval.length() - n_zeros_beginning)
 
-            if new_interval.length() != interval.length():
+            if new_interval.length() != use_interval.length():
                 n_intervals_trimmed += 1
                 #print("Trimmed interval into: ")
                 #print("   %s" % interval)
                 #print("   %s" % new_interval)
 
-            new_interval.score = interval.score
+            new_interval.score = use_interval.score
 
             if new_interval.length() < self.info.fragment_length:
                 #print("Not keeping too short interval: %s" % new_interval)

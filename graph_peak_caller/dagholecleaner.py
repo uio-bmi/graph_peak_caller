@@ -34,7 +34,10 @@ class DagHoleCleaner(object):
         start_node_indices = np.cumsum(node_lengths)
         #print("Start node indices: %s" % start_node_indices)
         diffs = np.diff(self.pileup.data._values * 1)
-        diffs[start_node_indices-1] = 0  # Ignore start of nodes here, we cannot be sure they are holes
+
+        if len(start_node_indices) > 0:
+            diffs[start_node_indices-1] = 0  # Ignore start of nodes here, we cannot be sure they are holes
+
         #print("Diffs: %s" % diffs)
         left_hole_indices = np.where(diffs == -1)[0] + 1
         positions = self.pileup.data.value_indexes_to_nodes_and_offsets(left_hole_indices)
