@@ -16,6 +16,7 @@ from .peakcollection import PeakCollection
 from . import linearsnarls
 IntervalCollection.interval_class = DirectedInterval
 from .subgraphcollection import SubgraphCollectionPartiallyOrderedGraph
+from .peakcollection import Peak
 from memory_profiler import profile
 
 def enable_filewrite(func):
@@ -176,6 +177,11 @@ class CallPeaksFromQvalues(object):
             if new_interval.length() < self.info.fragment_length:
                 #print("Not keeping too short interval: %s" % new_interval)
                 continue
+            new_interval = Peak(new_interval.start_position,
+                                new_interval.end_position,
+                                new_interval.region_paths,
+                                new_interval.graph,
+                                score=use_interval.score)
 
             new_intervals.append(new_interval)
 
