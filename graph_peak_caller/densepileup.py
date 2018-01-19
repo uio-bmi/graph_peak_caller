@@ -13,6 +13,7 @@ from .sparsepileup import SparseAreasDict, starts_and_ends_to_sparse_pileup, int
 from memory_profiler import profile
 from .sparsepileupv2 import RpScore, SimpleValuedIndexes
 
+
 class DensePileupData:
 
     def __init__(self, graph, ndim=1, base_value=0, dtype=None):
@@ -174,13 +175,17 @@ class DensePileupData:
         return (idxs, np.transpose(values))
 
     def find_valued_areas(self, node, value):
-        # Return list of tuples (start, end) having this value inside
-        all_indexes, values = self.get_sparse_indexes_and_values(node)
-        idxs = np.where(values == value)[0]
-        starts = all_indexes[idxs]
-        ends = all_indexes[idxs+1]
-        areas = list(chain(*zip(starts, ends)))
-        return areas
+        # Return list[start, end, start2, end2,...] having this value inside
+        values = self.values(node)
+        is_value = values == value
+        changes = np.nonzero(np.ediff1d(is_value))[0]+1
+        if is_value[0]:
+            if is_value[-1]:
+                return [0]+list(changes)+[is_value.size]
+            return [0]+list(changes)
+        if is_value[-1]:
+            return list(changes)+[is_value.size]
+        return list(changes)
 
     def nodes(self):
         return self._touched_nodes

@@ -176,7 +176,6 @@ def run_callpeaks(args):
         #ob_graph = obg.GraphWithReversals.from_numpy_files(obg_file_name)
         ob_graph = obg.GraphWithReversals.from_file(obg_file_name)
 
-
     if not os.path.isfile(args.linear_map_base_name + "_starts.pickle"):
         logging.info("Creating linear map")
         create_linear_map(ob_graph, args.vg_snarls_file_name, args.linear_map_base_name)
