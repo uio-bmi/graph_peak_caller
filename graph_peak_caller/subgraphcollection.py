@@ -168,6 +168,7 @@ class SingleArea:
     def __repr__(self):
         return self.__str__()
 
+
 class SubgraphCollectionPartiallyOrderedGraphBuilder():
 
     def __init__(self, graph, pileup):
@@ -196,13 +197,12 @@ class SubgraphCollectionPartiallyOrderedGraphBuilder():
                 is_start = self.areas._is_start_position(node_id, start)
                 #print("Checking end %d, %d" % (node_id, end))
                 is_end = self.areas._is_end_position(node_id, end)
-                self.single_areas.append(SingleArea(node_id, start, end, is_start, is_end))
+                yield SingleArea(node_id, start, end, is_start, is_end)
 
     def _create_subgraphs(self):
         logging.info("Creating subgraphs after single areas are created")
         peaks = []
         current_peak = BinaryContinousAreas(self.graph)
-        n_single_areas = len(self.single_areas)
         prev_was_end = False
         for single_area in self.single_areas:
             #print("Checking single area %s " % single_area)
@@ -225,9 +225,8 @@ class SubgraphCollectionPartiallyOrderedGraphBuilder():
         return peaks
 
     def build(self):
-        self._make_single_areas()
+        self.single_areas = self._make_single_areas()
         return self._create_subgraphs()
-
 
     """
     def build(self):

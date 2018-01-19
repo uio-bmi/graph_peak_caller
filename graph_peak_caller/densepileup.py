@@ -174,17 +174,20 @@ class DensePileupData:
         values = values[:, unique_idxs]
         return (idxs, np.transpose(values))
 
-    def find_valued_areas(self, node, value):
+    def find_valued_areas(self, node, value, changes=None):
         # Return list[start, end, start2, end2,...] having this value inside
-        values = self.values(node)
-        is_value = values == value
-        changes = np.nonzero(np.ediff1d(is_value))[0]+1
-        if is_value[0]:
-            if is_value[-1]:
-                return [0]+list(changes)+[is_value.size]
+        index = node - self.min_node
+        start = self._node_indexes[index]
+        end = start + self.node_size(node)
+        changes = np.nonzero(changes[start:end])[0]+1
+        # is_value = values == value
+        # changes = np.nonzero(np.ediff1d(is_value))[0]+1
+        if self._values[start] == value:
+            if self._values[end-1] == value:
+                return [0]+list(changes)+[end-start]
             return [0]+list(changes)
-        if is_value[-1]:
-            return list(changes)+[is_value.size]
+        if self._values[end-1]:
+            return list(changes)+[end-start]
         return list(changes)
 
     def nodes(self):
@@ -394,12 +397,13 @@ class DensePileup(Pileup):
 
     def find_valued_areas(self, value):
         logging.info("Finding valued areas equal to %d" % value)
+        changes = np.diff(self.data._values == value)
         if value:
-            return SparseAreasDict({node_id: self.data.find_valued_areas(node_id, value)
+            return SparseAreasDict({node_id: self.data.find_valued_areas(node_id, value, changes)
                                for node_id in self.data._graph.blocks
                                 }, graph=self.graph)
         else:
-            return SparseAreasDict({node_id: self.data.find_valued_areas(node_id, value)
+            return SparseAreasDict({node_id: self.data.find_valued_areas(node_id, value, changes)
                                    for node_id in self.data._touched_nodes
                                     }, graph=self.graph)
     @classmethod
