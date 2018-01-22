@@ -82,6 +82,24 @@ class TestDensePileup(unittest.TestCase):
                                                 Interval(7, 3, [1, 2], graph)
                                             ])
 
+        pileup.to_sparse_files("test_pileup_")
+        new = pileup.from_sparse_files(graph, "test_pileup_")
+
+        self.assertEqual(new, pileup)
+        self.assertEqual(pileup, new)
+
+        pileup = DensePileup.from_intervals(graph,
+                                            [
+                                                Interval(0, 5, [1, 2], graph),
+                                                Interval(7, 10, [1, 2], graph)
+                                            ])
+
+        pileup.to_sparse_files("test_pileup_")
+        new = pileup.from_sparse_files(graph, "test_pileup_")
+
+        self.assertEqual(new, pileup)
+        self.assertEqual(pileup, new)
+
 
 
 
