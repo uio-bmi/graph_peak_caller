@@ -80,6 +80,21 @@ class ExperimentInfo(object):
             data = pickle.loads(f.read())
             return data
 
+class CallPeaksFromPValuesAndPToQValuesMapping(object):
+    def __init__(self, graph, p_values_pileup, experiment_info,
+                 out_file_base_name="",
+                 graph_is_partially_ordered=False,
+                 save_tmp_results_to_file=True):
+        pass
+
+    @classmethod
+    def from_files(cls, graph_base_name, base_name,
+                   q_values_mapping_file_name,
+
+                   ):
+
+
+
 
 class CallPeaksFromQvalues(object):
     def __init__(self, graph, q_values_sparse_pileup,
