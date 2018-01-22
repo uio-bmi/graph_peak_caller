@@ -19,7 +19,7 @@ class PValuesFinder:
         baseEtoTen = np.log(10)
         p_values_array = -p_values / baseEtoTen
         p_values_pileup = DensePileup(self.sample.graph)
-        p_values_pileup.set_new_values(p_values_pileup)
+        p_values_pileup.set_new_values(p_values_array)
 
 
 class PToQValuesMapper:
@@ -62,11 +62,11 @@ class PToQValuesMapper:
             pre_q = q_value
             rank += value_count
 
-        self.p_to_q_values = p_to_q_values
+        self._p_to_q_values = p_to_q_values
 
     def to_file(self):
         with open(self.base_name + 'p2q.pkl', 'wb') as f:
-            pickle.dump(self._counter, f, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self._p_to_q_values, f, pickle.HIGHEST_PROTOCOL)
 
 
 class QValuesFinder:

@@ -639,18 +639,6 @@ class DensePileup(Pileup):
 
         return pileup
 
-    def to_sparse_files(self, truncate_below=0.05, file_base_name="p_values"):
-        vals = self.data._values
-        vals[np.where(vals < truncate_below)] = 0
-        indexes = np.where(np.ediff1d(self.p_values_array, to_begin=[0]) != 0)
-        values = self.p_values_array[indexes]
-
-        np.savetxt(file_base_name + "_indexes.npy", indexes)
-        np.savetxt(file_base_name + "_values.npy", values)
-
-        logging.info("Saved p values indexes/values to files")
-
-
 
 class DenseControlSample(DensePileup):
     def get_p_dict(self):
@@ -723,7 +711,7 @@ class DenseControlSample(DensePileup):
         return pileup
 
     @classmethod
-    def from_sparse_values_and_index_files(cls, graph, base_file_name):
+    def from_sparse_files(cls, graph, base_file_name):
         pileup = cls(graph)
         indexes = np.loadtxt(base_file_name + "_indexes.npy")
         values = np.loadtxt(base_file_name + "_values.npy")
@@ -735,6 +723,17 @@ class DenseControlSample(DensePileup):
         pileup.data._values = pileup_vals
 
         return pileup
+
+    def to_sparse_files(self, truncate_below=0.05, file_base_name="p_values"):
+        vals = self.data._values
+        vals[np.where(vals < truncate_below)] = 0
+        indexes = np.where(np.ediff1d(self.p_values_array, to_begin=[0]) != 0)
+        values = self.p_values_array[indexes]
+
+        np.savetxt(file_base_name + "_indexes.npy", indexes)
+        np.savetxt(file_base_name + "_values.npy", values)
+
+        logging.info("Saved p values indexes/values to files")
 
 
 class QValuesFinder:
