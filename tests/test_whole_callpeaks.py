@@ -9,9 +9,6 @@ import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
 class TestWholeCallPeaks(unittest.TestCase):
-    def get_caller(self):
-        self.graph_size = sum(block.length() for block in self.graph.blocks.values())
-        return CallPeaks(self.graph, out_file_base_name="test_")
 
 
     def _create_reads(self):
@@ -41,11 +38,11 @@ class TestWholeCallPeaks(unittest.TestCase):
 
         control_reads = self.sample_reads.copy()
 
-        self.caller = self.get_caller()
+        self.graph_size = sum(block.length() for block in self.graph.blocks.values())
         experiment_info = ExperimentInfo(self.graph_size,
                                          self.fragment_length, self.read_length)
         config = Configuration(skip_filter_duplicates=True)
-        self.caller.run_from_intervals(self.graph,
+        CallPeaks.run_from_intervals(self.graph,
                                        IntervalCollection(self.sample_reads),
                                        IntervalCollection(control_reads),
                                        out_file_base_name="test_",

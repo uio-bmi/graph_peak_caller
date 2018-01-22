@@ -1,20 +1,10 @@
 import unittest
 from offsetbasedgraph import GraphWithReversals as Graph, Block, DirectedInterval as Interval, IntervalCollection
-from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo
+from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo, Configuration
+from graph_peak_caller.sampleandcontrolcreator import SampleAndControlCreator
 from graph_peak_caller.densepileup import DensePileup as Pileup
 
 class Tester(unittest.TestCase):
-    def get_caller(self, sample_intervals, control_intervals, has_control=False):
-        self.graph_size = sum(block.length() for block in self.graph.blocks.values())
-        experiment_info = ExperimentInfo(self.graph_size,
-                                         self.fragment_length(), self.read_length())
-        return CallPeaks(self.graph,
-                         IntervalCollection(sample_intervals),
-                         IntervalCollection(control_intervals),
-                         experiment_info,
-                         out_file_base_name="test_", has_control=has_control,
-                         linear_map="test_linear_map.tmp",
-                         skip_filter_duplicates=True)
 
     def _create_reads(self):
         self.sample_reads = []
@@ -29,7 +19,7 @@ class Tester(unittest.TestCase):
 
     def assert_final_pileup_equals_correct_pileup(self):
         correct_pileup = self.correct_pileup  # Pileup.from_intervals(self.graph, self.fragments)
-        found_pileup = self.caller._sample_pileup
+        found_pileup = self.creator._sample_pileup
         print("Found pileup")
         print(found_pileup)
         print("Correct pileup")
@@ -46,10 +36,24 @@ class Tester(unittest.TestCase):
 
         control_reads = self.sample_reads.copy()
 
-        self.caller = self.get_caller(self.sample_reads,
-                                      control_reads,
-                                      has_control=False)
-        self.caller.create_sample_pileup()
+        self.graph_size = sum(block.length() for block in self.graph.blocks.values())
+        experiment_info = ExperimentInfo(self.graph_size,
+                                         self.fragment_length(), self.read_length())
+
+        config = Configuration(skip_filter_duplicates=True)
+
+        self.creator = SampleAndControlCreator(
+            self.graph,
+            IntervalCollection(self.sample_reads),
+            IntervalCollection(control_reads),
+            experiment_info,
+            "test_",
+            has_control=False,
+            linear_map="test_linear_map.tmp",
+            configuration=config
+
+        )
+        self.creator.create_sample_pileup()
 
     def do_asserts(self):
         self.run_callpeaks()

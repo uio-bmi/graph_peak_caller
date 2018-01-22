@@ -3,6 +3,7 @@ from graph_peak_caller.pileup import Pileup
 from offsetbasedgraph import Graph, Block, Interval, IntervalCollection
 from graph_peak_caller import bdgcmp, callpeaks
 from graph_peak_caller.callpeaks import ExperimentInfo
+from graph_peak_caller.sampleandcontrolcreator import SampleAndControlCreator
 import numpy as np
 
 class DummyLinearMap:
@@ -36,7 +37,7 @@ class TestFilterDulicates(unittest.TestCase):
         interval_collection = IntervalCollection(intervals)
         interval_collection.to_file("test_intervals.tmp")
 
-        caller = callpeaks.CallPeaks("test_graph.tmp", "test_intervals.tmp",
+        caller = SampleAndControlCreator("test_graph.tmp", "test_intervals.tmp",
                                      "test_intervals.tmp",
                                      experiment_info=experiment_info,
                                      linear_map="dummy_linear_map")
