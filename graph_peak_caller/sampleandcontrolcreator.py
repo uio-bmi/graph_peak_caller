@@ -35,10 +35,10 @@ class SampleAndControlCreator(object):
                  control_intervals=None, experiment_info=None,
                  verbose=False, out_file_base_name="", has_control=True,
                  linear_map=None, skip_filter_duplicates=False,
-                 graph_is_partially_ordered=False,
                  skip_read_validation=False,
                  save_tmp_results_to_file=True,
-                 configuration=None):
+                 configuration=None,
+                 graph_is_partially_ordered=False):
         """
         :param sample_intervals: Either an interval collection or file name
         :param control_intervals: Either an interval collection or a file name
@@ -74,7 +74,6 @@ class SampleAndControlCreator(object):
         self._control_pileup = None
         self._sample_pileup = None
         self.out_file_base_name = out_file_base_name
-        self.cutoff = 0.05
         self.pre_processed_peaks = None
         self.filtered_peaks = None
         self.skip_filter_duplicates = skip_filter_duplicates
@@ -97,9 +96,6 @@ class SampleAndControlCreator(object):
             self.skip_filter_duplicates = configuration.skip_filter_duplicates
             self.skip_read_validation = configuration.skip_read_validation
             self.save_tmp_results_to_file = configuration.save_tmp_results_to_file
-
-    def set_cutoff(self, value):
-        self.cutoff = value
 
     def run(self):
         self.preprocess()
@@ -300,11 +296,6 @@ class SampleAndControlCreator(object):
 
 
         self.q_value_peak_caller.callpeaks()
-
-
-    def save_max_path_sequences_to_fasta_file(self, file_name, retriever):
-        self.q_value_peak_caller.\
-            save_max_path_sequences_to_fasta_file(file_name, retriever)
 
     #@profile
     def create_sample_pileup(self):

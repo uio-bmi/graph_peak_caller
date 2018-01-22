@@ -26,11 +26,14 @@ class Configuration:
     def __init__(self, skip_filter_duplicates=False,
                        graph_is_partially_ordered=False,
                        skip_read_validation=False,
-                       save_tmp_results_to_file=False):
+                       save_tmp_results_to_file=False,
+                       p_val_cutoff=0.1
+                ):
         self.skip_filter_duplicates = skip_filter_duplicates
         self.graph_is_partially_ordered = graph_is_partially_ordered
         self.skip_read_validation = skip_read_validation
         self.save_tmp_results_to_file = save_tmp_results_to_file
+        self.p_val_cutoff = p_val_cutoff
 
     @classmethod
     def default(cls):
@@ -39,10 +42,9 @@ class Configuration:
 
 class CallPeaks(object):
 
-    def __init__(self, graph, out_file_base_name, graph_is_partially_ordered=None):
+    def __init__(self, graph, out_file_base_name):
         self.graph = graph
         self.out_file_base_name = out_file_base_name
-        self.graph_is_partially_ordered = graph_is_partially_ordered
 
         self.sample_intervals = None
         self.control_intervals = None
@@ -53,6 +55,7 @@ class CallPeaks(object):
         self.q_values_pileup = None
         self.peaks_as_subgraphs = None
         self.touched_nodes = None
+        self.max_path_peaks = None
 
     def run_pre_callpeaks(self, has_control, experiment_info, linear_map, configuration=None):
         if configuration is None:
@@ -72,16 +75,12 @@ class CallPeaks(object):
         self.sample_pileup = creator._sample_pileup
         self.control_pileup = creator._control_pileup
         self.touched_nodes = creator.touched_nodes
-        print("Sample pileup")
-        print(self.sample_pileup)
 
     def get_p_values(self):
         assert self.sample_pileup is not None
         assert self.control_pileup is not None
         self.p_values_pileup = \
             PValuesFinder(self.sample_pileup, self.control_pileup).get_p_values_pileup()
-        print("P values")
-        print(self.p_values_pileup)
 
     def get_p_to_q_values_mapping(self):
         assert self.p_values_pileup is not None
@@ -93,18 +92,17 @@ class CallPeaks(object):
         assert self.p_to_q_values_mapping is not None
         finder = QValuesFinder(self.p_values_pileup, self.p_to_q_values_mapping)
         self.q_values_pileup = finder.get_q_values()
-        print("Q values")
-        print(self.q_values_pileup)
 
-    def call_peaks_from_q_values(self, experiment_info):
+    def call_peaks_from_q_values(self, experiment_info, config=None):
         assert self.q_values_pileup is not None
         caller = CallPeaksFromQvalues(
             self.graph, self.q_values_pileup,
             experiment_info, self.out_file_base_name,
             touched_nodes=self.touched_nodes,
-            graph_is_partially_ordered=self.graph_is_partially_ordered
+            config=config
             )
         caller.callpeaks()
+        self.max_path_peaks = caller.max_paths
 
     @classmethod
     def run_from_intervals(cls, graph, sample_intervals,
@@ -120,7 +118,20 @@ class CallPeaks(object):
         caller.get_p_values()
         caller.get_p_to_q_values_mapping()
         caller.get_q_values()
-        caller.call_peaks_from_q_values(experiment_info)
+        caller.call_peaks_from_q_values(experiment_info, configuration)
+        return caller
+
+    def save_max_path_sequences_to_fasta_file(self, file_name, sequence_retriever):
+        assert self.max_path_peaks is not None
+        f = open(self.out_file_base_name + file_name, "w")
+        i = 0
+        for max_path in self.max_path_peaks:
+            seq = sequence_retriever.get_interval_sequence(max_path)
+            f.write(">peak" + str(i) + " " +
+                    max_path.to_file_line() + "\n" + seq + "\n")
+            i += 1
+        f.close()
+        logging.info("Wrote max path sequences to fasta file: %s" % (self.out_file_base_name + file_name))
 
 
 class CallPeaksFromQvalues(object):
@@ -128,7 +139,7 @@ class CallPeaksFromQvalues(object):
                  experiment_info,
                  out_file_base_name="",
                  cutoff=0.1, raw_pileup=None, touched_nodes=None,
-                 graph_is_partially_ordered=False):
+                 config=None):
         self.graph = graph
         self.q_values = q_values_pileup
         self.info = experiment_info
@@ -137,10 +148,16 @@ class CallPeaksFromQvalues(object):
         self.raw_pileup = raw_pileup
         #self.graph.assert_correct_edge_dicts()
         self.touched_nodes = touched_nodes
-        self.graph_is_partially_ordered = graph_is_partially_ordered
         self.save_tmp_results_to_file = True
+        self.graph_is_partially_ordered = False
+
+        if config is not None:
+            self.cutoff = config.p_val_cutoff
+            self.graph_is_partially_ordered = config.graph_is_partially_ordered
+            self.save_tmp_results_to_file = config.save_tmp_results_to_file
 
         self.info.to_file(self.out_file_base_name + "experiment_info.pickle")
+        logging.info("Using p value cutoff %.4f" % self.cutoff)
 
     def __threshold(self):
         threshold = -np.log10(self.cutoff)
@@ -251,6 +268,7 @@ class CallPeaksFromQvalues(object):
             text_file=True)
         logging.info("Wrote max paths to %s" % file_name)
 
+        assert max_paths is not None
         self.max_paths = max_paths
 
     def __get_subgraphs(self):

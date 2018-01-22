@@ -5,7 +5,7 @@ from pyvg.util import vg_gam_file_to_interval_collection, vg_json_file_to_interv
 from pyvg.sequences import SequenceRetriever
 from graph_peak_caller.util import create_linear_map, create_ob_graph_from_vg
 import logging
-from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo, CallPeaksFromQvalues
+from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo, CallPeaksFromQvalues, Configuration
 import argparse
 import sys
 from graph_peak_caller.sparsepileup import SparsePileup
@@ -35,20 +35,17 @@ def run_with_intervals(ob_graph,
     #logging.info("N nodes in graph: %d" % len(ob_graph.blocks))
 
     experiment_info = ExperimentInfo(graph_size, fragment_length, read_length)
-    caller = CallPeaks(
+    config = Configuration(skip_read_validation=True, save_tmp_results_to_file=False,
+                           skip_filter_duplicates=True, p_val_cutoff=0.05,
+                           graph_is_partially_ordered=True)
+
+    caller = CallPeaks.run_from_intervals(
         ob_graph, sample_intervals, control_intervals,
         experiment_info=experiment_info,
         out_file_base_name=out_name, has_control=has_control,
         linear_map=linear_map,
-        graph_is_partially_ordered=True,
-        skip_filter_duplicates=False,
-        skip_read_validation=True,
-        save_tmp_results_to_file=False
+        configuration=config
     )
-
-    caller.set_cutoff(0.05)
-    caller.verbose = True
-    caller.run()
     retriever = SequenceRetriever.from_vg_graph(vg_graph_file_name)
     caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
 

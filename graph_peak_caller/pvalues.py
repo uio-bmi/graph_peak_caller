@@ -51,8 +51,6 @@ class PToQValuesMapper:
         counts = counts[sorting]
 
         counter_dict = {unique_p_values[i]: counts[i] for i in range(0, len(counts))}
-        print("Counter dict")
-        print(counter_dict)
         return cls(counter_dict)
 
     @classmethod
@@ -72,7 +70,6 @@ class PToQValuesMapper:
         logN = np.log10(sum(self._counter.values()))
         pre_q = None
         for p_value in reversed(sorted(self._counter.keys())):
-            print("  P value %.5f" % p_value)
             value_count = self._counter[p_value]
             q_value = p_value + (np.log10(rank) - logN)
             if rank == 1:
@@ -85,8 +82,6 @@ class PToQValuesMapper:
             rank += value_count
 
         self.p_to_q_values = p_to_q_values
-        print("P to q values")
-        print(self.p_to_q_values)
         return p_to_q_values
 
     def to_file(self, base_name):
