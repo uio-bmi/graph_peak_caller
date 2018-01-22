@@ -289,12 +289,9 @@ class Extender(object):
         neg_length = self.length if direction == 0 else 0
         pos_remain, neg_remain = self.area_builder.filled_interval(
             interval, pos_length, neg_length)
-        logging.debug(pos_remain)
-        logging.debug(neg_remain)
         is_pos = interval.can_be_on_positive_strand()
         is_neg = interval.can_be_on_negative_strand()
-        logging.debug(is_pos)
-        logging.debug(is_neg)
+        #print(" Extending interval %s. Can be on pos/neg: %d/%d" % (interval, is_pos, is_neg))
         if pos_remain:
             if is_pos:
                 self.get_areas_from_node(

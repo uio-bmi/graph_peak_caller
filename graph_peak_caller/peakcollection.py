@@ -22,6 +22,7 @@ class Peak(obg.DirectedInterval):
                    score)
 
     def set_score(self, score):
+        assert isinstance(score, float), "Score %s is invalid, type %s" % (score, type(score))
         self.score = score
 
     def to_file_line(self):

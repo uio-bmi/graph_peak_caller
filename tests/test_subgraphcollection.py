@@ -3,7 +3,7 @@ from graph_peak_caller.subgraphcollection import SubgraphCollection, ConnectedAr
 from graph_peak_caller.extender import Areas
 from offsetbasedgraph import GraphWithReversals as Graph, Block, Interval, Position, GraphWithReversals
 import numpy as np
-from graph_peak_caller.sparsepileup import SparsePileup
+from graph_peak_caller.densepileup import DensePileup as SparsePileup
 
 class Tester(unittest.TestCase):
     def setUp(self):

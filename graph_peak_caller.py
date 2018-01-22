@@ -40,7 +40,12 @@ def run_with_intervals(ob_graph,
         experiment_info=experiment_info,
         out_file_base_name=out_name, has_control=has_control,
         linear_map=linear_map,
-        graph_is_partially_ordered=True)
+        graph_is_partially_ordered=True,
+        skip_filter_duplicates=False,
+        skip_read_validation=True,
+        save_tmp_results_to_file=False
+    )
+
     caller.set_cutoff(0.05)
     caller.verbose = True
     caller.run()
@@ -196,6 +201,7 @@ def run_callpeaks(args):
     )
 
 
+#@profile
 def run_callpeaks_with_numpy_graph(args):
     logging.info("Read offset based graph")
 
@@ -543,6 +549,9 @@ python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json gr
 """
 Lrc_kir local:
 python3 ../../graph_peak_caller.py callpeaks graph.json graph.vg linear_map reads.json reads.json False test_ 136 35
+
+LRC med numpy graph:
+python3 ../../graph_peak_caller.py callpeaks_with_numpy_graph graph graph.vg linear_map reads.json reads.json False test_ 136 35
 
 
 python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls filtered.gam filtered.gam False run1/ 135 36 23739138

@@ -1,8 +1,10 @@
 import json
 import pickle
-from .sparsepileup import ValuedIndexes, SparsePileupData
+from .sparsepileupv2 import SparsePileupData, SparsePileup
+from .densepileup import DensePileup
 from .linearintervals import LinearIntervalCollection
 import logging
+import numpy as np
 
 
 class LinearSnarlMap(object):
@@ -46,8 +48,8 @@ class LinearSnarlMap(object):
         offset = self.get_node_start(node_id)
         return scale, offset
 
-    def to_graph_pileup(self, unmapped_indices_dict):
-        vi_dict = {}
+    def to_dense_pileup(self, unmapped_indices_dict):
+        pileup = DensePileup(self._graph, dtype=np.uint8)
         i = 0
         for node_id, unmapped_indices in unmapped_indices_dict.items():
             if i % 100000 == 0:
@@ -58,15 +60,74 @@ class LinearSnarlMap(object):
             new_idxs = (unmapped_indices.get_index_array()-offset) / scale
             new_idxs = new_idxs.astype("int")
             new_idxs[0] = max(0, new_idxs[0])
-            vi = ValuedIndexes(
-                new_idxs[1:], unmapped_indices.get_values_array()[1:],
-                unmapped_indices.values[0],
-                self._graph.node_size(node_id))
-            assert (not vi.indexes.size) or vi.indexes[-1] <= vi.length
-            vi.sanitize_indices()
-            vi.sanitize()
-            vi_dict[node_id] = vi
-        return vi_dict
+
+            length = self._graph.node_size(node_id)
+            indexes = new_idxs
+            values = unmapped_indices.get_values_array()
+            start_value = values[0]
+            # Sanitize indexes
+            diffs = np.where(np.diff(indexes) > 0)[0]
+            indexes = indexes[diffs+1]
+            values = values[diffs+1]
+
+            indexes = np.insert(indexes, 0, 0)
+            indexes = np.append(indexes, length)
+            values = np.insert(values, 0, start_value)
+
+            j = 0
+            for start, end in zip(indexes[:-1], indexes[1:]):
+                value = values[j]
+                #print("    Setting %d, %d, %d, %d" % (node_id, start, end, value))
+                pileup.data.set_values(node_id, start, end, value)
+                j += 1
+
+        return pileup
+
+    def to_numpy_sparse_pileup(self, unmapped_indices_dict):
+        nodes = unmapped_indices_dict.keys()
+        lengths = []
+        assert self._graph is not None
+        i = 0
+        for node_id, unmapped_indices in unmapped_indices_dict.items():
+            if i % 100000 == 0:
+                logging.info("Processing node %d" % i)
+            i += 1
+            n_indices = len(unmapped_indices.get_index_array()) + 2
+            lengths.append(n_indices)
+
+        pileup_data = SparsePileupData(nodes, lengths, graph=self._graph)
+        del lengths
+
+        i = 0
+        for node_id, unmapped_indices in unmapped_indices_dict.items():
+            if i % 100000 == 0:
+                logging.info("Processing node %d" % i)
+            i += 1
+
+            scale, offset = self.get_scale_and_offset(node_id)
+            new_idxs = (unmapped_indices.get_index_array()-offset) / scale
+            new_idxs = new_idxs.astype("int")
+            new_idxs[0] = max(0, new_idxs[0])
+
+            length = self._graph.node_size(node_id)
+            indexes = new_idxs
+            values = unmapped_indices.get_values_array()
+            start_value = values[0]
+            # Sanitize indexes
+            diffs = np.where(np.diff(indexes) > 0)[0]
+            indexes = indexes[diffs+1]
+            values = values[diffs+1]
+
+            pileup_data.set_indexes(node_id, indexes)
+            pileup_data.set_end_index(node_id, length)
+            pileup_data.set_start_value(node_id, start_value)
+            pileup_data.set_values(node_id, values)
+
+        pileup = SparsePileup(self._graph)
+        pileup.data = pileup_data
+        #pileup.sanitize_indices()
+        pileup.sanitize()
+        return pileup
 
     def map_graph_interval(self, interval):
         start_pos = self.graph_position_to_linear(interval.start_position)
@@ -91,6 +152,7 @@ class LinearSnarlMap(object):
             start, end = self.map_graph_interval(interval)
             starts.append(start)
             ends.append(end)
+            #print("Mapping interval %s to %d, %d" % (interval, start, end))
         return LinearIntervalCollection(starts, ends)
 
     def to_json_files(self, base_name):

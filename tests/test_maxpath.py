@@ -2,7 +2,7 @@ import unittest
 from graph_peak_caller.subgraphcollection import SubgraphCollection, ConnectedAreas
 from offsetbasedgraph import GraphWithReversals as Graph, Block, Interval
 from graph_peak_caller.areas import BinaryContinousAreas, Areas
-from graph_peak_caller.sparsepileup import SparsePileup
+from graph_peak_caller.densepileup import DensePileup
 from graph_peak_caller.peakscores import ScoredPeak
 
 
@@ -26,10 +26,12 @@ class TestMaxPath(unittest.TestCase):
                               })
 
         binary_peak = BinaryContinousAreas.from_old_areas(peak)
-        qvalues = SparsePileup.from_base_value(graph, 10)
+        qvalues = DensePileup.from_base_value(graph, 10)
         print("q values")
         print(qvalues)
+        print(qvalues.data._values)
         scored_peak = ScoredPeak.from_peak_and_pileup(binary_peak, qvalues)
+        print(scored_peak)
 
         max_path = scored_peak.get_max_path()
 
@@ -60,12 +62,16 @@ class TestMaxPath(unittest.TestCase):
 
 
         binary_peak = BinaryContinousAreas.from_old_areas(peak)
-        qvalues = SparsePileup.from_intervals(graph,
+        qvalues = DensePileup.from_intervals(graph,
                 [
                     Interval(7, 2, [1, 3, 4])  # Giving higher qvalue
                                                 # through this path
                 ])
+
+        print(qvalues)
+
         scored_peak = ScoredPeak.from_peak_and_pileup(binary_peak, qvalues)
+        print(scored_peak)
 
         max_path = scored_peak.get_max_path()
         self.assertEqual(max_path, Interval(5, 3, [1, 3, 4]))
@@ -92,7 +98,7 @@ class TestMaxPath(unittest.TestCase):
                               })
 
         binary_peak = BinaryContinousAreas.from_old_areas(peak)
-        qvalues = SparsePileup.from_intervals(
+        qvalues = DensePileup.from_intervals(
             graph,
             [
                 Interval(7, 2, [1, 2, 4])
@@ -126,7 +132,7 @@ class TestMaxPath(unittest.TestCase):
                               })
 
         binary_peak = BinaryContinousAreas.from_old_areas(peak)
-        qvalues = SparsePileup.from_intervals(graph,
+        qvalues = DensePileup.from_intervals(graph,
                 [
                     Interval(0, 10, [3]), # Higher value on 3 than 2
                     Interval(0, 10, [3]),

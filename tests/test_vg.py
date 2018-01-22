@@ -31,7 +31,9 @@ class TestMapping(unittest.TestCase):
 class TestPath(unittest.TestCase):
     def test_json(self):
         path = Path.from_json(path_jsons[0])
-        self.assertEquals(path, paths[0])
+        print(path)
+        print(paths[0])
+        self.assertEqual(path, paths[0])
 
     def _est_obg(self):
         for path, interval in zip(paths, intervals):

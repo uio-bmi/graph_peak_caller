@@ -1,6 +1,6 @@
 import numpy as np
 from collections import defaultdict
-from .sparsepileup import SparsePileup
+from .sparsepileupv2 import SparsePileup
 from .eventsorter import EventSorter, EventSort
 from .snarlmaps import LinearSnarlMap
 import logging
@@ -22,7 +22,6 @@ def create_control_from_objs(linear_map, reads, extension_sizes,
     linear_size = linear_map._length
     mapped_reads = linear_map.map_interval_collection(reads)
     average_value = mapped_reads.n_intervals*fragment_length / linear_size
-    print(len(mapped_reads.starts))
     logging.info(
         "Average control value: %.4f (sum of pileup: %d, linear size: %d)" % (
             average_value, mapped_reads.n_basepairs_covered(), linear_size))
@@ -41,15 +40,10 @@ def create_control_from_objs(linear_map, reads, extension_sizes,
         max_pileup.maximum(linear_pileup)
 
     logging.info("All extensions done. Grating valued indexes from pileup")
-    valued_indexes = max_pileup.to_valued_indexes(linear_map, touched_nodes=touched_nodes)
 
-    #if ob_graph is not None:
-    #    for node_id in valued_indexes.keys():
-    #        assert node_id in ob_graph.blocks
 
     logging.info("Making sparsepilup from valued indexes")
-    graph_pileup = SparsePileup(linear_map._graph)
-    graph_pileup.data = valued_indexes
+    graph_pileup = max_pileup.to_sparse_pileup(linear_map, touched_nodes=touched_nodes)
     logging.info("Control pileup created")
 
     return graph_pileup
@@ -99,9 +93,18 @@ class LinearPileup(object):
 
     @classmethod
     def create_from_starts_and_ends(cls, starts, ends):
-        logging.info("Creating linear pileup from starts and ends %s and %s" % (starts, ends))
+        logging.info("Creating linear pileup from starts and ends.")
         es = EventSort([starts, ends], [1, -1])
         return LinearPileup(es.indices, es.values)
+
+    def to_sparse_pileup(self, linear_map, touched_nodes=None):
+        logging.info("Getting event sorter")
+        event_sorter = self.get_event_sorter(linear_map, touched_nodes)
+        logging.info("Getting unmapped indices")
+        unmapped_indices = self.from_event_sorter(event_sorter)
+        logging.info("Mapping linear map to graph pileup")
+        #return linear_map.to_numpy_sparse_pileup(unmapped_indices)
+        return linear_map.to_dense_pileup(unmapped_indices)
 
     def to_valued_indexes(self, linear_map, touched_nodes=None):
         logging.info("Getting event sorter")
