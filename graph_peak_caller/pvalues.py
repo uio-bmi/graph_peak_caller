@@ -13,7 +13,7 @@ class PValuesFinder():
 
     def get_p_values(self):
         self.p_values = poisson.logsf(self.sample.data._values,
-                                self.control.data._values)
+                                      self.control.data._values)
         baseEtoTen = np.log(10)
         self.p_values = -self.p_values / baseEtoTen
 
@@ -58,11 +58,11 @@ class PToQValuesMapper:
             pre_q = q_value
             rank += value_count
 
-        self.p_to_q_values = p_to_q_values
+        self._p_to_q_values = p_to_q_values
 
     def to_file(self):
         with open(self.base_name + 'p2q.pkl', 'wb') as f:
-            pickle.dump(self._counter, f, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self._p_to_q_values, f, pickle.HIGHEST_PROTOCOL)
 
 
 def get_q_from_p_values(self, p_values, p_to_q_values):
