@@ -34,13 +34,10 @@ class DensePileupData:
         span = max_node - self.min_node + 1
         n_elements = sum([self.node_size(block) for block in self._graph.blocks])
 
-        if ndim > 1:
-            self._values = np.zeros((n_elements, ndim), dtype=np.float16)
+        if self.dtype is not None:
+            self._values = np.zeros(n_elements)
         else:
-            if self.dtype is not None:
-                self._values = np.zeros(n_elements)
-            else:
-                self._values = np.zeros(n_elements)
+            self._values = np.zeros(n_elements)
 
         if base_value > 0:
             self._values += base_value
@@ -115,6 +112,9 @@ class DensePileupData:
 
     def scale(self, factor):
         self._values *= factor
+
+    def set_new_values(self, values):
+        self._values = values
 
     def fill_existing_hole(self, node, start, end, value):
         assert np.all(self.values_in_range(node, start, end) == 0)
@@ -346,6 +346,9 @@ class DensePileup(Pileup):
         cleaner = DagHoleCleaner(self, max_size)
         cleaner.run()
         logging.info("Done cleaning holes")
+
+    def set_new_values(self, values):
+        self.data.set_new_values(values)
 
     def fill_small_wholes(self, max_size, write_holes_to_file=None, touched_nodes=None):
         cleaner = HolesCleaner(self, max_size, touched_nodes=touched_nodes)
@@ -636,6 +639,18 @@ class DensePileup(Pileup):
 
         return pileup
 
+    def to_sparse_files(self, truncate_below=0.05, file_base_name="p_values"):
+        vals = self.data._values
+        vals[np.where(vals < truncate_below)] = 0
+        indexes = np.where(np.ediff1d(self.p_values_array, to_begin=[0]) != 0)
+        values = self.p_values_array[indexes]
+
+        np.savetxt(file_base_name + "_indexes.npy", indexes)
+        np.savetxt(file_base_name + "_values.npy", values)
+
+        logging.info("Saved p values indexes/values to files")
+
+
 
 class DenseControlSample(DensePileup):
     def get_p_dict(self):
@@ -705,6 +720,20 @@ class DenseControlSample(DensePileup):
         assert np.all(control.data._nodes == sample.data._nodes)
 
         pileup.data._touched_nodes = sample.data._touched_nodes.union(control.data._touched_nodes)
+        return pileup
+
+    @classmethod
+    def from_sparse_values_and_index_files(cls, graph, base_file_name):
+        pileup = cls(graph)
+        indexes = np.loadtxt(base_file_name + "_indexes.npy")
+        values = np.loadtxt(base_file_name + "_values.npy")
+
+        diffs = np.ediff1(values, to_begin=[0])
+        pileup_vals = pileup.data._values
+        pileup_vals[indexes] = diffs
+        pileup_vals = np.cumsum(pileup_vals)
+        pileup.data._values = pileup_vals
+
         return pileup
 
 
