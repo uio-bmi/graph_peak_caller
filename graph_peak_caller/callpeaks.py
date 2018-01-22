@@ -83,6 +83,7 @@ class ExperimentInfo(object):
 
 class CallPeaksFromPValuesAndPToQValuesMapping(object):
     def __init__(self, graph, p_values_pileup, experiment_info,
+                 q_values_mapping,
                  out_file_base_name="",
                  graph_is_partially_ordered=False,
                  save_tmp_results_to_file=True):
@@ -91,10 +92,20 @@ class CallPeaksFromPValuesAndPToQValuesMapping(object):
     @classmethod
     def from_files(cls, graph_base_name, base_name,
                    q_values_mapping_file_name,
-
+                   out_file_base_name,
+                   graph_is_partially_ordered=False,
+                   save_tmp_results_to_file=True
                    ):
-        pass
+        graph = offsetbasedgraph.GraphWithReversals.from_numpy_files(graph_base_name)
+        experiment_info = ExperimentInfo.from_file(base_name + "experiment_info.pickle")
+        with open(q_values_mapping_file_name, "rb") as f:
+            q_values_mapping = pickle.load(f)
 
+        p_values_pileup = DensePileup.from_sparse_files(graph, base_name)
+
+        return cls(graph, p_values_pileup, experiment_info, q_values_mapping,
+                   base_name, graph_is_partially_ordered,
+                   save_tmp_results_to_file)
 
 
 class CallPeaksFromQvalues(object):
