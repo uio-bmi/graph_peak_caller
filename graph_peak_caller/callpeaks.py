@@ -18,104 +18,119 @@ IntervalCollection.interval_class = DirectedInterval
 from .subgraphcollection import SubgraphCollectionPartiallyOrderedGraph
 from .peakcollection import Peak
 from memory_profiler import profile
+from .pvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
+from .experiment_info import ExperimentInfo
+from .sampleandcontrolcreator import SampleAndControlCreator
 
-def enable_filewrite(func):
-    def wrapper(*args, **kwargs):
-        intervals = args[1]
-        if isinstance(intervals, str):
-            intervals = IntervalCollection.from_file(intervals)
-
-        write_to_file = kwargs.pop("write_to_file", False)
-        interval_list = func(args[0], intervals, **kwargs)
-
-        if write_to_file:
-            interval_collection = IntervalCollection(interval_list)
-            interval_collection.to_file(write_to_file)
-            return write_to_file
-
-            with open(write_to_file, "w") as file:
-                print("Wrote results to " + str(write_to_file))
-                file.writelines(("%s\n" % interval.to_file_line()
-                                 for interval in interval_list))
-
-            return write_to_file
-        else:
-            return interval_list
-
-    return wrapper
-
-
-class ExperimentInfo(object):
-    def __init__(self, genome_size, fragment_length, read_length):
-        self.genome_size = genome_size
-        self.n_sample_reads = 0  # Counters will be modified by Callpeaks
-        self.n_control_reads = 0
-        self.fragment_length = fragment_length
-        self.read_length = read_length
+class Configuration:
+    def __init__(self, skip_filter_duplicates=False,
+                       graph_is_partially_ordered=False,
+                       skip_read_validation=False,
+                       save_tmp_results_to_file=False):
+        self.skip_filter_duplicates = skip_filter_duplicates
+        self.graph_is_partially_ordered = graph_is_partially_ordered
+        self.skip_read_validation = skip_read_validation
+        self.save_tmp_results_to_file = save_tmp_results_to_file
 
     @classmethod
-    def find_info(cls, graph, sample_file_name, control_file_name=None):
-        sizes = (block.length() for block in graph.blocks.values())
-        genome_size = sum(sizes)
+    def default(cls):
+        return cls()
 
-        try:
-            print("Finding shift")
-            fragment_length, read_length = get_shift_size_on_offset_based_graph(
-                graph, sample_file_name)
-            print("Found fragment length=%d, read length=%d" % (fragment_length, read_length))
-        except RuntimeError:
-            print("WARNING: To liptle data to compute shift. Setting to default.")
-            fragment_length = 125
-            read_length = 20
-        return cls(genome_size,
-                   fragment_length, read_length)
 
-    def to_file(self, file_name):
-        with open("%s" % file_name, "wb") as f:
-            pickle.dump(self, f)
+class CallPeaks(object):
+
+    def __init__(self, graph, out_file_base_name, graph_is_partially_ordered=None):
+        self.graph = graph
+        self.out_file_base_name = out_file_base_name
+        self.graph_is_partially_ordered = graph_is_partially_ordered
+
+        self.sample_intervals = None
+        self.control_intervals = None
+        self.sample_pileup = None
+        self.control_pileup = None
+        self.p_values_pileup = None
+        self.p_to_q_values_mapping = None
+        self.q_values_pileup = None
+        self.peaks_as_subgraphs = None
+        self.touched_nodes = None
+
+    def run_pre_callpeaks(self, has_control, experiment_info, linear_map, configuration=None):
+        if configuration is None:
+            configuration = Configuration.default()
+            logging.warning("Config is not set. Setting to default")
+        creator = SampleAndControlCreator(
+            self.graph,
+            self.sample_intervals,
+            self.control_intervals,
+            experiment_info,
+            out_file_base_name=self.out_file_base_name,
+            has_control=has_control,
+            linear_map=linear_map,
+            configuration=configuration
+            )
+        creator.run()
+        self.sample_pileup = creator._sample_pileup
+        self.control_pileup = creator._control_pileup
+        self.touched_nodes = creator.touched_nodes
+        print("Sample pileup")
+        print(self.sample_pileup)
+
+    def get_p_values(self):
+        assert self.sample_pileup is not None
+        assert self.control_pileup is not None
+        self.p_values_pileup = \
+            PValuesFinder(self.sample_pileup, self.control_pileup).get_p_values_pileup()
+        print("P values")
+        print(self.p_values_pileup)
+
+    def get_p_to_q_values_mapping(self):
+        assert self.p_values_pileup is not None
+        finder = PToQValuesMapper.from_p_values_dense_pileup(self.p_values_pileup)
+        self.p_to_q_values_mapping = finder.get_p_to_q_values()
+
+    def get_q_values(self):
+        assert self.p_values_pileup is not None
+        assert self.p_to_q_values_mapping is not None
+        finder = QValuesFinder(self.p_values_pileup, self.p_to_q_values_mapping)
+        self.q_values_pileup = finder.get_q_values()
+        print("Q values")
+        print(self.q_values_pileup)
+
+    def call_peaks_from_q_values(self, experiment_info):
+        assert self.q_values_pileup is not None
+        caller = CallPeaksFromQvalues(
+            self.graph, self.q_values_pileup,
+            experiment_info, self.out_file_base_name,
+            touched_nodes=self.touched_nodes,
+            graph_is_partially_ordered=self.graph_is_partially_ordered
+            )
+        caller.callpeaks()
 
     @classmethod
-    def from_file(cls, file_name):
-        with open("%s" % file_name, "rb") as f:
-            data = pickle.loads(f.read())
-            return data
+    def run_from_intervals(cls, graph, sample_intervals,
+                 control_intervals=None, experiment_info=None,
+                 out_file_base_name="", has_control=True,
+                 linear_map=None, configuration=None):
+        caller = cls(graph, out_file_base_name)
+        caller.sample_intervals = sample_intervals
+        caller.control_intervals = control_intervals
 
-
-class CallPeaksFromPValuesAndPToQValuesMapping(object):
-    def __init__(self, graph, p_values_pileup, experiment_info,
-                 q_values_mapping,
-                 out_file_base_name="",
-                 graph_is_partially_ordered=False,
-                 save_tmp_results_to_file=True):
-        pass
-
-    @classmethod
-    def from_files(cls, graph_base_name, base_name,
-                   q_values_mapping_file_name,
-                   out_file_base_name,
-                   graph_is_partially_ordered=False,
-                   save_tmp_results_to_file=True
-                   ):
-        graph = offsetbasedgraph.GraphWithReversals.from_numpy_files(graph_base_name)
-        experiment_info = ExperimentInfo.from_file(base_name + "experiment_info.pickle")
-        with open(q_values_mapping_file_name, "rb") as f:
-            q_values_mapping = pickle.load(f)
-
-        p_values_pileup = DensePileup.from_sparse_files(graph, base_name)
-
-        return cls(graph, p_values_pileup, experiment_info, q_values_mapping,
-                   base_name, graph_is_partially_ordered,
-                   save_tmp_results_to_file)
+        caller.run_pre_callpeaks(has_control, experiment_info,
+                                 linear_map, configuration)
+        caller.get_p_values()
+        caller.get_p_to_q_values_mapping()
+        caller.get_q_values()
+        caller.call_peaks_from_q_values(experiment_info)
 
 
 class CallPeaksFromQvalues(object):
-    def __init__(self, graph, q_values_sparse_pileup,
-                 experiment_info, out_file_base_name="",
+    def __init__(self, graph, q_values_pileup,
+                 experiment_info,
+                 out_file_base_name="",
                  cutoff=0.1, raw_pileup=None, touched_nodes=None,
-                 graph_is_partially_ordered=False,
-                 save_tmp_results_to_file=True):
+                 graph_is_partially_ordered=False):
         self.graph = graph
-        self.q_values = q_values_sparse_pileup
+        self.q_values = q_values_pileup
         self.info = experiment_info
         self.out_file_base_name = out_file_base_name
         self.cutoff = cutoff
@@ -123,7 +138,7 @@ class CallPeaksFromQvalues(object):
         #self.graph.assert_correct_edge_dicts()
         self.touched_nodes = touched_nodes
         self.graph_is_partially_ordered = graph_is_partially_ordered
-        self.save_tmp_results_to_file = save_tmp_results_to_file
+        self.save_tmp_results_to_file = True
 
         self.info.to_file(self.out_file_base_name + "experiment_info.pickle")
 
@@ -230,10 +245,11 @@ class CallPeaksFromQvalues(object):
             max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1)
 
 
+        file_name = self.out_file_base_name + "max_paths.intervalcollection"
         PeakCollection(max_paths).to_file(
-            self.out_file_base_name + "max_paths.intervalcollection",
+            file_name,
             text_file=True)
-        logging.info("Wrote max paths to file")
+        logging.info("Wrote max paths to %s" % file_name)
 
         self.max_paths = max_paths
 
@@ -307,315 +323,35 @@ class CallPeaksFromQvalues(object):
         f.close()
 
 
-class CallPeaks(object):
-    def __init__(self, graph, sample_intervals,
-                 control_intervals=None, experiment_info=None,
-                 verbose=False, out_file_base_name="", has_control=True,
-                 linear_map=None, skip_filter_duplicates=False,
-                 graph_is_partially_ordered=False,
-                 skip_read_validation=False,
-                 save_tmp_results_to_file=True):
-        """
-        :param sample_intervals: Either an interval collection or file name
-        :param control_intervals: Either an interval collection or a file name
-        """
-
-        assert linear_map is not None, "LinearMap cannot be None"
-        assert isinstance(linear_map, str), "Must be file name"
-
-        assert isinstance(sample_intervals, IntervalCollection) \
-               or isinstance(sample_intervals, str), \
-                "Samples intervals must be either interval collection or a file name"
-
-        assert isinstance(control_intervals, IntervalCollection) \
-               or isinstance(control_intervals, str), \
-                "control_intervals must be either interval collection or a file name"
-
-        if not has_control:
-            logging.info("Running without control")
-        else:
-            logging.info("Running with control")
-
-        self.graph = graph
-
-        self.sample_intervals = sample_intervals
-        self.control_intervals = control_intervals
-        self.has_control = has_control
-        self.linear_map = linear_map
-
-        self._p_value_track = "p_value_track"
-        self._q_value_track = "q_value_track"
+"""
+class CallPeaksFromPValues(object):
+    def __init__(self, graph, base_name, p_values_pileup, experiment_info, q_values_mapping):
+        self.p_values_pileup = p_values_pileup
+        self.q_values_mapping = q_values_mapping
         self.info = experiment_info
-        self.verbose = verbose
-        self._control_pileup = None
-        self._sample_pileup = None
-        self.out_file_base_name = out_file_base_name
-        self.cutoff = 0.05
-        self.pre_processed_peaks = None
-        self.filtered_peaks = None
-        self.skip_filter_duplicates = skip_filter_duplicates
-        self.skip_read_validation = skip_read_validation
-        self.save_tmp_results_to_file = save_tmp_results_to_file
+        self.base_name = base_name
 
-        self.max_paths = None
-        self.peaks_as_subgraphs = None
+        self.run()
 
-        if self.skip_filter_duplicates:
-            logging.info("Not removing duplicates")
+    def get_q_values(self):
+        finder = QValuesFinder(self.p_values_pileup, self.q_values_mapping)
+        return finder.get_q_values()
 
-        self.create_graph()
-        self.touched_nodes = None  # Nodes touched by sample pileup
-        self.graph_is_partially_ordered = graph_is_partially_ordered
+    def run(self):
+        q_values = self.get_q_values()
+        CallPeaksFromQvalues(self.graph, q_values, self.info, self.base_name)
 
-    def set_cutoff(self, value):
-        self.cutoff = value
-
-    def run(self, out_file="final_peaks.bed"):
-        self.run_pre_call_peaks_steps()
-        self.call_peaks()
-
-    def run_pre_call_peaks_steps(self):
-        self.preprocess()
-        if self.info is None:
-            self.info = ExperimentInfo.find_info(
-                self.ob_graph, self.sample_intervals, self.control_intervals)
-        self.create_sample_pileup()
-
-        self.create_control()
-        self.scale_tracks()
-        self.get_score()
-
-    def preprocess(self):
-        self.info.n_control_reads = 0
-        self.info.n_sample_reads = 0
-
-        if not self.skip_read_validation:
-            self.sample_intervals = self.remove_alignments_not_in_graph(
-                                        self.sample_intervals)
-        else:
-            logging.warning("Skipping validation of reads. Not checking whether reads are valid"
-                            " or inside the graph.")
-
-        self.sample_intervals = self.filter_duplicates_and_count_intervals(
-                                    self.sample_intervals, is_control=False)
-
-        if not self.skip_read_validation:
-            self.control_intervals = self.remove_alignments_not_in_graph(
-                                    self.control_intervals, is_control=True)
-        self.control_intervals = self.filter_duplicates_and_count_intervals(
-                                    self.control_intervals, is_control=True)
-
-    @enable_filewrite
-    def remove_alignments_not_in_graph(self, intervals, is_control=False):
-        for interval in self._get_intervals_in_ob_graph(intervals):
-            if interval is not False:
-                yield interval
-
-    @enable_filewrite
-    def filter_duplicates_and_count_intervals(self, intervals, is_control=False):
-        interval_hashes = {}
-        n_duplicates = 0
-        n_reads_left = 0
-        for interval in intervals:
-            if not self.skip_filter_duplicates:
-                hash = interval.hash()
-                if hash in interval_hashes:
-                    n_duplicates += 1
-                    continue
-
-                interval_hashes[hash] = True
-
-            if is_control:
-                self.info.n_control_reads += 1
-            else:
-                self.info.n_sample_reads += 1
-
-            yield interval
-
-    def _assert_interval_is_valid(self, interval):
-        #print("Checking that %s is valid" % interval)
-        # Checks that the interval (read) is a valid connected interval
-        direction = None
-        for i, rp in enumerate(interval.region_paths[:-1]):
-            next_rp = interval.region_paths[i+1]
-            if next_rp in self.ob_graph.adj_list[rp]:
-                new_dir = 1
-            elif next_rp in self.ob_graph.reverse_adj_list[rp]:
-                new_dir = -1
-            else:
-                logging.error("Invalid interval: Rp %d of interval %s is not "
-                              "connected in graph to rp %d, which is the next rp"
-                              % (rp, interval, next_rp))
-                raise Exception("Invalid interval")
-
-            if direction is None:
-                direction = new_dir
-            else:
-                if new_dir != direction:
-                    logging.error("Invalid read: Interval %s is going edges in multiple directions.")
-                    raise Exception("Invalid interval")
-
-            #print("  Dir: %d " % direction)
-        return True
-
-    def _get_intervals_in_ob_graph(self, intervals):
-        # Returns only those intervals that exist in graph
-        for interval in intervals:
-            self._assert_interval_is_valid(interval)
-            if interval.region_paths[0] in self.ob_graph.blocks:
-                yield interval
-            else:
-                logging.warning("Interval: %s" % interval)
-                raise Exception("Interval not in graph")
-
-    def scale_tracks(self, update_saved_files=False):
-        logging.info("Scaling tracks to ratio: %d / %d" % (self.info.n_sample_reads,
-                                                    self.info.n_control_reads))
-        ratio = self.info.n_sample_reads/self.info.n_control_reads
-
-        if self.info.n_sample_reads == self.info.n_control_reads:
-            logging.info("Not scaling any tracks because of same amount of reads")
-            self._control_pileup.to_bed_graph(
-                self.out_file_base_name + "scaled_control.bdg")
-            return
-
-        if ratio > 1:
-            logging.warning("More reads in sample than in control")
-            self._sample_pileup.scale(1/ratio)
-            self._sample_pileup.to_bed_graph(
-                self.out_file_base_name + "scaled_treat.bdg")
-            if update_saved_files:
-                self._sample_pileup.to_bed_graph(self._sample_track)
-        else:
-            logging.info("Scaling control pileup down using ration %.3f" % ratio)
-            self._control_pileup.scale(ratio)
-            self._control_pileup.to_bed_graph(
-                self.out_file_base_name + "scaled_control.bdg")
-            if update_saved_files:
-                self._control_pileup.to_bed_graph(self._control_track)
-
-    def find_info(self):
-        sizes = (block.length() for block in self.ob_graph.blocks.values())
-
-        self.genome_size = sum(sizes)
-        self.n_reads = sum(1 for line in open(self.control_file_name))
-
-    def create_graph(self):
-        logging.info("Creating graph")
-        if isinstance(self.graph, str):
-            self.ob_graph = offsetbasedgraph.Graph.from_file(self.graph)
-        else:
-            self.ob_graph = self.graph
-            logging.info("Graph already created")
-
-    def create_control(self):
-        logging.info("Creating control track using linear map %s" % self.linear_map)
-        extensions = [self.info.fragment_length, 1000, 10000] if self.has_control else [10000]
-        control_pileup = linearsnarls.create_control(
-            self.linear_map,  self.control_intervals,
-            extensions, self.info.fragment_length,
-            ob_graph=self.graph,
-            touched_nodes=self.touched_nodes
-        )
-
-        # Delete linear map
-        self.linear_map = None
-
-        control_pileup.graph = self.ob_graph
-        logging.info("Number of control reads: %d" % self.info.n_control_reads)
-
-        if self.save_tmp_results_to_file:
-            self._control_track = self.out_file_base_name + "control_track.bdg"
-            control_pileup.to_bed_graph(self._control_track)
-            logging.info("Saved control pileup to " + self._control_track)
-
-        self._control_pileup = control_pileup
-
-        # Delete control pileup
-        self.control_intervals = None
-
-    def get_score(self):
-        logging.info("Getting scores. Creating sparse array from sparse control and sample")
-        #q_values_pileup = DenseControlSample.from_sparse_control_and_sample(
-        #    self._control_pileup, self._sample_pileup)
-
-        q_values_finder = QValuesFinder(self._sample_pileup, self._control_pileup)
-        q_values_pileup = q_values_finder.get_q_values_pileup()
-
-
-        # Delete sample and control pileups
-        self._control_pileup = None
-        self._sample_pileup = None
-
-        #logging.info("Computing q values")
-        #q_values_pileup.get_scores()
-        self.q_values = q_values_pileup
-
-        if self.save_tmp_results_to_file:
-            q_val_file_name = self.out_file_base_name + "q_values.bdg"
-            logging.info("Writing q values to file")
-            self.q_values.to_bed_graph(q_val_file_name)
-            logging.info("Writing q values to pickle")
-            self.q_values.to_pickle(self.out_file_base_name + "q_values.pickle")
-
-    def call_peaks(self):
-        self.q_value_peak_caller = CallPeaksFromQvalues(
-            self.graph,
-            self.q_values,
-            self.info,
-            self.out_file_base_name,
-            self.cutoff,
-            touched_nodes=self.touched_nodes,
-            graph_is_partially_ordered=self.graph_is_partially_ordered,
-            save_tmp_results_to_file=self.save_tmp_results_to_file
-        )
-        self.q_value_peak_caller.callpeaks()
-
-    def save_max_path_sequences_to_fasta_file(self, file_name, retriever):
-        self.q_value_peak_caller.\
-            save_max_path_sequences_to_fasta_file(file_name, retriever)
-
-    #@profile
-    def create_sample_pileup(self):
-        logging.debug("In sample pileup")
-        logging.info("Creating sample pileup")
-        alignments = self.sample_intervals
-        logging.info(self.sample_intervals)
-        extender = Extender(self.ob_graph, self.info.fragment_length)
-        valued_areas = ValuedAreas(self.ob_graph)
-        logging.info("Extending sample reads")
-        areas_list = (extender.extend_interval(interval)
-                      for interval in alignments)
-        i = 0
-        logging.info("Processing areas")
-
-        #touched_nodes = set()  # Speedup thing, keep track of nodes where areas are on
-        pileup = DensePileup.create_from_binary_continous_areas(
-                    self.ob_graph, areas_list)
-        touched_nodes = pileup.data._touched_nodes
-        self.touched_nodes = touched_nodes
-
-
-
-        self._sample_track = self.out_file_base_name + "sample_track.bdg"
-        if self.save_tmp_results_to_file:
-            logging.info("Saving sample pileup to file")
-            pileup.to_bed_graph(self._sample_track)
-            logging.info("Saved sample pileup to " + self._sample_track)
-
-            logging.info("Writing touched nodes to file")
-            with open(self.out_file_base_name + "touched_nodes.pickle", "wb") as f:
-                pickle.dump(touched_nodes, f)
-
-            logging.info("N touched nodes: %d" % len(touched_nodes))
-
-        self._sample_pileup = pileup
-
-        # Delete sample intervals
-        self.sample_intervals = None
-
-    def _write_vg_alignments_as_intervals_to_bed_file(self):
-        pass
+    @classmethod
+    def run_from_files(cls, graph_base_name, base_name,
+                         q_values_mapping_file_name):
+        graph = offsetbasedgraph.GraphWithReversals.from_numpy_files(graph_base_name)
+        experiment_info = ExperimentInfo.from_file(base_name + "experiment_info.pickle")
+        with open(q_values_mapping_file_name, "rb") as f:
+            q_values_mapping = pickle.load(f)
+        p_values_pileup = DensePileup.from_sparse_files(graph, base_name)
+        return cls(graph, p_values_pileup, experiment_info, q_values_mapping,
+                   base_name)
+"""
 
 
 if __name__ == "__main__":

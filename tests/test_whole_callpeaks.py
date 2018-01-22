@@ -1,7 +1,7 @@
 import unittest
 from offsetbasedgraph import GraphWithReversals, Block, \
         Interval, DirectedInterval, IntervalCollection
-from graph_peak_caller.callpeaks import ExperimentInfo, CallPeaks
+from graph_peak_caller.callpeaks import ExperimentInfo, CallPeaks, Configuration
 from graph_peak_caller.snarls import SnarlGraph, SnarlGraphBuilder, SimpleSnarl
 from graph_peak_caller.linearsnarls import LinearSnarlMap
 from graph_peak_caller.sparsepileup import SparsePileup
@@ -9,17 +9,10 @@ import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
 class TestWholeCallPeaks(unittest.TestCase):
-    def get_caller(self, sample_intervals, control_intervals, has_control=False):
+    def get_caller(self):
         self.graph_size = sum(block.length() for block in self.graph.blocks.values())
-        experiment_info = ExperimentInfo(self.graph_size,
-                                         self.fragment_length, self.read_length)
-        return CallPeaks(self.graph,
-                         IntervalCollection(sample_intervals),
-                         IntervalCollection(control_intervals),
-                         experiment_info,
-                         out_file_base_name="test_", has_control=has_control,
-                         linear_map="test_linear_map.tmp",
-                         skip_filter_duplicates=True)
+        return CallPeaks(self.graph, out_file_base_name="test_")
+
 
     def _create_reads(self):
         self.sample_reads = []
@@ -48,11 +41,19 @@ class TestWholeCallPeaks(unittest.TestCase):
 
         control_reads = self.sample_reads.copy()
 
-        self.caller = self.get_caller(self.sample_reads,
-                                      control_reads,
-                                      has_control=False)
-        self.caller.run()
-        print(self.caller._sample_pileup)
+        self.caller = self.get_caller()
+        experiment_info = ExperimentInfo(self.graph_size,
+                                         self.fragment_length, self.read_length)
+        config = Configuration(skip_filter_duplicates=True)
+        self.caller.run_from_intervals(self.graph,
+                                       IntervalCollection(self.sample_reads),
+                                       IntervalCollection(control_reads),
+                                       out_file_base_name="test_",
+                                       experiment_info=experiment_info,
+                                       has_control=False,
+                                       configuration=config,
+                                       linear_map="test_linear_map.tmp"
+                                       )
 
     def do_asserts(self):
         for peak in self.peaks:
