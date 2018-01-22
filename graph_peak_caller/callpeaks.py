@@ -80,6 +80,7 @@ class ExperimentInfo(object):
             data = pickle.loads(f.read())
             return data
 
+
 class CallPeaksFromPValuesAndPToQValuesMapping(object):
     def __init__(self, graph, p_values_pileup, experiment_info,
                  out_file_base_name="",
@@ -93,7 +94,6 @@ class CallPeaksFromPValuesAndPToQValuesMapping(object):
 
                    ):
         pass
-
 
 
 
