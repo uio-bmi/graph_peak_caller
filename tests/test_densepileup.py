@@ -75,6 +75,15 @@ class TestDensePileup(unittest.TestCase):
         values = pileup.data.get_interval_values(Interval(3, 6, [1], graph))
         self.assertTrue(np.all(values == [0, 0, 1]))
 
+    def test_to_from_sparse_files(self):
+        pileup = DensePileup.from_intervals(graph,
+                                            [
+                                                Interval(5, 5, [1, 2], graph),
+                                                Interval(7, 3, [1, 2], graph)
+                                            ])
+
+
+
 
 if __name__ == "__main__":
     unittest.main()

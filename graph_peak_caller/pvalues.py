@@ -12,22 +12,14 @@ class PValuesFinder:
         self.sample = sample_pileup
         self.control = control_pileup
 
-    def get_p_values_array(self):
+    def get_p_values_pileup(self):
         p_values = poisson.logsf(
                                 self.sample.data._values,
                                 self.control.data._values)
         baseEtoTen = np.log(10)
-        self.p_values_array -p_values / baseEtoTen
-
-    def to_sparse_file(self, truncate_below=0.05, file_base_name="p_values"):
-        self.p_values_array[np.where(self.p_values_array < truncate_below)] = 0
-        indexes = np.where(np.ediff1d(self.p_values_array, to_begin=[0]) != 0)
-        values = self.p_values_array[indexes]
-
-        np.savetxt(file_base_name + "_indexes.npy", indexes)
-        np.savetxt(file_base_name + "_values.npy", values)
-
-        logging.info("Saved p values indexes/values to files")
+        p_values_array = -p_values / baseEtoTen
+        p_values_pileup = DensePileup(self.sample.graph)
+        p_values_pileup.set_new_values(p_values_pileup)
 
 
 class PToQValuesMapper:
