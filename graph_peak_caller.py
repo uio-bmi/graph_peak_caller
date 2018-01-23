@@ -232,16 +232,17 @@ def run_callpeaks_with_numpy_graph(args):
 
 
 def run_callpeaks_whole_genome(args):
-    chromosomes = args.chromosomes
+    logging.info("Running whole genome.")
+    chromosomes = args.chromosomes.split(",")
     graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
     linear_map_file_names = [args.linear_maps_location + chrom for chrom in chromosomes]
-    vg_graphs = [args.linear_maps_location + chrom for chrom in chromosomes]
+    vg_graphs = [args.vg_graphs_location + chrom + ".vg" for chrom in chromosomes]
     sequence_retrievers = \
-        [SequenceRetriever.from_vg_graph(fn) for fn in vg_graphs]
-    sample_file_names = [args.sample_reads_base_name + "_" + chr + ".json"
-                        for chr in chromosomes]
-    control_file_names = [args.sample_reads_base_name + "_" + chr + ".json"
-                        for chr in chromosomes]
+        (SequenceRetriever.from_vg_graph(fn) for fn in vg_graphs)
+    sample_file_names = [args.sample_reads_base_name + chrom + ".json"
+                        for chrom in chromosomes]
+    control_file_names = [args.sample_reads_base_name + chrom + ".json"
+                        for chrom in chromosomes]
     sample_collections = [obg.IntervalCollection.create_generator_from_file(fn)
                     for fn in sample_file_names]
     control_collections = [obg.IntervalCollection.create_generator_from_file(fn)
@@ -447,7 +448,7 @@ interface = \
                     ('sample_reads_base_name', 'Will use files *_[chromosome].json'),
                     ('control_reads_base_name', 'Will use files *_[chromosome].json'),
                     ('out_base_name', 'eg experiment1_'),
-                    ('with_control', 'True/False')
+                    ('with_control', 'True/False'),
                     ('fragment_length', ''),
                     ('read_length', '')
                 ],
