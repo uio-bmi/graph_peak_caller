@@ -243,19 +243,15 @@ def run_callpeaks_whole_genome(args):
                         for chrom in chromosomes]
     control_file_names = [args.sample_reads_base_name + chrom + ".json"
                         for chrom in chromosomes]
-    sample_collections = [obg.IntervalCollection.create_generator_from_file(fn)
-                    for fn in sample_file_names]
-    control_collections = [obg.IntervalCollection.create_generator_from_file(fn)
-                    for fn in control_file_names]
-
+				
     caller = MultipleGraphsCallpeaks(
         chromosomes,
         graph_file_names,
-        sample_collections,
-        control_collections,
+        sample_file_names,
+        control_file_names,
         linear_map_file_names,
-        args.fragment_length,
-        args.read_length,
+        int(args.fragment_length),
+        int(args.read_length),
         has_control=args.with_control=="True",
         sequence_retrievers=sequence_retrievers,
         out_base_name=args.out_base_name

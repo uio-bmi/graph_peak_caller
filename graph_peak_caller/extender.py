@@ -266,6 +266,7 @@ class AreasBuilder(object):
 class Extender(object):
     def __init__(self, graph, length):
         self.length = length
+        assert isinstance(length, int)
         self.graph = graph
         self.pos_traverser = GraphTraverser(graph, +1)
         self.neg_traverser = GraphTraverser(graph, -1)
