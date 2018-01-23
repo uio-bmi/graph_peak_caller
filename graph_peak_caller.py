@@ -35,9 +35,10 @@ def run_with_intervals(ob_graph,
     #logging.info("N nodes in graph: %d" % len(ob_graph.blocks))
 
     experiment_info = ExperimentInfo(graph_size, fragment_length, read_length)
-    config = Configuration(skip_read_validation=True, save_tmp_results_to_file=False,
-                           skip_filter_duplicates=True, p_val_cutoff=0.05,
-                           graph_is_partially_ordered=True)
+    config = Configuration(
+        skip_read_validation=True, save_tmp_results_to_file=False,
+        skip_filter_duplicates=True, p_val_cutoff=0.05,
+        graph_is_partially_ordered=True)
 
     caller = CallPeaks.run_from_intervals(
         ob_graph, sample_intervals, control_intervals,
