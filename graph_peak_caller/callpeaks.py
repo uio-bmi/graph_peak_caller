@@ -81,6 +81,8 @@ class CallPeaks(object):
         assert self.control_pileup is not None
         self.p_values_pileup = \
             PValuesFinder(self.sample_pileup, self.control_pileup).get_p_values_pileup()
+        self.sample_pileup = None
+        self.control_pileup = None
 
     def get_p_to_q_values_mapping(self):
         assert self.p_values_pileup is not None
