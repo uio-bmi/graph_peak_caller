@@ -8,7 +8,6 @@ class MultipleGraphsCallpeaks:
                  control_file_names, linear_maps,
                  experiment_info,
                  out_base_name="", has_control=False):
-
         self.run()
 
 
