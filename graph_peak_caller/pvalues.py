@@ -36,8 +36,8 @@ class PToQValuesMapper:
 
     @classmethod
     def __read_file(cls, file_name):
-        indices = np.load(file_name + "_indices.npy")
-        values = np.load(file_name + "_values.npy")
+        indices = np.loadtxt(file_name + "_indexes.npy")
+        values = np.loadtxt(file_name + "_values.npy")
         return indices, values
 
     @classmethod
@@ -55,14 +55,18 @@ class PToQValuesMapper:
 
     @classmethod
     def from_files(cls, base_file_name):
+        search = base_file_name
+        logging.info("Searching for files starting with %s" % search)
         files = (f for f in os.listdir()
-                 if f.startswith(base_file_name + "_chr"))
+                 if f.startswith(search) and "pvalues" in f and f.endswith("_indexes.npy"))
         counter = Counter()
         for filename in files:
-            indices, values = cls.__read_file(filename)
+            base_file_name = filename.replace("_indexes.npy", "")  # Get file name base
+            logging.info("Reading p values from file %s" % base_file_name)
+            indices, values = cls.__read_file(base_file_name)
             counts = np.diff(indices)
             counter.update(dict(zip(values, counts)))
-        return cls(counter, base_file_name)
+        return cls(counter)
 
     def get_p_to_q_values(self):
         p_to_q_values = {}

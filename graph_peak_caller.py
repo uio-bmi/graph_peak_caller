@@ -16,6 +16,7 @@ from graph_peak_caller.peakcollection import Peak
 import os
 from collections import defaultdict
 from memory_profiler import profile
+from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
@@ -230,6 +231,35 @@ def run_callpeaks_with_numpy_graph(args):
     )
 
 
+def run_callpeaks_whole_genome(args):
+    chromosomes = args.chromosomes
+    graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
+    linear_map_file_names = [args.linear_maps_location + chrom for chrom in chromosomes]
+    vg_graphs = [args.linear_maps_location + chrom for chrom in chromosomes]
+    sequence_retrievers = \
+        [SequenceRetriever.from_vg_graph(fn) for fn in vg_graphs]
+    sample_file_names = [args.sample_reads_base_name + "_" + chr + ".json"
+                        for chr in chromosomes]
+    control_file_names = [args.sample_reads_base_name + "_" + chr + ".json"
+                        for chr in chromosomes]
+    sample_collections = [obg.IntervalCollection.create_generator_from_file(fn)
+                    for fn in sample_file_names]
+    control_collections = [obg.IntervalCollection.create_generator_from_file(fn)
+                    for fn in control_file_names]
+
+    caller = MultipleGraphsCallpeaks(
+        chromosomes,
+        graph_file_names,
+        sample_collections,
+        control_collections,
+        linear_map_file_names,
+        args.fragment_length,
+        args.read_length,
+        has_control=args.with_control=="True",
+        sequence_retrievers=sequence_retrievers,
+        out_base_name=args.out_base_name
+    )
+
 def linear_peaks_to_fasta(args):
     from benchmarking.nongraphpeaks import NonGraphPeakCollection
     collection = NonGraphPeakCollection.from_bed_file(args.linear_reads_file_name)
@@ -405,6 +435,24 @@ interface = \
                 ],
             'method': run_callpeaks_with_numpy_graph
         },
+    'callpeaks_whole_genome':
+        {
+            'help': 'Callpeaks on whole genome, using one graph for each chromosome',
+            'arguments':
+                [
+                    ('chromosomes', 'Comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
+                    ('graphs_location', 'Will use the graphs *_[chromosome]'),
+                    ('vg_graphs_location', ''),
+                    ('linear_maps_location', ''),
+                    ('sample_reads_base_name', 'Will use files *_[chromosome].json'),
+                    ('control_reads_base_name', 'Will use files *_[chromosome].json'),
+                    ('out_base_name', 'eg experiment1_'),
+                    ('with_control', 'True/False')
+                    ('fragment_length', ''),
+                    ('read_length', '')
+                ],
+            'method': run_callpeaks_whole_genome
+        },
     'callpeaks_from_qvalues':
         {
             'help': '...',
@@ -501,6 +549,7 @@ interface = \
                 ],
             'method': plot_motif_enrichment
         }
+
 }
 
 # Create parser
