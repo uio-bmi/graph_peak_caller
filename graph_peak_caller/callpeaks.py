@@ -104,6 +104,18 @@ class CallPeaks(object):
         caller.callpeaks()
         self.max_path_peaks = caller.max_paths
 
+    def save_max_path_sequences_to_fasta_file(self, file_name, sequence_retriever):
+        assert self.max_path_peaks is not None
+        f = open(self.out_file_base_name + file_name, "w")
+        i = 0
+        for max_path in self.max_path_peaks:
+            seq = sequence_retriever.get_interval_sequence(max_path)
+            f.write(">peak" + str(i) + " " +
+                    max_path.to_file_line() + "\n" + seq + "\n")
+            i += 1
+        f.close()
+        logging.info("Wrote max path sequences to fasta file: %s" % (self.out_file_base_name + file_name))
+
     @classmethod
     def run_from_intervals(cls, graph, sample_intervals,
                  control_intervals=None, experiment_info=None,
@@ -120,18 +132,6 @@ class CallPeaks(object):
         caller.get_q_values()
         caller.call_peaks_from_q_values(experiment_info, configuration)
         return caller
-
-    def save_max_path_sequences_to_fasta_file(self, file_name, sequence_retriever):
-        assert self.max_path_peaks is not None
-        f = open(self.out_file_base_name + file_name, "w")
-        i = 0
-        for max_path in self.max_path_peaks:
-            seq = sequence_retriever.get_interval_sequence(max_path)
-            f.write(">peak" + str(i) + " " +
-                    max_path.to_file_line() + "\n" + seq + "\n")
-            i += 1
-        f.close()
-        logging.info("Wrote max path sequences to fasta file: %s" % (self.out_file_base_name + file_name))
 
 
 class CallPeaksFromQvalues(object):
