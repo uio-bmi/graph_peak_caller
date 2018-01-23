@@ -22,6 +22,7 @@ from .pvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
 from .experiment_info import ExperimentInfo
 from .sampleandcontrolcreator import SampleAndControlCreator
 
+
 class Configuration:
     def __init__(self, skip_filter_duplicates=False,
                        graph_is_partially_ordered=False,
@@ -57,7 +58,8 @@ class CallPeaks(object):
         self.touched_nodes = None
         self.max_path_peaks = None
 
-    def run_pre_callpeaks(self, has_control, experiment_info, linear_map, configuration=None):
+    def run_pre_callpeaks(self, has_control, experiment_info,
+                          linear_map, configuration=None):
         if configuration is None:
             configuration = Configuration.default()
             logging.warning("Config is not set. Setting to default")
@@ -79,8 +81,8 @@ class CallPeaks(object):
     def get_p_values(self):
         assert self.sample_pileup is not None
         assert self.control_pileup is not None
-        self.p_values_pileup = \
-            PValuesFinder(self.sample_pileup, self.control_pileup).get_p_values_pileup()
+        self.p_values_pileup = PValuesFinder(
+            self.sample_pileup, self.control_pileup).get_p_values_pileup()
         self.sample_pileup = None
         self.control_pileup = None
 
@@ -119,10 +121,11 @@ class CallPeaks(object):
         logging.info("Wrote max path sequences to fasta file: %s" % (self.out_file_base_name + file_name))
 
     @classmethod
-    def run_from_intervals(cls, graph, sample_intervals,
-                 control_intervals=None, experiment_info=None,
-                 out_file_base_name="", has_control=True,
-                 linear_map=None, configuration=None):
+    def run_from_intervals(
+            cls, graph, sample_intervals,
+            control_intervals=None, experiment_info=None,
+            out_file_base_name="", has_control=True,
+            linear_map=None, configuration=None, stop_after_p_values=False):
         caller = cls(graph, out_file_base_name)
         caller.sample_intervals = sample_intervals
         caller.control_intervals = control_intervals
@@ -130,6 +133,10 @@ class CallPeaks(object):
         caller.run_pre_callpeaks(has_control, experiment_info,
                                  linear_map, configuration)
         caller.get_p_values()
+        if stop_after_p_values:
+            return caller.p_values_pileup.to_sparse_files(
+                out_file_base_name, configuration.p_val_cutoff)
+
         caller.get_p_to_q_values_mapping()
         caller.get_q_values()
         caller.call_peaks_from_q_values(experiment_info, configuration)

@@ -25,7 +25,7 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
         for chromosome in self.chromosomes:
 
             graph  = Graph({i + node_offset: Block(10) for i in range(0, 3)},
-                      {i+node_offset: i+1+node_offset for i in range(0, 2)})
+                      {i+node_offset: [i+1+node_offset] for i in range(0, 2)})
 
             snarls = {
                 4+node_offset: SimpleSnarl(node_offset, node_offset+2, 4+node_offset)
@@ -60,6 +60,8 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
             self.control_reads.append(control_reads)
 
     def test_run_from_init(self):
+        print(self.linear_maps)
+        return
         caller = TestMultipleGraphsCallPeaks(
             self.chromosomes,
             self.chromosomes,
@@ -80,5 +82,6 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
                 assert peak in final_peaks
 
 
-
+if __name__ == "__main__":
+    unittest.main()
 
