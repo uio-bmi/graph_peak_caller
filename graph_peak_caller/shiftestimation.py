@@ -356,7 +356,10 @@ class PeakModel:
                     horizon_line[pre_p:p] = pileup
                     pre_p = p
                 pileup -= 1
+        top_pos = self.__find_top_pos(horizon_line, peak_length)
+        return (top_pos[int(len(top_pos)/2)]+start)
 
+    def __find_top_pos(self, horizon_line, peak_length):
         top_pos = []            # to record the top positions. Maybe > 1
         top_p_num = 0           # the maximum number of projected points
         # find the peak posistion as the highest point
@@ -366,8 +369,8 @@ class PeakModel:
                 top_pos = [pp]
             elif horizon_line[pp] == top_p_num:
                 top_pos.append(pp)
+        return top_pos
 
-        return (top_pos[int(len(top_pos)/2)]+start)
 
     def __naive_peak_pos_vanilla(self, pos_list, plus_strand):
         """Naively calculate the position of peak.
