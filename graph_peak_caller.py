@@ -235,7 +235,7 @@ def run_callpeaks_whole_genome(args):
     chromosomes = args.chromosomes
     graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
     linear_map_file_names = [args.linear_maps_location + chrom for chrom in chromosomes]
-    vg_graphs = [args.linear_maps_location + chrom for chrom in chromosomes]
+    vg_graphs = [args.vg_graphs_location + chrom for chrom in chromosomes]
     sequence_retrievers = \
         [SequenceRetriever.from_vg_graph(fn) for fn in vg_graphs]
     sample_file_names = [args.sample_reads_base_name + "_" + chr + ".json"
@@ -621,5 +621,11 @@ python3 ../graph_peak_caller.py linear_peaks_to_fasta macs_with_control_peaks_ch
 Max TF chr1 på server
 cd ~/data/chr1
 python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls ~/data/tfs/max/filtered_r1.0.gam ~/data/tfs/max/filtered_r1.0.gam False max_without_control/ 183 50 23739138
+
+
+Multigraph server, test:
+cd ~/dev/graph_peak_caller/tests/whole_genome
+python3 ../../graph_peak_caller.py callpeaks_whole_genome 20,21 ~/data/whole_genome/ ~/data/whole_genome/ ~/data/whole_genome/linear_map_ small_ small_ multigraph False 136 35
+
 
 """
