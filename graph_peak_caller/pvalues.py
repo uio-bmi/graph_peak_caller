@@ -82,7 +82,7 @@ class PToQValuesMapper:
             else:
                 q_value = max(0.0, min(pre_q, q_value))
 
-            p_to_q_values[p_value] = q_value
+            p_to_q_values[round(p_value, 10)] = q_value
             pre_q = q_value
             rank += value_count
 
@@ -110,12 +110,13 @@ class QValuesFinder:
         assert isinstance(p_values, np.ndarray)
 
         def translation(x):
-            assert x >= 0
+            assert x >= -1e-8
             if x == 0:
                 return 0
-            return self.p_to_q_values[x]
+            return self.p_to_q_values[round(x, 10)]
 
         trans = np.vectorize(translation, otypes=[np.float])
-        assert np.all(p_values >= 0)
+        assert np.all(p_values >= -1e-8)
         new_values = trans(p_values)
         return new_values
+
