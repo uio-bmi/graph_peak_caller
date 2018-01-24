@@ -619,4 +619,10 @@ Max TF chr1 på server
 cd ~/data/chr1
 python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls ~/data/tfs/max/filtered_r1.0.gam ~/data/tfs/max/filtered_r1.0.gam False max_without_control/ 183 50 23739138
 
+
+Multigraph server, test:
+cd ~/dev/graph_peak_caller/tests/whole_genome
+python3 ../../graph_peak_caller.py callpeaks_whole_genome 20,21 ~/data/whole_genome/ ~/data/whole_genome/ ~/data/whole_genome/linear_map_ small_ small_ multigraph False 136 35
+
+
 """

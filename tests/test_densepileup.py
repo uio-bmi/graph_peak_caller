@@ -100,7 +100,17 @@ class TestDensePileup(unittest.TestCase):
         self.assertEqual(new, pileup)
         self.assertEqual(pileup, new)
 
+    def test_to_from_sparse_files2(self):
+        pileup = DensePileup(graph)
+        pileup.data.set_values(1, 1, 3, [3.5, 2.1])
+        pileup.data.set_values(2, 0, 3, [1.1, 3.5, 2.1])
+        pileup.data.set_values(3, 0, 4, [3.5, 3.5, 2.1, 2.1])
 
+        pileup.to_sparse_files("test_pileup2_")
+        new = DensePileup.from_sparse_files(graph, "test_pileup2_")
+        self.assertTrue(np.all(new.data.values_in_range(1, 1, 3) == [3.5, 2.1]))
+        self.assertTrue(np.all(new.data.values_in_range(2, 0, 3) == [1.1, 3.5, 2.1]))
+        self.assertTrue(np.all(new.data.values_in_range(3, 0, 4) == [3.5, 3.5, 2.1, 2.1]))
 
 
 if __name__ == "__main__":
