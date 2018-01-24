@@ -94,11 +94,7 @@ class CallPeaks(object):
     def get_q_values(self):
         assert self.p_values_pileup is not None
         assert self.p_to_q_values_mapping is not None
-<<<<<<< HEAD
-        assert np.all(self.p_values_pileup.data._values >= 0)
-=======
         assert np.all(self.p_values_pileup.data._values >= -1e-8)
->>>>>>> 9ab7d85b00f4d4b40b1ad2629498c043c5964c82
         finder = QValuesFinder(self.p_values_pileup, self.p_to_q_values_mapping)
         self.q_values_pileup = finder.get_q_values()
 
