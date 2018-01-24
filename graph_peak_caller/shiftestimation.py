@@ -360,17 +360,8 @@ class PeakModel:
         return (top_pos[int(len(top_pos)/2)]+start)
 
     def __find_top_pos(self, horizon_line, peak_length):
-        top_pos = []            # to record the top positions. Maybe > 1
-        top_p_num = 0           # the maximum number of projected points
-        # find the peak posistion as the highest point
-        for pp in range(peak_length):
-            if horizon_line[pp] > top_p_num:
-                top_p_num = horizon_line[pp]
-                top_pos = [pp]
-            elif horizon_line[pp] == top_p_num:
-                top_pos.append(pp)
-        return top_pos
-
+        m = np.max(horizon_line)
+        return np.where(horizon_line == m)[0]
 
     def __naive_peak_pos_vanilla(self, pos_list, plus_strand):
         """Naively calculate the position of peak.
