@@ -232,29 +232,26 @@ def run_callpeaks_with_numpy_graph(args):
 
 
 def run_callpeaks_whole_genome(args):
-    chromosomes = args.chromosomes
+    logging.info("Running whole genome.")
+    chromosomes = args.chromosomes.split(",")
     graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
     linear_map_file_names = [args.linear_maps_location + chrom for chrom in chromosomes]
-    vg_graphs = [args.vg_graphs_location + chrom for chrom in chromosomes]
+    vg_graphs = [args.vg_graphs_location + chrom + ".vg" for chrom in chromosomes]
     sequence_retrievers = \
-        [SequenceRetriever.from_vg_graph(fn) for fn in vg_graphs]
-    sample_file_names = [args.sample_reads_base_name + "_" + chr + ".json"
-                        for chr in chromosomes]
-    control_file_names = [args.sample_reads_base_name + "_" + chr + ".json"
-                        for chr in chromosomes]
-    sample_collections = [obg.IntervalCollection.create_generator_from_file(fn)
-                    for fn in sample_file_names]
-    control_collections = [obg.IntervalCollection.create_generator_from_file(fn)
-                    for fn in control_file_names]
-
+        (SequenceRetriever.from_vg_graph(fn) for fn in vg_graphs)
+    sample_file_names = [args.sample_reads_base_name + chrom + ".json"
+                        for chrom in chromosomes]
+    control_file_names = [args.sample_reads_base_name + chrom + ".json"
+                        for chrom in chromosomes]
+				
     caller = MultipleGraphsCallpeaks(
         chromosomes,
         graph_file_names,
-        sample_collections,
-        control_collections,
+        sample_file_names,
+        control_file_names,
         linear_map_file_names,
-        args.fragment_length,
-        args.read_length,
+        int(args.fragment_length),
+        int(args.read_length),
         has_control=args.with_control=="True",
         sequence_retrievers=sequence_retrievers,
         out_base_name=args.out_base_name
@@ -447,7 +444,7 @@ interface = \
                     ('sample_reads_base_name', 'Will use files *_[chromosome].json'),
                     ('control_reads_base_name', 'Will use files *_[chromosome].json'),
                     ('out_base_name', 'eg experiment1_'),
-                    ('with_control', 'True/False')
+                    ('with_control', 'True/False'),
                     ('fragment_length', ''),
                     ('read_length', '')
                 ],
