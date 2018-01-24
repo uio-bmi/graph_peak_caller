@@ -183,9 +183,9 @@ class PeakModel:
                 if not flag_find_overlap:
                     flag_find_overlap = True
                     i2_prev = i2
-                s = max(p2-self.tag_expansion_size/2-p1+psize_adjusted1, 0)
+                s = max(p2-self.tag_expansion_size//2-p1+psize_adjusted1, 0)
                 start[s] += 1
-                e = min(p2+self.tag_expansion_size/2-p1+psize_adjusted1,
+                e = min(p2+self.tag_expansion_size//2-p1+psize_adjusted1,
                         max_index)
                 end[e] -= 1
                 i2 += 1
@@ -300,11 +300,48 @@ class PeakModel:
                                              # 2. current_tag_list is []
         return peak_info
 
+    def __get_horizon_line_sparse(self, pos_list, start, peak_length):
+        positions = np.empty(pos_list.size*2)
+        positions[:pos_list.size] = np.maximum(
+            pos_list-start-self.tag_expansion_size//2,
+            0)
+        positions[pos_list.size:] = np.minimum(
+            pos_list-start+self.tag_expansion_size//2,
+            peak_length)
+        args = np.argsort(positions)
+        codes = 1-2*(args >= pos_list.size)
+
+    def __get_horizon_line(self, pos_list):
+        # pos_list = np.array(pos_list, dtype="int")
+        peak_length = pos_list[-1]+1-pos_list[0] + self.tag_expansion_size
+        # leftmost position of project line
+        start = pos_list[0] - self.tag_expansion_size//2
+        ss = np.maximum(
+            pos_list-start-self.tag_expansion_size//2,
+            0)
+        es = np.minimum(
+            pos_list-start+self.tag_expansion_size//2,
+            peak_length)
+
+        # the line for tags to be projected
+        horizon_line = np.zeros(peak_length, dtype="int32")
+        horizon_line[ss] += 1
+        horizon_line[es] -= 1
+        horizon_line = np.cumsum(horizon_line)
+        return horizon_line
+
     def __naive_peak_pos(self, pos_list, plus_strand):
         """Naively calculate the position of peak.
         plus_strand: 1, plus; 0, minus
         return the highest peak summit position.
         """
+        peak_length = pos_list[-1]+1-pos_list[0] + self.tag_expansion_size
+        start = pos_list[0] - self.tag_expansion_size//2
+        horizon_line = self.__get_horizon_line(pos_list)
+        top_pos = self.__find_top_pos(horizon_line, peak_length)
+        return (top_pos[len(top_pos)//2]+start)
+
+    def __get_horizon_line_vanilla(self, pos_list):
         # pos_list = np.array(pos_list, dtype="int")
         peak_length = pos_list[-1]+1-pos_list[0] + self.tag_expansion_size
         # leftmost position of project line
@@ -356,8 +393,7 @@ class PeakModel:
                     horizon_line[pre_p:p] = pileup
                     pre_p = p
                 pileup -= 1
-        top_pos = self.__find_top_pos(horizon_line, peak_length)
-        return (top_pos[int(len(top_pos)/2)]+start)
+        return horizon_line
 
     def __find_top_pos(self, horizon_line, peak_length):
         m = np.max(horizon_line)
