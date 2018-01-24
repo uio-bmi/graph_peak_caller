@@ -11,14 +11,7 @@ with the distribution).
 @author:  Yong Zhang, Tao Liu
 @contact: taoliu@jimmy.harvard.edu
 """
-import logging
-import sys
-import time
-import random
 import numpy as np
-# from array import array
-# from MACS2.Constants import *
-
 
 def median(nums):
     """Calculate Median.
@@ -93,22 +86,13 @@ class PeakModel:
         elif num_paired_peakpos < self.max_pairnum:
             print("Fewer paired peaks (%d) than %d! Model may not be build well! Lower your MFOLD parameter may erase this warning. Now I will use %d pairs to build model!" % (num_paired_peakpos, self.max_pairnum,num_paired_peakpos_picked))
         self.__paired_peak_model(paired_peakpos)
-    '''
 
-    def __str__ (self):
-        """For debug...
-        """
-        return """
-Summary of Peak Model:
-  Baseline: %d
-  Upperline: %d
-  Fragment size: %d
-  Scan window size: %d
-""" % (self.min_tags,self.max_tags,self.d,self.scan_window)
-    '''
     def __paired_peak_model(self, paired_peakpos):
-        """Use paired peak positions and treatment tag positions to build the model.
-        Modify self.(d, model_shift size and scan_window size. and extra, plus_line, minus_line and shifted_line for plotting).
+        """Use paired peak positions and treatment
+        tag positions to build the model.
+        Modify self.(d, model_shift size and
+        scan_window size. and extra, plus_line,
+        minus_line and shifted_line for plotting).
         """
         window_size = 1+2*self.peaksize+self.tag_expansion_size
         self.plus_line = np.zeros(window_size, dtype="int32")
@@ -171,7 +155,7 @@ Summary of Peak Model:
 
     def __model_add_line(self, pos1, pos2, start, end):
         """Project each pos in pos2 which is included in
-        [pos1-self.peaksize,pos1+self.peaksize] to the line.
+        [pos1-self.peaksize, pos1+self.peaksize] to the line.
         pos1: paired centers -- array.array
         pos2: tags of certain strand -- a numpy.array object
         line: numpy array object where we pileup tags
@@ -184,7 +168,7 @@ Summary of Peak Model:
         flag_find_overlap = False
 
         max_index = start.shape[0] - 1
-        psize_adjusted1 = self.peaksize + self.tag_expansion_size / 2
+        psize_adjusted1 = self.peaksize + self.tag_expansion_size // 2
 
         while i1 < i1_max and i2 < i2_max:
             p1 = pos1[i1]
@@ -263,7 +247,8 @@ Summary of Peak Model:
     def __naive_find_peaks(self, taglist, plus_strand=1):
         """Naively call peaks based on tags counting.
         if plus_strand == 0, call peak on minus strand.
-        Return peak positions and the tag number in peak region by a tuple list [(pos,num)].
+        Return peak positions and the tag number in peak
+        region by a tuple list [(pos,num)].
         """
         peak_info = []    # store peak pos in every peak region and
                           # unique tag number in every peak region
@@ -292,6 +277,75 @@ Summary of Peak Model:
         plus_strand: 1, plus; 0, minus
         return the highest peak summit position.
         """
+        pos_list = np.array(pos_list, dtype="int")
+        peak_length = pos_list[-1]+1-pos_list[0] + self.tag_expansion_size
+        # leftmost position of project line
+        start = pos_list[0] - self.tag_expansion_size//2
+        ss = np.maximum(
+            pos_list-start-self.tag_expansion_size//2,
+            0)
+        es = np.minimum(
+            pos_list-start+self.tag_expansion_size//2,
+            peak_length)
+
+        # the line for tags to be projected
+        horizon_line = np.zeros(peak_length, dtype="int32")
+        ss.sort()
+        es.sort()
+
+        pileup = 0
+
+        ls = len(ss)
+        le = len(es)
+
+        i_s = 0
+        i_e = 0
+
+        pre_p = min(ss[0], es[0])
+
+        while i_s < ls and i_e < le:
+            if ss[i_s] < es[i_e]:
+                p = ss[i_s]
+                if p != pre_p:
+                    horizon_line[pre_p:p] = pileup
+                    pre_p = p
+                pileup += 1
+                i_s += 1
+            elif ss[i_s] > es[i_e]:
+                p = es[i_e]
+                if p != pre_p:
+                    horizon_line[pre_p:p] = pileup
+                    pre_p = p
+                pileup -= 1
+                i_e += 1
+            else:
+                i_s += 1
+                i_e += 1
+        if (i_e < ls):
+            for j in range(i_e, ls):
+                p = es[i_e]
+                if p != pre_p:
+                    horizon_line[pre_p:p] = pileup
+                    pre_p = p
+                pileup -= 1
+
+        top_pos = []            # to record the top positions. Maybe > 1
+        top_p_num = 0           # the maximum number of projected points
+        # find the peak posistion as the highest point
+        for pp in range(peak_length):
+            if horizon_line[pp] > top_p_num:
+                top_p_num = horizon_line[pp]
+                top_pos = [pp]
+            elif horizon_line[pp] == top_p_num:
+                top_pos.append(pp)
+
+        return (top_pos[int(len(top_pos)/2)]+start)
+
+    def __naive_peak_pos_vanilla(self, pos_list, plus_strand):
+        """Naively calculate the position of peak.
+        plus_strand: 1, plus; 0, minus
+        return the highest peak summit position.
+        """
         peak_length = pos_list[-1]+1-pos_list[0] + self.tag_expansion_size
         # leftmost position of project line
         start = pos_list[0] - self.tag_expansion_size//2
@@ -299,8 +353,7 @@ Summary of Peak Model:
         es = []
         # the line for tags to be projected
         horizon_line = np.zeros(peak_length, dtype="int32")
-        for i in range(len(pos_list)):
-            pos = pos_list[i]
+        for pos in pos_list:
             ss.append(max(pos-start-self.tag_expansion_size//2, 0))
             es.append(min(pos-start+self.tag_expansion_size//2, peak_length))
 
