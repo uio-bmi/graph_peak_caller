@@ -101,10 +101,14 @@ class QValuesFinder:
         self.p_to_q_values = p_to_q_values
 
     def get_q_values(self):
+        q_values_pileup = DensePileup(self.p_values.graph)
         new_values = self.get_q_array_from_p_array(
                         self.p_values.data._values)
-        self.p_values.data._values = new_values
-        return self.p_values
+        q_values_pileup.set_new_values(new_values)
+        print("New values: %s" % new_values)
+        print("Touched nodes: %s" % self.p_values.data._touched_nodes)
+        q_values_pileup.data._touched_nodes = self.p_values.data._touched_nodes
+        return q_values_pileup
 
     def get_q_array_from_p_array(self, p_values):
         assert isinstance(p_values, np.ndarray)

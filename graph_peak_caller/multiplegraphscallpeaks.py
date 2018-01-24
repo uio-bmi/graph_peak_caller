@@ -20,8 +20,8 @@ class MultipleGraphsCallpeaks:
                  ):
 
         self._config = Configuration(
-            skip_read_validation=False, save_tmp_results_to_file=False,
-            skip_filter_duplicates=False, p_val_cutoff=0.05,
+            skip_read_validation=True, save_tmp_results_to_file=False,
+            skip_filter_duplicates=True, p_val_cutoff=0.05,
             graph_is_partially_ordered=True)
         self.names = graph_names
         self.graph_file_names = graph_file_names

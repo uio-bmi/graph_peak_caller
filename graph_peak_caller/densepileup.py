@@ -624,14 +624,15 @@ class DensePileup(Pileup):
         indexes = np.loadtxt(base_file_name + "_indexes.npy", dtype=np.uint32)
         assert np.all(indexes >= 0)
         values = np.loadtxt(base_file_name + "_values.npy")
+        touched_nodes = np.loadtxt(base_file_name + "_touched_nodes.npy", dtype=np.uint32)
 
         diffs = np.ediff1d(values, to_begin=[values[0]])
         pileup_vals = pileup.data._values
-        cumsum = 0
         pileup_vals[indexes] = diffs
         pileup_vals = np.cumsum(pileup_vals)
         assert np.all(pileup_vals >= -1e-8)
         pileup.data._values = pileup_vals
+        pileup.data._touched_nodes = set(list(touched_nodes))
 
         return pileup
 
@@ -641,8 +642,8 @@ class DensePileup(Pileup):
         vals[np.where(vals < truncate_below)] = 0
         indexes = np.where(np.ediff1d(vals, to_begin=[vals[0]]) != 0)
         values = vals[indexes]
-	
 
+        np.savetxt(file_base_name + "_touched_nodes.npy", np.array(list(self.data._touched_nodes)))
         np.savetxt(file_base_name + "_indexes.npy", indexes)
         np.savetxt(file_base_name + "_values.npy", values)
 

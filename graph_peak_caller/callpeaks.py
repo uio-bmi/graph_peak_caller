@@ -201,10 +201,11 @@ class CallPeaksFromQvalues(object):
         if isinstance(self.pre_processed_peaks, DensePileup):
             # If dense pileup, we are filtering small peaks while trimming later
             self.filtered_peaks = self.pre_processed_peaks
+            logging.info("Not removing small peaks.")
         else:
             self.filtered_peaks = self.pre_processed_peaks.remove_small_peaks(
                 self.info.fragment_length)
-        logging.info("Small peaks removed")
+            logging.info("Small peaks removed")
 
     def trim_max_path_intervals(self, intervals, end_to_trim=-1):
         # Right trim max path intervals, remove right end where q values are 0
@@ -299,8 +300,10 @@ class CallPeaksFromQvalues(object):
         else:
             logging.info("Assuming graph is partially ordered!")
             logging.info("Creating subgraphs from peak regions")
+
             peaks_as_subgraphs = \
                 SubgraphCollectionPartiallyOrderedGraph.create_from_pileup(self.graph, self.filtered_peaks)
+
             #logging.info("Writing subgraphs to file")
             #peaks_as_subgraphs.to_file(self.out_file_base_name + "peaks.subgraphs")
 
