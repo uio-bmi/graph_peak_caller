@@ -89,4 +89,4 @@ class MultipleGraphsCallpeaks:
             caller.p_values_pileup = DensePileup.from_sparse_files(
                 ob_graph, self._base_name + name + "_" + "pvalues")
             caller.get_q_values()
-            caller.call_peaks_from_q_values(experiment_info=info)
+            caller.call_peaks_from_q_values(experiment_info=info, config=self._config)
