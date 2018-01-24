@@ -73,7 +73,6 @@ class MultipleGraphsCallpeaks:
     def create_joined_q_value_mapping(self):
         mapper = PToQValuesMapper.from_files(self._base_name)
         self._q_value_mapping = mapper.get_p_to_q_values()
-        print(self._q_value_mapping)
 
     def run_from_p_values(self):
         for i, name in enumerate(self.names):
