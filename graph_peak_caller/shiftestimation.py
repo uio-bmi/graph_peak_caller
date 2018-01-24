@@ -244,7 +244,7 @@ class PeakModel:
                 im += 1
         return pair_centers
 
-    def __naive_find_peaks(self, taglist, plus_strand=1):
+    def __naive_find_peaks_vanilla(self, taglist, plus_strand=1):
         """Naively call peaks based on tags counting.
         if plus_strand == 0, call peak on minus strand.
         Return peak positions and the tag number in peak
@@ -255,7 +255,6 @@ class PeakModel:
         if taglist.shape[0] < 2:
             return peak_info
         pos = taglist[0]
-
         current_tag_list = [pos]
         for pos in taglist[1:]:
             # call peak in current_tag_list when the region is long enough
@@ -272,12 +271,41 @@ class PeakModel:
                                              # 2. current_tag_list is []
         return peak_info
 
+    def __naive_find_peaks(self, taglist, plus_strand=1):
+        """Naively call peaks based on tags counting.
+        if plus_strand == 0, call peak on minus strand.
+        Return peak positions and the tag number in peak
+        region by a tuple list [(pos,num)].
+        """
+        peak_info = []    # store peak pos in every peak region and
+                          # unique tag number in every peak region
+        if taglist.shape[0] < 2:
+            return peak_info
+        pos = taglist[0]
+        # current_tag_list = [pos]
+        cur_start = 0
+        for i in range(1, len(taglist)):
+            pos = taglist[i]
+            # call peak in current_tag_list when the region is long enough
+            if (pos - taglist[cur_start] + 1) > self.peaksize:
+                # a peak will be called if tag number is ge min tags.
+                if self.max_tags >= i-cur_start >= self.min_tags:
+                    peak_info.append((self.__naive_peak_pos(
+                        taglist[cur_start:i], plus_strand),
+                                      i-cur_start))
+                cur_start = i
+
+            # current_tag_list.append(pos)   # add pos while 1. no
+                                             # need to call peak;
+                                             # 2. current_tag_list is []
+        return peak_info
+
     def __naive_peak_pos(self, pos_list, plus_strand):
         """Naively calculate the position of peak.
         plus_strand: 1, plus; 0, minus
         return the highest peak summit position.
         """
-        pos_list = np.array(pos_list, dtype="int")
+        # pos_list = np.array(pos_list, dtype="int")
         peak_length = pos_list[-1]+1-pos_list[0] + self.tag_expansion_size
         # leftmost position of project line
         start = pos_list[0] - self.tag_expansion_size//2
