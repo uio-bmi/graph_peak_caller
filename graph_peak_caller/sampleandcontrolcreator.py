@@ -83,9 +83,6 @@ class SampleAndControlCreator(object):
         self.max_paths = None
         self.peaks_as_subgraphs = None
 
-        if self.skip_filter_duplicates:
-            logging.info("Not removing duplicates")
-
         self.create_graph()
         self.touched_nodes = None  # Nodes touched by sample pileup
         self.graph_is_partially_ordered = graph_is_partially_ordered
@@ -96,6 +93,11 @@ class SampleAndControlCreator(object):
             self.skip_filter_duplicates = configuration.skip_filter_duplicates
             self.skip_read_validation = configuration.skip_read_validation
             self.save_tmp_results_to_file = configuration.save_tmp_results_to_file
+
+        if self.skip_filter_duplicates:
+            logging.warning("Not removing duplicates")
+        else:
+            logging.info("Will remove duplicates.")
 
     def run(self):
         self.preprocess()
@@ -285,18 +287,6 @@ class SampleAndControlCreator(object):
     def get_p_to_q_values_mapping(self):
         return PToQValuesMapper.from_p_values_dense_pileup(self.p_values)
 
-    def call_peaks(self):
-        q_values_mapping = self.get_p_to_q_values_mapping()
-        caller = CallPeaksFromPValues(
-            self.graph,
-            self._p_values_pileup,
-            self.info,
-            q_values_mapping
-        )
-
-
-        self.q_value_peak_caller.callpeaks()
-
     #@profile
     def create_sample_pileup(self):
         logging.debug("In sample pileup")
@@ -330,6 +320,8 @@ class SampleAndControlCreator(object):
                 pickle.dump(touched_nodes, f)
 
             logging.info("N touched nodes: %d" % len(touched_nodes))
+        else:
+            logging.info("Not saving sample pileup to files.")
 
         self._sample_pileup = pileup
 

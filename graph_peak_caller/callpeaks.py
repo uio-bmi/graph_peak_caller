@@ -83,6 +83,7 @@ class CallPeaks(object):
         assert self.control_pileup is not None
         self.p_values_pileup = PValuesFinder(
             self.sample_pileup, self.control_pileup).get_p_values_pileup()
+        self.p_values_pileup.to_bed_graph(self.out_file_base_name + "pvalues.bdg")
         self.sample_pileup = None
         self.control_pileup = None
 
@@ -97,6 +98,7 @@ class CallPeaks(object):
         #assert np.all(self.p_values_pileup.data._values >= -1e-8)
         finder = QValuesFinder(self.p_values_pileup, self.p_to_q_values_mapping)
         self.q_values_pileup = finder.get_q_values()
+        self.q_values_pileup.to_bed_graph(self.out_file_base_name + "qvalues.bdg")
 
     def call_peaks_from_q_values(self, experiment_info, config=None):
         assert self.q_values_pileup is not None
@@ -223,6 +225,7 @@ class CallPeaksFromQvalues(object):
                 "This method only supports intervals with single rp direction"
 
             pileup_values = self.q_values.data.get_interval_values(use_interval)
+            pileup_values = 1 * (pileup_values >= -np.log10(self.cutoff))
             assert len(pileup_values) == use_interval.length()
 
             if end_to_trim == 1:
@@ -235,6 +238,7 @@ class CallPeaksFromQvalues(object):
                 new_interval = use_interval.get_subinterval(n_zeros_beginning, use_interval.length())
             else:
                 new_interval = use_interval.get_subinterval(0, use_interval.length() - n_zeros_beginning)
+
 
             if new_interval.length() != use_interval.length():
                 n_intervals_trimmed += 1
@@ -257,6 +261,7 @@ class CallPeaksFromQvalues(object):
 
         logging.info("Trimmed in total %d intervals" % n_intervals_trimmed)
         logging.info("N intervals left: %d" % len(new_intervals))
+
         return new_intervals
 
     def __get_max_paths(self):
@@ -271,7 +276,6 @@ class CallPeaksFromQvalues(object):
         if isinstance(self.q_values, DensePileup):
             max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1)
             max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1)
-
 
         file_name = self.out_file_base_name + "max_paths.intervalcollection"
         PeakCollection(max_paths).to_file(

@@ -324,8 +324,8 @@ class DensePileup(Pileup):
         mean = self.sum() / graph_size
         return mean
 
-    def scale(self, scale):
-        self.data.scale()
+    def scale(self, factor):
+        self.data.scale(factor)
 
     def fill_small_wholes_on_dag(self, max_size):
         from .dagholecleaner import DagHoleCleaner
