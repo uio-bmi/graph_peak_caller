@@ -160,6 +160,48 @@ class PeakModel:
         pos2: tags of certain strand -- a numpy.array object
         line: numpy array object where we pileup tags
         """
+        psize_adjusted1 = self.peaksize + self.tag_expansion_size // 2
+        window_starts = p1-psize_adjusted1
+        window_ends = p1+p_size_adjusted1
+
+
+        i1 = 0                  # index for pos1
+        i2 = 0                  # index for pos2
+        i2_prev = 0             # index for pos2 in previous pos1
+        i1_max = len(pos1)
+        i2_max = pos2.shape[0]
+        flag_find_overlap = False
+
+        max_index = start.shape[0] - 1
+
+        while i1 < i1_max and i2 < i2_max:
+            p1 = pos1[i1]
+            p2 = pos2[i2]
+            if p1-psize_adjusted1 > p2:
+                i2 += 1
+            elif p1 + psize_adjusted1 < p2:
+                i1 += 1
+                i2 = i2_prev    # search minus peaks from previous index
+                flag_find_overlap = False
+            else:               # overlap!
+                if not flag_find_overlap:
+                    flag_find_overlap = True
+                    i2_prev = i2
+                s = max(p2-p1+self.peaksize, 0)
+                start[s] += 1
+                e = min(p2+self.tag_expansion_size-p1+self.peaksize,
+                        max_index)
+                end[e] -= 1
+                i2 += 1
+        return
+
+    def __model_add_line_vanilla(self, pos1, pos2, start, end):
+        """Project each pos in pos2 which is included in
+        [pos1-self.peaksize, pos1+self.peaksize] to the line.
+        pos1: paired centers -- array.array
+        pos2: tags of certain strand -- a numpy.array object
+        line: numpy array object where we pileup tags
+        """
         i1 = 0                  # index for pos1
         i2 = 0                  # index for pos2
         i2_prev = 0             # index for pos2 in previous pos1
@@ -244,33 +286,6 @@ class PeakModel:
                 im += 1
         return pair_centers
 
-    def __naive_find_peaks_vanilla(self, taglist, plus_strand=1):
-        """Naively call peaks based on tags counting.
-        if plus_strand == 0, call peak on minus strand.
-        Return peak positions and the tag number in peak
-        region by a tuple list [(pos,num)].
-        """
-        peak_info = []    # store peak pos in every peak region and
-                          # unique tag number in every peak region
-        if taglist.shape[0] < 2:
-            return peak_info
-        pos = taglist[0]
-        current_tag_list = [pos]
-        for pos in taglist[1:]:
-            # call peak in current_tag_list when the region is long enough
-            if (pos - current_tag_list[0] + 1) > self.peaksize:
-                # a peak will be called if tag number is ge min tags.
-                if len(current_tag_list) >= self.min_tags and len(current_tag_list) <= self.max_tags:
-                    peak_info.append((self.__naive_peak_pos(
-                        current_tag_list, plus_strand),
-                                      len(current_tag_list)))
-                current_tag_list = []
-
-            current_tag_list.append(pos)   # add pos while 1. no
-                                             # need to call peak;
-                                             # 2. current_tag_list is []
-        return peak_info
-
     def __naive_find_peaks(self, taglist, plus_strand=1):
         """Naively call peaks based on tags counting.
         if plus_strand == 0, call peak on minus strand.
@@ -316,12 +331,8 @@ class PeakModel:
         peak_length = pos_list[-1]+1-pos_list[0] + self.tag_expansion_size
         # leftmost position of project line
         start = pos_list[0] - self.tag_expansion_size//2
-        ss = np.maximum(
-            pos_list-start-self.tag_expansion_size//2,
-            0)
-        es = np.minimum(
-            pos_list-start+self.tag_expansion_size//2,
-            peak_length)
+        ss = pos_list-start-self.tag_expansion_size//2
+        es = pos_list-start+self.tag_expansion_size//2
 
         # the line for tags to be projected
         horizon_line = np.zeros(peak_length, dtype="int32")
@@ -341,136 +352,11 @@ class PeakModel:
         top_pos = self.__find_top_pos(horizon_line, peak_length)
         return (top_pos[len(top_pos)//2]+start)
 
-    def __get_horizon_line_vanilla(self, pos_list):
-        # pos_list = np.array(pos_list, dtype="int")
-        peak_length = pos_list[-1]+1-pos_list[0] + self.tag_expansion_size
-        # leftmost position of project line
-        start = pos_list[0] - self.tag_expansion_size//2
-        ss = np.maximum(
-            pos_list-start-self.tag_expansion_size//2,
-            0)
-        es = np.minimum(
-            pos_list-start+self.tag_expansion_size//2,
-            peak_length)
-
-        # the line for tags to be projected
-        horizon_line = np.zeros(peak_length, dtype="int32")
-        ss.sort()
-        es.sort()
-
-        pileup = 0
-
-        ls = len(ss)
-        le = len(es)
-
-        i_s = 0
-        i_e = 0
-
-        pre_p = min(ss[0], es[0])
-
-        while i_s < ls and i_e < le:
-            if ss[i_s] < es[i_e]:
-                p = ss[i_s]
-                if p != pre_p:
-                    horizon_line[pre_p:p] = pileup
-                    pre_p = p
-                pileup += 1
-                i_s += 1
-            elif ss[i_s] > es[i_e]:
-                p = es[i_e]
-                if p != pre_p:
-                    horizon_line[pre_p:p] = pileup
-                    pre_p = p
-                pileup -= 1
-                i_e += 1
-            else:
-                i_s += 1
-                i_e += 1
-        if (i_e < ls):
-            for j in range(i_e, ls):
-                p = es[i_e]
-                if p != pre_p:
-                    horizon_line[pre_p:p] = pileup
-                    pre_p = p
-                pileup -= 1
-        return horizon_line
 
     def __find_top_pos(self, horizon_line, peak_length):
         m = np.max(horizon_line)
         return np.where(horizon_line == m)[0]
 
-    def __naive_peak_pos_vanilla(self, pos_list, plus_strand):
-        """Naively calculate the position of peak.
-        plus_strand: 1, plus; 0, minus
-        return the highest peak summit position.
-        """
-        peak_length = pos_list[-1]+1-pos_list[0] + self.tag_expansion_size
-        # leftmost position of project line
-        start = pos_list[0] - self.tag_expansion_size//2
-        ss = []
-        es = []
-        # the line for tags to be projected
-        horizon_line = np.zeros(peak_length, dtype="int32")
-        for pos in pos_list:
-            ss.append(max(pos-start-self.tag_expansion_size//2, 0))
-            es.append(min(pos-start+self.tag_expansion_size//2, peak_length))
-
-        ss.sort()
-        es.sort()
-
-        pileup = 0
-
-        ls = len(ss)
-        le = len(es)
-
-        i_s = 0
-        i_e = 0
-
-        pre_p = min(ss[0], es[0])
-        if pre_p != 0:
-            for i in range(pre_p):
-                horizon_line[i] = 0
-
-        while i_s < ls and i_e < le:
-            if ss[i_s] < es[i_e]:
-                p = ss[i_s]
-                if p != pre_p:
-                    for i in range(pre_p, p):
-                        horizon_line[i] = pileup
-                    pre_p = p
-                pileup += 1
-                i_s += 1
-            elif ss[i_s] > es[i_e]:
-                p = es[i_e]
-                if p != pre_p:
-                    for i in range(pre_p, p):
-                        horizon_line[i] = pileup
-                    pre_p = p
-                pileup -= 1
-                i_e += 1
-            else:
-                i_s += 1
-                i_e += 1
-        if (i_e < ls):
-            for j in range(i_e, ls):
-                p = es[i_e]
-                if p != pre_p:
-                    for i in range(pre_p, p):
-                        horizon_line[i] = pileup
-                    pre_p = p
-                pileup -= 1
-
-        top_pos = []            # to record the top positions. Maybe > 1
-        top_p_num = 0           # the maximum number of projected points
-        # find the peak posistion as the highest point
-        for pp in range(peak_length):
-            if horizon_line[pp] > top_p_num:
-                top_p_num = horizon_line[pp]
-                top_pos = [pp]
-            elif horizon_line[pp] == top_p_num:
-                top_pos.append(pp)
-
-        return (top_pos[int(len(top_pos)/2)]+start)
 
 
 # smooth function from SciPy cookbook: http://www.scipy.org/Cookbook/SignalSmooth
