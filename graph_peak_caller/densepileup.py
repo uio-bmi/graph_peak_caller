@@ -630,7 +630,6 @@ class DensePileup(Pileup):
         pileup_vals = pileup.data._values
         pileup_vals[indexes] = diffs
         pileup_vals = np.cumsum(pileup_vals)
-        assert np.all(pileup_vals >= -1e-8)
         pileup.data._values = pileup_vals
         pileup.data._touched_nodes = set(list(touched_nodes))
 
