@@ -1,17 +1,15 @@
 import logging
-from itertools import chain
 import numpy as np
 from scipy.stats import poisson
 from collections import defaultdict
 from .pileup import Pileup
 from .pileupcleaner2 import PeaksCleaner, HolesCleaner
 from .subgraphcollection import SubgraphCollection
-from .eventsorter import DiscreteEventSorter
 from offsetbasedgraph import Interval, IntervalCollection
 import pickle
-from .sparsepileup import SparseAreasDict, starts_and_ends_to_sparse_pileup, intervals_to_start_and_ends
-from memory_profiler import profile
-from .sparsepileupv2 import RpScore, SimpleValuedIndexes
+from .sparsepileup import SparseAreasDict, intervals_to_start_and_ends
+# from memory_profiler import profile
+from .sparsepileupv2 import RpScore
 
 
 class DensePileupData:
