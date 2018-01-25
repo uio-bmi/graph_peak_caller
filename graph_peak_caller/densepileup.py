@@ -121,33 +121,12 @@ class DensePileupData:
         self.set_values(node, start, end, value)
 
     def get_sparse_indexes_and_values(self, node):
-
-        if self.ndim == 1:
-            values = self.values(node)
-            diffs = np.ediff1d(values, to_begin=np.array([1]))
-            indexes = np.where(diffs != 0)
-            values = values[indexes]
-            indexes = np.append(indexes, self.node_size(node))
-            return indexes, values
-        else:
-            values = self.values(node)
-            diffs1 = np.ediff1d(values[:,0], to_begin=np.array([1]))
-            indexes1 = np.where(diffs1 != 0)
-            values1 = values[indexes1][:,0]
-            indexes1 = np.append(indexes1, self.node_size(node))
-
-            diffs2 = np.ediff1d(values[:,1], to_begin=np.array([1]))
-            indexes2 = np.where(diffs2 != 0)
-            values2 = values[indexes2][:,1]
-            indexes2 = np.append(indexes2, self.node_size(node))
-
-            #print("Values: %s" % values1)
-            #print("Values2: %s" % values2)
-
-            indexes, values = self.combine_valued_indexes(indexes1, values1, indexes2, values2)
-            indexes = np.append(indexes, self.node_size(node))
-            return indexes, values
-            #return indexes1, indexes2, values1, values2
+        values = self.values(node)
+        diffs = np.ediff1d(values, to_begin=np.array([1]))
+        indexes = np.where(diffs != 0)
+        values = values[indexes]
+        indexes = np.append(indexes, self.node_size(node))
+        return indexes, values
 
     @classmethod
     def combine_valued_indexes(cls, indexes1, values1, indexes2, values2):
@@ -642,23 +621,29 @@ class DensePileup(Pileup):
     @classmethod
     def from_sparse_files(cls, graph, base_file_name):
         pileup = cls(graph)
-        indexes = np.loadtxt(base_file_name + "_indexes.npy", dtype=np.uint16)
+        indexes = np.loadtxt(base_file_name + "_indexes.npy", dtype=np.uint32)
+        assert np.all(indexes >= 0)
         values = np.loadtxt(base_file_name + "_values.npy")
+        touched_nodes = np.loadtxt(base_file_name + "_touched_nodes.npy", dtype=np.uint32)
 
         diffs = np.ediff1d(values, to_begin=[values[0]])
         pileup_vals = pileup.data._values
         pileup_vals[indexes] = diffs
         pileup_vals = np.cumsum(pileup_vals)
+        assert np.all(pileup_vals >= -1e-8)
         pileup.data._values = pileup_vals
+        pileup.data._touched_nodes = set(list(touched_nodes))
 
         return pileup
 
     def to_sparse_files(self, file_base_name, truncate_below=0.05):
         vals = self.data._values
+        assert np.all(vals >= 0)
         vals[np.where(vals < truncate_below)] = 0
         indexes = np.where(np.ediff1d(vals, to_begin=[vals[0]]) != 0)
         values = vals[indexes]
 
+        np.savetxt(file_base_name + "_touched_nodes.npy", np.array(list(self.data._touched_nodes)))
         np.savetxt(file_base_name + "_indexes.npy", indexes)
         np.savetxt(file_base_name + "_values.npy", values)
 

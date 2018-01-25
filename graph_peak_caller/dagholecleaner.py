@@ -46,8 +46,11 @@ class DagHoleCleaner(object):
         # Check all node starts
         logging.info("Adding node starts")
         is_hole = set(np.where(self.pileup.data._values == False)[0])
+        logging.info("Step 1 done")
         is_hole_and_start = is_hole.intersection(set(start_node_indices))
+        logging.info("Step 2 done")
         is_hole_and_start = sorted(list(is_hole_and_start))
+        logging.info("Step 3 done")
         start_positions = self.pileup.data.value_indexes_to_nodes_and_offsets(is_hole_and_start)
 
         logging.info("Going through each start")

@@ -94,6 +94,7 @@ class CallPeaks(object):
     def get_q_values(self):
         assert self.p_values_pileup is not None
         assert self.p_to_q_values_mapping is not None
+        assert np.all(self.p_values_pileup.data._values >= -1e-8)
         finder = QValuesFinder(self.p_values_pileup, self.p_to_q_values_mapping)
         self.q_values_pileup = finder.get_q_values()
 
@@ -135,7 +136,7 @@ class CallPeaks(object):
         caller.get_p_values()
         if stop_after_p_values:
             return caller.p_values_pileup.to_sparse_files(
-                out_file_base_name, configuration.p_val_cutoff)
+                out_file_base_name + "pvalues", configuration.p_val_cutoff)
 
         caller.get_p_to_q_values_mapping()
         caller.get_q_values()
@@ -200,10 +201,11 @@ class CallPeaksFromQvalues(object):
         if isinstance(self.pre_processed_peaks, DensePileup):
             # If dense pileup, we are filtering small peaks while trimming later
             self.filtered_peaks = self.pre_processed_peaks
+            logging.info("Not removing small peaks.")
         else:
             self.filtered_peaks = self.pre_processed_peaks.remove_small_peaks(
                 self.info.fragment_length)
-        logging.info("Small peaks removed")
+            logging.info("Small peaks removed")
 
     def trim_max_path_intervals(self, intervals, end_to_trim=-1):
         # Right trim max path intervals, remove right end where q values are 0
@@ -298,8 +300,10 @@ class CallPeaksFromQvalues(object):
         else:
             logging.info("Assuming graph is partially ordered!")
             logging.info("Creating subgraphs from peak regions")
+
             peaks_as_subgraphs = \
                 SubgraphCollectionPartiallyOrderedGraph.create_from_pileup(self.graph, self.filtered_peaks)
+
             #logging.info("Writing subgraphs to file")
             #peaks_as_subgraphs.to_file(self.out_file_base_name + "peaks.subgraphs")
 

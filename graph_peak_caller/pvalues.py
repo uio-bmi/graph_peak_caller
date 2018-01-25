@@ -36,8 +36,9 @@ class PToQValuesMapper:
 
     @classmethod
     def __read_file(cls, file_name):
-        indices = np.load(file_name + "_indices.npy")
-        values = np.load(file_name + "_values.npy")
+        indices = np.loadtxt(file_name + "_indexes.npy")
+        values = np.loadtxt(file_name + "_values.npy")
+        assert np.all(values >= 0)
         return indices, values
 
     @classmethod
@@ -55,14 +56,18 @@ class PToQValuesMapper:
 
     @classmethod
     def from_files(cls, base_file_name):
+        search = base_file_name
+        logging.info("Searching for files starting with %s" % search)
         files = (f for f in os.listdir()
-                 if f.startswith(base_file_name + "_chr"))
+                 if f.startswith(search) and "pvalues" in f and f.endswith("_indexes.npy"))
         counter = Counter()
         for filename in files:
-            indices, values = cls.__read_file(filename)
+            base_file_name = filename.replace("_indexes.npy", "")  # Get file name base
+            logging.info("Reading p values from file %s" % base_file_name)
+            indices, values = cls.__read_file(base_file_name)
             counts = np.diff(indices)
             counter.update(dict(zip(values, counts)))
-        return cls(counter, base_file_name)
+        return cls(counter)
 
     def get_p_to_q_values(self):
         p_to_q_values = {}
@@ -77,7 +82,7 @@ class PToQValuesMapper:
             else:
                 q_value = max(0.0, min(pre_q, q_value))
 
-            p_to_q_values[p_value] = q_value
+            p_to_q_values[round(p_value, 10)] = q_value
             pre_q = q_value
             rank += value_count
 
@@ -96,19 +101,26 @@ class QValuesFinder:
         self.p_to_q_values = p_to_q_values
 
     def get_q_values(self):
+        q_values_pileup = DensePileup(self.p_values.graph)
         new_values = self.get_q_array_from_p_array(
                         self.p_values.data._values)
-        self.p_values.data._values = new_values
-        return self.p_values
+        q_values_pileup.set_new_values(new_values)
+        print("New values: %s" % new_values)
+        print("Touched nodes: %s" % self.p_values.data._touched_nodes)
+        q_values_pileup.data._touched_nodes = self.p_values.data._touched_nodes
+        return q_values_pileup
 
     def get_q_array_from_p_array(self, p_values):
         assert isinstance(p_values, np.ndarray)
 
         def translation(x):
+            assert x >= -1e-8
             if x == 0:
                 return 0
-            return self.p_to_q_values[x]
+            return self.p_to_q_values[round(x, 10)]
 
         trans = np.vectorize(translation, otypes=[np.float])
+        assert np.all(p_values >= -1e-8)
         new_values = trans(p_values)
         return new_values
+
