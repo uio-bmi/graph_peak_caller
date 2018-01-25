@@ -383,7 +383,6 @@ class SparseAreasDict(dict):
         del kwargs["graph"]
         super(SparseAreasDict, self).__init__(*args, **kwargs)
 
-
     def __getitem__(self, item):
         if item not in self:
             value = [0, self.graph.node_size(item)]

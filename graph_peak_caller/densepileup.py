@@ -13,6 +13,7 @@ from .sparsepileup import SparseAreasDict, starts_and_ends_to_sparse_pileup, int
 from memory_profiler import profile
 from .sparsepileupv2 import RpScore, SimpleValuedIndexes
 
+
 class DensePileupData:
 
     def __init__(self, graph, ndim=1, base_value=0, dtype=None):
@@ -173,14 +174,21 @@ class DensePileupData:
         values = values[:, unique_idxs]
         return (idxs, np.transpose(values))
 
-    def find_valued_areas(self, node, value):
-        # Return list of tuples (start, end) having this value inside
-        all_indexes, values = self.get_sparse_indexes_and_values(node)
-        idxs = np.where(values == value)[0]
-        starts = all_indexes[idxs]
-        ends = all_indexes[idxs+1]
-        areas = list(chain(*zip(starts, ends)))
-        return areas
+    def find_valued_areas(self, node, value, changes=None):
+        # Return list[start, end, start2, end2,...] having this value inside
+        index = node - self.min_node
+        start = self._node_indexes[index]
+        end = start + self.node_size(node)
+        changes = np.nonzero(changes[start:end])[0]+1
+        # is_value = values == value
+        # changes = np.nonzero(np.ediff1d(is_value))[0]+1
+        if self._values[start] == value:
+            if self._values[end-1] == value:
+                return [0]+list(changes)+[end-start]
+            return [0]+list(changes)
+        if self._values[end-1]:
+            return list(changes)+[end-start]
+        return list(changes)
 
     def nodes(self):
         return self._touched_nodes
@@ -389,12 +397,13 @@ class DensePileup(Pileup):
 
     def find_valued_areas(self, value):
         logging.info("Finding valued areas equal to %d" % value)
+        changes = np.diff(self.data._values == value)
         if value:
-            return SparseAreasDict({node_id: self.data.find_valued_areas(node_id, value)
+            return SparseAreasDict({node_id: self.data.find_valued_areas(node_id, value, changes)
                                for node_id in self.data._graph.blocks
                                 }, graph=self.graph)
         else:
-            return SparseAreasDict({node_id: self.data.find_valued_areas(node_id, value)
+            return SparseAreasDict({node_id: self.data.find_valued_areas(node_id, value, changes)
                                    for node_id in self.data._touched_nodes
                                     }, graph=self.graph)
     @classmethod

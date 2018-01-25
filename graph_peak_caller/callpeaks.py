@@ -19,6 +19,7 @@ from .subgraphcollection import SubgraphCollectionPartiallyOrderedGraph
 from .peakcollection import Peak
 from memory_profiler import profile
 
+
 def enable_filewrite(func):
     def wrapper(*args, **kwargs):
         intervals = args[1]
