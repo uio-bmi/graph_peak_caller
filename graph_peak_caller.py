@@ -349,7 +349,7 @@ def concatenate_sequence_files(args):
     all_fasta_entries = []
     for chromosome in chromosomes:
         logging.info("Processing chromosome %s" % chromosome)
-        fasta_file = open("chr" + chromosome + "_sequences.fasta")
+        fasta_file = open(chromosome + "_sequences.fasta")
         for line in fasta_file:
             if line.startswith(">"):
                 all_fasta_entries.append([line, None])
