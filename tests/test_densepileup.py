@@ -112,6 +112,34 @@ class TestDensePileup(unittest.TestCase):
         self.assertTrue(np.all(new.data.values_in_range(2, 0, 3) == [1.1, 3.5, 2.1]))
         self.assertTrue(np.all(new.data.values_in_range(3, 0, 4) == [3.5, 3.5, 2.1, 2.1]))
 
+    def test_to_bedgraph(self):
+        pileup = DensePileup(graph)
+        pileup.data.set_values(1, 3, 6, [1, 1, 1])
+        pileup.data.set_values(1, 6, 8, [1.5, 2])
+
+        pileup.to_bed_graph("test_bdg.tmp")
+
+        lines = []
+        f = open("test_bdg.tmp")
+        for line in f:
+            lines.append(line)
+        f.close()
+
+        self.assertTrue("1\t0\t3\t0.0\n" in lines)
+        self.assertTrue("1\t3\t6\t1.0\n" in lines)
+        self.assertTrue("1\t6\t7\t1.5\n" in lines)
+        self.assertTrue("1\t7\t8\t2.0\n" in lines)
+
+    def _test_to_from_bedgraph_equals_old_sparse_pileup(self):
+        # Not working.
+        pileup = DensePileup(graph)
+        pileup.data.set_values(1, 3, 6, [1, 1, 1])
+        pileup.data.set_values(2, 6, 8, [1.5, 2])
+        pileup.to_bed_graph("test_bdg.tmp")
+        from graph_peak_caller.sparsepileup import SparsePileup
+        sparse = SparsePileup.from_bed_graph(graph, "test_bdg.tmp")
+        self.assertTrue(pileup.equals_old_sparse_pileup(sparse))
+
 
 if __name__ == "__main__":
     unittest.main()

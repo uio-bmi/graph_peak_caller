@@ -44,14 +44,16 @@ class PToQValuesMapper:
     @classmethod
     def from_p_values_dense_pileup(cls, p_values):
         values = p_values.data._values
-        non_zero_indices = np.nonzero(values)
-        sorted_p_values = sorted(values[non_zero_indices], reverse=True)
-        unique, counts = np.unique(sorted_p_values, return_counts=True)
-        sorting = np.argsort(-unique)
-        unique_p_values = unique[sorting]
-        counts = counts[sorting]
+        #non_zero_indices = np.nonzero(values)
+        #sorted_p_values = sorted(values[non_zero_indices], reverse=True)
+        sorted_p_values = sorted(values, reverse=True)
 
-        counter_dict = {unique_p_values[i]: counts[i] for i in range(0, len(counts))}
+        unique, counts = np.unique(sorted_p_values, return_counts=True)
+        #sorting = np.argsort(-unique)
+        #unique_p_values = unique[sorting]
+        #counts = counts[sorting]
+
+        counter_dict = {unique[i]: counts[i] for i in range(0, len(counts))}
         return cls(counter_dict)
 
     @classmethod
