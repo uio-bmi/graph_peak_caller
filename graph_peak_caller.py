@@ -21,9 +21,13 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
 
-def shift_estimation(names, graphs, reads):
+def shift_estimation(args):
+    chromosomes = args.names.split(",")
+    graphs = [args.ob_graphs_location + chrom + ".vg" for chrom in chromosomes]
+    sample_file_names = [args.sample_reads_base_name + chrom + ".json"
+                         for chrom in chromosomes]
     estimator = MultipleGraphsShiftEstimator(
-        names, graphs, reads)
+        chromosomes, graphs, sample_file_names)
     d = estimator.run()
     print(d)
 
@@ -467,7 +471,7 @@ interface = \
             'arguments':
                 [
                     ('chromosomes', 'Comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
-                    ('ob_graphs_location', ''),
+                    ('ob_graphs_location', 'Location of graph files'),
                     ('sample_reads_base_name', 'Will use files *_[chromosome].json'),
                 ],
             'method': shift_estimation
