@@ -1,16 +1,18 @@
 
 from pyvg.linear_filter import LinearFilter
-from .shiftestimation import Opt, Treatment
+from .shiftestimation import Opt, Treatment, PeakModel
 
 
-def MultiGraphShiftEstimator(object):
-
+class MultiGraphShiftEstimator(object):
     def __init__(self, position_tuples):
         self._position_tuples = position_tuples
 
-    def get_fragment_length(self):
+    def get_estimates(self):
         opt = Opt()
         treatment = Treatment(self._position_tuples)
+        peakmodel = PeakModel(opt, treatment)
+        peakmodel.build()
+        return peakmodel.d
 
     @classmethod
     def from_files(chrom_names, graph_file_names, interval_json_file_names):
