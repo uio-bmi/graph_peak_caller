@@ -115,17 +115,16 @@ class QValuesFinder:
         assert isinstance(p_values, np.ndarray)
 
         def translation(x):
-            if math.isclose(x, 0, abs_tol=1e-9):
+            if np.isclose(x, 0, atol=1e-9):
                 return 0
             if math.isnan(x):
                 return 0
             x = "%.7f" % x
             if x not in self.p_to_q_values:
-                print(self.p_to_q_values) 
+                print(self.p_to_q_values)
                 logging.error("P value not found in mapping dict. Could be due to rounding errors.")
             return self.p_to_q_values[x]
 
         trans = np.vectorize(translation, otypes=[np.float])
         new_values = trans(p_values)
         return new_values
-

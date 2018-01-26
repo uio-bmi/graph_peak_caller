@@ -2,7 +2,7 @@ import logging
 import numpy as np
 from offsetbasedgraph import IntervalCollection, DirectedInterval
 import pyvg as vg
-from .densepileup import DensePileup, QValuesFinder
+from .densepileup import DensePileup
 from .areas import BinaryContinousAreas, BCACollection
 from .peakscores import ScoredPeak
 from .peakcollection import PeakCollection
@@ -11,7 +11,7 @@ from .experiment_info import ExperimentInfo
 from .subgraphcollection import SubgraphCollectionPartiallyOrderedGraph
 from .peakcollection import Peak
 # from memory_profiler import profile
-from .pvalues import PValuesFinder, PToQValuesMapper
+from .pvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
 from .sampleandcontrolcreator import SampleAndControlCreator
 
 
