@@ -61,8 +61,6 @@ class Opt:
         self.warn = logging.warning
         self.gsize = 300000000
 
-t = Treatment.from_bed_file("vgdata/ctcf_reads_chr1.bed")
-o = Opt()
 
 # cProfile.run("p = PeakModel(o, t)")
 # PeakModel(o, t)")
