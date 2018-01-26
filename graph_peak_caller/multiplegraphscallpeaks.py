@@ -96,4 +96,4 @@ class MultipleGraphsCallpeaks:
             caller.call_peaks_from_q_values(
                 experiment_info=info, config=self._config)
             caller.save_max_path_sequences_to_fasta_file(
-                "sequences.fasta", self.sequence_retrievers[i])
+                "sequences.fasta", self.sequence_retrievers.__next__())

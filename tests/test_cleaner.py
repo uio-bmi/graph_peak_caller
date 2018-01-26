@@ -375,7 +375,7 @@ class TestCleanerOnRandomGraphs(CleanupTester):
 
     def test_filter_intervals(self):
         seed(1)
-        for i in range(0, 200):
+        for i in range(0, 10):
             self.setUp()
             self.setUpRandomIntervals()
             pileup = SparsePileup.from_intervals(
@@ -388,7 +388,7 @@ class TestCleanerOnRandomGraphs(CleanupTester):
     def test_fill_holes(self):
         seed(1)
         n_cases_checked = 0
-        for i in range(0, 1000):
+        for i in range(0, 50):
             self.setUp()
             self.setUpRandomIntervals(True)
 
