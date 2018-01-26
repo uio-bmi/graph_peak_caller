@@ -21,6 +21,17 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
 
+def shift_estimation(args):
+    chromosomes = args.names.split(",")
+    graphs = [args.ob_graphs_location + chrom + ".vg" for chrom in chromosomes]
+    sample_file_names = [args.sample_reads_base_name + chrom + ".json"
+                         for chrom in chromosomes]
+    estimator = MultipleGraphsShiftEstimator(
+        chromosomes, graphs, sample_file_names)
+    d = estimator.run()
+    print(d)
+
+
 def run_with_intervals(ob_graph,
                        sample_intervals,
                        control_intervals,
@@ -453,6 +464,17 @@ interface = \
                     ('read_length', '')
                 ],
             'method': run_callpeaks_whole_genome
+        },
+    'estimate_shift':
+        {
+            'help': 'Estimate shift on whole genome',
+            'arguments':
+                [
+                    ('chromosomes', 'Comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
+                    ('ob_graphs_location', 'Location of graph files'),
+                    ('sample_reads_base_name', 'Will use files *_[chromosome].json'),
+                ],
+            'method': shift_estimation
         },
     'callpeaks_from_qvalues':
         {
