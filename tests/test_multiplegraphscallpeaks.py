@@ -72,7 +72,7 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
             self.fragment_length,
             self.read_length,
             has_control=False,
-            sequence_retrievers=self.sequence_retrievers
+            sequence_retrievers=None
         )
         self.do_asserts()
 
