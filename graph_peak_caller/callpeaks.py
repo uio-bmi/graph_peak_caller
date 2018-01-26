@@ -1,35 +1,26 @@
 import logging
 import numpy as np
-import pickle
 from offsetbasedgraph import IntervalCollection, DirectedInterval
 import pyvg as vg
-import offsetbasedgraph
-from graph_peak_caller import get_shift_size_on_offset_based_graph
-#from .sparsepileupv2 import SparseControlSample
-#from .sparsepileupv2 import SparsePileup
-from .densepileup import DensePileup, DenseControlSample, QValuesFinder
-
-from .extender import Extender
-from .areas import ValuedAreas, BinaryContinousAreas, BCACollection
+from .densepileup import DensePileup, QValuesFinder
+from .areas import BinaryContinousAreas, BCACollection
 from .peakscores import ScoredPeak
 from .peakcollection import PeakCollection
-from . import linearsnarls
 IntervalCollection.interval_class = DirectedInterval
+from .experiment_info import ExperimentInfo
 from .subgraphcollection import SubgraphCollectionPartiallyOrderedGraph
 from .peakcollection import Peak
-from memory_profiler import profile
-from .pvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
-from .experiment_info import ExperimentInfo
+# from memory_profiler import profile
+from .pvalues import PValuesFinder, PToQValuesMapper
 from .sampleandcontrolcreator import SampleAndControlCreator
 
 
 class Configuration:
     def __init__(self, skip_filter_duplicates=False,
-                       graph_is_partially_ordered=False,
-                       skip_read_validation=False,
-                       save_tmp_results_to_file=False,
-                       p_val_cutoff=0.1
-                ):
+                 graph_is_partially_ordered=False,
+                 skip_read_validation=False,
+                 save_tmp_results_to_file=False,
+                 p_val_cutoff=0.1):
         self.skip_filter_duplicates = skip_filter_duplicates
         self.graph_is_partially_ordered = graph_is_partially_ordered
         self.skip_read_validation = skip_read_validation
@@ -88,14 +79,16 @@ class CallPeaks(object):
 
     def get_p_to_q_values_mapping(self):
         assert self.p_values_pileup is not None
-        finder = PToQValuesMapper.from_p_values_dense_pileup(self.p_values_pileup)
+        finder = PToQValuesMapper.from_p_values_dense_pileup(
+            self.p_values_pileup)
         self.p_to_q_values_mapping = finder.get_p_to_q_values()
 
     def get_q_values(self):
         assert self.p_values_pileup is not None
         assert self.p_to_q_values_mapping is not None
-        #assert np.all(self.p_values_pileup.data._values >= -1e-8)
-        finder = QValuesFinder(self.p_values_pileup, self.p_to_q_values_mapping)
+        # assert np.all(self.p_values_pileup.data._values >= -1e-8)
+        finder = QValuesFinder(self.p_values_pileup,
+                               self.p_to_q_values_mapping)
         self.q_values_pileup = finder.get_q_values()
 
     def call_peaks_from_q_values(self, experiment_info, config=None):
@@ -109,7 +102,8 @@ class CallPeaks(object):
         caller.callpeaks()
         self.max_path_peaks = caller.max_paths
 
-    def save_max_path_sequences_to_fasta_file(self, file_name, sequence_retriever):
+    def save_max_path_sequences_to_fasta_file(self, file_name,
+                                              sequence_retriever):
         assert self.max_path_peaks is not None
         f = open(self.out_file_base_name + file_name, "w")
         i = 0
@@ -119,7 +113,8 @@ class CallPeaks(object):
                     max_path.to_file_line() + "\n" + seq + "\n")
             i += 1
         f.close()
-        logging.info("Wrote max path sequences to fasta file: %s" % (self.out_file_base_name + file_name))
+        logging.info("Wrote max path sequences to fasta file: %s" % (
+            self.out_file_base_name + file_name))
 
     @classmethod
     def run_from_intervals(
@@ -156,7 +151,7 @@ class CallPeaksFromQvalues(object):
         self.out_file_base_name = out_file_base_name
         self.cutoff = cutoff
         self.raw_pileup = raw_pileup
-        #self.graph.assert_correct_edge_dicts()
+        # self.graph.assert_correct_edge_dicts()
         self.touched_nodes = touched_nodes
         self.save_tmp_results_to_file = True
         self.graph_is_partially_ordered = False
@@ -186,17 +181,16 @@ class CallPeaksFromQvalues(object):
                                     self.info.read_length)
         else:
             self.pre_processed_peaks.fill_small_wholes(
-                                    self.info.read_length,
-                                    self.out_file_base_name + "_holes.intervals",
-                                    touched_nodes=self.touched_nodes)
+                self.info.read_length,
+                self.out_file_base_name + "_holes.intervals",
+                touched_nodes=self.touched_nodes)
 
         logging.info("Removing small peaks")
 
         # This is slow:
-        #self.pre_processed_peaks.to_bed_file(
+        # self.pre_processed_peaks.to_bed_file(
         #    self.out_file_base_name + "_before_small_peaks_removal.bed")
-        #logging.info("Preprocessed peaks written to bed file")
-
+        # logging.info("Preprocessed peaks written to bed file")
 
         if isinstance(self.pre_processed_peaks, DensePileup):
             # If dense pileup, we are filtering small peaks while trimming later

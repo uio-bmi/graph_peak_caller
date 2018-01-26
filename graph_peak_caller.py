@@ -1,24 +1,24 @@
-import pyvg.util
-import pyvg.vg as vg
 import offsetbasedgraph as obg
-from pyvg.util import vg_gam_file_to_interval_collection, vg_json_file_to_interval_collection
+from pyvg.util import vg_gam_file_to_interval_collection,\
+    vg_json_file_to_interval_collection
 from pyvg.sequences import SequenceRetriever
 from graph_peak_caller.util import create_linear_map, create_ob_graph_from_vg
 import logging
-from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo, CallPeaksFromQvalues, Configuration
+from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo,\
+    CallPeaksFromQvalues, Configuration
 import argparse
 import sys
 from graph_peak_caller.sparsepileup import SparsePileup
 import pickle
-import subprocess
-from pyvg.protoparser import json_file_to_obg_graph, json_file_to_obg_numpy_graph
+from pyvg.protoparser import json_file_to_obg_graph,\
+    json_file_to_obg_numpy_graph
 from graph_peak_caller.peakcollection import Peak
 import os
-from collections import defaultdict
-from memory_profiler import profile
+# from memory_profiler import profile
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
 
 def run_with_intervals(ob_graph,
@@ -33,7 +33,7 @@ def run_with_intervals(ob_graph,
     logging.info("Running from intervals")
     graph_size = sum(block.length() for block in ob_graph.blocks.values())
     logging.info("Graph size: %d" % graph_size)
-    #logging.info("N nodes in graph: %d" % len(ob_graph.blocks))
+    # logging.info("N nodes in graph: %d" % len(ob_graph.blocks))
 
     experiment_info = ExperimentInfo(graph_size, fragment_length, read_length)
     config = Configuration(
@@ -59,7 +59,7 @@ def run_with_gam(ob_graph,
                  has_control=True,
                  limit_to_chromosomes=False,
                  fragment_length=135, read_length=36,
-                 linear_map_file_name = False):
+                 linear_map_file_name=False):
 
     logging.info("Running from gam files")
 
@@ -77,19 +77,20 @@ def run_with_gam(ob_graph,
                        read_length=read_length,
                        linear_map=linear_map_file_name)
 
-#@profile
+
+# @profile
 def run_with_json(ob_graph,
-                 json_file_name, json_control_file,
-                 vg_graph_file_name,
-                 out_name="real_data_",
-                 has_control=True,
-                 limit_to_chromosomes=False,
-                 fragment_length=135, read_length=36,
-                 linear_map_file_name = False):
+                  json_file_name, json_control_file,
+                  vg_graph_file_name,
+                  out_name="real_data_",
+                  has_control=True,
+                  limit_to_chromosomes=False,
+                  fragment_length=135, read_length=36,
+                  linear_map_file_name=False):
 
     logging.info("Running from gam files")
 
-    #ob_graph = obg.GraphWithReversals.from_file(ob_graph_file_name)
+    # ob_graph = obg.GraphWithReversals.from_file(ob_graph_file_name)
     reads_intervals = vg_json_file_to_interval_collection(
          None, json_file_name, ob_graph)
 
@@ -108,7 +109,8 @@ def run_mhc_ctcf_example():
     create_ob_graph_from_vg("tests/mhc/graph.json", "tests/mhc/graph.obg")
     logging.info("Reading graph from file")
     ob_graph = obg.Graph.from_file("tests/mhc/graph.obg")
-    create_linear_map(ob_graph, "tests/mhc/graph.snarls", "tests/mhc/linear_map.lm")
+    create_linear_map(ob_graph, "tests/mhc/graph.snarls",
+                      "tests/mhc/linear_map.lm")
 
     run_with_gam(
         "tests/mhc/graph.obg",
@@ -153,14 +155,15 @@ def intervals_to_fasta(args):
     logging.info("Getting sequence retriever")
     retriever = SequenceRetriever.from_vg_graph(args.vg_graph_file_name)
     logging.info("Getting intervals")
-    intervals = obg.IntervalCollection.create_generator_from_file(args.intervals_file_name)
+    intervals = obg.IntervalCollection.create_generator_from_file(
+        args.intervals_file_name)
     logging.info("Writing to fasta")
-    CallPeaksFromQvalues.intervals_to_fasta_file(intervals, args.out_file_name, retriever)
+    CallPeaksFromQvalues.intervals_to_fasta_file(
+        intervals, args.out_file_name, retriever)
 
 
 def run_callpeaks(args):
     logging.info("Creating offset based graph")
-    out_name = args.out_base_name
     json_file_name = args.vg_json_graph_file_name
     obg_file_name = json_file_name.replace(".json", ".obg")
 
@@ -172,12 +175,13 @@ def run_callpeaks(args):
         ob_graph.to_file(obg_file_name)
     else:
         logging.info("Reading graph from file (graph already existing on disk)")
-        #ob_graph = obg.GraphWithReversals.from_numpy_files(obg_file_name)
+        # ob_graph = obg.GraphWithReversals.from_numpy_files(obg_file_name)
         ob_graph = obg.GraphWithReversals.from_file(obg_file_name)
 
     if not os.path.isfile(args.linear_map_base_name + "_starts.pickle"):
         logging.info("Creating linear map")
-        create_linear_map(ob_graph, args.vg_snarls_file_name, args.linear_map_base_name)
+        create_linear_map(ob_graph, args.vg_snarls_file_name,
+                          args.linear_map_base_name)
         logging.info("Linear map created")
     else:
         logging.info("Not creating linear map. Already existing")
@@ -199,16 +203,17 @@ def run_callpeaks(args):
     )
 
 
-#@profile
+# @profile
 def run_callpeaks_with_numpy_graph(args):
     logging.info("Read offset based graph")
 
-
-    ob_graph = obg.GraphWithReversals.from_numpy_files(args.numpy_graph_base_name)
+    ob_graph = obg.GraphWithReversals.from_numpy_files(
+        args.numpy_graph_base_name)
 
     if not os.path.isfile(args.linear_map_base_name + "_starts.pickle"):
         logging.info("Creating linear map")
-        create_linear_map(ob_graph, args.vg_snarls_file_name, args.linear_map_base_name)
+        create_linear_map(ob_graph, args.vg_snarls_file_name,
+                          args.linear_map_base_name)
         logging.info("Linear map created")
     else:
         logging.info("Not creating linear map. Already existing")

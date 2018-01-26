@@ -5,7 +5,8 @@ from .callpeaks import CallPeaks, Configuration
 from .pvalues import PToQValuesMapper
 from .densepileup import DensePileup
 import logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s, %(levelname)s: %(message)s")
 
 
 class MultipleGraphsCallpeaks:
@@ -47,16 +48,19 @@ class MultipleGraphsCallpeaks:
 
     def run_to_p_values(self):
         for name, graph_file_name, sample, control, lin_map in \
-                zip(self.names, self.graph_file_names,
+            zip(self.names, self.graph_file_names,
                 self.samples, self.controls, self.linear_maps):
             logging.info("Running %s" % name)
-            ob_graph = obg.GraphWithReversals.from_unknown_file_format(graph_file_name)
+            ob_graph = obg.GraphWithReversals.from_unknown_file_format(
+                graph_file_name)
             if isinstance(sample, obg.IntervalCollection):
                 logging.info("Sample is already intervalcollection.")
             else:
                 logging.info("Creating interval collecftions from files")
-                sample = vg_json_file_to_interval_collection(None, sample, ob_graph)
-                control = vg_json_file_to_interval_collection(None, control, ob_graph)
+                sample = vg_json_file_to_interval_collection(
+                    None, sample, ob_graph)
+                control = vg_json_file_to_interval_collection(
+                    None, control, ob_graph)
 
             graph_size = sum(
                 block.length() for block in ob_graph.blocks.values())
@@ -77,7 +81,8 @@ class MultipleGraphsCallpeaks:
     def run_from_p_values(self):
         for i, name in enumerate(self.names):
             graph_file_name = self.graph_file_names[i]
-            ob_graph = obg.GraphWithReversals.from_unknown_file_format(graph_file_name)
+            ob_graph = obg.GraphWithReversals.from_unknown_file_format(
+                graph_file_name)
             graph_size = sum(
                 block.length() for block in ob_graph.blocks.values())
             info = ExperimentInfo(
@@ -88,5 +93,7 @@ class MultipleGraphsCallpeaks:
             caller.p_values_pileup = DensePileup.from_sparse_files(
                 ob_graph, self._base_name + name + "_" + "pvalues")
             caller.get_q_values()
-            caller.call_peaks_from_q_values(experiment_info=info, config=self._config)
-            caller.save_max_path_sequences_to_fasta_file("sequences.fasta", self.sequence_retrievers[i])
+            caller.call_peaks_from_q_values(
+                experiment_info=info, config=self._config)
+            caller.save_max_path_sequences_to_fasta_file(
+                "sequences.fasta", self.sequence_retrievers[i])

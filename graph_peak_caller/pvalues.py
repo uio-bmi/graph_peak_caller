@@ -51,7 +51,8 @@ class PToQValuesMapper:
         unique_p_values = unique[sorting]
         counts = counts[sorting]
 
-        counter_dict = {unique_p_values[i]: counts[i] for i in range(0, len(counts))}
+        counter_dict = {unique_p_values[i]:
+                        counts[i] for i in range(0, len(counts))}
         return cls(counter_dict)
 
     @classmethod

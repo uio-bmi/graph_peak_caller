@@ -1,5 +1,6 @@
 import pickle
 
+
 class ExperimentInfo(object):
     def __init__(self, genome_size, fragment_length, read_length):
         self.genome_size = genome_size
