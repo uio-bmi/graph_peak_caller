@@ -117,7 +117,7 @@ class QValuesFinder:
         assert isinstance(p_values, np.ndarray)
 
         def translation(x):
-            if np.isclose(x, 0, atol=1e-9):
+            if abs(x) < 1e-9:
                 return 0
             if math.isnan(x):
                 return 0
