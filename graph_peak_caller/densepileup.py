@@ -5,7 +5,7 @@ from collections import defaultdict
 from .pileup import Pileup
 from .pileupcleaner2 import PeaksCleaner, HolesCleaner
 from .subgraphcollection import SubgraphCollection
-from offsetbasedgraph import Interval, IntervalCollection
+from offsetbasedgraph import Interval, IntervalCollection, BlockArray
 import pickle
 from .sparsepileup import SparseAreasDict, intervals_to_start_and_ends
 # from memory_profiler import profile
@@ -26,12 +26,14 @@ class DensePileupData:
         self._create_empty(ndim, base_value=base_value)
 
     def _create_empty(self, ndim=1, base_value=0):
+        logging.info("Sorting nodes")
         self._nodes = sorted(self._graph.blocks.keys())
         sorted_nodes = self._nodes
         self.min_node = sorted_nodes[0]
         max_node = sorted_nodes[-1]
         span = max_node - self.min_node + 1
-        n_elements = sum([self.node_size(block) for block in self._graph.blocks])
+        logging.info("Counting basepairs")
+        n_elements = self._graph.number_of_basepairs()
 
         if self.dtype is not None:
             self._values = np.zeros(n_elements)
@@ -41,12 +43,18 @@ class DensePileupData:
         if base_value > 0:
             self._values += base_value
 
-        self._node_indexes = np.zeros(span, dtype=np.uint32)
-        offset = 0
-        for i, node in enumerate(self._nodes):
-            index = node - self.min_node
-            self._node_indexes[index] = offset
-            offset += self.node_size(node)
+        if isinstance(self._graph.blocks, BlockArray):
+            # Quicker way to make node_indexes array
+            logging.info("Using quick way to init densepileup (using cumsum on np block array)")
+            self._node_indexes = np.cumsum(self._graph.blocks._array, dtype=np.uint32)
+            logging.info("Node indexes created...")
+        else:
+            self._node_indexes = np.zeros(span, dtype=np.uint32)
+            offset = 0
+            for i, node in enumerate(self._nodes):
+                index = node - self.min_node
+                self._node_indexes[index] = offset
+                offset += self.node_size(node)
 
         logging.info("Dense pileup inited")
 
