@@ -79,7 +79,12 @@ class PToQValuesMapper:
         rank = 1
         logN = np.log10(sum(self._counter.values()))
         pre_q = None
+        i = 0
         for p_value in reversed(sorted(self._counter.keys())):
+            if i % 200 == 0:
+                logging.info("Done mapping p value %d/%d" % (i, len(self._counter.keys())))
+            i += 1
+
             value_count = self._counter[p_value]
             q_value = p_value + (np.log10(rank) - logN)
             if rank == 1:
@@ -92,6 +97,7 @@ class PToQValuesMapper:
             rank += value_count
 
         self.p_to_q_values = p_to_q_values
+        logging.info("Done creating mapping")
         return p_to_q_values
 
     def to_file(self, base_name):

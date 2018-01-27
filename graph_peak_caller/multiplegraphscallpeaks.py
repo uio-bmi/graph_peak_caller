@@ -42,7 +42,7 @@ class MultipleGraphsCallpeaks:
         pass
 
     def run(self):
-        self.run_to_p_values()
+        #self.run_to_p_values()
         self.create_joined_q_value_mapping()
         self.run_from_p_values()
 
