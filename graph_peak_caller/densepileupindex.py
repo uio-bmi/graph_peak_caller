@@ -1,4 +1,5 @@
-
+from offsetbasedgraph.graphtraverser import GraphTraverser
+from collections import defaultdict
 
 class GraphIndex(object):
     def __init__(self, index):
@@ -13,7 +14,23 @@ class GraphIndex(object):
             yield child
 
     def _create_index(self, graph, length):
-        pass
+        self.index = defaultdict(list)
+        for node in graph:
+            self._traverse_from_node(graph, node, length)
+            self._traverse_from_node(graph, -node, length)
+
+    def _traverse_from_node(self, graph, node, length):
+        if node > 0:
+            traverser = GraphTraverser(graph, direction=1)
+        else:
+            traverser = GraphTraverser(graph, direction=-1)
+
+        visited = defaultdict(int)
+        for next_node in traverser.adj_list[node]:
+            traverser.extend_from_block(next_node, length, visited)
+
+        for to_node, to_length in visited:
+            self.index[node].append((to_node, to_length))
 
     @classmethod
     def from_file(cls, file_name):
