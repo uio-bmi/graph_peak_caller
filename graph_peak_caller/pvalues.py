@@ -81,7 +81,7 @@ class PToQValuesMapper:
         pre_q = None
         i = 0
         for p_value in reversed(sorted(self._counter.keys())):
-            if i % 200 == 0:
+            if i % 5000 == 0:
                 logging.info("Done mapping p value %d/%d" % (i, len(self._counter.keys())))
             i += 1
 

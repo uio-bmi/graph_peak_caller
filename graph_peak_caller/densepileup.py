@@ -79,6 +79,23 @@ class DensePileupData:
         array_end = self._node_indexes[index] + end
         return self._values[array_start:array_end]
 
+    def node_range_to_value_indexes(self, node, start, end):
+
+        if node < 0:
+            node = -node
+            new_start = self.node_size(node) - end
+            end = self.node_size(node) - start
+            start = new_start
+
+        node_size = self.node_size(node)
+        start = min(node_size, max(start, 0))
+        end = max(0, min(node_size, end))
+
+        index = node - self.min_node
+        array_start = self._node_indexes[index] + start
+        array_end = self._node_indexes[index] + end
+        return array_start, array_end
+
     def set_values(self, node, start, end, value):
         index = node - self.min_node
         array_start = self._node_indexes[index] + start

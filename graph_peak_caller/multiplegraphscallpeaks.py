@@ -62,8 +62,7 @@ class MultipleGraphsCallpeaks:
                 control = vg_json_file_to_interval_collection(
                     None, control, ob_graph)
 
-            graph_size = sum(
-                block.length() for block in ob_graph.blocks.values())
+            graph_size = ob_graph.number_of_basepairs()
             info = ExperimentInfo(
                 graph_size, self.fragment_length, self.read_length)
             CallPeaks.run_from_intervals(
