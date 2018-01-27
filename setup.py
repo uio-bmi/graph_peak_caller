@@ -9,7 +9,7 @@ setup(name='graph_peak_caller',
       license='MIT',
       packages=['graph_peak_caller'],
       zip_safe=False,
-      install_requires=['pymysql', 'numpy', 'future', 'filecache', 'scipy', 'pybedtools', 'pyBigWig', 'memory_profiler'],
+      install_requires=['pymysql', 'numpy', 'filecache', 'scipy', 'pybedtools', 'pyBigWig', 'memory_profiler'],
       classifiers=[
             'Programming Language :: Python :: 3'
       ]
