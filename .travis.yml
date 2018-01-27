@@ -4,14 +4,15 @@ python:
     - "3.5"
 
 before_install:
-    apt-get install python3-nose
+    sudo apt-get install -y python3-nose
     git clone git@github.com:uio-cels/OffsetBasedGraph.git
     cd OffsetBasedGraph && git checkout develop && pip install .
 
     cd
     git clone git@github.com:uio-bmi/pyvg.git
-    cd pyvg && pip install .
-    
+    cd pyvg
+    pip install .
+
 
 install:
     pip install .
