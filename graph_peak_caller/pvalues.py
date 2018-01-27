@@ -43,6 +43,7 @@ class PToQValuesMapper:
 
     @classmethod
     def from_p_values_dense_pileup(cls, p_values):
+        logging.info("Creating mapping from p value dense pileup")
         values = p_values.data._values
         #non_zero_indices = np.nonzero(values)
         #sorted_p_values = sorted(values[non_zero_indices], reverse=True)
@@ -73,6 +74,7 @@ class PToQValuesMapper:
         return cls(counter)
 
     def get_p_to_q_values(self):
+        logging.info("Mapping p to q values")
         p_to_q_values = {}
         rank = 1
         logN = np.log10(sum(self._counter.values()))
