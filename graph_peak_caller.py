@@ -299,6 +299,16 @@ def create_ob_numpy_graph(args):
     logging.info("Writing ob graph to file")
     ob_graph.to_numpy_files(args.out_file_name)
 
+def create_graph_index(args):
+    ob_graph = obg.GraphWithReversals.from_unknown_file_format(
+        args.graph_file_base_name)
+    length = int(args.index_size)
+
+    from graph_peak_caller.densepileupindex import GraphIndex
+    index = GraphIndex.create_from_graph(ob_graph, length)
+    index.to_file(args.graph_file_base_name)
+    logging.info("Wrote index to file: %s.obgindex" % args.graph_file_base_name)
+
 
 def create_linear_map_interface(args):
     logging.info("Reading ob graph from file")
@@ -517,6 +527,16 @@ interface = \
                     ('out_file_name', 'E.g. graph.obg')
                 ],
             'method': create_ob_graph
+        },
+    'create_graph_index':
+        {
+            'help': 'Creates a graph index',
+            'arguments':
+                [
+                    ('graph_file_base_name', ''),
+                    ('index_size', 'Should be minium maximal fragment length + maximal node size.'),
+                ],
+            'method': create_graph_index
         },
     'create_ob_numpy_graph':
         {

@@ -236,14 +236,10 @@ class CallPeaksFromQvalues(object):
 
             if new_interval.length() != use_interval.length():
                 n_intervals_trimmed += 1
-                #print("Trimmed interval into: ")
-                #print("   %s" % interval)
-                #print("   %s" % new_interval)
 
             new_interval.score = use_interval.score
 
             if new_interval.length() < self.info.fragment_length:
-                #print("Not keeping too short interval: %s" % new_interval)
                 continue
             new_interval = Peak(new_interval.start_position,
                                 new_interval.end_position,

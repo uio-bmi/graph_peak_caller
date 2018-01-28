@@ -10,7 +10,7 @@ from . import linearsnarls
 IntervalCollection.interval_class = DirectedInterval
 from .pvalues import PValuesFinder, PToQValuesMapper
 from .experiment_info import ExperimentInfo
-
+import os
 
 def enable_filewrite(func):
     def wrapper(*args, **kwargs):
@@ -98,6 +98,8 @@ class SampleAndControlCreator(object):
             logging.warning("Not removing duplicates")
         else:
             logging.info("Will remove duplicates.")
+
+        if os
 
     def run(self):
         self.preprocess()
@@ -287,12 +289,39 @@ class SampleAndControlCreator(object):
     def get_p_to_q_values_mapping(self):
         return PToQValuesMapper.from_p_values_dense_pileup(self.p_values)
 
+    def create_sample_pileup_using_graph_index(self, graph_index):
+        # Faster
+        pileup = create_sample_using_indexes(self.sample_intervals, graph_index,
+                                             self.ob_graph, self.info.fragment_length)
+        self.touched_nodes = pileup.data._touched_nodes
+
+        self._sample_track = self.out_file_base_name + "sample_track.bdg"
+        if self.save_tmp_results_to_file:
+            logging.info("Saving sample pileup to file")
+            pileup.to_bed_graph(self._sample_track)
+            logging.info("Saved sample pileup to " + self._sample_track)
+
+            logging.info("Writing touched nodes to file")
+            with open(self.out_file_base_name + "touched_nodes.pickle", "wb") as f:
+                pickle.dump(self.touched_nodes, f)
+
+            logging.info("N touched nodes: %d" % len(self.touched_nodes))
+
+        self._sample_pileup = pileup
+        # Delete sample intervals
+        self.sample_intervals = None
+
     #@profile
     def create_sample_pileup(self):
+        from .densepileupindex import GraphIndex
+        graph_index = GraphIndex.create_from_graph(self.ob_graph, 700)
+        self.create_sample_pileup_using_graph_index(graph_index)
+        return
+
+
         logging.debug("In sample pileup")
         logging.info("Creating sample pileup")
         alignments = self.sample_intervals
-        logging.info(self.sample_intervals)
         extender = Extender(self.ob_graph, self.info.fragment_length)
         valued_areas = ValuedAreas(self.ob_graph)
         logging.info("Extending sample reads")
@@ -330,3 +359,24 @@ class SampleAndControlCreator(object):
 
     def _write_vg_alignments_as_intervals_to_bed_file(self):
         pass
+
+
+def create_sample_using_indexes(alignments, graph_index, graph, fragment_length):
+    from .densepileupindex import DensePileupExtender, GraphExtender
+    pileup = DensePileup(graph)
+    extender = DensePileupExtender(GraphExtender(graph_index), pileup)
+    touched_nodes = set()
+    for alignment in alignments:
+        pileup.data.add_interval(alignment, touched_nodes)
+        extension_length = fragment_length - alignment.length()
+        end_node = alignment.end_position.region_path_id
+        end_offset = alignment.end_position.offset
+        extensions = extender.extend_from_position(end_node, end_offset, extension_length,
+                                                   touched_nodes)
+
+        for start, end in extensions:
+            pileup.data._values[start:end] += 1
+
+    pileup.data._touched_nodes = touched_nodes
+    return pileup
+

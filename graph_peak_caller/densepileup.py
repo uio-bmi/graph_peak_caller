@@ -281,6 +281,26 @@ class DensePileupData:
 
         return values
 
+    def add_interval(self, interval, touched_nodes=None):
+        for i, rp in enumerate(interval.region_paths):
+            start = 0
+            end = self._graph.node_size(rp)
+            if i == 0:
+                start = interval.start_position.offset
+            if i == len(interval.region_paths) - 1:
+                end = interval.end_position.offset
+
+            if rp < 0:
+                rp = -rp
+                new_start = self._graph.node_size(rp) - end
+                new_end = self._graph.node_size(rp) - start
+                end = new_end
+                start = new_start
+
+            self.add_value(rp, start, end, 1)
+            if touched_nodes is not None:
+                touched_nodes.add(rp)
+
     def value_indexes_to_nodes_and_offsets(self, indexes):
         """
         Takes indexes referring to positions in self._values

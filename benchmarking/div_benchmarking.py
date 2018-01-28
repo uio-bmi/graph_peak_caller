@@ -7,7 +7,8 @@ import logging
 import sys
 import numpy as np
 from graph_peak_caller.pileupcleaner2 import PeaksCleaner
-
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
 graph = GraphWithReversals({
             i: Block(30) for i in range(1, 10010)
@@ -73,6 +74,12 @@ def run_create_sample_pileup_new(intervals):
                 graph, areas_list)
 
 
+def graph_index():
+    from graph_peak_caller.densepileupindex import GraphIndex
+    graph = GraphWithReversals.from_numpy_files("../tests/lrc_kir/graph")
+    index = GraphIndex.create_from_graph(graph, 200)
+    index.to_file("lrc_kir")
+
 def combine_sparsepileups(pileup1, pileup2):
     pileup = SparseControlSample.from_sparse_control_and_sample(pileup1, pileup2)
 
@@ -84,10 +91,13 @@ def run_peakscleaner(graph, pileup):
 
 if __name__ == "__main__":
 
-
+    graph_index()
+    """
     intervals = get_random_intervals(graph)
     for i in range(1):
         run_create_sample_pileup_new(intervals)
+    """
+
     """
     pileup = SparsePileup.from_intervals(graph, get_random_intervals(graph))
     for i in range(2000):
