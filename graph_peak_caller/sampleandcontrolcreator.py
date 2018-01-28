@@ -99,7 +99,6 @@ class SampleAndControlCreator(object):
         else:
             logging.info("Will remove duplicates.")
 
-        if os
 
     def run(self):
         self.preprocess()
