@@ -14,6 +14,7 @@ from pyvg.protoparser import json_file_to_obg_graph,\
     json_file_to_obg_numpy_graph
 from graph_peak_caller.peakcollection import Peak
 import os
+from graph_peak_caller.densepileupindex import GraphIndex
 # from memory_profiler import profile
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 
@@ -45,6 +46,7 @@ def run_with_intervals(ob_graph,
     graph_size = sum(block.length() for block in ob_graph.blocks.values())
     logging.info("Graph size: %d" % graph_size)
     # logging.info("N nodes in graph: %d" % len(ob_graph.blocks))
+
 
     experiment_info = ExperimentInfo(graph_size, fragment_length, read_length)
     config = Configuration(
@@ -220,6 +222,14 @@ def run_callpeaks_with_numpy_graph(args):
 
     ob_graph = obg.GraphWithReversals.from_numpy_files(
         args.numpy_graph_base_name)
+
+    try:
+        graphindex = GraphIndex.from_file(args.numpy_graph_base_name)
+    except FileNotFoundError:
+        logging.error("Graphindex not existing. Looking for %s.obgindex. "
+                      "Create this first with "
+                      "create_graph_index, then run again." % args.numpy_graph_base_name)
+
 
     if not os.path.isfile(args.linear_map_base_name + "_starts.pickle"):
         logging.info("Creating linear map")

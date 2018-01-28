@@ -34,7 +34,7 @@ class Configuration:
 
 class CallPeaks(object):
 
-    def __init__(self, graph, out_file_base_name):
+    def __init__(self, graph, out_file_base_name, graph_index_base_name=None):
         self.graph = graph
         self.out_file_base_name = out_file_base_name
 
@@ -48,6 +48,7 @@ class CallPeaks(object):
         self.peaks_as_subgraphs = None
         self.touched_nodes = None
         self.max_path_peaks = None
+        self.graph_index_base_name = graph_index_base_name
 
     def run_pre_callpeaks(self, has_control, experiment_info,
                           linear_map, configuration=None):
@@ -62,7 +63,8 @@ class CallPeaks(object):
             out_file_base_name=self.out_file_base_name,
             has_control=has_control,
             linear_map=linear_map,
-            configuration=configuration
+            configuration=configuration,
+            graph_index_base_name=self.graph_index_base_name
             )
         creator.run()
         self.sample_pileup = creator._sample_pileup

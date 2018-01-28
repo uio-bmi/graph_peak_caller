@@ -9,6 +9,7 @@ from .areas import ValuedAreas
 from . import linearsnarls
 IntervalCollection.interval_class = DirectedInterval
 from .pvalues import PValuesFinder, PToQValuesMapper
+from .densepileupindex import GraphIndex
 from .experiment_info import ExperimentInfo
 import os
 
@@ -38,7 +39,8 @@ class SampleAndControlCreator(object):
                  skip_read_validation=False,
                  save_tmp_results_to_file=True,
                  configuration=None,
-                 graph_is_partially_ordered=False):
+                 graph_is_partially_ordered=False,
+                 graph_index_base_name=None):
         """
         :param sample_intervals: Either an interval collection or file name
         :param control_intervals: Either an interval collection or a file name
@@ -99,13 +101,22 @@ class SampleAndControlCreator(object):
         else:
             logging.info("Will remove duplicates.")
 
+        if graph_index_base_name is None:
+            logging.warning("Graph index is None. Creating. If this is not a test "
+                            "or simple graph, then graph index should have been created"
+                            "already.")
+            # Settting arbitrary high length. For backwards compatibility with
+            # tests not creating graph index
+            self.graph_index = GraphIndex.create_from_graph(self.ob_graph, length=2000)
+        else:
+            self.graph_index = GraphIndex.from_file(graph_index_base_name)
 
     def run(self):
         self.preprocess()
         if self.info is None:
             self.info = ExperimentInfo.find_info(
                 self.ob_graph, self.sample_intervals, self.control_intervals)
-        self.create_sample_pileup()
+        self.create_sample_pileup_using_graph_index(self.graph_index)
         self.create_control()
         self.scale_tracks()
 
@@ -312,9 +323,8 @@ class SampleAndControlCreator(object):
 
     #@profile
     def create_sample_pileup(self):
-        from .densepileupindex import GraphIndex
-        graph_index = GraphIndex.create_from_graph(self.ob_graph, 700)
-        self.create_sample_pileup_using_graph_index(graph_index)
+        # Re-routing. Temporarily for tests to use new method.
+        self.create_sample_pileup_using_graph_index(self.graph_index)
         return
 
 
