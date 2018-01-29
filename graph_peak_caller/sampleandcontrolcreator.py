@@ -30,6 +30,7 @@ def enable_filewrite(func):
 
     return wrapper
 
+
 class SampleAndControlCreator(object):
     def __init__(self, graph, sample_intervals,
                  control_intervals=None, experiment_info=None,

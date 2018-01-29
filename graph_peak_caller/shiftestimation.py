@@ -14,6 +14,7 @@ with the distribution).
 import numpy as np
 import logging
 
+
 def median(nums):
     """Calculate Median.
     Parameters:
@@ -220,9 +221,8 @@ class PeakModel:
         line: numpy array object where we pileup tags
         """
         psize_adjusted1 = self.peaksize + self.tag_expansion_size // 2
-        window_starts = p1-psize_adjusted1
-        window_ends = p1+p_size_adjusted1
-
+        # window_starts = p1-psize_adjusted1
+        # window_ends = p1+p_size_adjusted1
 
         i1 = 0                  # index for pos1
         i2 = 0                  # index for pos2
