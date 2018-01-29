@@ -14,7 +14,8 @@ before_install:
     - pip install .
 
 install:
-    pip install .
+    - cd ../uio-bmi/graph_peak_caller
+    - pip install .
 
 script:
     cd tests && nosetests3
