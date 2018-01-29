@@ -39,7 +39,12 @@ class NotEnoughPairsException(Exception):
 
 class Treatment:
     def __init__(self, dicts):
+        assert isinstance(dicts, dict)
+        assert "+" in dicts and "-" in dicts and len(dicts) == 2
+
         self._chroms = list(set(list(dicts["+"].keys()) + list(dicts["-"].keys())))
+        logging.info("Treatment init")
+        logging.info("Chroms: %s" % self._chroms)
         self._pos_dict = {key: np.array(dicts["+"][key], dtype="int")
                           for key in self._chroms}
         self._neg_dict = {key: np.array(dicts["-"][key], dtype="int")
@@ -141,9 +146,10 @@ class PeakModel:
 
         self.info("#2 number of paired peaks: %d" % (num_paired_peakpos))
         if num_paired_peakpos < 100:
+            logging.warning("Too few paired peaks (%d) to get good shift estimate" % num_paired_peakpos)
             raise NotEnoughPairsException("No enough pairs to build model")
         elif num_paired_peakpos < self.max_pairnum:
-            print("Fewer paired peaks (%d) than %d! Model may not be build well! Lower your MFOLD parameter may erase this warning. Now I will use %d pairs to build model!" % (num_paired_peakpos, self.max_pairnum,num_paired_peakpos_picked))
+            logging.warning("Few paired peaks (%d) than %d! Model may not be build well! Lower your MFOLD parameter may erase this warning. Now I will use %d pairs to build model!" % (num_paired_peakpos, self.max_pairnum,num_paired_peakpos_picked))
         self.__paired_peak_model(paired_peakpos)
 
     def __paired_peak_model(self, paired_peakpos):
@@ -220,8 +226,8 @@ class PeakModel:
         line: numpy array object where we pileup tags
         """
         psize_adjusted1 = self.peaksize + self.tag_expansion_size // 2
-        window_starts = p1-psize_adjusted1
-        window_ends = p1+p_size_adjusted1
+        #window_starts = p1-psize_adjusted1
+        #window_ends = p1+p_size_adjusted1
 
 
         i1 = 0                  # index for pos1
