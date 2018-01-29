@@ -16,20 +16,24 @@ from graph_peak_caller.peakcollection import Peak
 import os
 # from memory_profiler import profile
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
+from graph_peak_caller.shift_estimation_multigraph import MultiGraphShiftEstimator
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
 
 def shift_estimation(args):
-    chromosomes = args.names.split(",")
-    graphs = [args.ob_graphs_location + chrom + ".vg" for chrom in chromosomes]
+    chromosomes = args.chromosomes.split(",")
+    graphs = [args.ob_graphs_location + chrom for chrom in chromosomes]
+    logging.info("Will try to use graphs %s" % graphs)
     sample_file_names = [args.sample_reads_base_name + chrom + ".json"
                          for chrom in chromosomes]
-    estimator = MultipleGraphsShiftEstimator(
+    logging.info("Will use reads from %s" % sample_file_names)
+
+    estimator = MultiGraphShiftEstimator.from_files(
         chromosomes, graphs, sample_file_names)
-    d = estimator.run()
-    print(d)
+    d = estimator.get_estimates()
+    print("Shift: %d" % d)
 
 
 def run_with_intervals(ob_graph,
@@ -472,7 +476,7 @@ interface = \
                 [
                     ('chromosomes', 'Comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
                     ('ob_graphs_location', 'Location of graph files'),
-                    ('sample_reads_base_name', 'Will use files *_[chromosome].json'),
+                    ('sample_reads_base_name', 'Will use files [base_name][chromosome].json'),
                 ],
             'method': shift_estimation
         },
