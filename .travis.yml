@@ -16,7 +16,7 @@ before_install:
     - cd
 
 install:
-    - cd uio-bmi/graph_peak_caller
+    - cd travis/uio-bmi/graph_peak_caller
     - pip install .
 
 script:
