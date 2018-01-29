@@ -5,6 +5,8 @@ python:
 
 
 before_install:
+    - pwd
+    - ls
     - sudo apt-get install -y python3-nose
     - git clone https://github.com/uio-cels/OffsetBasedGraph.git
     - cd OffsetBasedGraph && git checkout develop && pip install .
@@ -13,9 +15,12 @@ before_install:
     - cd pyvg
     - pip install .
     - pwd
+    - ls
     - cd
+    - ls
 
 install:
+    - ls
     - cd travis/uio-bmi/graph_peak_caller
     - pip install .
 
