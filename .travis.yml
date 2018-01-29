@@ -12,9 +12,11 @@ before_install:
     - git clone https://github.com/uio-bmi/pyvg.git
     - cd pyvg
     - pip install .
+    - pwd
+    - cd
 
 install:
-    - cd ../uio-bmi/graph_peak_caller
+    - cd uio-bmi/graph_peak_caller
     - pip install .
 
 script:
