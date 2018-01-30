@@ -1,6 +1,6 @@
 import logging
 logging.basicConfig(level=logging.INFO)
-from .nongraphpeaks import NonGraphPeak, NonGraphPeakCollection
+#from nongraphpeaks import NonGraphPeak, NonGraphPeakCollection
 import subprocess
 import matplotlib as mpl
 mpl.use('Agg')
@@ -81,12 +81,16 @@ def plot_true_positives(peak_file_sets, meme_file_name, save_to_file=None):
 
 
 if __name__ == "__main__":
-
+    """
+    from nongraphpeaks import NonGraphPeak, NonGraphPeakCollection
     collection = NonGraphPeakCollection.from_bed_file("../tests/macs_without_control_peaks.narrowPeak")
-    #collection.filter_peaks_outside_region("chr6", 28510119, 33480577)
-    collection.filter_peaks_outside_region("chr19", 54025634, 55084318)
+    collection.filter_peaks_outside_region("chr6", 28510119, 33480577)
+    #collection.filter_peaks_outside_region("chr19", 54025634, 55084318)
     collection.set_peak_sequences()
-    collection.save_to_sorted_fasta("../tests/lrc_kir/macs_without_control.fasta")
+    collection.save_to_sorted_fasta("../tests/mhc/macs_without_control.fasta")
+    exit()
+    """
+
     #import sys
     #sys.exit()
     #matcher = MotifMatcher("../tests/real_data_sequences.fasta", "MA0139.1.meme")
@@ -94,6 +98,7 @@ if __name__ == "__main__":
 
     #print(true_positives)
     #sys.exit()
+    """
     plot_true_positives({
         #"macs with control": "../tests/macs_with_control_sequences_chr1.fasta",
         #"graph with control": "../tests/chr1_ctcf_with_control_sequences.fasta",
@@ -104,6 +109,7 @@ if __name__ == "__main__":
     },
     "MA0139.1.meme")
     exit()
+    """
 
     # SRF
     """
@@ -116,7 +122,7 @@ if __name__ == "__main__":
     )
     exit()
     """
-
+    """
     plot_true_positives({
         #"graph without control": "../tests/mhc/ctcf_without_control_sequences.fasta",
         "graph with control": "../tests/ctcf_q50_with_control_sequences.fasta",
@@ -128,19 +134,20 @@ if __name__ == "__main__":
         "graph using macs reads remapepd": "../tests/mhc/macs_reads_remapped_sequences.fasta"
     },
     "MA0139.1.meme")
-
     """
+
     plot_true_positives(
         {
             "macs": "../tests/lrc_kir/macs_without_control.fasta",
-            "graph without control": "../tests/lrc_kir/ctcf_without_control_sequences.fasta",
+            "graph without control": "../tests/lrc_kir/test_sequences.fasta",
             "graph with control": "../tests/lrc_kir/ctcf_with_control_sequences.fasta",
             "graph using macs reads": "../tests/lrc_kir_using_macs_reads_sequences.fasta",
             "graph using macs reads remapped": "../tests/lrc_kir/macs_reads_remapped_sequences.fasta",
         },
-        "MA0139.1.meme"
+        "MA0139.1.meme",
+        save_to_file="enrichment.png"
     )
-    """
+
     exit()
 
 
