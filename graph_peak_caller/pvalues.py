@@ -37,8 +37,8 @@ class PToQValuesMapper:
 
     @classmethod
     def __read_file(cls, file_name):
-        indices = np.loadtxt(file_name + "_indexes.npy")
-        values = np.loadtxt(file_name + "_values.npy")
+        indices = np.load(file_name + "_indexes.npy")
+        values = np.load(file_name + "_values.npy")
         return indices, values
 
     @classmethod
