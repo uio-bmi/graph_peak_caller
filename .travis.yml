@@ -5,7 +5,7 @@ python:
 
 
 before_install:
-    - pip install macs2
+    - sudo apt-get install macs
     - pip install nose
     - pwd
     - ls
