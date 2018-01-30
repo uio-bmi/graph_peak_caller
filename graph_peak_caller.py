@@ -17,6 +17,7 @@ import os
 # from memory_profiler import profile
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 from graph_peak_caller.shift_estimation_multigraph import MultiGraphShiftEstimator
+from pyvg.util import vg_gam_file_to_intervals
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
@@ -34,6 +35,30 @@ def shift_estimation(args):
         chromosomes, graphs, sample_file_names)
     d = estimator.get_estimates()
     print("Shift: %d" % d)
+
+
+def filter_reads_in_graph(args):
+    graph = obg.GraphWithReversals.from_unknown_file_format(args.graph_base_name)
+    intervals = vg_gam_file_to_intervals(None, args.gam_reads_file, graph)
+
+    filtered = []
+    kept = 0
+    i = 0
+    print("Starting")
+    for interval in intervals:
+        if True or i % 10 == 0:
+            logging.info("Processed %d intervals" % i)
+        i += 1
+
+        if interval.region_paths[0] in graph.blocks \
+                and interval.region_paths[-1] in graph.blocks:
+            filtered.append(interval)
+            kept += 1
+    logging.info("Kept %d intevals" % kept)
+
+    filtered = obg.IntervalCollection(filtered)
+    filtered.to_file(args.out_file_name)
+    logging.info("Wrote resulting intervals to %s" % args.out_file_name)
 
 
 def run_with_intervals(ob_graph,
@@ -106,11 +131,20 @@ def run_with_json(ob_graph,
     logging.info("Running from gam files")
 
     # ob_graph = obg.GraphWithReversals.from_file(ob_graph_file_name)
-    reads_intervals = vg_json_file_to_interval_collection(
-         None, json_file_name, ob_graph)
 
-    control_intervals = vg_json_file_to_interval_collection(
-         None, json_control_file, ob_graph)
+    if json_file_name.endswith(".json"):
+        reads_intervals = vg_json_file_to_interval_collection(
+             None, json_file_name, ob_graph)
+
+        control_intervals = vg_json_file_to_interval_collection(
+             None, json_control_file, ob_graph)
+    else:
+        reads_intervals = obg.IntervalCollection.from_file(
+            json_file_name, graph=ob_graph
+        )
+        control_intervals = obg.IntervalCollection.from_file(
+            json_control_file, graph=ob_graph
+        )
 
     run_with_intervals(ob_graph, reads_intervals, control_intervals,
                        out_name=out_name, has_control=has_control,
@@ -306,9 +340,9 @@ def create_ob_numpy_graph(args):
 
 def create_linear_map_interface(args):
     logging.info("Reading ob graph from file")
-    ob_graph = obg.GraphWithReversals.from_file(args.obg_file_name)
+    ob_graph = obg.GraphWithReversals.from_unknown_file_format(args.obg_file_name)
     logging.info("Creating linear map")
-    create_linear_map(ob_graph, args.vg_snarls_file_name, args.out_file_base_name)
+    create_linear_map(ob_graph, args.vg_snarls_file_name, args.out_file_base_name, copy_graph=False)
 
 
 def split_vg_json_reads_into_chromosomes(args):
@@ -575,9 +609,21 @@ interface = \
                     ('out_figure_file_name', '')
                 ],
             'method': plot_motif_enrichment
+        },
+    'filter_reads_in_graph':
+        {
+            'help': "Writes reads in graph to new json file.",
+            'arguments':
+                [
+                    ('gam_reads_file', ''),
+                    ('graph_base_name', ''),
+                    ('out_file_name', '')
+                ],
+            'method': filter_reads_in_graph
         }
 
 }
+
 
 # Create parser
 parser = argparse.ArgumentParser(
@@ -626,6 +672,16 @@ python3 ../../graph_peak_caller.py callpeaks graph.json graph.vg linear_map read
 
 LRC med numpy graph:
 python3 ../../graph_peak_caller.py callpeaks_with_numpy_graph graph graph.vg linear_map reads.json reads.json False test_ 136 35
+
+
+MHC (i mhc_test_data):
+1) Lage numpy graph
+2) Lage ob graph
+3) Lage linear map
+4) Peak calling:
+python3 ../../graph_peak_caller.py callpeaks_with_numpy_graph graph haplo1kg50-mhc.vg linear_map macs_remapped_mhc.json macs_remapped_mhc.json False test_ 135 36
+5) Motif enrichment
+python3 ../../graph_peak_caller.py plot_motif_enrichment test_sequences.fasta macs_sequences.fasta MA0139.1.meme plot.png
 
 
 python3 ../../dev/graph_peak_caller/graph_peak_caller.py callpeaks graph.json graph.vg graph.snarls filtered.gam filtered.gam False run1/ 135 36 23739138
