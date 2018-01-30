@@ -118,17 +118,17 @@ class PileupCreator:
             prev_ends = len(remains)
             for next_node in self._graph.adj_list[node_id]:
                 node_infos[next_node].update(remains)
-        self._pileup._array = np.cumsum(self._pileup._array)
+        self._pileup._values = np.cumsum(self._pileup._values)
 
 
 class DummyPileup:
     def __init__(self, N, node_size=1000):
         self.N = N
         self._node_size = node_size
-        self._array = np.zeros(N*node_size, dtype="int")
+        self._values = np.zeros(N*node_size, dtype="int")
 
     def values(self, k):
-        return self._array[(k-1)*node_size:k*node_size]
+        return self._values[(k-1)*node_size:k*node_size]
 
 
 class DummyStarts:
