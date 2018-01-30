@@ -27,4 +27,3 @@ install:
 
 script:
     - cd tests && nosetests
-    

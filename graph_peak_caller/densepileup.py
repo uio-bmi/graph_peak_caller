@@ -654,11 +654,11 @@ class DensePileup(Pileup):
     def from_sparse_files(cls, graph, base_file_name):
         # TODO: Use np.save(...)
         pileup = cls(graph)
-        indexes = np.loadtxt(base_file_name + "_indexes.npy", dtype=np.uint32)
+        indexes = np.load(base_file_name + "_indexes.npy")
         assert np.all(indexes >= 0)
-        values = np.loadtxt(base_file_name + "_values.npy")
-        touched_nodes = np.loadtxt(
-            base_file_name + "_touched_nodes.npy", dtype=np.uint32)
+        values = np.load(base_file_name + "_values.npy")
+        touched_nodes = np.load(
+            base_file_name + "_touched_nodes.npy")
 
         diffs = np.ediff1d(values, to_begin=[values[0]])
         pileup_vals = pileup.data._values
@@ -672,15 +672,14 @@ class DensePileup(Pileup):
     def to_sparse_files(self, file_base_name, truncate_below=0.05):
         vals = self.data._values
         assert np.all(vals >= 0)
-        # TODO: Use np.clip(vals, truncate_below, None)
         vals[np.where(vals < truncate_below)] = 0
         # TODO: Use np.nonzero(np.ediff1d(vals, to_begin=vals[0]))
-        indexes = np.where(np.ediff1d(vals, to_begin=[vals[0]]) != 0)
+        indexes = np.nonzero(np.ediff1d(vals, to_begin=[vals[0]]))
         values = vals[indexes]
-        np.savetxt(file_base_name + "_touched_nodes.npy",
+        np.save(file_base_name + "_touched_nodes.npy",
                    np.array(list(self.data._touched_nodes)))
-        np.savetxt(file_base_name + "_indexes.npy", indexes)
-        np.savetxt(file_base_name + "_values.npy", values)
+        np.save(file_base_name + "_indexes.npy", indexes)
+        np.save(file_base_name + "_values.npy", values)
 
         logging.info("Saved p values indexes/values to files")
 
