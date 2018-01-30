@@ -320,6 +320,11 @@ class DensePileup(Pileup):
         self.graph = graph
         self.data = DensePileupData(graph, ndim=ndim, base_value=base_value, dtype=dtype)
 
+    def add_areas(self, areas):
+        for area, intervals in areas.items():
+            self.data.values(area)[intervals[0]:intervals[1]] += 1
+        self.data._touched_nodes.add(area)
+
     @classmethod
     def from_base_value(cls, graph, base_value):
         pileup = cls(graph, base_value=base_value)
@@ -423,7 +428,6 @@ class DensePileup(Pileup):
             for i, start in enumerate(starts[node]):
                 end = ends[node][i]
                 pileup.data.add_value(node, start, end, 1)
-
 
         return pileup
 
@@ -822,3 +826,4 @@ class QValuesFinder:
         assert len(new_values) == len(self.sample.data._values)
 
         return new_values
+

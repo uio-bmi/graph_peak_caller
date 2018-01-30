@@ -10,6 +10,7 @@ from . import linearsnarls
 IntervalCollection.interval_class = DirectedInterval
 from .pvalues import PValuesFinder, PToQValuesMapper
 from .experiment_info import ExperimentInfo
+from .directsamplepileup import main as samplemain
 
 
 def enable_filewrite(func):
@@ -31,7 +32,7 @@ def enable_filewrite(func):
     return wrapper
 
 
-class SampleAndControlCreator(object):
+class SampleAndControlCreatorOld(object):
     def __init__(self, graph, sample_intervals,
                  control_intervals=None, experiment_info=None,
                  verbose=False, out_file_base_name="", has_control=True,
@@ -41,7 +42,7 @@ class SampleAndControlCreator(object):
                  configuration=None,
                  graph_is_partially_ordered=False):
         """
-        :param sample_intervals: Either an interval collection or file name
+        :param sample_intervals: Either an interval collection or file namen
         :param control_intervals: Either an interval collection or a file name
         """
 
@@ -308,8 +309,6 @@ class SampleAndControlCreator(object):
         touched_nodes = pileup.data._touched_nodes
         self.touched_nodes = touched_nodes
 
-
-
         self._sample_track = self.out_file_base_name + "sample_track.bdg"
         if self.save_tmp_results_to_file:
             logging.info("Saving sample pileup to file")
@@ -330,4 +329,35 @@ class SampleAndControlCreator(object):
         self.sample_intervals = None
 
     def _write_vg_alignments_as_intervals_to_bed_file(self):
+
         pass
+
+
+class SampleAndControlCreator(SampleAndControlCreatorOld):
+    def create_sample_pileup(self):
+        logging.debug("In sample pileup")
+        logging.info("Creating sample pileup")
+        logging.info(self.sample_intervals)
+        logging.info("Processing areas")
+        pileup = samplemain(self.sample_intervals, self.graph,
+                            self.info.fragment_length-self.info.read_length)
+        self.touched_nodes = pileup.data._touched_nodes
+
+        self._sample_track = self.out_file_base_name + "sample_track.bdg"
+        if self.save_tmp_results_to_file:
+            logging.info("Saving sample pileup to file")
+            pileup.to_bed_graph(self._sample_track)
+            logging.info("Saved sample pileup to " + self._sample_track)
+
+            logging.info("Writing touched nodes to file")
+            with open(self.out_file_base_name + "touched_nodes.pickle", "wb") as f:
+                pickle.dump(self.touched_nodes, f)
+
+            logging.info("N touched nodes: %d" % len(self.touched_nodes))
+        else:
+            logging.info("Not saving sample pileup to files.")
+
+        self._sample_pileup = pileup
+
+        # Delete sample intervals
+        self.sample_intervals = None
