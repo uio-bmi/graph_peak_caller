@@ -45,15 +45,22 @@ class PileupCreator:
         self._fragment_length = 150
         self._pileup = pileup
 
-    def _update_pileup(self, node_id, node_info, starts):
+    def _update_pileup(self, node_id, node_info, starts, prev_ends):
         sub_array = self._pileup.get_sub_array(node_id)
         node_size = self._graph.node_size(node_id)
+        n_in = 0
         for s in node_info._dist_dict.values():
-            sub_array[0: min(node_size, s)] += 1
+            if s == 0:
+                continue
+            if s < node_size:
+                sub_array[s] -= 1
+            # sub_array[0: min(node_size, s)] += 1
+            n_in += 1
+        sub_array[0] = n_in-prev_ends
         for start in starts:
-            end = min(node_size, start+self._fragment_length)
-            s = sub_array[start:end]
-            s += 1
+            sub_array[start] += 1
+            if s < node_size-self._fragment_length:
+                sub_array[s+self._fragment_length] -= 1
 
     def run(self):
         start_node = self._graph.get_first_blocks()[0]
@@ -86,6 +93,39 @@ class PileupCreator:
                     # print("F", finished)
                     del unfinished[next_node]
 
+    def run_linear(self):
+        node_ids = self._graph.get_sorted_node_ids()
+        start_node = self._graph.get_first_blocks()[0]
+        prev_ends = 0
+        node_infos = {start_node: NodeInfo({})}
+        unfinished = {}
+        # cur_start_idx = 0
+        cur_id = 0
+        for node_id in node_ids:
+            info = node_infos[start_node]
+            del node_infos[start_node]
+            node_size = self._graph.node_size(node_id)
+            starts = self._starts.get_node_starts(node_id)
+            self._update_pileup(node_id, info, starts, prev_ends)
+            remains = self._fragment_length - (node_size-starts)
+            last_id = cur_id + len(remains)
+            remains = dict(zip(range(cur_id, last_id),
+                               [r for r in remains if r >= 0]))
+            remains.update({node: d-node_size for node, d in
+                            info._dist_dict.items()
+                            if d >= node_size})
+            cur_id = last_id
+            prev_ends = len(remains)
+            for next_node in self._graph.adj_list[node_id]:
+                if next_node not in unfinished:
+                    unfinished[next_node] = TmpNodeInfo(
+                        len(self._graph.reverse_adj_list[-next_node]))
+                finished = unfinished[next_node].update(remains)
+                if finished is not None:
+                    queue.append((next_node, finished))
+                    # print("F", finished)
+                    del unfinished[next_node]
+
 
 class DummyPileup:
     def __init__(self, N, node_size=1000):
@@ -99,11 +139,21 @@ class DummyPileup:
 
 class DummyStarts:
     def __init__(self, nodes, node_size=1000, dist=100):
-        self._idxs = {node: np.arange(0, node_size, dist) if ((node//100) % 10)==0 else np.array([])
+        self._idxs = {node: np.arange(0, node_size, dist)
+                      if ((node//100) % 10) == 0 else np.array([])
                       for node in nodes}
 
     def get_node_starts(self, node_id):
         return self._idxs[node_id]
+
+
+def sorted_wierd_graph(N, node_size):
+    nodes = {node_id: obg.Block(node_size)
+             for node_id in range(1, 2*N+1)}
+    edges = {i+1: [i-(i % 2)+3, i-(i % 2)+4]
+             for i in range(2*N-2)}
+    edges[2] = []
+    return obg.GraphWithReversals(nodes, edges)
 
 
 def wierd_graph(N, node_size):
@@ -119,8 +169,8 @@ def wierd_graph(N, node_size):
 
 if __name__ == "__main__":
     node_size = 32
-    n_nodes = 1000000
-    graph = wierd_graph(n_nodes, node_size)
+    n_nodes = 100
+    graph = sorted_wierd_graph(n_nodes, node_size)
 
     # nodes = {node_id: obg.Block(node_size)
     #          for node_id in range(1, n_nodes+1)}
