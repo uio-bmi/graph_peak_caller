@@ -44,11 +44,11 @@ class PileupCreator:
     def __init__(self, graph, starts, pileup):
         self._graph = graph
         self._starts = starts
-        self._fragment_length = 150
+        self._fragment_length = 110
         self._pileup = pileup
 
     def _update_pileup(self, node_id, node_info, starts, prev_ends):
-        sub_array = self._pileup.get_sub_array(node_id)
+        sub_array = self._pileup.values(node_id)
         node_size = self._graph.node_size(node_id)
         n_in = 0
         for s in node_info._dist_dict.values():
@@ -127,7 +127,7 @@ class DummyPileup:
         self._node_size = node_size
         self._array = np.zeros(N*node_size, dtype="int")
 
-    def get_sub_array(self, k):
+    def values(self, k):
         return self._array[(k-1)*node_size:k*node_size]
 
 
@@ -164,14 +164,14 @@ def wierd_graph(N, node_size):
 
 if __name__ == "__main__":
     node_size = 32
-    n_nodes = 500000
+    n_nodes = 1000000
     graph = sorted_wierd_graph(n_nodes, node_size)
 
     # nodes = {node_id: obg.Block(node_size)
     #          for node_id in range(1, n_nodes+1)}
     # edges = {1: [2, 3], 2: [4], 3: [4]}
     # graph = obg.GraphWithReversals(nodes, edges)
-    starts = DummyStarts(list(range(1, 2*n_nodes+1)), node_size, dist=10, M=10)
+    starts = DummyStarts(list(range(1, 2*n_nodes+1)), node_size, dist=10, M=20)
     pileup = DummyPileup(2*n_nodes, node_size)
     creator = PileupCreator(graph, starts, pileup)
     cProfile.run("creator.run_linear()")
