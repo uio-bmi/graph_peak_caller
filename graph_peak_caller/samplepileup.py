@@ -10,11 +10,13 @@ class StartIndices:
 
 
 class NodeInfo:
-    def __init__(self, dist_dict):
-        self._dist_dict = dist_dict
+    def __init__(self, dist_dict=None):
+        self._dist_dict = dist_dict if dist_dict\
+                          is not None else defaultdict(int)
 
-    def is_ready(self):
-        return len(self._dist_dict) == self._edges_in
+    def update(self, starts):
+        for read_id, val in starts.items():
+            self._dist_dict[read_id] = max(self._dist_dict[read_id], val)
 
     def __str__(self):
         return str(self._dist_dict)
@@ -95,14 +97,13 @@ class PileupCreator:
 
     def run_linear(self):
         node_ids = self._graph.get_sorted_node_ids()
-        start_node = self._graph.get_first_blocks()[0]
         prev_ends = 0
-        node_infos = {start_node: NodeInfo({})}
-        unfinished = {}
+        node_infos = defaultdict(NodeInfo)
         cur_id = 0
+        empty = NodeInfo()
         for node_id in node_ids:
-            info = node_infos[node_id]
-            del node_infos[node_id]
+            info = node_infos.pop(node_id, empty)
+            # del node_infos[node_id]
             node_size = self._graph.node_size(node_id)
             starts = self._starts.get_node_starts(node_id)
             self._update_pileup(node_id, info, starts, prev_ends)
@@ -116,13 +117,7 @@ class PileupCreator:
             cur_id = last_id
             prev_ends = len(remains)
             for next_node in self._graph.adj_list[node_id]:
-                if next_node not in unfinished:
-                    unfinished[next_node] = TmpNodeInfo(
-                        len(self._graph.reverse_adj_list[-next_node]))
-                finished = unfinished[next_node].update(remains)
-                if finished is not None:
-                    node_infos[next_node] = finished
-                    del unfinished[next_node]
+                node_infos[next_node].update(remains)
         self._pileup._array = np.cumsum(self._pileup._array)
 
 
