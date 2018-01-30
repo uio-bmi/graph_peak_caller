@@ -46,8 +46,8 @@ def run_with_intervals(ob_graph,
                        read_length=36,
                        linear_map="haplo1kg50-mhc.lm"):
     logging.info("Running from intervals")
-    graph_size = sum(block.length() for block in ob_graph.blocks.values())
-    logging.info("Graph size: %d" % graph_size)
+    graph_size = ob_graph.number_of_basepairs()
+    logging.info("Number of base pairs in graph: %d" % graph_size)
     # logging.info("N nodes in graph: %d" % len(ob_graph.blocks))
 
     experiment_info = ExperimentInfo(graph_size, fragment_length, read_length)
