@@ -674,7 +674,7 @@ class DensePileup(Pileup):
         assert np.all(vals >= 0)
         vals[np.where(vals < truncate_below)] = 0
         # TODO: Use np.nonzero(np.ediff1d(vals, to_begin=vals[0]))
-        indexes = np.nonzero(np.ediff1d(vals, to_begin=[vals[0]]))
+        indexes = np.nonzero(np.ediff1d(vals, to_begin=[vals[0]]))[0]
         values = vals[indexes]
         np.save(file_base_name + "_touched_nodes.npy",
                    np.array(list(self.data._touched_nodes)))
