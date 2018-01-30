@@ -228,6 +228,12 @@ class CallPeaksFromQvalues(object):
             cumsum = np.cumsum(pileup_values)
             n_zeros_beginning = np.sum(cumsum == 0)
 
+
+            if n_zeros_beginning == use_interval.length():
+                logging.warning("Trimming interval of length %d with %d bp"
+                                % (use_interval.length(), n_zeros_beginning))
+                continue
+
             if end_to_trim == -1:
                 new_interval = use_interval.get_subinterval(n_zeros_beginning, use_interval.length())
             else:

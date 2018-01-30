@@ -175,9 +175,11 @@ def sanitize_indices_and_values(indices, values):
     return new_indices, new_values
 
 
-def create_linear_map(ob_graph, snarl_file_name = "haplo1kg50-mhc.snarls", out_file_name="linear_map"):
+def create_linear_map(ob_graph, snarl_file_name = "haplo1kg50-mhc.snarls", out_file_name="linear_map", copy_graph=True):
+    if copy_graph:
+        ob_graph = ob_graph.copy()
     builder = SnarlGraphBuilder.from_vg_snarls(
-        ob_graph.copy(),
+        ob_graph,
         snarl_file_name)
     snarlgraph = builder.build_snarl_graphs()
     linear_map = LinearSnarlMap.from_snarl_graph(snarlgraph, ob_graph.copy())
