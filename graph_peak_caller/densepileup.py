@@ -182,6 +182,8 @@ class DensePileupData:
         start = self._node_indexes[index]
         end = start + self.node_size(node)
         changes = np.nonzero(changes[start:end])[0]+1
+        if changes.size and changes[-1] == end-start:
+            changes = changes[:-1]
         # is_value = values == value
         # changes = np.nonzero(np.ediff1d(is_value))[0]+1
         if self._values[start] == value:
