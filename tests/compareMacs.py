@@ -611,7 +611,7 @@ def small_multigraph(with_control=False):
 
 
 def big_multigraph(with_control=False):
-    return MacsTestUsingMultipleGraphsInterface(1000, 2, 50, read_length=10,
+    return MacsTestUsingMultipleGraphsInterface(150, 3, 10, read_length=10,
                      fragment_length=120, with_control=with_control)
 
 

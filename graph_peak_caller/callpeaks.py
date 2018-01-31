@@ -133,7 +133,7 @@ class CallPeaks(object):
         caller.get_p_values()
         if stop_after_p_values:
             return caller.p_values_pileup.to_sparse_files(
-                out_file_base_name + "pvalues", configuration.p_val_cutoff)
+                out_file_base_name + "pvalues")
 
         caller.get_p_to_q_values_mapping()
         caller.get_q_values()

@@ -670,15 +670,16 @@ class DensePileup(Pileup):
 
         return pileup
 
-    def to_sparse_files(self, file_base_name, truncate_below=0.05):
+    def to_sparse_files(self, file_base_name):
         vals = self.data._values
         assert np.all(vals >= 0)
-        vals[np.where(vals < truncate_below)] = 0
-        # TODO: Use np.nonzero(np.ediff1d(vals, to_begin=vals[0]))
-        indexes = np.nonzero(np.ediff1d(vals, to_begin=[vals[0]]))[0]
+        #vals[np.where(vals < truncate_below)] = 0
+        diffs = np.ediff1d(vals, to_begin=[1])
+        indexes = np.nonzero(diffs)[0]
+        #indexes = np.insert(indexes, 0, 0)
         values = vals[indexes]
 
-        # Add length to indexes
+        # Add length to end and 0 to start
         indexes = np.append(indexes, len(self.data._values))
 
         np.save(file_base_name + "_touched_nodes.npy",

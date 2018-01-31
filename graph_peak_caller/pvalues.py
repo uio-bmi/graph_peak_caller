@@ -38,10 +38,7 @@ class PToQValuesMapper:
     @classmethod
     def __read_file(cls, file_name):
         indices = np.load(file_name + "_indexes.npy")
-        print("Read indexes:")
-        print(indices)
         values = np.load(file_name + "_values.npy")
-        print(values)
         return indices, values
 
     @classmethod
@@ -66,9 +63,6 @@ class PToQValuesMapper:
             logging.info("Reading p values from file %s" % base_file_name)
             indices, values = cls.__read_file(base_file_name)
             counts = np.diff(indices)
-            print("Counts")
-            print(counts)
-            print(values)
             for key, val in zip(values, counts):
                 counter[key] += val
             #counter.update(dict(zip(values, counts)))
