@@ -38,7 +38,10 @@ class PToQValuesMapper:
     @classmethod
     def __read_file(cls, file_name):
         indices = np.load(file_name + "_indexes.npy")
+        print("Read indexes:")
+        print(indices)
         values = np.load(file_name + "_values.npy")
+        print(values)
         return indices, values
 
     @classmethod
@@ -63,10 +66,17 @@ class PToQValuesMapper:
             logging.info("Reading p values from file %s" % base_file_name)
             indices, values = cls.__read_file(base_file_name)
             counts = np.diff(indices)
-            counter.update(dict(zip(values, counts)))
+            print("Counts")
+            print(counts)
+            print(values)
+            for key, val in zip(values, counts):
+                counter[key] += val
+            #counter.update(dict(zip(values, counts)))
         return cls(counter)
 
     def get_p_to_q_values(self):
+        print(self._counter)
+        logging.info("Number of zero pvalues: %d" % self._counter[0])
         logging.info("Mapping p to q values")
         p_to_q_values = {}
         rank = 1
@@ -87,6 +97,7 @@ class PToQValuesMapper:
             p_to_q_values["%.7f" % p_value] = q_value
             pre_q = q_value
             rank += value_count
+
 
         self.p_to_q_values = p_to_q_values
         logging.info("Done creating mapping")
