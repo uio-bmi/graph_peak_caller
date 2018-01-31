@@ -47,9 +47,9 @@ class PileupCreator:
         self._fragment_length = 110
         self._pileup = pileup
         self.touched_nodes = set() if touched_nodes is None else touched_nodes
-        self.__set_adj_list()
+        self._set_adj_list()
 
-    def __set_adj_list(self):
+    def _set_adj_list(self):
         self._adj_list = self._graph.adj_list
 
     def _update_pileup(self, node_info, starts, prev_ends, sub_array):
@@ -92,15 +92,12 @@ class PileupCreator:
                             if d > node_size})
             cur_id = last_id
             for next_node in self._graph.adj_list[node_id]:
-                # print(node_id, next_node)
                 if next_node not in unfinished:
                     unfinished[next_node] = TmpNodeInfo(
                         len(self._graph.reverse_adj_list[-next_node]))
-                # print("U", unfinished[next_node])
                 finished = unfinished[next_node].update(remains)
                 if finished is not None:
                     queue.append((next_node, finished))
-                    # print("F", finished)
                     del unfinished[next_node]
 
     def get_subarray(self, from_idx, to_idx):
@@ -129,6 +126,7 @@ class PileupCreator:
                 self.get_subarray(cur_array_idx, cur_array_idx+node_size))
             if touched:
                 self._add_touched(node_id)
+            cur_array_idx += node_size
             remains = self._fragment_length - (node_size-starts)
             last_id = cur_id + len(remains)
             remains = dict(zip(range(cur_id, last_id),
@@ -142,9 +140,15 @@ class PileupCreator:
                 node_infos[next_node].update(remains)
         self._pileup = np.cumsum(self._pileup)
 
+    def get_pileup(self):
+        return self._pileup
+
 
 class ReversePileupCreator(PileupCreator):
-    def __set_adj_list(self):
+    def get_pileup(self):
+        return self._pileup[::-1]
+
+    def _set_adj_list(self):
         self._adj_list = self._graph.reverse_adj_list
 
     def get_node_ids(self):
@@ -193,7 +197,6 @@ def wierd_graph(N, node_size):
     edges[N] = []
     edges[2*N] = []
     edges[N+1] = []
-    # print(edges)
     return obg.GraphWithReversals(nodes, edges)
 
 if __name__ == "__main__":

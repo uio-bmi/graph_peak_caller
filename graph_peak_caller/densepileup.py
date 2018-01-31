@@ -73,7 +73,10 @@ class DensePileupData:
         index = node - self.min_node
         start = self._node_indexes[index]
         end = start + self.node_size(node)
-        return self._values[start:end:sign]
+        vals = self._values[start:end]
+        if sign < 0:
+            return vals[::-1]
+        return vals
 
     def values_in_range(self, node, start, end):
         index = node - self.min_node

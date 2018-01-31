@@ -562,7 +562,7 @@ class MACSTests(object):
 
 
 def small_test(with_control=False):
-    return MACSTests(1000, 2, 60, read_length=10,
+    return MACSTests(1000, 100, 60, read_length=10,
                      fragment_length=50, with_control=with_control)
 
 
