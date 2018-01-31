@@ -610,6 +610,11 @@ def small_multigraph(with_control=False):
                      fragment_length=50, with_control=with_control)
 
 
+def big_multigraph(with_control=False):
+    return MacsTestUsingMultipleGraphsInterface(1000, 2, 50, read_length=10,
+                     fragment_length=120, with_control=with_control)
+
+
 def big_test(with_control=False):
     return MACSTests(1000, 10000, 5000, read_length=51,
                      fragment_length=120, with_control=with_control)
@@ -617,7 +622,8 @@ def big_test(with_control=False):
 
 if __name__ == "__main__":
     random.seed(110)
-    test = small_multigraph(False)
+    test = big_multigraph(False)
+    #test = big_test(False)
     # test.test_call_peaks()
     test.test_whole_pipeline()
     exit()
