@@ -40,6 +40,14 @@ class BinaryContinousAreas(Areas):
         assert idx > 0
         self.starts[node_id] = max(idx, self.starts[node_id])
 
+    def merge_with_other(self, other):
+        for full in other.full_areas.keys():
+            self.add_full(full)
+        for node, start in other.starts.items():
+            self.add_start(node, start)
+        for node, startend in other.internal_intervals.items():
+            self.add_internal(node, startend[0], startend[1])
+
     def add_internal(self, node_id, start, end):
         assert start != end
         self.internal_intervals[node_id] = [start, end]

@@ -622,7 +622,7 @@ def big_test(with_control=False):
 
 if __name__ == "__main__":
     random.seed(110)
-    test = big_test(False)
+    test = big_multigraph(False)
     #test = big_test(False)
     # test.test_call_peaks()
     test.test_whole_pipeline()

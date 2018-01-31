@@ -147,7 +147,7 @@ class TestDensePileup(unittest.TestCase):
                                 Interval(0, 10, [3])
                             ])
         valued_areas = pileup.find_valued_areas(1)
-        #self.assertEqual(len(valued_areas), 2)
+
         self.assertEqual(valued_areas[1], [2, 10])
         self.assertEqual(valued_areas[3], [0, 10])
         self.assertEqual(valued_areas[2], [])

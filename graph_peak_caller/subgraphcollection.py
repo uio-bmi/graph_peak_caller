@@ -176,9 +176,7 @@ class SubgraphCollectionPartiallyOrderedGraphBuilder():
         self.pileup = pileup
         from .densepileup import DensePileupData
         assert isinstance(self.pileup.data, DensePileupData)
-
         areas = pileup.find_valued_areas(1)
-        #print(areas)
         self.areas = Areas(self.graph, areas)
         self.single_areas = []
 
@@ -187,6 +185,7 @@ class SubgraphCollectionPartiallyOrderedGraphBuilder():
         sorted_nodes = sorted(self.areas.areas.keys())
         n = 0
         for node_id in sorted_nodes: #, starts_and_ends in self.areas.areas.items():
+            #print("Checking node %d" % node_id)
             starts_and_ends = self.areas.areas[node_id]
             if n % 1000000 == 0:
                 logging.info("Adding node %d to subgraph" % n)
@@ -199,30 +198,73 @@ class SubgraphCollectionPartiallyOrderedGraphBuilder():
                 is_end = self.areas._is_end_position(node_id, end)
                 yield SingleArea(node_id, start, end, is_start, is_end)
 
+    def _get_connected_subgraphs(self, subgraphs, area):
+        connected = []
+        #print("Getting connected subgraphs")
+        for subgraph in subgraphs:
+            #print("  Checking subgraph")
+            if not area.is_start:
+                for prev_node in self.graph.reverse_adj_list[-area.node]:
+                    #print("        Checking prev node %d" % prev_node)
+                    if -prev_node in subgraph.full_areas:
+                        connected.append(subgraph)
+                    if prev_node in subgraph.starts:
+                        connected.append(subgraph)
+            elif not area.is_end:
+                for next_node in self.graph.adj_list[area.node]:
+                    #print("        Checking next node %d" % next_node)
+                    if next_node in subgraph.starts:
+                        connected.append(subgraph)
+                    if next_node in subgraph.full_areas:
+                        connected.append(subgraph)
+
+        return connected
+
     def _create_subgraphs(self):
+        from collections import deque
+        active_subgraphs = deque()
+
         logging.info("Creating subgraphs after single areas are created")
         peaks = []
         current_peak = BinaryContinousAreas(self.graph)
         prev_was_end = False
+        prev_node = 0
         for single_area in self.single_areas:
-            #print("Checking single area %s " % single_area)
-            if single_area.is_start and prev_was_end:
-                # Store this peak. Create new
-                peaks.append(current_peak)
-                current_peak = BinaryContinousAreas(self.graph)
+            #print("Single area: %s " % single_area)
 
-            # Always add what we have to current peak
-            current_peak.add(single_area.node,
+            connected = self._get_connected_subgraphs(active_subgraphs, single_area)
+            if len(connected) > 1:
+                assert len(connected) == 2
+                connected[0].merge_with_other(connected[1])
+                connected = [connected[0]]
+
+            if len(connected) == 0:
+                current_peak = BinaryContinousAreas(self.graph)
+                current_peak.add(single_area.node, single_area.start,
+                                 single_area.end)
+                if single_area.is_start and single_area.is_end:
+                    peaks.append(current_peak)
+                    #print("   Creating new, finishing it")
+                else:
+                    active_subgraphs.append(current_peak)
+                    #print("   Creating new, appending to active")
+            else:
+                #print("   Adding to active")
+                current_peak = connected[0]
+
+                current_peak.add(single_area.node,
                              single_area.start,
                              single_area.end)
-            #print("  Adding %d, %d, %d" % (single_area.node, single_area.start, single_area.end))
 
-            if single_area.is_end:
-                prev_was_end = True
+            # If more than 2, the first must be finished
+            if len(active_subgraphs) > 2:
+                peaks.append(active_subgraphs.popleft())
+                #print("Finishing subgraph")
 
-        peaks.append(current_peak)
+        peaks.extend(active_subgraphs)
 
         return peaks
+
 
     def build(self):
         self.single_areas = self._make_single_areas()

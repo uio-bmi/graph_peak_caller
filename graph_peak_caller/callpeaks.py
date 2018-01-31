@@ -187,6 +187,11 @@ class CallPeaksFromQvalues(object):
                 self.out_file_base_name + "_holes.intervals",
                 touched_nodes=self.touched_nodes)
 
+        if self.save_tmp_results_to_file:
+            self.pre_processed_peaks.to_bed_file(
+                self.out_file_base_name + "after_hole_cleaning.bed")
+            logging.info("Wrote results after holes cleaning to file")
+
         logging.info("Removing small peaks")
 
         # This is slow:
@@ -319,6 +324,8 @@ class CallPeaksFromQvalues(object):
                 BCACollection(binary_peaks).to_file(
                     self.out_file_base_name + "bcapeaks.subgraphs")
             self.binary_peaks = binary_peaks
+
+        #logging.info("N touched nodes: %d" % len(self.touched_nodes))
 
     def callpeaks(self):
         logging.info("Calling peaks")

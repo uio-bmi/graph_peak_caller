@@ -9,8 +9,8 @@ from graph_peak_caller.densepileup import DensePileup
 from graph_peak_caller.subgraphcollection import \
     SubgraphCollectionPartiallyOrderedGraphBuilder, SubgraphCollectionPartiallyOrderedGraph
 from graph_peak_caller.peakscores import ScoredPeak
-
 from graph_peak_caller.areas import BinaryContinousAreas
+
 
 class SubgraphsAndMaxPathsOnPartiallyOrderedGraphs(unittest.TestCase):
 
@@ -38,11 +38,51 @@ class SubgraphsAndMaxPathsOnPartiallyOrderedGraphs(unittest.TestCase):
 
         subgraphs = SubgraphCollectionPartiallyOrderedGraph.create_from_pileup(
             self.linear_graph, pileup)
+        print(subgraphs)
+
 
         scored_peaks = (ScoredPeak.from_peak_and_pileup(peak, self.scores)
                         for peak in subgraphs)
         max_paths = [peak.get_max_path() for peak in scored_peaks]
         self.assertTrue(all(interval in max_paths for interval in intervals))
+
+    def test_simple_two_peaks(self):
+
+        intervals = [Interval(2, 5, [1]), Interval(0, 5, [3])]
+        pileup = DensePileup.from_intervals(self.linear_graph,
+                                             intervals)
+
+        subgraphs = SubgraphCollectionPartiallyOrderedGraph.create_from_pileup(
+            self.linear_graph, pileup)
+        print(subgraphs)
+
+
+        correct1 = BinaryContinousAreas(self.linear_graph)
+        correct1.add_start(-1, 3)
+        correct2 = BinaryContinousAreas(self.linear_graph)
+        correct2.add_full(3)
+
+        self.assertTrue(correct1 in subgraphs)
+        self.assertTrue(correct2 in subgraphs)
+
+
+    def test_split_graph(self):
+
+        intervals = [Interval(2, 5, [1]), Interval(1, 5, [2]), Interval(0, 2, [3])]
+        pileup = DensePileup.from_intervals(self.graph,
+                                             intervals)
+
+        subgraphs = SubgraphCollectionPartiallyOrderedGraph.create_from_pileup(
+            self.graph, pileup)
+        print(subgraphs)
+
+
+        correct1 = BinaryContinousAreas(self.graph)
+        correct1.add_start(-1, 3)
+        correct1.add_start(-2, 4)
+        correct1.add_start(3, 2)
+
+        self.assertTrue(correct1 in subgraphs)
 
 
     def test_simple2(self):
