@@ -562,7 +562,7 @@ class MACSTests(object):
 
 
 def small_test(with_control=False):
-    return MACSTests(1000, 10, 60, read_length=10,
+    return MACSTests(1000, 2, 60, read_length=10,
                      fragment_length=50, with_control=with_control)
 
 
@@ -573,7 +573,7 @@ def big_test(with_control=False):
 
 if __name__ == "__main__":
     random.seed(110)
-    test = big_test(False)
+    test = small_test(False)
     # test.test_call_peaks()
     test.test_whole_pipeline()
     exit()
