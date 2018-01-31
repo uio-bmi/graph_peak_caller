@@ -67,11 +67,16 @@ class DensePileupData:
     def node_size(self, node):
         return self._graph.node_size(node)
 
-    def values(self, node):
+    def values(self, tmp_node):
+        node = abs(tmp_node)
+        sign = tmp_node//node
         index = node - self.min_node
         start = self._node_indexes[index]
         end = start + self.node_size(node)
-        return self._values[start:end]
+        vals = self._values[start:end]
+        if sign < 0:
+            return vals[::-1]
+        return vals
 
     def values_in_range(self, node, start, end):
         index = node - self.min_node
@@ -80,7 +85,6 @@ class DensePileupData:
         return self._values[array_start:array_end]
 
     def node_range_to_value_indexes(self, node, start, end):
-
         if node < 0:
             node = -node
             new_start = self.node_size(node) - end
@@ -131,8 +135,8 @@ class DensePileupData:
         return np.sum(self.values(node_id)[start:end])
 
     def score(self, node_id, start, end):
-        return RpScore(self.get_subset_max_value(node_id, start, end), \
-               self.get_subset_sum(node_id, start, end))
+        return RpScore(self.get_subset_max_value(node_id, start, end),
+                       self.get_subset_sum(node_id, start, end))
 
     def scale(self, factor):
         self._values *= factor
@@ -301,9 +305,6 @@ class DensePileupData:
             current_node = nodes[current_node_index]
             node_size = self.node_size(current_node)
             next_node_start = length_offset + node_size
-
-            #print("Checking index %d. Current node: %d" % (index, current_node))
-
             if index >= next_node_start:
                 current_node_index += 1
                 length_offset += node_size
@@ -320,7 +321,24 @@ class DensePileup(Pileup):
     def __init__(self, graph, ndim=1, base_value=0, dtype=None):
         logging.info("Initing dense pileup")
         self.graph = graph
-        self.data = DensePileupData(graph, ndim=ndim, base_value=base_value, dtype=dtype)
+        self.data = DensePileupData(
+            graph, ndim=ndim, base_value=base_value, dtype=dtype)
+
+    def add_interval(self, interval):
+        for i, rp in enumerate(interval.region_paths):
+            start = 0
+            end = self.data._graph.node_size(rp)
+            if i == 0:
+                start = interval.start_position.offset
+            if i == len(interval.region_paths) - 1:
+                end = interval.end_position.offset
+            self.data.values(rp)[start:end] += 1
+            self.data._touched_nodes.add(abs(rp))
+
+    def add_areas(self, areas):
+        for area, intervals in areas.items():
+            self.data.values(area)[intervals[0]:intervals[1]] += 1
+        self.data._touched_nodes.add(area)
 
     @classmethod
     def from_base_value(cls, graph, base_value):
@@ -336,7 +354,7 @@ class DensePileup(Pileup):
         return out
 
     def __repr__(self):
-        return self.__str__
+        return str(self)
 
     def __eq__(self, other):
         return self.data == other.data
@@ -425,7 +443,6 @@ class DensePileup(Pileup):
             for i, start in enumerate(starts[node]):
                 end = ends[node][i]
                 pileup.data.add_value(node, start, end, 1)
-
 
         return pileup
 

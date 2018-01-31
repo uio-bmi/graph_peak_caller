@@ -2,8 +2,8 @@ from itertools import chain
 from collections import defaultdict
 import numpy as np
 import offsetbasedgraph as obg
-from .io import CollectionIO
 import itertools
+from .ioclass import CollectionIO
 
 class Areas(object):
     pass
