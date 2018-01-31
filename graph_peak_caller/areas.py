@@ -3,7 +3,7 @@ from collections import defaultdict
 import numpy as np
 import offsetbasedgraph as obg
 from .io import CollectionIO
-
+import itertools
 
 class Areas(object):
     pass
@@ -39,6 +39,27 @@ class BinaryContinousAreas(Areas):
     def add_start(self, node_id, idx):
         assert idx > 0
         self.starts[node_id] = max(idx, self.starts[node_id])
+
+    def _is_end_position(self, node, offset):
+        if offset < self.graph.node_size(node):
+            return True
+        graph = self.graph
+        for in_node in itertools.chain(graph.adj_list[node], graph.reverse_adj_list[node]):
+            if in_node in self.full_areas or in_node in self.starts or -in_node in self.full_areas:
+                return False
+
+        return True
+
+    def _is_start_position(self, node, offset):
+        if offset > 0:
+            return True
+
+        graph = self.graph
+        for in_node in itertools.chain(graph.adj_list[-node], graph.reverse_adj_list[-node]):
+            if in_node in self.full_areas or in_node in self.starts or -in_node in self.full_areas:
+                return False
+
+        return True
 
     def merge_with_other(self, other):
         for full in other.full_areas.keys():

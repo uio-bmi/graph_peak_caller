@@ -61,10 +61,10 @@ class TestSubGraphCollection(Tester):
         for graph in self.simple_graphs:
             collection = SubgraphCollection(graph)
             collection.add_area(1, 2, 3)
-
+            print(collection.subgraphs)
             self.assertEqual(len(collection.subgraphs), 1)
-            self.assertTrue(1 in collection.subgraphs[0].areas)
-            self.assertTrue(np.all(np.array([2, 3]) == collection.subgraphs[0].areas[1]))
+            self.assertTrue(-1 in collection.subgraphs[0].starts)
+            self.assertEqual(collection.subgraphs[0].starts[-1], 1)
 
     def test_add_two_disjoint_areas(self):
         for graph in self.simple_graphs:
@@ -73,10 +73,10 @@ class TestSubGraphCollection(Tester):
             collection.add_area(2, 2, 3)
 
             self.assertEqual(len(collection.subgraphs), 2)
-            self.assertTrue(1 in collection.subgraphs[0].areas)
-            self.assertTrue(2 in collection.subgraphs[1].areas)
-            self.assertTrue(np.all(np.array([1, 2]) == collection.subgraphs[0].areas[1]))
-            self.assertTrue(np.all(np.array([2, 3]) == collection.subgraphs[1].areas[2]))
+            self.assertTrue(1 in collection.subgraphs[0].internal_intervals)
+            self.assertTrue(-2 in collection.subgraphs[1].starts)
+            self.assertTrue(np.all(np.array([1, 2]) == collection.subgraphs[0].internal_intervals[1]))
+            self.assertTrue(1 == collection.subgraphs[1].starts[-2])
 
     def test_add_two_connected_areas(self):
         for graph in self.simple_graphs:
@@ -85,9 +85,9 @@ class TestSubGraphCollection(Tester):
             collection.add_area(2, 0, 3)
 
             self.assertTrue(len(collection.subgraphs), 1)
-            areas = collection.subgraphs[0].areas
-            self.assertTrue(np.all(areas[1] == [2, 3]))
-            self.assertTrue(np.all(areas[2] == [0, 3]))
+            areas = collection.subgraphs[0]
+            self.assertTrue(areas.starts[-1] == 1)
+            self.assertTrue(areas.full_areas[2] == 1)
 
     def test_two_subgraphs_where_one_is_connected(self):
         for graph in self.simple_graphs:
@@ -97,12 +97,12 @@ class TestSubGraphCollection(Tester):
             collection.add_area(3, 1, 2)
 
             self.assertTrue(len(collection.subgraphs), 2)
-            areas = collection.subgraphs[0].areas
-            self.assertTrue(np.all(areas[1] == [2, 3]))
-            self.assertTrue(np.all(areas[2] == [0, 2]))
+            areas = collection.subgraphs[0]
+            self.assertTrue(np.all(areas.starts[-1] == 1))
+            self.assertTrue(np.all(areas.starts[2] == 2))
 
-            areas = collection.subgraphs[1].areas
-            self.assertTrue(np.all(areas[3] == [1, 2]))
+            areas = collection.subgraphs[1]
+            self.assertTrue(np.all(areas.internal_intervals[3] == [1, 2]))
 
     def test_subgraphs_with_loop(self):
         for graph in self.simple_graphs:
@@ -113,15 +113,15 @@ class TestSubGraphCollection(Tester):
             collection.add_area(1, 0, 1)
 
             self.assertTrue(len(collection.subgraphs), 3)
-            areas = collection.subgraphs[0].areas
-            self.assertTrue(np.all(areas[1] == [2, 3]))
-            self.assertTrue(np.all(areas[2] == [0, 2]))
+            areas = collection.subgraphs[0]
+            self.assertTrue(np.all(areas.starts[-1] == 1))
+            self.assertTrue(np.all(areas.starts[2] == 2))
 
-            areas = collection.subgraphs[1].areas
-            self.assertTrue(np.all(areas[3] == [1, 2]))
+            areas = collection.subgraphs[1]
+            self.assertTrue(np.all(areas.internal_intervals[3] == [1, 2]))
 
-            areas = collection.subgraphs[2].areas
-            self.assertTrue(np.all(areas[1] == [0, 1]))
+            areas = collection.subgraphs[2]
+            self.assertTrue(np.all(areas.starts[1] == 1))
 
     def test_subgraphs_multiple(self):
 
@@ -132,12 +132,12 @@ class TestSubGraphCollection(Tester):
             collection.add_area(2, 0, 3)
 
             self.assertTrue(len(collection.subgraphs), 1)
-            areas = collection.subgraphs[0].areas
+            areas = collection.subgraphs[0]
             print("Areas")
             print(areas)
-            self.assertTrue(np.all(areas[1] == [0, 3]))
-            self.assertTrue(np.all(areas[2] == [0, 3]))
-            self.assertTrue(np.all(areas[3] == [0, 3]))
+            self.assertTrue(np.all(areas.full_areas[1] == 1))
+            self.assertTrue(np.all(areas.full_areas[2] == 1))
+            self.assertTrue(np.all(areas.full_areas[3] == 1))
 
     def test_create_subgraph_from_pileup(self):
         for graph in self.simple_graphs:
@@ -145,10 +145,10 @@ class TestSubGraphCollection(Tester):
             pileup = SparsePileup.from_intervals(graph, intervals)
             collection = SubgraphCollection.from_pileup(graph, pileup)
             self.assertTrue(len(collection.subgraphs), 1)
-            areas = collection.subgraphs[0].areas
-            self.assertTrue(np.all(areas[1] == [0, 3]))
-            self.assertTrue(np.all(areas[2] == [0, 3]))
-            self.assertTrue(np.all(areas[3] == [0, 3]))
+            areas = collection.subgraphs[0]
+            self.assertTrue(np.all(areas.full_areas[1] == 1))
+            self.assertTrue(np.all(areas.full_areas[2] == 1))
+            self.assertTrue(np.all(areas.full_areas[3] == 1 ))
 
     def test_special_case(self):
 
@@ -173,7 +173,9 @@ class TestSubGraphCollection(Tester):
         collection.to_file("subgraphcollection.test.tmp")
 
 
-class TestConnectedAreas(Tester):
+# Outdatad tests. Connected areas will not be used more. BCconnected areas replacing.
+"""
+class Te___stConnectedAreas(Tester):
 
     def test_connected_area_touches(self):
 
@@ -232,6 +234,7 @@ class TestConnectedAreas(Tester):
         self.assertFalse(partial_areas.contains_interval(Interval(0, 3, [1, 2, 3], self.simple_graph)))
         self.assertFalse(partial_areas.contains_interval(Interval(0, 3, [2, 3], self.simple_graph)))
         self.assertTrue(partial_areas.contains_interval(Interval(0, 3, [2], self.simple_graph)))
+"""
 
 if __name__ == "__main__":
     unittest.main()

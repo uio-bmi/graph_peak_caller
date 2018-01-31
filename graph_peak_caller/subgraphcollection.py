@@ -54,6 +54,55 @@ class ConnectedAreas(Areas):
         return n
 
 
+class BCConnectedAreas(BinaryContinousAreas):
+    def __init__(self, graph, areas=None):
+        super(BCConnectedAreas, self).__init__(graph)
+        for node, startend in areas.items():
+            self.add(node, startend[0], startend[1])
+
+    def touches_area(self, other_node, start, end):
+        graph = self.graph
+
+        if start > 0 and end < graph.node_size(other_node):
+            if other_node not in self.areas:
+                return False
+
+        if start == 0:
+            if not self._is_start_position(other_node, start):
+                return True
+
+        if end == self.graph.node_size(other_node):
+            if not self._is_end_position(other_node, end):
+                return True
+
+        return False
+
+    def __add__(self, other):
+        # Adds another connected area to this one
+        self.merge_with_other(other)
+        return self
+
+    def contains_interval(self, interval):
+        intervals = self.to_simple_intervals()
+        overlap = 0
+        for internal_interval in intervals:
+            overlap += interval.overlap(internal_interval)
+
+        assert overlap <= interval.length()
+
+        if overlap == interval.length():
+            return True
+
+        return False
+
+    def n_basepairs(self):
+        intervals = self.to_simple_intervals()
+        n = 0
+        for interval in intervals:
+            n += interval.length()
+        return n
+
+
 class SubgraphCollection(object):
 
     def __init__(self, graph, subgraphs=None):
@@ -63,8 +112,14 @@ class SubgraphCollection(object):
         else:
             self.subgraphs = []
 
+        self._node_end_index = {}  # Index from node id to subgraphs touching end
+        self._node_start_index = {}
+
     def remove(self, subgraph):
         self.subgraphs.remove(subgraph)
+
+    def add(self, subgraph):
+        pass
 
     @classmethod
     def from_pileup(cls, graph, pileup):
@@ -97,16 +152,21 @@ class SubgraphCollection(object):
         assert start >= 0 and start < end
         assert end <= self.graph.node_size(node_id)
 
-        touching_subgraphs = self._subgraphs_touching_area(node_id, start, end)
+        if start > 0 and end < self.graph.node_size(node_id):
+            # Internal, will never touch anything
+            touching_subgraphs = []
+        else:
+            touching_subgraphs = self._subgraphs_touching_area(node_id, start, end)
+
 
         if len(touching_subgraphs) == 0:
-            new_subgraph = ConnectedAreas(
+            new_subgraph = BCConnectedAreas(
                 self.graph,
                 {node_id: np.array([start, end])})
             self.subgraphs.append(new_subgraph)
         elif len(touching_subgraphs) == 1:
-            touching_subgraphs[0].add_areas_for_node(
-                node_id, np.array([start, end]))
+            touching_subgraphs[0].add(
+                node_id, start, end)
         elif len(touching_subgraphs) > 1:
             # Merge all touching subgraphs, then add the area
             new_subgraph = touching_subgraphs[0]
@@ -114,7 +174,7 @@ class SubgraphCollection(object):
                 new_subgraph = new_subgraph + touching_subgraph
                 self.remove(touching_subgraph)
 
-            new_subgraph.add_areas_for_node(node_id, np.array([start, end]))
+            new_subgraph.add(node_id, start, end)
 
     def to_file(self, file_name):
         f = open(file_name, "w")
