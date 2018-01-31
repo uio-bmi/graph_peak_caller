@@ -5,6 +5,8 @@ import logging
 from collections import OrderedDict
 from .areas import BinaryContinousAreas
 from .extender import Areas
+import itertools
+from collections import defaultdict
 
 class ConnectedAreas(Areas):
     def __init__(self, graph, areas=None):
@@ -55,10 +57,14 @@ class ConnectedAreas(Areas):
 
 
 class BCConnectedAreas(BinaryContinousAreas):
-    def __init__(self, graph, areas=None):
+    def __init__(self, graph, id, areas=None):
         super(BCConnectedAreas, self).__init__(graph)
+        self.id = id
         for node, startend in areas.items():
             self.add(node, startend[0], startend[1])
+
+    def __hash__(self):
+        return self.id
 
     def touches_area(self, other_node, start, end):
         graph = self.graph
@@ -107,13 +113,14 @@ class SubgraphCollection(object):
 
     def __init__(self, graph, subgraphs=None):
         self.graph = graph
+        self._id_counter = 0
         if subgraphs is not None:
             self.subgraphs = subgraphs
         else:
             self.subgraphs = []
 
-        self._node_end_index = {}  # Index from node id to subgraphs touching end
-        self._node_start_index = {}
+        self._node_end_index = defaultdict(set)  # Index from node id to subgraphs touching end
+        self._node_start_index = defaultdict(set)
 
     def remove(self, subgraph):
         self.subgraphs.remove(subgraph)
@@ -126,6 +133,7 @@ class SubgraphCollection(object):
         collection = cls(graph)
         logging.info("Finding valued areas")
         areas = pileup.find_valued_areas(1)
+        print(pileup)
         n = 0
         for node_id, starts_and_ends in areas.items():
             if n % 50000 == 0:
@@ -138,6 +146,21 @@ class SubgraphCollection(object):
         return collection
 
     def _subgraphs_touching_area(self, node_id, start, end):
+        out = set()
+        if start == 0:
+            print("   Checking start of node %d" % node_id)
+            out = self._node_start_index[node_id]
+            print("   Found:")
+            print(self._node_start_index[node_id])
+        if end == self.graph.node_size(node_id):
+            out.update(self._node_end_index[node_id])
+            print("  Checking end of node %d" % node_id)
+            print("   Found:")
+            print(self._node_end_index[node_id])
+        print("   Found in total %d touching subgraphs" % len(out))
+        #return list(set(out))
+        return out
+
         touching_subgraphs = []
         for subgraph in self.subgraphs:
             if subgraph.touches_area(node_id, start, end):
@@ -147,27 +170,60 @@ class SubgraphCollection(object):
     def __iter__(self):
         return iter(self.subgraphs)
 
+    def add_indexes(self, node, start, end, subgraph):
+        # Checks if added node id,start,end touches nodes. Link index to subgraph
+        if start == 0:
+            for in_node in self.graph.adj_list[-node]:
+                print("    Adding subgraph to end index of %d and start of %d" % (in_node, -in_node))
+                self._node_end_index[in_node].add(subgraph)
+                self._node_start_index[-in_node].add(subgraph)
+            for in_node in self.graph.reverse_adj_list[-node]:
+                print("    Adding subgraph to end index of %d and end of %d" % (-in_node, in_node))
+                self._node_end_index[-in_node].add(subgraph)
+                self._node_start_index[in_node].add(subgraph)
+
+        if end == self.graph.node_size(node):
+            for in_node in self.graph.adj_list[node]:
+                print("    Adding subgraph to start index of %d and end index of %d" % (in_node, -in_node))
+                self._node_start_index[in_node].add(subgraph)
+                self._node_end_index[-in_node].add(subgraph)
+            for in_node in self.graph.reverse_adj_list[node]:
+                print("    Adding subgraph to end index of %d and start of %d" % (-in_node, in_node))
+                self._node_end_index[-in_node].add(subgraph)
+                self._node_start_index[in_node].add(subgraph)
+
+
+
     def add_area(self, node_id, start, end):
         assert node_id in self.graph.blocks
         assert start >= 0 and start < end
         assert end <= self.graph.node_size(node_id)
-
+        print("Adding node %d, startend %d %d" % (node_id, start, end))
+        print("%d subgraphs so far" % len(self.subgraphs))
         if start > 0 and end < self.graph.node_size(node_id):
             # Internal, will never touch anything
             touching_subgraphs = []
         else:
-            touching_subgraphs = self._subgraphs_touching_area(node_id, start, end)
+            touching_subgraphs = list(self._subgraphs_touching_area(node_id, start, end))
 
-
+        self._id_counter += 1
         if len(touching_subgraphs) == 0:
             new_subgraph = BCConnectedAreas(
                 self.graph,
+                self._id_counter,
                 {node_id: np.array([start, end])})
             self.subgraphs.append(new_subgraph)
+            self.add_indexes(node_id, start, end, new_subgraph)
+
         elif len(touching_subgraphs) == 1:
             touching_subgraphs[0].add(
                 node_id, start, end)
+            print("Subgraph after adding")
+            print(touching_subgraphs[0])
+            self.add_indexes(node_id, start, end, touching_subgraphs[0])
+
         elif len(touching_subgraphs) > 1:
+            print("  Found multiple subgraphs")
             # Merge all touching subgraphs, then add the area
             new_subgraph = touching_subgraphs[0]
             for touching_subgraph in touching_subgraphs[1:]:
@@ -175,6 +231,7 @@ class SubgraphCollection(object):
                 self.remove(touching_subgraph)
 
             new_subgraph.add(node_id, start, end)
+            self.add_indexes(node_id, start, end, new_subgraph)
 
     def to_file(self, file_name):
         f = open(file_name, "w")
