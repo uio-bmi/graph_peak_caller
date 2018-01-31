@@ -84,6 +84,29 @@ class SubgraphsAndMaxPathsOnPartiallyOrderedGraphs(unittest.TestCase):
 
         self.assertTrue(correct1 in subgraphs)
 
+    def test_three_nodes_in(self):
+        graph = Graph({i: Block(5) for i in range(1, 5)},
+                      {1: [4],
+                       2: [4],
+                       3: [4]})
+
+        intervals = [Interval(2, 5, [1]), Interval(2, 5, [2]), Interval(2, 5, [3]), Interval(0, 3, [4])]
+        pileup = DensePileup.from_intervals(graph,
+                                             intervals)
+
+        subgraphs = SubgraphCollectionPartiallyOrderedGraph.create_from_pileup(
+            graph, pileup)
+        print(subgraphs)
+
+
+        correct1 = BinaryContinousAreas(graph)
+        correct1.add_start(-1, 3)
+        correct1.add_start(-2, 3)
+        correct1.add_start(-3, 3)
+        correct1.add_start(4, 3)
+
+        self.assertTrue(correct1 in subgraphs)
+
 
     def test_simple2(self):
         intervals = [Interval(1, 5, [1]), Interval(1, 2, [2, 3])]
@@ -126,6 +149,8 @@ class SubgraphsAndMaxPathsOnPartiallyOrderedGraphs(unittest.TestCase):
             Interval(0, 5, [1, 3, 4]) in max_paths or
             Interval(0, 3, [1, 3, 5]) in max_paths
         )
+
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -234,9 +234,11 @@ class SubgraphCollectionPartiallyOrderedGraphBuilder():
 
             connected = self._get_connected_subgraphs(active_subgraphs, single_area)
             if len(connected) > 1:
-                assert len(connected) == 2
-                connected[0].merge_with_other(connected[1])
-                connected = [connected[0]]
+                merged = connected[0]
+                for subgraph in connected[1:]:
+                    merged.merge_with_other(subgraph)
+
+                connected = [merged]
 
             if len(connected) == 0:
                 current_peak = BinaryContinousAreas(self.graph)
@@ -257,7 +259,7 @@ class SubgraphCollectionPartiallyOrderedGraphBuilder():
                              single_area.end)
 
             # If more than 2, the first must be finished
-            if len(active_subgraphs) > 2:
+            if len(active_subgraphs) > 5:
                 peaks.append(active_subgraphs.popleft())
                 #print("Finishing subgraph")
 
