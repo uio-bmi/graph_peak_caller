@@ -14,6 +14,7 @@ from graph_peak_caller.pileup import Pileup
 from graph_peak_caller.sparsepileup import SparsePileup
 from graph_peak_caller.snarls import SnarlGraphBuilder, SimpleSnarl
 from graph_peak_caller.linearsnarls import LinearSnarlMap
+from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 from peakscomparer import PeaksComparer
 logging.basicConfig(level=logging.INFO)
 
@@ -114,9 +115,9 @@ class MACSTests(object):
         self.info.n_sample_reads = self.n_intervals
         logging.info("N_control %s, N_sample: %s",
                      self.info.n_control_reads, self.info.n_sample_reads)
-        control_file_name = self.INTERVALS_NAME
+        self.control_file_name = self.INTERVALS_NAME
         if self.with_control:
-            control_file_name = self.CONTROL_NAME
+            self.control_file_name = self.CONTROL_NAME
 
         """
         self.caller = CallPeaks(self.GRAPH_NAME, self.INTERVALS_NAME,
@@ -126,6 +127,16 @@ class MACSTests(object):
                                 verbose=True,
                                 linear_map=self.MAP_NAME)
         """
+        self.sample_intervals = IntervalCollection(self.graph_intervals)
+
+        if self.with_control:
+            self.control_intervals = IntervalCollection(self.graph_intervals_control)
+        else:
+            self.control_intervals = IntervalCollection(self.graph_intervals)
+
+        self._init_caller()
+
+    def _init_caller(self):
         self.caller = CallPeaks(GraphWithReversals.from_file(self.GRAPH_NAME), "")
         #self.caller.create_graph()
 
@@ -515,12 +526,8 @@ class MACSTests(object):
     def test_whole_pipeline(self):
         self._run_whole_macs()
         # self.caller.create_graph()
-        self.caller.sample_intervals = IntervalCollection(self.graph_intervals)
-
-        if self.with_control:
-            self.caller.control_intervals = IntervalCollection(self.graph_intervals_control)
-        else:
-            self.caller.control_intervals = IntervalCollection(self.graph_intervals)
+        self.caller.sample_intervals = self.sample_intervals
+        self.caller.control_intervals = self.control_intervals
 
         config = Configuration(save_tmp_results_to_file=True, skip_filter_duplicates=True,
                                p_val_cutoff=0.05)
@@ -552,7 +559,7 @@ class MACSTests(object):
         self.assertPeakSetsEqual("macstest_peaks.narrowPeak",
                                  "max_paths.intervalcollection")
 
-        print("All assertions passed")
+        print("Success. All assertions passed")
 
     def test_final_tracks(self):
         self._run_whole_macs()
@@ -561,8 +568,45 @@ class MACSTests(object):
                                  "macstest_peaks.narrowPeak")
 
 
+class MacsTestUsingMultipleGraphsInterface(MACSTests):
+    def _init_caller(self):
+
+        self.caller = MultipleGraphsCallpeaks(
+                        ["test"], [self.GRAPH_NAME],
+                        [self.sample_intervals],
+                        [self.control_intervals],
+                        [self.MAP_NAME],
+                        self.fragment_length,
+                        self.read_length,
+                        has_control=self.with_control,
+                        out_base_name="multigraph_",
+                        skip_filter_duplicates=True,
+                        save_tmp_results_to_file=True)
+
+    def test_whole_pipeline(self):
+        self._run_whole_macs()
+
+        self.assertPileupFilesEqual("multigraph_test_sample_track.bdg",
+                                    "macstest_treat_pileup.bdg")
+
+
+        #self.assertPileupFilesEqual("control_track.bdg",
+        #                            "macstest_control_lambda.bdg")
+
+
+        self.assertPeakSetsEqual("macstest_peaks.narrowPeak",
+                                 "multigraph_test_max_paths.intervalcollection")
+
+        print("Success. All assertions passed")
+
+
 def small_test(with_control=False):
     return MACSTests(1000, 10, 60, read_length=10,
+                     fragment_length=50, with_control=with_control)
+
+
+def small_multigraph(with_control=False):
+    return MacsTestUsingMultipleGraphsInterface(1000, 10, 60, read_length=10,
                      fragment_length=50, with_control=with_control)
 
 
@@ -573,21 +617,7 @@ def big_test(with_control=False):
 
 if __name__ == "__main__":
     random.seed(110)
-    test = big_test(False)
+    test = small_multigraph(False)
     # test.test_call_peaks()
     test.test_whole_pipeline()
-    exit()
-    test.test_sample_pileup()
-    test.test_control_pileup()
-    test.test_call_peaks()
-    exit()
-
-    caller = test.caller
-    caller._control_pileup = Pileup.from_bed_graph(
-        test.graph, "control_track.bdg")
-    caller._sample_pileup = Pileup.from_bed_graph(
-        test.graph, "sample_track.bdg")
-    cProfile.run("caller.get_score()", "profiling")
-    p = pstats.Stats("profiling")
-    p.sort_stats("tottime").print_stats()
     exit()
