@@ -140,6 +140,18 @@ class TestDensePileup(unittest.TestCase):
         sparse = SparsePileup.from_bed_graph(graph, "test_bdg.tmp")
         self.assertTrue(pileup.equals_old_sparse_pileup(sparse))
 
+    def test_find_valued_areas(self):
+        pileup = DensePileup.from_intervals(graph,
+                            [
+                                Interval(2, 10, [1]),
+                                Interval(0, 10, [3])
+                            ])
+        valued_areas = pileup.find_valued_areas(1)
+        #self.assertEqual(len(valued_areas), 2)
+        self.assertEqual(valued_areas[1], [2, 10])
+        self.assertEqual(valued_areas[3], [0, 10])
+        self.assertEqual(valued_areas[2], [])
+
 
 if __name__ == "__main__":
     unittest.main()
