@@ -148,16 +148,16 @@ class SubgraphCollection(object):
     def _subgraphs_touching_area(self, node_id, start, end):
         out = set()
         if start == 0:
-            print("   Checking start of node %d" % node_id)
+            #print("   Checking start of node %d" % node_id)
             out = self._node_start_index[node_id]
-            print("   Found:")
-            print(self._node_start_index[node_id])
+            #print("   Found:")
+            #print(self._node_start_index[node_id])
         if end == self.graph.node_size(node_id):
             out.update(self._node_end_index[node_id])
-            print("  Checking end of node %d" % node_id)
-            print("   Found:")
-            print(self._node_end_index[node_id])
-        print("   Found in total %d touching subgraphs" % len(out))
+            #print("  Checking end of node %d" % node_id)
+            #print("   Found:")
+            #print(self._node_end_index[node_id])
+        #print("   Found in total %d touching subgraphs" % len(out))
         #return list(set(out))
         return out
 
@@ -174,21 +174,21 @@ class SubgraphCollection(object):
         # Checks if added node id,start,end touches nodes. Link index to subgraph
         if start == 0:
             for in_node in self.graph.adj_list[-node]:
-                print("    Adding subgraph to end index of %d and start of %d" % (in_node, -in_node))
+                #print("    Adding subgraph to end index of %d and start of %d" % (in_node, -in_node))
                 self._node_end_index[in_node].add(subgraph)
                 self._node_start_index[-in_node].add(subgraph)
             for in_node in self.graph.reverse_adj_list[-node]:
-                print("    Adding subgraph to end index of %d and end of %d" % (-in_node, in_node))
+                #print("    Adding subgraph to end index of %d and end of %d" % (-in_node, in_node))
                 self._node_end_index[-in_node].add(subgraph)
                 self._node_start_index[in_node].add(subgraph)
 
         if end == self.graph.node_size(node):
             for in_node in self.graph.adj_list[node]:
-                print("    Adding subgraph to start index of %d and end index of %d" % (in_node, -in_node))
+                #print("    Adding subgraph to start index of %d and end index of %d" % (in_node, -in_node))
                 self._node_start_index[in_node].add(subgraph)
                 self._node_end_index[-in_node].add(subgraph)
             for in_node in self.graph.reverse_adj_list[node]:
-                print("    Adding subgraph to end index of %d and start of %d" % (-in_node, in_node))
+                #print("    Adding subgraph to end index of %d and start of %d" % (-in_node, in_node))
                 self._node_end_index[-in_node].add(subgraph)
                 self._node_start_index[in_node].add(subgraph)
 
@@ -198,8 +198,8 @@ class SubgraphCollection(object):
         assert node_id in self.graph.blocks
         assert start >= 0 and start < end
         assert end <= self.graph.node_size(node_id)
-        print("Adding node %d, startend %d %d" % (node_id, start, end))
-        print("%d subgraphs so far" % len(self.subgraphs))
+        #print("Adding node %d, startend %d %d" % (node_id, start, end))
+        #print("%d subgraphs so far" % len(self.subgraphs))
         if start > 0 and end < self.graph.node_size(node_id):
             # Internal, will never touch anything
             touching_subgraphs = []
@@ -218,12 +218,12 @@ class SubgraphCollection(object):
         elif len(touching_subgraphs) == 1:
             touching_subgraphs[0].add(
                 node_id, start, end)
-            print("Subgraph after adding")
-            print(touching_subgraphs[0])
+            #print("Subgraph after adding")
+            #print(touching_subgraphs[0])
             self.add_indexes(node_id, start, end, touching_subgraphs[0])
 
         elif len(touching_subgraphs) > 1:
-            print("  Found multiple subgraphs")
+            #print("  Found multiple subgraphs")
             # Merge all touching subgraphs, then add the area
             new_subgraph = touching_subgraphs[0]
             for touching_subgraph in touching_subgraphs[1:]:
