@@ -62,3 +62,4 @@ vg_graph
 *.tbi
 *.pileup
 *.r
+*.npy
