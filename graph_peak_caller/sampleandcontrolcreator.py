@@ -1,5 +1,6 @@
 import logging
 import pickle
+import numpy as np
 from offsetbasedgraph import IntervalCollection, DirectedInterval
 import offsetbasedgraph
 from .densepileup import DensePileup
@@ -32,7 +33,7 @@ def enable_filewrite(func):
     return wrapper
 
 
-class SampleAndControlCreatorOld(object):
+class SampleAndControlCreatorO(object):
     def __init__(self, graph, sample_intervals,
                  control_intervals=None, experiment_info=None,
                  verbose=False, out_file_base_name="", has_control=True,
@@ -306,6 +307,11 @@ class SampleAndControlCreatorOld(object):
         #touched_nodes = set()  # Speedup thing, keep track of nodes where areas are on
         pileup = DensePileup.create_from_binary_continous_areas(
                     self.ob_graph, areas_list)
+        print(np.sum(pileup.data._values))
+        print(len(pileup.data._touched_nodes))
+        for node_id in pileup.data._touched_nodes:
+            assert np.sum(pileup.data.values(node_id)) > 0
+
         touched_nodes = pileup.data._touched_nodes
         self.touched_nodes = touched_nodes
 
@@ -333,7 +339,7 @@ class SampleAndControlCreatorOld(object):
         pass
 
 
-class SampleAndControlCreator(SampleAndControlCreatorOld):
+class SampleAndControlCreator(SampleAndControlCreatorO):
     def create_sample_pileup(self):
         logging.debug("In sample pileup")
         logging.info("Creating sample pileup")
@@ -341,6 +347,9 @@ class SampleAndControlCreator(SampleAndControlCreatorOld):
         logging.info("Processing areas")
         pileup = samplemain(self.sample_intervals, self.graph,
                             self.info.fragment_length-self.info.read_length)
+        print("#################################")
+        print(np.sum(pileup.data._values))
+        print(len(pileup.data._touched_nodes))
         self.touched_nodes = pileup.data._touched_nodes
 
         self._sample_track = self.out_file_base_name + "sample_track.bdg"

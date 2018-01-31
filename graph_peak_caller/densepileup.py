@@ -322,7 +322,7 @@ class DensePileup(Pileup):
         self.data = DensePileupData(
             graph, ndim=ndim, base_value=base_value, dtype=dtype)
 
-    def add_interval(self, interval, touched_nodes=None):
+    def add_interval(self, interval):
         for i, rp in enumerate(interval.region_paths):
             start = 0
             end = self.data._graph.node_size(rp)
@@ -331,8 +331,7 @@ class DensePileup(Pileup):
             if i == len(interval.region_paths) - 1:
                 end = interval.end_position.offset
             self.data.values(rp)[start:end] += 1
-            if touched_nodes is not None:
-                touched_nodes.add(abs(rp))
+            self.data._touched_nodes.add(abs(rp))
 
     def add_areas(self, areas):
         for area, intervals in areas.items():
