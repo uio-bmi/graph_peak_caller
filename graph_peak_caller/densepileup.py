@@ -353,7 +353,7 @@ class DensePileup(Pileup):
         return out
 
     def __repr__(self):
-        return self.__str__
+        return str(self)
 
     def __eq__(self, other):
         return self.data == other.data

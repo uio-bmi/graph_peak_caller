@@ -1,8 +1,10 @@
 import unittest
+import numpy as np
 from offsetbasedgraph import GraphWithReversals as Graph, Block, DirectedInterval as Interval, IntervalCollection
 from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo, Configuration
 from graph_peak_caller.sampleandcontrolcreator import SampleAndControlCreator
 from graph_peak_caller.densepileup import DensePileup as Pileup
+
 
 class Tester(unittest.TestCase):
 
@@ -12,8 +14,9 @@ class Tester(unittest.TestCase):
             fragment.graph = self.graph
             left_sub = fragment.get_subinterval(0, self.read_length())
             self.sample_reads.append(left_sub)
-            right_sub = fragment.get_subinterval(self.fragment_length() - self.read_length(),
-                                             self.fragment_length())
+            right_sub = fragment.get_subinterval(
+                self.fragment_length() - self.read_length(),
+                self.fragment_length())
             right_sub_reverse = right_sub.get_reverse()
             self.sample_reads.append(right_sub_reverse)
 
@@ -22,8 +25,10 @@ class Tester(unittest.TestCase):
         found_pileup = self.creator._sample_pileup
         print("Found pileup")
         print(found_pileup)
+        print(found_pileup.data._values)
         print("Correct pileup")
         print(correct_pileup)
+        print(correct_pileup.data._values)
         self.assertEqual(found_pileup, correct_pileup)
 
     def setUp(self):
@@ -86,10 +91,10 @@ class TestLinearGraph(TestCase):
         self.graph = Graph({1: Block(5), 2: Block(5)}, {1: [2]})
 
     def test_single_fragment(self):
-
+        print("######################")
         self.correct_pileup = Pileup.from_intervals(self.graph,
             [
-                Interval(3, 3, [1,2]),
+                Interval(3, 3, [1, 2]),
                 Interval(3, 3, [1, 2])
             ]
         )
@@ -97,9 +102,10 @@ class TestLinearGraph(TestCase):
         self.do_asserts()
 
     def test_two_fragments(self):
+        print("-________________________")
         self.correct_pileup = Pileup.from_intervals(self.graph,
             [
-                Interval(3, 3, [1,2]),
+                Interval(3, 3, [1, 2]),
                 Interval(3, 3, [1, 2]),
                 Interval(0, 5, [1]),
                 Interval(0, 5, [1]),

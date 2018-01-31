@@ -56,6 +56,9 @@ class PileupCreator:
         node_size = sub_array.size
         n_in = 0
         touched = False
+        print(starts, node_info._dist_dict)
+        if node_size in starts:
+            print("############", starts)
         for s in node_info._dist_dict.values():
             if s == 0:
                 continue
@@ -64,6 +67,8 @@ class PileupCreator:
                 touched = True
             n_in += 1
         sub_array[0] = n_in-prev_ends
+        print(starts, node_info._dist_dict)
+        print(n_in, prev_ends, sub_array[0])
         for start in starts:
             if start < node_size:
                 sub_array[start] += 1
@@ -117,6 +122,7 @@ class PileupCreator:
         empty = NodeInfo()
         cur_array_idx = 0
         for node_id in node_ids:
+            print("N:", node_id)
             node_id = node_id
             info = node_infos.pop(node_id, empty)
             node_size = self._graph.node_size(node_id)
@@ -135,9 +141,13 @@ class PileupCreator:
                             info._dist_dict.items()
                             if d >= node_size})
             cur_id = last_id
-            prev_ends = len(remains)
+
+            prev_ends = len([r for r in remains.values()
+                             if r < self._fragment_length])
+            print(remains, prev_ends)
             for next_node in self._adj_list[node_id]:
                 node_infos[next_node].update(remains)
+        print("#", self._pileup)
         self._pileup = np.cumsum(self._pileup)
 
     def get_pileup(self):
