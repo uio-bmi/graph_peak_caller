@@ -17,12 +17,14 @@ class MultipleGraphsCallpeaks:
                  fragment_length, read_length,
                  has_control=False,
                  sequence_retrievers=None,
-                 out_base_name="multigraphs_"
+                 out_base_name="multigraphs_",
+                 skip_filter_duplicates=False,
+                 save_tmp_results_to_file=False
                  ):
 
         self._config = Configuration(
-            skip_read_validation=True, save_tmp_results_to_file=False,
-            skip_filter_duplicates=True, p_val_cutoff=0.05,
+            skip_read_validation=True, save_tmp_results_to_file=save_tmp_results_to_file,
+            skip_filter_duplicates=skip_filter_duplicates, p_val_cutoff=0.05,
             graph_is_partially_ordered=True)
         self.names = graph_names
         self.graph_file_names = graph_file_names

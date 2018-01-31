@@ -45,15 +45,8 @@ class PToQValuesMapper:
     def from_p_values_dense_pileup(cls, p_values):
         logging.info("Creating mapping from p value dense pileup")
         values = p_values.data._values
-        #non_zero_indices = np.nonzero(values)
-        #sorted_p_values = sorted(values[non_zero_indices], reverse=True)
         sorted_p_values = sorted(values, reverse=True)
-
         unique, counts = np.unique(sorted_p_values, return_counts=True)
-        #sorting = np.argsort(-unique)
-        #unique_p_values = unique[sorting]
-        #counts = counts[sorting]
-
         counter_dict = {unique[i]: counts[i]
                         for i in range(0, len(counts))}
         return cls(counter_dict)
@@ -91,7 +84,6 @@ class PToQValuesMapper:
                 q_value = max(0.0, q_value)
             else:
                 q_value = max(0.0, min(pre_q, q_value))
-
             p_to_q_values["%.7f" % p_value] = q_value
             pre_q = q_value
             rank += value_count
