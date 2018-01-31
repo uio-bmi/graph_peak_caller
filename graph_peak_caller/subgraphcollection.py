@@ -133,7 +133,6 @@ class SubgraphCollection(object):
         collection = cls(graph)
         logging.info("Finding valued areas")
         areas = pileup.find_valued_areas(1)
-        print(pileup)
         n = 0
         for node_id, starts_and_ends in areas.items():
             if n % 50000 == 0:
