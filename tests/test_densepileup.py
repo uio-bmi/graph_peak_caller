@@ -142,12 +142,11 @@ class TestDensePileup(unittest.TestCase):
 
     def test_find_valued_areas(self):
         pileup = DensePileup.from_intervals(graph,
-                            [
-                                Interval(2, 10, [1]),
-                                Interval(0, 10, [3])
-                            ])
+                                            [
+                                                Interval(2, 10, [1]),
+                                                Interval(0, 10, [3])
+                                            ])
         valued_areas = pileup.find_valued_areas(1)
-
         self.assertEqual(valued_areas[1], [2, 10])
         self.assertEqual(valued_areas[3], [0, 10])
         self.assertEqual(valued_areas[2], [])
