@@ -69,7 +69,6 @@ class PToQValuesMapper:
         return cls(counter)
 
     def get_p_to_q_values(self):
-        logging.info("Number of zero pvalues: %d" % self._counter[0])
         logging.info("Mapping p to q values")
         p_to_q_values = {}
         rank = 1
