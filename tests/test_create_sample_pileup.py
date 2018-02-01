@@ -21,7 +21,7 @@ class Tester(unittest.TestCase):
             self.sample_reads.append(right_sub_reverse)
 
     def assert_final_pileup_equals_correct_pileup(self):
-        correct_pileup = self.correct_pileup  # Pileup.from_intervals(self.graph, self.fragments)
+        correct_pileup = self.correct_pileup
         found_pileup = self.creator._sample_pileup
         print("Found pileup")
         print(found_pileup)
@@ -145,19 +145,18 @@ class TestSplitGraph(TestCase):
 
     def set_graph(self):
         self.graph = Graph({1: Block(5), 2: Block(5), 3: Block(5), 4: Block(5)},
-                           {1: [2, 4], 2: [3], 4: [3]})
+                           {1: [2, 3], 2: [4], 3: [4]})
 
     def test_single_fragment(self):
-
         self.correct_pileup = Pileup.from_intervals(self.graph,
             [
-                Interval(0, 5, [1, 2, 3]),
-                Interval(0, 5, [1, 2, 3]),
-                Interval(0, 5, [4]),
-                Interval(0, 5, [4])
+                Interval(0, 5, [1, 2, 4]),
+                Interval(0, 5, [1, 2, 4]),
+                Interval(0, 5, [3]),
+                Interval(0, 5, [3])
             ]
         )
-        self.fragments = [Interval(0, 5, [1, 2, 3])]
+        self.fragments = [Interval(0, 5, [1, 2, 4])]
         self.do_asserts()
 
 
