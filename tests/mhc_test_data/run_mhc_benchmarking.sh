@@ -10,6 +10,6 @@ python3 ../../graph_peak_caller.py create_linear_map graph.obg haplo1kg50-mhc.sn
 python3 ../../graph_peak_caller.py callpeaks_with_numpy_graph graph haplo1kg50-mhc.vg linear_map macs_remapped_mhc.json macs_remapped_mhc.json False test_ 135 36
 
 # Motif enrichment
-python3 ../../graph_peak_caller.py plot_motif_enrichment test_sequences.fasta macs_sequences.fasta MA0139.1.meme plot.png
+#python3 ../../graph_peak_caller.py plot_motif_enrichment test_sequences.fasta macs_sequences.fasta MA0139.1.meme plot.png
 
-ls plot.png
+#ls plot.png
