@@ -2,6 +2,7 @@ import offsetbasedgraph as obg
 import numpy as np
 from collections import deque, defaultdict
 import cProfile
+import logging
 
 
 class StartIndices:
@@ -116,7 +117,11 @@ class PileupCreator:
         cur_id = 0
         empty = NodeInfo()
         cur_array_idx = 0
+        i = 0
         for node_id in node_ids:
+            if i % 100000 == 0:
+                logging.info("%d nodes processed" % i)
+            i += 1
             node_id = node_id
             info = node_infos.pop(node_id, empty)
             node_size = self._graph.node_size(node_id)

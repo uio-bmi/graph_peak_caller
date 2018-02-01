@@ -1,6 +1,7 @@
 from .densepileup import DensePileup
 from .samplepileup import PileupCreator, ReversePileupCreator
 import numpy as np
+import logging
 
 
 class DirectPileup:
@@ -35,9 +36,11 @@ class Starts:
 
 def main(intervals, graph, extension_size):
     pileup = DensePileup(graph)
+    logging.info("Filling intervals directly")
     direct_pileup = DirectPileup(graph, intervals, pileup)
     direct_pileup.run()
-    print(len(pileup.data._touched_nodes))
+
+    logging.info("Expanding reverse reads")
     pileup_neg = np.zeros_like(pileup.data._values)
     creator = ReversePileupCreator(
         graph, Starts(direct_pileup._neg_ends),
@@ -47,6 +50,8 @@ def main(intervals, graph, extension_size):
     print(len(pileup.data._touched_nodes))
     pileup.data._values += creator._pileup[::-1]
     del pileup_neg
+
+    logging.info("Expanding forward reads")
     extension_pileup = np.zeros_like(pileup.data._values)
     creator = PileupCreator(
         graph, Starts(direct_pileup._pos_ends), extension_pileup,
