@@ -27,7 +27,7 @@ install:
 
 script:
     - cd tests
-    - py.test --cov=../
+    - py.test --cov=../graph_peak_caller/
 #    - cd mhc_test_data
 #    - bash run_mhc_benchmarking.sh
 
