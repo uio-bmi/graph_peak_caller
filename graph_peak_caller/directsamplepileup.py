@@ -22,8 +22,12 @@ class DirectPileup:
             self._pos_ends[rp].append(end_pos.offset)
 
     def run(self):
+        i = 0
         for interval in self._intervals:
+            if i % 5000 == 0:
+                logging.info("%d reads processed" % i)
             self._handle_interval(interval)
+            i += 1
 
 
 class Starts:
