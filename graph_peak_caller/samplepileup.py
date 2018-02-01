@@ -41,12 +41,11 @@ class TmpNodeInfo(NodeInfo):
 
 
 class PileupCreator:
-    def __init__(self, graph, starts, pileup, touched_nodes=None):
+    def __init__(self, graph, starts, pileup):
         self._graph = graph
         self._starts = starts
         self._fragment_length = 110
         self._pileup = pileup
-        self.touched_nodes = set() if touched_nodes is None else touched_nodes
         self._set_adj_list()
 
     def _set_adj_list(self):
@@ -54,92 +53,82 @@ class PileupCreator:
 
     def _update_pileup(self, node_info, starts, prev_ends, sub_array):
         node_size = sub_array.size
+
         n_in = 0
-        touched = False
         for s in node_info._dist_dict.values():
             if s == 0:
                 continue
             if s < node_size:
                 sub_array[s] -= 1
-            touched = True
             n_in += 1
-        sub_array[0] = n_in-prev_ends
-        for start in starts:
-            if start < node_size:
-                sub_array[start] += 1
-                touched = True
-            if start < node_size-self._fragment_length:
-                sub_array[start+self._fragment_length] -= 1
-        return touched
 
-    def run(self):
-        start_node = self._graph.get_first_blocks()[0]
-        node_info = NodeInfo({})
-        queue = deque([(start_node, node_info)])
-        unfinished = {}
-        cur_id = 0
-        while queue:
-            node_id, info = queue.popleft()
-            node_size = self._graph.node_size(node_id)
-            starts = self._starts.get_node_starts(node_id)
-            self._update_pileup(node_id, info, starts)
-            remains = self._fragment_length - (node_size-starts)
-            last_id = cur_id+len(remains)
-            remains = dict(zip(range(cur_id, last_id),
-                               [r for r in remains if r > 0]))
-            remains.update({node: d-node_size for node, d in
-                            info._dist_dict.items()
-                            if d > node_size})
-            cur_id = last_id
-            for next_node in self._graph.adj_list[node_id]:
-                if next_node not in unfinished:
-                    unfinished[next_node] = TmpNodeInfo(
-                        len(self._graph.reverse_adj_list[-next_node]))
-                finished = unfinished[next_node].update(remains)
-                if finished is not None:
-                    queue.append((next_node, finished))
-                    del unfinished[next_node]
+        sub_array[0] = n_in-prev_ends
+        t_starts = [start for start in starts if start < node_size]
+        ends = [start+self._fragment_length for start in starts if
+                start < node_size-self._fragment_length]
+        for start in t_starts:
+            sub_array[start] += 1
+        for end in ends:
+            sub_array[end] -= 1
 
     def get_subarray(self, from_idx, to_idx):
-        return self._pileup[from_idx:to_idx]
+        return self._pileup[from_idx:to_idx+1]
 
     def get_node_ids(self):
         return self._graph.get_sorted_node_ids()
 
-    def _add_touched(self, node_id):
-        self.touched_nodes.add(node_id)
-
     def run_linear(self):
         node_ids = self.get_node_ids()
-        prev_ends = 0
         node_infos = defaultdict(NodeInfo)
         cur_id = 0
         empty = NodeInfo()
         cur_array_idx = 0
+        np_starts = np.empty(1000, dtype="int")
+        np_ends = np.empty(2000, dtype="int")
+        np_ids = np.empty(2000, dtype="int")
         for node_id in node_ids:
-            node_id = node_id
             info = node_infos.pop(node_id, empty)
             node_size = self._graph.node_size(node_id)
+            sub_array = self.get_subarray(
+                cur_array_idx,
+                cur_array_idx+node_size)
             starts = self._starts.get_node_starts(node_id)
-            touched = self._update_pileup(
-                info, starts, prev_ends,
-                self.get_subarray(cur_array_idx, cur_array_idx+node_size))
-            if touched:
-                self._add_touched(node_id)
-            cur_array_idx += node_size
-            remains = self._fragment_length - (node_size-starts)
-            last_id = cur_id + len(remains)
-            remains = dict(zip(range(cur_id, last_id),
-                               [r for r in remains if r >= 0]))
-            remains.update({node: d-node_size for node, d in
-                            info._dist_dict.items()
-                            if d >= node_size})
-            cur_id = last_id
+            n_starts = len(starts)
+            n_ends = n_starts + len(info._dist_dict)
+            np_starts[:n_starts] = starts
+            starts = np_starts[:n_starts]
+            np_ends[:n_starts] = starts+self._fragment_length
+            np_ends[n_starts:n_ends] = np.fromiter(
+                info._dist_dict.values(), dtype="int", count=n_ends-n_starts)
+            last_id = cur_id+n_starts
+            np_ids[n_starts:n_ends] = np.fromiter(
+                info._dist_dict.keys(), dtype="int", count=n_ends-n_starts)
 
-            prev_ends = len([r for r in remains.values()
-                             if r < self._fragment_length])
+            np_ids[:n_starts] = range(cur_id, last_id)
+            ends = np_ends[:n_ends]
+            ends_ids = np_ends[:n_ends]
+
+            # ends = np.r_[starts + self._fragment_length,
+            #             np.fromiter(info._dist_dict.values(), "int")]
+            #
+            # ends_ids = np.r_[np.fromiter(info._dist_dict.keys(), "int"),
+            #                 cur_id:last_id]
+            n_in = n_ends-n_starts
+            sub_array[0] += n_in
+            cur_id = last_id
+            outside_ends = ends >= node_size
+            for start in starts:
+                sub_array[start] += 1
+            for end in ends[np.logical_not(outside_ends)]:
+                sub_array[end] -= 1
+            n_out = np.count_nonzero(outside_ends)
+            sub_array[-1] -= n_out
+            remains = ends[outside_ends]-node_size
+            remain_dict = dict(zip(ends_ids[outside_ends], remains))
+            cur_array_idx += node_size
             for next_node in self._adj_list[node_id]:
-                node_infos[next_node].update(remains)
+                node_infos[next_node].update(remain_dict)
+        self._pileup[-1] += n_out
         self._pileup = np.cumsum(self._pileup)
 
     def get_pileup(self):
@@ -156,9 +145,6 @@ class ReversePileupCreator(PileupCreator):
     def get_node_ids(self):
         return (-node_id for node_id in
                 self._graph.get_sorted_node_ids(reverse=True))
-
-    def _add_touched(self, node_id):
-        self.touched_nodes.add(-node_id)
 
 
 class DummyPileup:
