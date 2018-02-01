@@ -27,9 +27,9 @@ install:
 
 script:
     - cd tests
-    - py.test --doctest-modules --pep8 coveralls -v --cov coveralls --cov-report term-missing
+    - py.test --cov=./
 #    - cd mhc_test_data
 #    - bash run_mhc_benchmarking.sh
- 
+
 after_success:
-  - coveralls
+  - codecov
