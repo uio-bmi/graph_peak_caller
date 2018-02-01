@@ -24,6 +24,17 @@ logging.basicConfig(
 
 
 def shift_estimation(args):
+
+    """
+    from graph_peak_caller.shiftestimation import Treatment, Opt, PeakModel
+    treatment = Treatment.from_bed_file("linear_bed.bed")
+    opt = Opt()
+    opt.gsize = 48172484
+    model = PeakModel(opt, treatment)
+    print(model.d)
+    return
+    """
+
     chromosomes = args.chromosomes.split(",")
     graphs = [args.ob_graphs_location + chrom for chrom in chromosomes]
     logging.info("Will try to use graphs %s" % graphs)
@@ -33,6 +44,9 @@ def shift_estimation(args):
 
     estimator = MultiGraphShiftEstimator.from_files(
         chromosomes, graphs, sample_file_names)
+
+    estimator.to_linear_bed_file("linear_bed.bed", read_length=36)
+
     d = estimator.get_estimates()
     print("Shift: %d" % d)
 

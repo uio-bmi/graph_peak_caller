@@ -9,6 +9,7 @@ class DirectPileup:
         self._graph = graph
         self._intervals = intervals
         self._pileup = pileup
+        logging.info("Initing index dicts")
         self._pos_ends = {node_id: [] for node_id in self._graph.blocks.keys()}
         self._neg_ends = {-node_id: [] for node_id in self._graph.blocks.keys()}
 

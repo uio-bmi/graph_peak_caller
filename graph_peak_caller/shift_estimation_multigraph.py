@@ -17,6 +17,25 @@ class MultiGraphShiftEstimator(object):
         peakmodel.build()
         return round(peakmodel.d)
 
+    def to_linear_bed_file(self, file_name, read_length):
+        f = open(file_name, "w")
+        for direction in self._position_tuples.keys():
+            for chrom, positions in self._position_tuples[direction].items():
+                for pos in positions:
+                    #print("Writing position %d" % pos)
+
+                    start = pos
+                    end = pos + read_length
+
+                    if direction == "-":
+                        start = pos - read_length
+                        end = pos
+
+                    f.writelines(["chr%s\t%d\t%d\t.\t0\t%s\n" % \
+                                  (chrom, start, end, direction)])
+        f.close()
+
+
     @classmethod
     def from_files(cls, chrom_names, graph_file_names, interval_json_file_names):
 
