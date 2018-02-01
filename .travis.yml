@@ -23,7 +23,7 @@ before_install:
 install:
     - ls
     - cd build/uio-bmi/graph_peak_caller
-    - pip install .
+    - pip install -e .
 
 script:
     - py.test --cov=./
