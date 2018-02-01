@@ -108,16 +108,14 @@ class PileupCreator:
             self._pileup[cur_array_idx] -= len(d)
             for next_node in self._adj_list[node_id]:
                 node_infos[next_node].update(d)
-                
-        self._pileup = np.cumsum(self._pileup[:-1])
 
     def get_pileup(self):
-        return self._pileup
+        return np.cumsum(self._pileup)
 
 
 class ReversePileupCreator(PileupCreator):
     def get_pileup(self):
-        return self._pileup[::-1]
+        return np.cumsum(self._pileup[:-1])[::-1]
 
     def _set_adj_list(self):
         self._adj_list = self._graph.reverse_adj_list

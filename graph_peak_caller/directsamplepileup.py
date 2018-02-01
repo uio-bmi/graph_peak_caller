@@ -95,6 +95,7 @@ def main(intervals, graph, extension_size):
     pileup = DensePileup(graph)
     direct_pileup = SparseDirectPileup(graph, intervals, pileup)
     direct_pileup.run()
+    my_pileup = direct_pileup._pileup[:-1]
     pileup.data._values = np.cumsum(direct_pileup._pileup[:-1])
     pileup_neg = np.zeros(pileup.data._values.size+1, dtype="int")
     creator = ReversePileupCreator(
@@ -102,13 +103,15 @@ def main(intervals, graph, extension_size):
         pileup_neg)
     creator._fragment_length = extension_size
     creator.run_linear()
-    pileup.data._values += creator._pileup[::-1]
+    my_pileup -= creator._pileup[:0:-1]
+    # pileup.data._values += creator._pileup[::-1]
     del pileup_neg
     extension_pileup = np.zeros(pileup.data._values.size+1, dtype="int")
     creator = PileupCreator(
         graph, Starts(direct_pileup._pos_ends), extension_pileup)
     creator._fragment_length = extension_size
     creator.run_linear()
-    pileup.data._values += creator._pileup
+    my_pileup += creator._pileup[:-1]
+    pileup.data._values = np.cumsum(my_pileup)
     pileup.data._touched_nodes = check_touched(pileup, graph.blocks.keys())
     return pileup
