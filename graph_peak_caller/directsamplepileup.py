@@ -51,7 +51,7 @@ def main(intervals, graph, extension_size):
     pileup = DensePileup(graph)
     direct_pileup = DirectPileup(graph, intervals, pileup)
     direct_pileup.run()
-    pileup_neg = np.zeros_like(pileup.data._values)
+    pileup_neg = np.zeros(pileup.data._values.size+1, dtype="int")
     creator = ReversePileupCreator(
         graph, Starts(direct_pileup._neg_ends),
         pileup_neg)
@@ -59,7 +59,7 @@ def main(intervals, graph, extension_size):
     creator.run_linear()
     pileup.data._values += creator._pileup[::-1]
     del pileup_neg
-    extension_pileup = np.zeros_like(pileup.data._values)
+    extension_pileup = np.zeros(pileup.data._values.size+1, dtype="int")
     creator = PileupCreator(
         graph, Starts(direct_pileup._pos_ends), extension_pileup)
     creator._fragment_length = extension_size

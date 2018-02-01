@@ -1,6 +1,7 @@
 import offsetbasedgraph as obg
 import numpy as np
 from collections import deque, defaultdict
+from itertools import chain
 import cProfile
 
 
@@ -83,9 +84,6 @@ class PileupCreator:
         cur_id = 0
         empty = NodeInfo()
         cur_array_idx = 0
-        np_starts = np.empty(1000, dtype="int")
-        np_ends = np.empty(2000, dtype="int")
-        np_ids = np.empty(2000, dtype="int")
         for node_id in node_ids:
             info = node_infos.pop(node_id, empty)
             node_size = self._graph.node_size(node_id)
@@ -95,41 +93,27 @@ class PileupCreator:
             starts = self._starts.get_node_starts(node_id)
             n_starts = len(starts)
             n_ends = n_starts + len(info._dist_dict)
-            np_starts[:n_starts] = starts
-            starts = np_starts[:n_starts]
-            np_ends[:n_starts] = starts+self._fragment_length
-            np_ends[n_starts:n_ends] = np.fromiter(
-                info._dist_dict.values(), dtype="int", count=n_ends-n_starts)
             last_id = cur_id+n_starts
-            np_ids[n_starts:n_ends] = np.fromiter(
-                info._dist_dict.keys(), dtype="int", count=n_ends-n_starts)
-
-            np_ids[:n_starts] = range(cur_id, last_id)
-            ends = np_ends[:n_ends]
-            ends_ids = np_ends[:n_ends]
-
-            # ends = np.r_[starts + self._fragment_length,
-            #             np.fromiter(info._dist_dict.values(), "int")]
-            #
-            # ends_ids = np.r_[np.fromiter(info._dist_dict.keys(), "int"),
-            #                 cur_id:last_id]
-            n_in = n_ends-n_starts
-            sub_array[0] += n_in
+            endsidxs = chain(enumerate(
+                (start+self._fragment_length for start in starts),
+                start=cur_id),
+                             info._dist_dict.items())
+            sub_array[0] += n_ends-n_starts
             cur_id = last_id
-            outside_ends = ends >= node_size
             for start in starts:
                 sub_array[start] += 1
-            for end in ends[np.logical_not(outside_ends)]:
-                sub_array[end] -= 1
-            n_out = np.count_nonzero(outside_ends)
-            sub_array[-1] -= n_out
-            remains = ends[outside_ends]-node_size
-            remain_dict = dict(zip(ends_ids[outside_ends], remains))
+            d = {}
+            for idx, end in endsidxs:
+                if end < node_size:
+                    sub_array[end] -= 1
+                else:
+                    d[idx] = end-node_size
+            sub_array[-1] -= len(d)
+            # remain_dict = dict(zip(ends_ids[outside_ends], remains))
             cur_array_idx += node_size
             for next_node in self._adj_list[node_id]:
-                node_infos[next_node].update(remain_dict)
-        self._pileup[-1] += n_out
-        self._pileup = np.cumsum(self._pileup)
+                node_infos[next_node].update(d)
+        self._pileup = np.cumsum(self._pileup[:-1])
 
     def get_pileup(self):
         return self._pileup
