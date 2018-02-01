@@ -241,11 +241,12 @@ class DensePileupData:
             #print("   Checking node %d" % node)
             other_indexes, other_values = other.get_sparse_indexes_and_values(node)
             #print("   Values: %s / %s" % (values, other_values))
+            print(indexes, other_indexes)
             if not np.all(indexes == other_indexes):
                 print("Indices %s != %s" % (indexes, other_indexes))
                 return False
 
-
+            print(values, other_values)
             if np.any(np.abs(values -  other_values) > 1e-5):
                 print("Values %s != %s" % (values, other_values))
                 print()
