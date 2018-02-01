@@ -29,7 +29,7 @@ script:
     - py.test --cov=./
     - cd tests
     - cd mhc_test_data
-    - bash run_mhc_benchmarking.sh
+    #- bash run_mhc_benchmarking.sh
 
 after_success:
   - codecov
