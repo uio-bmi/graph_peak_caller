@@ -87,32 +87,28 @@ class PileupCreator:
         for node_id in node_ids:
             info = node_infos.pop(node_id, empty)
             node_size = self._graph.node_size(node_id)
-            sub_array = self.get_subarray(
-                cur_array_idx,
-                cur_array_idx+node_size)
             starts = self._starts.get_node_starts(node_id)
             n_starts = len(starts)
             n_ends = n_starts + len(info._dist_dict)
-            last_id = cur_id+n_starts
             endsidxs = chain(enumerate(
                 (start+self._fragment_length for start in starts),
                 start=cur_id),
                              info._dist_dict.items())
-            sub_array[0] += n_ends-n_starts
-            cur_id = last_id
+            self._pileup[cur_array_idx] += n_ends-n_starts
             for start in starts:
-                sub_array[start] += 1
+                self._pileup[cur_array_idx+start] += 1
             d = {}
             for idx, end in endsidxs:
                 if end < node_size:
-                    sub_array[end] -= 1
+                    self._pileup[cur_array_idx+end] -= 1
                 else:
                     d[idx] = end-node_size
-            sub_array[-1] -= len(d)
-            # remain_dict = dict(zip(ends_ids[outside_ends], remains))
             cur_array_idx += node_size
+            cur_id = cur_id + n_starts
+            self._pileup[cur_array_idx] -= len(d)
             for next_node in self._adj_list[node_id]:
                 node_infos[next_node].update(d)
+                
         self._pileup = np.cumsum(self._pileup[:-1])
 
     def get_pileup(self):

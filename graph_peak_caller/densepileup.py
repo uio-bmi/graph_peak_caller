@@ -22,7 +22,6 @@ class DensePileupData:
         self._touched_nodes = set()
         self.ndim = ndim
         self.dtype = dtype
-
         self._create_empty(ndim, base_value=base_value)
 
     def _create_empty(self, ndim=1, base_value=0):
@@ -49,13 +48,14 @@ class DensePileupData:
             self._node_indexes = np.cumsum(self._graph.blocks._array, dtype=np.uint32)
             logging.info("Node indexes created...")
         else:
-            self._node_indexes = np.zeros(span, dtype=np.uint32)
+            print(span)
+            self._node_indexes = np.zeros(span+1, dtype=np.uint32)
             offset = 0
             for i, node in enumerate(self._nodes):
                 index = node - self.min_node
                 self._node_indexes[index] = offset
                 offset += self.node_size(node)
-
+            self._node_indexes[-1] = offset
         logging.info("Dense pileup inited")
 
     def sum(self):
