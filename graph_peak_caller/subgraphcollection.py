@@ -227,7 +227,8 @@ class SubgraphCollection(object):
             new_subgraph = touching_subgraphs[0]
             for touching_subgraph in touching_subgraphs[1:]:
                 new_subgraph = new_subgraph + touching_subgraph
-                self.remove(touching_subgraph)
+                if touching_subgraph in self.subgraphs:
+                    self.remove(touching_subgraph)
 
             new_subgraph.add(node_id, start, end)
             self.add_indexes(node_id, start, end, new_subgraph)
