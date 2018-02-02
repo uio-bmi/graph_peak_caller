@@ -14,7 +14,8 @@ from .sparsepileupv2 import RpScore
 
 class DensePileupData:
 
-    def __init__(self, graph, ndim=1, base_value=0, dtype=None):
+    def __init__(self, graph, ndim=1, base_value=0, dtype=None, padding=0):
+        self._padding = padding
         self._values = None
         self._node_indexes = None
         self._graph = graph
@@ -22,8 +23,8 @@ class DensePileupData:
         self._touched_nodes = set()
         self.ndim = ndim
         self.dtype = dtype
-
         self._create_empty(ndim, base_value=base_value)
+
 
     def _create_empty(self, ndim=1, base_value=0):
         logging.info("Sorting nodes")
@@ -36,9 +37,9 @@ class DensePileupData:
         n_elements = self._graph.number_of_basepairs()
 
         if self.dtype is not None:
-            self._values = np.zeros(n_elements)
+            self._values = np.zeros(n_elements+self._padding)
         else:
-            self._values = np.zeros(n_elements)
+            self._values = np.zeros(n_elements+self._padding)
 
         if base_value > 0:
             self._values += base_value
@@ -49,13 +50,14 @@ class DensePileupData:
             self._node_indexes = np.cumsum(self._graph.blocks._array, dtype=np.uint32)
             logging.info("Node indexes created...")
         else:
-            self._node_indexes = np.zeros(span, dtype=np.uint32)
+            print(span)
+            self._node_indexes = np.zeros(span+1, dtype=np.uint32)
             offset = 0
             for i, node in enumerate(self._nodes):
                 index = node - self.min_node
                 self._node_indexes[index] = offset
                 offset += self.node_size(node)
-
+            self._node_indexes[-1] = offset
         logging.info("Dense pileup inited")
 
     def sum(self):
