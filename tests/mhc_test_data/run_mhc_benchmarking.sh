@@ -9,7 +9,11 @@ graph_peak_caller create_linear_map graph.obg haplo1kg50-mhc.snarls linear_map
 # Call peaks
 graph_peak_caller callpeaks_with_numpy_graph graph haplo1kg50-mhc.vg linear_map reads.json reads.json False test_ 135 36
 
+# Run fimo
+fimo -oc fimo_test_sequences MA0139.1.meme test_sequences.fasta
+fimo -oc fimo_macs_sequences MA0139.1.meme macs_sequences.fasta
+
 # Motif enrichment
-#graph_peak_caller plot_motif_enrichment test_sequences.fasta macs_sequences.fasta MA0139.1.meme plot.png
+graph_peak_caller plot_motif_enrichment test_sequences.fasta macs_sequences.fasta MA0139.1.meme plot.png True
 
 #ls plot.png

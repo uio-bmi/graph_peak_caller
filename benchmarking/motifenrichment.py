@@ -9,28 +9,25 @@ import matplotlib.pyplot as plt
 
 class MotifMatcher():
 
-    def __init__(self, ranked_fasta_file_name, meme_motif_file_name):
+    def __init__(self, ranked_fasta_file_name, meme_motif_file_name, run_fimo=True):
         self.fasta_file = ranked_fasta_file_name
         self.meme_file = meme_motif_file_name
-
+        self.run_fimo = run_fimo
         self.peaks_matching_motif = set()
         self.sorted_peaks = []
+
         self.get_sorted_peak_ids()
+
         self.get_peaks_matching_motif()
 
     def get_peaks_matching_motif(self):
-        #commmand = ["/home/ivargry/meme_4.11.4/src/fimo", self.meme_file, self.fasta_file]
-        #commmand = ["bash", "-c", "'/home/ivargry/meme_4.11.4/src/fimo -oc fimo_tmp " + self.meme_file + " " + self.fasta_file +"'"]
-        #print(' '.join(commmand))
-        subprocess.check_output(["fimo -oc fimo_tmp %s %s" % (self.meme_file, self.fasta_file)], shell=True)
-        #ps = subprocess.check_output(commmand, shell=True)
-        #output, error = ps.communicate()
-        #print("Output")
-        #print(output)
-        #print("Error")
-        #print(error)
 
-        result_file = "fimo_tmp/fimo.txt"
+        out_dir = "fimo_" + self.fasta_file.replace(".fasta", "")
+
+        if self.run_fimo:
+            subprocess.check_output(["fimo -oc %s %s %s" % (out_dir, self.meme_file, self.fasta_file)], shell=True)
+
+        result_file = out_dir + "/fimo.txt"
 
         for line in open(result_file):
             l = line.split()
@@ -61,7 +58,7 @@ class MotifMatcher():
         return true_positives
 
 
-def plot_true_positives(peak_file_sets, meme_file_name, save_to_file=None):
+def plot_true_positives(peak_file_sets, meme_file_name, save_to_file=None, run_fimo=True):
     for name, fasta_file_name in peak_file_sets.items():
         matcher = MotifMatcher(fasta_file_name, meme_file_name)
         true_positives = matcher.compute_true_positives()

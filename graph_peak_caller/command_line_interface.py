@@ -462,7 +462,8 @@ def plot_motif_enrichment(args):
             "file2": fasta2
         },
         meme,
-        save_to_file=args.out_figure_file_name
+        save_to_file=args.out_figure_file_name,
+        run_fimo=args.run_fimo == "True"
     )
 
 
@@ -597,7 +598,8 @@ interface = \
                     ('fasta1', ''),
                     ('fasta2', ''),
                     ('meme_motif_file', 'something.meme'),
-                    ('out_figure_file_name', '')
+                    ('out_figure_file_name', ''),
+                    ('run_fimo', 'Set to True if fimo has not already been run.')
                 ],
             'method': plot_motif_enrichment
         },
