@@ -29,12 +29,36 @@ class TestPValuesFinder(unittest.TestCase):
                   {1: [2]})
 
     def test_sample_equals_control(self):
-        sample = DensePileup.from_intervals([Interval(0, 3, [1, 2])])
-        control = DensePileup.from_intervals([Interval(0, 3, [1, 2])])
+        sample = DensePileup.from_intervals(self.graph, [Interval(0, 3, [1, 2])])
+        control = DensePileup.from_intervals(self.graph, [Interval(0, 3, [1, 2])])
 
         finder = PValuesFinder(sample, control)
         p_values = finder.get_p_values_pileup()
-        print(p_values)
+
+        correct = -np.log10(0.26424)
+        self.assertTrue(np.allclose(p_values.data._values, correct))
+
+    def test_sample_equals_control_one_node(self):
+        sample = DensePileup.from_intervals(self.graph, [Interval(0, 3, [2])])
+        control = DensePileup.from_intervals(self.graph, [Interval(0, 3, [1, 2])])
+
+        finder = PValuesFinder(sample, control)
+        p_values = finder.get_p_values_pileup()
+
+        correct = -np.log10(0.26424)
+        self.assertTrue(np.allclose(p_values.data.values(1), 0))
+        self.assertTrue(np.allclose(p_values.data.values(2), correct))
+
+    def test_sample_twice_control_one_node(self):
+        sample = DensePileup.from_intervals(self.graph, [Interval(0, 3, [2]), Interval(0, 3, [2])])
+        control = DensePileup.from_intervals(self.graph, [Interval(0, 3, [1, 2])])
+
+        finder = PValuesFinder(sample, control)
+        p_values = finder.get_p_values_pileup()
+
+        correct = -np.log10(0.08030)
+        self.assertTrue(np.allclose(p_values.data.values(1), 0))
+        self.assertTrue(np.allclose(p_values.data.values(2), correct))
 
 
 
