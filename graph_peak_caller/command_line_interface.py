@@ -23,6 +23,8 @@ from pyvg.util import vg_gam_file_to_intervals
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
+def main():
+    pass
 
 def shift_estimation(args):
 
