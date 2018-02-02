@@ -5,6 +5,16 @@ python:
 
 
 before_install:
+    - wget http://meme-suite.org/meme-software/4.12.0/meme_4.12.0.tar.gz
+    - tar zxf meme_4.12.0.tar.gz
+    - cd meme_4.12.0
+    - ./configure --prefix=$HOME/meme --with-url=http://meme-suite.org --enable-build-libxml2 --enable-build-libxslt
+    - make
+    - make test
+    - make install
+    - export PATH=$HOME/meme/bin:$PATH 
+    - cd
+
     - sudo apt-get -y install macs
     - pip install nose
     - pwd
