@@ -19,7 +19,8 @@ class MultipleGraphsCallpeaks:
                  sequence_retrievers=None,
                  out_base_name="multigraphs_",
                  skip_filter_duplicates=False,
-                 save_tmp_results_to_file=False
+                 save_tmp_results_to_file=False,
+                 stop_after_p_values=False
                  ):
 
         self._config = Configuration(
@@ -36,7 +37,8 @@ class MultipleGraphsCallpeaks:
         self.sequence_retrievers = sequence_retrievers
         self.samples = samples
         self.controls = controls
-        self.run()
+        self.stop_after_p_values = stop_after_p_values
+        #self.run()
 
     @classmethod
     def from_file_base_names(cls):
@@ -45,6 +47,9 @@ class MultipleGraphsCallpeaks:
 
     def run(self):
         self.run_to_p_values()
+        if self.stop_after_p_values:
+            logging.info("Stopping, as planned, after p-values")
+            return
         self.create_joined_q_value_mapping()
         self.run_from_p_values()
 
@@ -79,8 +84,12 @@ class MultipleGraphsCallpeaks:
         mapper = PToQValuesMapper.from_files(self._base_name)
         self._q_value_mapping = mapper.get_p_to_q_values()
 
-    def run_from_p_values(self):
+    def run_from_p_values(self, only_chromosome=None):
         for i, name in enumerate(self.names):
+            if only_chromosome is not None:
+                if only_chromosome != name:
+                    logging.info("Skipping %s" % str(name))
+                    continue
             graph_file_name = self.graph_file_names[i]
             ob_graph = obg.GraphWithReversals.from_unknown_file_format(
                 graph_file_name)

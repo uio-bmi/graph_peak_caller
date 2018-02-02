@@ -586,6 +586,7 @@ class MacsTestUsingMultipleGraphsInterface(MACSTests):
                         out_base_name="multigraph_",
                         skip_filter_duplicates=True,
                         save_tmp_results_to_file=True)
+        self.caller.run()
 
     def test_whole_pipeline(self):
         self._run_whole_macs()

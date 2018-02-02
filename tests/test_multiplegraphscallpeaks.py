@@ -75,6 +75,7 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
             sequence_retrievers=None,
             skip_filter_duplicates=True
         )
+        caller.run()
         self.do_asserts()
 
     def do_asserts(self):
