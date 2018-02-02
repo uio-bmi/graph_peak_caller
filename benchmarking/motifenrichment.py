@@ -22,7 +22,7 @@ class MotifMatcher():
         #commmand = ["/home/ivargry/meme_4.11.4/src/fimo", self.meme_file, self.fasta_file]
         #commmand = ["bash", "-c", "'/home/ivargry/meme_4.11.4/src/fimo -oc fimo_tmp " + self.meme_file + " " + self.fasta_file +"'"]
         #print(' '.join(commmand))
-        subprocess.check_output(["~/Sources/meme_4.12.0/src/fimo -oc fimo_tmp %s %s" % (self.meme_file, self.fasta_file)], shell=True)
+        subprocess.check_output(["fimo -oc fimo_tmp %s %s" % (self.meme_file, self.fasta_file)], shell=True)
         #ps = subprocess.check_output(commmand, shell=True)
         #output, error = ps.communicate()
         #print("Output")

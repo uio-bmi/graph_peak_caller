@@ -12,9 +12,9 @@ before_install:
     - cd meme_4.12.0
     - ./configure --prefix=$HOME/meme --with-url=http://meme-suite.org --enable-build-libxml2 --enable-build-libxslt
     - make
-#    - make test
+#   - make test
     - make install
-    - export PATH=$HOME/meme/bin:$PATH
+    - sudo ln -s src/fimo /usr/local/bin
     - cd
 
     - sudo apt-get -y install macs
