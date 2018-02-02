@@ -47,11 +47,14 @@ class SparseDirectPileup:
         self._pileup[starts[0]+interval.start_position.offset] += 1
         self._pileup[starts[-1] + interval.end_position.offset] -= 1
 
-    def __init__(self, graph, intervals, pileup):
+    def __init__(self, graph, intervals, pileup, out=None):
         self.min_id = pileup.data.min_node
         self._node_indexes = pileup.data._node_indexes
         self._intervals = intervals
-        self._pileup = np.zeros(pileup.data._values.size+1, "int")
+        if out is None:
+            self._pileup = np.zeros(pileup.data._values.size+1, "int")
+        else:
+            self._pileup = out
         self._pos_ends = {node_id: [] for node_id in graph.blocks.keys()}
         self._neg_ends = {-node_id: [] for node_id
                           in graph.blocks.keys()}
@@ -96,25 +99,27 @@ def check_touched(pileup, node_ids):
 
 def main(intervals, graph, extension_size):
     pileup = DensePileup(graph)
-    direct_pileup = SparseDirectPileup(graph, intervals, pileup)
+    my_pileup = np.zeros(pileup.data._values.size+2, dtype="int")
+    direct_pileup = SparseDirectPileup(graph, intervals, pileup,
+                                       out=my_pileup[1:])
     direct_pileup.run()
-    my_pileup = direct_pileup._pileup[:-1]
-    print("SUM", np.sum(np.cumsum(my_pileup)))
-    pileup.data._values = np.cumsum(direct_pileup._pileup[:-1])
+    # my_pileup = direct_pileup._pileup[:-1]
+    # pileup.data._values = np.cumsum(direct_pileup._pileup[:-1])
     pileup_neg = np.zeros(pileup.data._values.size+1, dtype="int")
     creator = ReversePileupCreator(
         graph, Starts(direct_pileup._neg_ends),
         pileup_neg)
     creator._fragment_length = extension_size
     creator.run_linear()
-    my_pileup -= creator._pileup[:0:-1]
-    del pileup_neg
-    extension_pileup = np.zeros(pileup.data._values.size+1, dtype="int")
+    my_pileup[1:-1] -= creator._pileup[:0:-1]
+    # del pileup_neg
+    #extension_pileup = np.zeros(pileup.data._values.size+1, dtype="int")
+    extension_pileup = my_pileup[1:]
     creator = PileupCreator(
         graph, Starts(direct_pileup._pos_ends), extension_pileup)
     creator._fragment_length = extension_size
     creator.run_linear()
-    my_pileup += creator._pileup[:-1]
-    pileup.data._values = np.cumsum(my_pileup)
+    # my_pileup += creator._pileup[:-1]
+    pileup.data._values = np.cumsum(my_pileup[1:-1])
     pileup.data._touched_nodes = check_touched(pileup, graph.blocks.keys())
     return pileup

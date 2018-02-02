@@ -14,7 +14,8 @@ from .sparsepileupv2 import RpScore
 
 class DensePileupData:
 
-    def __init__(self, graph, ndim=1, base_value=0, dtype=None):
+    def __init__(self, graph, ndim=1, base_value=0, dtype=None, padding=0):
+        self._padding = padding
         self._values = None
         self._node_indexes = None
         self._graph = graph
@@ -23,6 +24,7 @@ class DensePileupData:
         self.ndim = ndim
         self.dtype = dtype
         self._create_empty(ndim, base_value=base_value)
+
 
     def _create_empty(self, ndim=1, base_value=0):
         logging.info("Sorting nodes")
@@ -35,9 +37,9 @@ class DensePileupData:
         n_elements = self._graph.number_of_basepairs()
 
         if self.dtype is not None:
-            self._values = np.zeros(n_elements)
+            self._values = np.zeros(n_elements+self._padding)
         else:
-            self._values = np.zeros(n_elements)
+            self._values = np.zeros(n_elements+self._padding)
 
         if base_value > 0:
             self._values += base_value
