@@ -7,15 +7,15 @@ python:
 before_install:
     - sudo apt-get install libexpat1-dev
     - sudo apt-get install zlib1g-dev
-    - wget http://meme-suite.org/meme-software/4.12.0/meme_4.12.0.tar.gz
-    - tar zxf meme_4.12.0.tar.gz
-    - cd meme_4.12.0
-    - ./configure --prefix=$HOME/meme --with-url=http://meme-suite.org --enable-build-libxml2 --enable-build-libxslt
-    - make
+#    - wget http://meme-suite.org/meme-software/4.12.0/meme_4.12.0.tar.gz
+#    - tar zxf meme_4.12.0.tar.gz
+#    - cd meme_4.12.0
+#    - ./configure --prefix=$HOME/meme --with-url=http://meme-suite.org --enable-build-libxml2 --enable-build-libxslt
+#    - make
 #   - make test
-    - make install
-    - sudo ln -s /home/travis/meme_4.12.0/src/fimo /usr/bin
-    - fimo
+#    - make install
+#    - sudo ln -s /home/travis/meme_4.12.0/src/fimo /usr/bin
+#    - fimo
     - cd
 
     - sudo apt-get -y install macs

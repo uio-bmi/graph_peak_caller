@@ -30,7 +30,12 @@ class TestPValuesFinder(unittest.TestCase):
 
     def test_sample_equals_control(self):
         sample = DensePileup.from_intervals([Interval(0, 3, [1, 2])])
-        control = DensePileup.from_intervals([Interval()])
+        control = DensePileup.from_intervals([Interval(0, 3, [1, 2])])
+
+        finder = PValuesFinder(sample, control)
+        p_values = finder.get_p_values_pileup()
+        print(p_values)
+
 
 
 if __name__ == "__main__":
