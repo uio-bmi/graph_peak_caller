@@ -75,7 +75,6 @@ class NonGraphPeakCollection(object):
             i += 1
             peak.set_sequence_using_fasta_index(genome)
 
-
     def save_to_sorted_fasta(self, file_name):
         self._sort_on_score_descending()
         self.to_fasta(file_name)
