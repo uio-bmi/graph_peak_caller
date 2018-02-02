@@ -13,6 +13,9 @@ setup(name='graph_peak_caller',
                         'memory_profiler', 'python-coveralls', 'matplotlib', 'codecov', 'pytest-cov'],
       classifiers=[
             'Programming Language :: Python :: 3'
-      ]
+      ],
+      entry_points = {
+        'console_scripts': ['graph_peak_caller=graph_peak_caller.command_line_interface:main'],
+      }
 
       )

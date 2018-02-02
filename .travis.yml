@@ -15,6 +15,7 @@ before_install:
 #    - make test
     - make install
     - export PATH=$HOME/meme/bin:$PATH
+    - fimo
     - cd
 
     - sudo apt-get -y install macs

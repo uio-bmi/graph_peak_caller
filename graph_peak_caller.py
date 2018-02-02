@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import offsetbasedgraph as obg
 from pyvg.util import vg_gam_file_to_interval_collection,\
     vg_json_file_to_interval_collection
