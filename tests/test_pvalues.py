@@ -1,4 +1,6 @@
-from graph_peak_caller.pvalues import PToQValuesMapper
+from graph_peak_caller.pvalues import PToQValuesMapper, PValuesFinder, QValuesFinder
+from graph_peak_caller.densepileup import DensePileup
+from offsetbasedgraph import GraphWithReversals as Graph, DirectedInterval as Interval, Block
 import unittest
 import numpy as np
 
@@ -17,6 +19,18 @@ class TestPToQValuesMapper(unittest.TestCase):
 
         q_val_05 = 0.5 + (np.log10(4) - np.log10(6))
         self.assertAlmostEqual(mapping["%.7f" % 0.5], q_val_05)
+
+
+class TestPValuesFinder(unittest.TestCase):
+
+
+    def setUp(self):
+        self.graph = Graph({i: Block(3) for i in range(1, 3)},
+                  {1: [2]})
+
+    def test_sample_equals_control(self):
+        sample = DensePileup.from_intervals([Interval(0, 3, [1, 2])])
+        control = DensePileup.from_intervals([Interval()])
 
 
 if __name__ == "__main__":

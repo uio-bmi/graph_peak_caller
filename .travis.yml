@@ -14,7 +14,7 @@ before_install:
     - make
 #   - make test
     - make install
-    - sudo ln -s /home/travis/meme_4.12.0/src/fimo /usr/local/bin
+    - sudo ln -s /home/travis/meme_4.12.0/src/fimo /usr/bin
     - fimo
     - cd
 
