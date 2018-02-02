@@ -43,4 +43,5 @@ script:
     - bash run_mhc_benchmarking.sh
 
 after_success:
-  - codecov
+    - cd /home/travis/build/uio-bmi/graph_peak_caller/
+    - codecov
