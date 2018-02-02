@@ -24,6 +24,8 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
 
+print("test")
+
 def shift_estimation(args):
 
     """

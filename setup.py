@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(name='graph_peak_caller',
       version='1.0.0',
-      description='Offset based graph',
+      description='Graph peak caller',
       url='http://github.com/uio-bmi/graph_peak_caller',
       author='Ivar Grytten and Knut Rand',
       author_email='',
