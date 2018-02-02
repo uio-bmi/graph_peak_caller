@@ -93,39 +93,7 @@ class TestSparsePileup(unittest.TestCase):
 
 
 class TestSparseControlSample(unittest.TestCase):
-    def setUp(self):
-        control = pileup1_one_block
-        sample = pileup2_one_block
-        a = control.get_count_array(1)
-        a[0] = 3
-        self.sparse = SparseControlSample.from_control_and_sample(
-            control, sample)
 
-    def test_from_control_and_sample(self):
-        true_vi = ValuedIndexes(np.array([1, 5]),
-                                np.array([[2., 1.],
-                                          [1., 0.]]),
-                                np.array([3., 1.]),
-                                10)
-        self.assertEqual(self.sparse.data[1], true_vi)
-
-    def _test_get_p_dict(self):
-        self.sparse.get_p_dict()
-        keys = [(2., 1.), (1., 0.), (3., 1.)]
-        s_keys = [str(np.array(k)) for k in keys]
-        p_values = [-np.log10(1-poisson.cdf(k[1], k[0])) for k in keys]
-        true_dict = dict(zip(s_keys, p_values))
-        self.assertEqual(self.sparse.p_value_dict,
-                         true_dict)
-
-        lens = [4, 5, 1]
-        count_dict = dict(zip(p_values, lens))
-        self.assertEqual(self.sparse.count_dict,
-                         count_dict)
-
-        self.sparse.get_p_to_q_values()
-        print("#", self.sparse.p_to_q_values)
-        self.sparse.get_q_values()
 
     def test_starts_and_values_to_sparse_pileup(self):
         starts = np.array([1, 3])

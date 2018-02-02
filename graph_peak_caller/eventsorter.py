@@ -51,15 +51,6 @@ class EventSorter(object):
 
         return self.np_init(index_lists, values_lists)
 
-        self.tuples = []
-        i = 0
-        for index_list, values_list in zip(index_lists, values_lists):
-            self.tuples.extend([(idx, i, value) for
-                                idx, value in zip(index_list, values_list)])
-            i += 1
-        self.n_codes = i
-        self.tuples.sort(key=itemgetter(0, 1))
-
     def __str__(self):
         return "EventSorter(\n" +"\n".join(str(t) for t in self) + ")"
 

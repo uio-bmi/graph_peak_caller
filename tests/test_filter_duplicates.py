@@ -1,7 +1,6 @@
 import unittest
 from graph_peak_caller.pileup import Pileup
 from offsetbasedgraph import Graph, Block, Interval, IntervalCollection
-from graph_peak_caller import bdgcmp, callpeaks
 from graph_peak_caller.callpeaks import ExperimentInfo
 from graph_peak_caller.sampleandcontrolcreator import SampleAndControlCreator
 import numpy as np

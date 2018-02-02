@@ -87,7 +87,6 @@ class CallPeaks(object):
     def get_q_values(self):
         assert self.p_values_pileup is not None
         assert self.p_to_q_values_mapping is not None
-        # assert np.all(self.p_values_pileup.data._values >= -1e-8)
         finder = QValuesFinder(self.p_values_pileup,
                                self.p_to_q_values_mapping)
         self.q_values_pileup = finder.get_q_values()
@@ -194,11 +193,6 @@ class CallPeaksFromQvalues(object):
 
         logging.info("Removing small peaks")
 
-        # This is slow:
-        # self.pre_processed_peaks.to_bed_file(
-        #    self.out_file_base_name + "_before_small_peaks_removal.bed")
-        # logging.info("Preprocessed peaks written to bed file")
-
         if isinstance(self.pre_processed_peaks, DensePileup):
             # If dense pileup, we are filtering small peaks while trimming later
             self.filtered_peaks = self.pre_processed_peaks
@@ -247,14 +241,10 @@ class CallPeaksFromQvalues(object):
 
             if new_interval.length() != use_interval.length():
                 n_intervals_trimmed += 1
-                #print("Trimmed interval into: ")
-                #print("   %s" % interval)
-                #print("   %s" % new_interval)
 
             new_interval.score = use_interval.score
 
             if new_interval.length() < self.info.fragment_length:
-                #print("Not keeping too short interval: %s" % new_interval)
                 continue
             new_interval = Peak(new_interval.start_position,
                                 new_interval.end_position,
@@ -293,40 +283,17 @@ class CallPeaksFromQvalues(object):
 
     def __get_subgraphs(self):
 
-        if True or not self.graph_is_partially_ordered:
-            logging.info("Creating subgraphs from peak regions")
-            peaks_as_subgraphs = self.filtered_peaks.to_subgraphs()
-            logging.info("Writing subgraphs to file")
-            peaks_as_subgraphs.to_file(self.out_file_base_name + "peaks.subgraphs")
+        logging.info("Creating subgraphs from peak regions")
+        peaks_as_subgraphs = self.filtered_peaks.to_subgraphs()
+        logging.info("Writing subgraphs to file")
+        peaks_as_subgraphs.to_file(self.out_file_base_name + "peaks.subgraphs")
 
-            logging.info("Found %d subgraphs" % len(peaks_as_subgraphs.subgraphs))
-            binary_peaks = peaks_as_subgraphs
-            #[BinaryContinousAreas.from_old_areas(peak) for peak in
-            #               peaks_as_subgraphs]
-            logging.info("Finding max path through subgraphs")
-            BCACollection(binary_peaks).to_file(
-                self.out_file_base_name + "bcapeaks.subgraphs")
-            self.binary_peaks = binary_peaks
-        else:
-            logging.info("Assuming graph is partially ordered!")
-            logging.info("Creating subgraphs from peak regions")
-
-            peaks_as_subgraphs = \
-                SubgraphCollectionPartiallyOrderedGraph.create_from_pileup(self.graph, self.filtered_peaks)
-
-            #logging.info("Writing subgraphs to file")
-            #peaks_as_subgraphs.to_file(self.out_file_base_name + "peaks.subgraphs")
-
-            logging.info("Found %d subgraphs" % len(peaks_as_subgraphs))
-            binary_peaks = peaks_as_subgraphs
-
-            if self.save_tmp_results_to_file:
-                logging.info("Writing binary continous peaks to file")
-                BCACollection(binary_peaks).to_file(
-                    self.out_file_base_name + "bcapeaks.subgraphs")
-            self.binary_peaks = binary_peaks
-
-        #logging.info("N touched nodes: %d" % len(self.touched_nodes))
+        logging.info("Found %d subgraphs" % len(peaks_as_subgraphs.subgraphs))
+        binary_peaks = peaks_as_subgraphs
+        logging.info("Finding max path through subgraphs")
+        BCACollection(binary_peaks).to_file(
+            self.out_file_base_name + "bcapeaks.subgraphs")
+        self.binary_peaks = binary_peaks
 
     def callpeaks(self):
         logging.info("Calling peaks")
@@ -364,37 +331,6 @@ class CallPeaksFromQvalues(object):
             if i % 100 == 0:
                 logging.info("Writing sequence # %d" % i)
         f.close()
-
-
-"""
-class CallPeaksFromPValues(object):
-    def __init__(self, graph, base_name, p_values_pileup, experiment_info, q_values_mapping):
-        self.p_values_pileup = p_values_pileup
-        self.q_values_mapping = q_values_mapping
-        self.info = experiment_info
-        self.base_name = base_name
-
-        self.run()
-
-    def get_q_values(self):
-        finder = QValuesFinder(self.p_values_pileup, self.q_values_mapping)
-        return finder.get_q_values()
-
-    def run(self):
-        q_values = self.get_q_values()
-        CallPeaksFromQvalues(self.graph, q_values, self.info, self.base_name)
-
-    @classmethod
-    def run_from_files(cls, graph_base_name, base_name,
-                         q_values_mapping_file_name):
-        graph = offsetbasedgraph.GraphWithReversals.from_numpy_files(graph_base_name)
-        experiment_info = ExperimentInfo.from_file(base_name + "experiment_info.pickle")
-        with open(q_values_mapping_file_name, "rb") as f:
-            q_values_mapping = pickle.load(f)
-        p_values_pileup = DensePileup.from_sparse_files(graph, base_name)
-        return cls(graph, p_values_pileup, experiment_info, q_values_mapping,
-                   base_name)
-"""
 
 
 if __name__ == "__main__":

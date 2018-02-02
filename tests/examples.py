@@ -55,24 +55,4 @@ directed_pileup_intervals = [
 for interval in pileup_intervals+directed_pileup_intervals:
     interval.graph = ob_graphs[0]
 
-true_counts = {node.id: np.zeros(node.n_basepairs, dtype="int32")
-               for node in nodes}
-true_counts[0][5:] = 1
-true_counts[1][:5] = 2
-true_counts[1][5:15] = 1
-true_pileup = Pileup(None)
-true_pileup.set_count_arrays(true_counts)
 
-
-one_block_graph = offsetbasedgraph.GraphWithReversals({1: offsetbasedgraph.Block(10)}, {})
-one_block_pileup1_intervals = [
-    offsetbasedgraph.Interval(1, 10, [1], one_block_graph),
-    offsetbasedgraph.Interval(1, 5, [1], one_block_graph)]
-
-one_block_pileup2_intervals = [
-    offsetbasedgraph.Interval(0, 5, [1], one_block_graph)]
-
-pileup1_one_block = Pileup(one_block_graph)
-pileup1_one_block.add_intervals(one_block_pileup1_intervals)
-pileup2_one_block = Pileup(one_block_graph)
-pileup2_one_block.add_intervals(one_block_pileup2_intervals)

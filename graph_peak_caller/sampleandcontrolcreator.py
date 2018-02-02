@@ -159,7 +159,6 @@ class SampleAndControlCreatorO(object):
             yield interval
 
     def _assert_interval_is_valid(self, interval):
-        #print("Checking that %s is valid" % interval)
         # Checks that the interval (read) is a valid connected interval
         direction = None
         for i, rp in enumerate(interval.region_paths[:-1]):
@@ -181,7 +180,6 @@ class SampleAndControlCreatorO(object):
                     logging.error("Invalid read: Interval %s is going edges in multiple directions.")
                     raise Exception("Invalid interval")
 
-            #print("  Dir: %d " % direction)
         return True
 
     def _get_intervals_in_ob_graph(self, intervals):
@@ -269,23 +267,6 @@ class SampleAndControlCreatorO(object):
         # Delete sample and control pileups
         self._control_pileup = None
         self._sample_pileup = None
-        """
-        q_values_finder = QValuesFinder(self._sample_pileup, self._control_pileup)
-        q_values_pileup = q_values_finder.get_q_values_pileup()
-
-
-
-        #logging.info("Computing q values")
-        #q_values_pileup.get_scores()
-        self.q_values = q_values_pileup
-
-        if self.save_tmp_results_to_file:
-            q_val_file_name = self.out_file_base_name + "q_values.bdg"
-            logging.info("Writing q values to file")
-            self.q_values.to_bed_graph(q_val_file_name)
-            logging.info("Writing q values to pickle")
-            self.q_values.to_pickle(self.out_file_base_name + "q_values.pickle")
-        """
 
     def get_p_to_q_values_mapping(self):
         return PToQValuesMapper.from_p_values_dense_pileup(self.p_values)
