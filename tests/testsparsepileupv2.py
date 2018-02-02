@@ -1,4 +1,4 @@
-from graph_peak_caller.sparsepileupv2 import SparsePileup, SparsePileupData, SparseControlSample
+from graph_peak_caller.sparsepileupv2 import SparsePileup, SparsePileupData
 from graph_peak_caller.sparsepileup import SparsePileup as SparsePileupOld
 from offsetbasedgraph import GraphWithReversals, Block, Interval
 
@@ -97,7 +97,7 @@ class TestSparsePileup(unittest.TestCase):
 
 
 
-
+"""
 class TestSparseControlSample(unittest.TestCase):
 
     def test_from_control_and_sample(self):
@@ -157,7 +157,7 @@ class TestSparseControlSample(unittest.TestCase):
         joined.get_p_to_q_values()
         print(joined.p_to_q_values)
         joined.get_q_values()
-
+"""
 
 if __name__ == "__main__":
     unittest.main()
