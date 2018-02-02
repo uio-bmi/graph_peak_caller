@@ -454,51 +454,6 @@ class DensePileup(Pileup):
         collection = SubgraphCollection.from_pileup(self.graph, self)
         return collection
 
-    @classmethod
-    def from_valued_areas(cls, graph, valued_areas, touched_nodes = None):
-        pileup = cls(graph)
-
-        if touched_nodes is None:
-            nodes = graph.blocks
-        else:
-            nodes = touched_nodes
-
-        i = 0
-        # Fill pileup_data
-        logging.info("N nodes to process: %d" % len(nodes))
-        for rp in nodes:
-            if i % 100000 == 0:
-                logging.info("Creating sparse from valued areas for node %d" % i)
-            i += 1
-
-            length = graph.blocks[rp].length()
-            starts = valued_areas.get_starts_array(rp, node_size=length)
-            if len(starts) == 0:
-                continue
-
-            ends = valued_areas.get_ends_array(rp, node_size=length)
-            if len(starts) == 0 and len(ends) == 0:
-                continue
-
-            assert len(starts) == len(ends)
-            for start, end in zip(starts, ends):
-                pileup.data.add_value(rp, start, end, 1)
-
-        return pileup
-
-    @classmethod
-    def from_areas_collection(cls, graph, areas_list):
-        starts_dict = defaultdict(list)
-        ends_dict = defaultdict(list)
-        for areas in areas_list:
-            for rp in areas.areas:
-                starts_dict[rp].extend(areas.get_starts(rp))
-                ends_dict[rp].extend(areas.get_ends(rp))
-        starts_dict = {rp: np.array(v) for rp, v in starts_dict.items()}
-        ends_dict = {rp: np.array(v) for rp, v in ends_dict.items()}
-        return cls.from_starts_and_ends(graph, starts_dict,
-                                        ends_dict, dtype=int)
-
     def threshold_copy(self, cutoff):
         new_pileup = self.__class__(self.graph)
         new_pileup.data = self.data.threshold_copy(cutoff)
