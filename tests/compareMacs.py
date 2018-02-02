@@ -190,10 +190,14 @@ class MACSTests(object):
                                  "lin_peaks.bed")
 
     def neg_linear_to_graph_interval(self, lin_interval):
-        start_offset = (-lin_interval.end) % self.node_size
-        end_offset = (-lin_interval.start+1) % self.node_size - 1
-        start_rp = (lin_interval.end-1) // self.node_size + 1
-        end_rp = (lin_interval.start) // self.node_size + 1
+        start_rp = ((lin_interval.end-1)//self.node_size+1)
+        end_rp = (lin_interval.start//self.node_size+1)
+        start_offset = start_rp*self.node_size-lin_interval.end
+        end_offset = end_rp*self.node_size-lin_interval.start
+        # start_offset = (-lin_interval.end) % self.node_size
+        # end_offset = (-lin_interval.start) % self.node_size
+        # start_rp = (lin_interval.end) // self.node_size + 1
+        # end_rp = (-lin_interval.start) // self.node_size + 1
         rps = list(range(start_rp*-1, end_rp*-1+1))
         interval = DirectedInterval(start_offset, end_offset, rps,
                                     graph=self.graph)

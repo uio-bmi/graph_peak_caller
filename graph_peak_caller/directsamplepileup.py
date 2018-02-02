@@ -9,7 +9,8 @@ class DirectPileup:
         self._intervals = intervals
         self._pileup = pileup
         self._pos_ends = {node_id: [] for node_id in self._graph.blocks.keys()}
-        self._neg_ends = {-node_id: [] for node_id in self._graph.blocks.keys()}
+        self._neg_ends = {-node_id: [] for node_id
+                          in self._graph.blocks.keys()}
 
     def _handle_interval(self, interval):
         self._pileup.add_interval(interval)
@@ -21,28 +22,46 @@ class DirectPileup:
             self._pos_ends[rp].append(end_pos.offset)
 
     def run(self):
+        counter = 0
         for interval in self._intervals:
             self._handle_interval(interval)
+            counter += 1
 
 
 class SparseDirectPileup:
     def add_neg_interval(self, interval):
         rps = [abs(rp)-self.min_id for rp in interval.region_paths]
+        f = lambda x: None
+        if 9718 in rps:
+            f = lambda x: print("-", x)
+        f(interval)
         starts = self._node_indexes[rps]
         ends = self._node_indexes[1:][rps]
         self._pileup[starts[:-1]] += 1
         self._pileup[ends[1:]] -= 1
-        self._pileup[ends[0]-interval.start_position.offset] -= 1
         self._pileup[ends[-1]-interval.end_position.offset] += 1
+        self._pileup[ends[0]-interval.start_position.offset] -= 1
+        f(ends[-1])
+        f(interval.end_position.offset)
+        f(ends[-1]-interval.end_position.offset)
+        f(ends[0]-interval.start_position.offset)
 
     def add_interval(self, interval):
         rps = [rp-self.min_id for rp in interval.region_paths]
+        f = lambda x: None
+        if 1409 in rps or 11408 in rps:
+            pass
+            # f = lambda x: print("+", x) 
+
         starts = self._node_indexes[rps]
         ends = self._node_indexes[1:][rps]
+        f(interval)
         self._pileup[starts[1:]] += 1
         self._pileup[ends[:-1]] -= 1
         self._pileup[starts[0]+interval.start_position.offset] += 1
         self._pileup[starts[-1] + interval.end_position.offset] -= 1
+        f(starts[0] + interval.start_position.offset)
+        f(starts[-1] + interval.end_position.offset)
 
     def __init__(self, graph, intervals, pileup):
         self.min_id = pileup.data.min_node
@@ -96,6 +115,7 @@ def main(intervals, graph, extension_size):
     direct_pileup = SparseDirectPileup(graph, intervals, pileup)
     direct_pileup.run()
     my_pileup = direct_pileup._pileup[:-1]
+    print("SUM", np.sum(np.cumsum(my_pileup)))
     pileup.data._values = np.cumsum(direct_pileup._pileup[:-1])
     pileup_neg = np.zeros(pileup.data._values.size+1, dtype="int")
     creator = ReversePileupCreator(
@@ -104,7 +124,6 @@ def main(intervals, graph, extension_size):
     creator._fragment_length = extension_size
     creator.run_linear()
     my_pileup -= creator._pileup[:0:-1]
-    # pileup.data._values += creator._pileup[::-1]
     del pileup_neg
     extension_pileup = np.zeros(pileup.data._values.size+1, dtype="int")
     creator = PileupCreator(
