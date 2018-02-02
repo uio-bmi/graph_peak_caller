@@ -208,5 +208,13 @@ class TestWholeCallPeaksHierarchical(TestWholeCallPeaks):
         ]
         self.do_asserts()
 
+    def test_multiple_peaks2(self):
+
+        self.peaks = [
+            DirectedInterval(2, 2, [1, 3, 4], self.graph),
+            DirectedInterval(2, 2, [6, 10, 12], self.graph),
+        ]
+        self.do_asserts()
+
 if __name__ == "__main__":
     unittest.main()
