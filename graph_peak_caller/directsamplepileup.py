@@ -31,37 +31,21 @@ class DirectPileup:
 class SparseDirectPileup:
     def add_neg_interval(self, interval):
         rps = [abs(rp)-self.min_id for rp in interval.region_paths]
-        f = lambda x: None
-        if 9718 in rps:
-            f = lambda x: print("-", x)
-        f(interval)
         starts = self._node_indexes[rps]
         ends = self._node_indexes[1:][rps]
         self._pileup[starts[:-1]] += 1
         self._pileup[ends[1:]] -= 1
         self._pileup[ends[-1]-interval.end_position.offset] += 1
         self._pileup[ends[0]-interval.start_position.offset] -= 1
-        f(ends[-1])
-        f(interval.end_position.offset)
-        f(ends[-1]-interval.end_position.offset)
-        f(ends[0]-interval.start_position.offset)
 
     def add_interval(self, interval):
         rps = [rp-self.min_id for rp in interval.region_paths]
-        f = lambda x: None
-        if 1409 in rps or 11408 in rps:
-            pass
-            # f = lambda x: print("+", x) 
-
         starts = self._node_indexes[rps]
         ends = self._node_indexes[1:][rps]
-        f(interval)
         self._pileup[starts[1:]] += 1
         self._pileup[ends[:-1]] -= 1
         self._pileup[starts[0]+interval.start_position.offset] += 1
         self._pileup[starts[-1] + interval.end_position.offset] -= 1
-        f(starts[0] + interval.start_position.offset)
-        f(starts[-1] + interval.end_position.offset)
 
     def __init__(self, graph, intervals, pileup):
         self.min_id = pileup.data.min_node
