@@ -19,40 +19,6 @@ class LinearRegion(object):
 LRC_REGION = LinearRegion("chr19", 54025634, 55084318)
 MHC_REGION = LinearRegion("chr6", 28510119, 33480577)
 
-def get_average_signal_values_within_peaks(signal_file_name,
-                                           peaks_bed_file_name):
-    signal_file = pyBigWig.open(signal_file_name)
-    peaks_file = pybedtools.BedTool(peaks_bed_file_name)
-    long_segments = []
-    max_segments = 200000
-    i = 0
-    for peak in peaks_file:
-        chrom = peak.chrom.replace("chrom", "")
-        start = peak.start
-        end = peak.stop
-        signal_values = signal_file.values(chrom, start, end)
-        signal_value = np.mean(signal_values)
-        long_segments.append(signal_value)
-        i += 1
-        if i > max_segments:
-            break
-
-    return np.array(long_segments)
-
-
-def longest_segment(file_name):
-    longest = 0
-    for line in open(file_name):
-        l = line.split()
-        start = int(l[1])
-        end = int(l[2])
-        if end - start > longest:
-            print("Found longer %d at %d-%d with value %.6f" % (
-                end-start, start, end, float(l[3])))
-            longest = end - start
-
-    print(longest)
-
 
 def bed_intervals_to_graph(obg_graph, linear_path_interval,
                            bed_file_name, graph_start_offset):
@@ -185,42 +151,6 @@ def create_linear_map(ob_graph, snarl_file_name = "haplo1kg50-mhc.snarls", out_f
     linear_map = LinearSnarlMap.from_snarl_graph(snarlgraph, ob_graph.copy())
     linear_map.to_json_files(out_file_name)
     logging.info("Created linear snarl map, wrote to file %s" % out_file_name)
-
-
-def filter_ucsc_snps_on_region_output_vcf(bed_file_name, out_file_name,
-                                          chromosome, start, end):
-    out_file = open(out_file_name, "w")
-    out_file.writelines(["#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\n"])
-    i = 0
-    for line in open(bed_file_name):
-        l = line.split()
-        if i % 1000 == 0:
-            print("Line %d" % i)
-        i += 1
-        type = l[11]
-        if type != "single":
-            continue
-
-        chr = l[1]
-        if chr != chromosome:
-            continue
-
-        chr = chr.replace("chr", "")
-
-        pos = int(l[2])
-        if pos < start or pos > end:
-            continue
-
-        id = l[4]
-        variant = l[9].split("/")
-        ref = variant[0]
-        alt = variant[1]
-
-        print("Wrote")
-        out_file.writelines(["%s\t%d\t%s\t%s\t%s\t%d\t%s\n" % (chr, pos + 1, id, ref, alt, 0, "PASS")])
-
-    out_file.close()
-
 
 def create_ob_graph_from_vg(vg_json_graph_file_name, ob_graph_file_name="graph.obg"):
     vg_graph = pyvg.Graph.create_from_file(vg_json_graph_file_name)
