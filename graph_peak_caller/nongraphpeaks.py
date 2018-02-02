@@ -15,9 +15,6 @@ class NonGraphPeak():
         self.score = score
         self.sequence = None
 
-    def set_sequence(self):
-        self.sequence = get_sequence_ucsc(self.chromosome, self.start, self.end)
-
     def set_sequence_using_fasta_index(self, fasta_index):
         print("Chromosome: %s" % self.chromosome)
         self.sequence = str(fasta_index[self.chromosome][self.start:self.end])
@@ -68,13 +65,6 @@ class NonGraphPeakCollection(object):
                  for i, peak in enumerate(self.peaks))
 
         SeqIO.write(lines, file_name, "fasta")
-
-    def set_peak_sequences(self):
-        i = 0
-        for peak in self.peaks:
-            logging.info("Set sequence for peak %d/%d" % (i, len(self.peaks)))
-            i += 1
-            peak.set_sequence()
 
     def set_peak_sequences_using_fasta(self, fasta_file_location="grch38.fasta"):
         logging.info("Set peak sequences using fasta index")

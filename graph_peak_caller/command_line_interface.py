@@ -1,20 +1,22 @@
 #!/usr/bin/python3
-import offsetbasedgraph as obg
-from pyvg.util import vg_gam_file_to_interval_collection,\
-    vg_json_file_to_interval_collection
-from pyvg.sequences import SequenceRetriever
-from graph_peak_caller.util import create_linear_map, create_ob_graph_from_vg
-import logging
-from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo,\
-    CallPeaksFromQvalues, Configuration
 import argparse
-import sys
-from graph_peak_caller.sparsepileup import SparsePileup
+import logging
+import os
 import pickle
+import sys
+
+import offsetbasedgraph as obg
 from pyvg.protoparser import json_file_to_obg_graph,\
     json_file_to_obg_numpy_graph
+from pyvg.sequences import SequenceRetriever
+from pyvg.util import vg_gam_file_to_interval_collection,\
+    vg_json_file_to_interval_collection
+
+from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo,\
+    CallPeaksFromQvalues, Configuration
 from graph_peak_caller.peakcollection import Peak
-import os
+from graph_peak_caller.sparsepileup import SparsePileup
+from graph_peak_caller.util import create_linear_map, create_ob_graph_from_vg
 # from memory_profiler import profile
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 from graph_peak_caller.shift_estimation_multigraph import MultiGraphShiftEstimator
@@ -328,7 +330,7 @@ def run_callpeaks_whole_genome(args):
     )
 
 def linear_peaks_to_fasta(args):
-    from benchmarking.nongraphpeaks import NonGraphPeakCollection
+    from graph_peak_caller.nongraphpeaks import NonGraphPeakCollection
     collection = NonGraphPeakCollection.from_bed_file(args.linear_reads_file_name)
     #collection.filter_peaks_outside_region("chr6", 28510119, 33480577)
     collection.set_peak_sequences_using_fasta(fasta_file_location=args.fasta_file)
@@ -363,7 +365,6 @@ def create_linear_map_interface(args):
 
 
 def split_vg_json_reads_into_chromosomes(args):
-    import json
     reads_base_name = args.vg_json_reads_file_name.split(".")[0]
 
     chromosomes = [str(i) for i in range(1, 23)] + ["X", "Y"]
@@ -451,7 +452,7 @@ def concatenate_sequence_files(args):
 
 
 def plot_motif_enrichment(args):
-    from benchmarking.motifenrichment import MotifMatcher, plot_true_positives
+    from benchmarking.motifenrichment import plot_true_positives
     fasta1 = args.fasta1
     fasta2 = args.fasta2
     meme = args.meme_motif_file
