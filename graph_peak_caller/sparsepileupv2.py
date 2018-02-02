@@ -333,24 +333,6 @@ class SparsePileupData:
 
         return max_val
 
-    def get_max_value_between_old(self, node_id, start, end):
-        assert node_id is not None
-        assert start >= 0
-        assert end <= self.indexes(node_id)[-1]
-
-        indexes = self.indexes(node_id)[1:]
-        values = self.values(node_id)
-
-        length = end-start
-        indexes = indexes - start
-        above_mask = indexes >= 0
-        inside_mask = np.logical_and(above_mask,
-                                     indexes <= length)
-        subset_indexes = indexes[inside_mask]
-        subset_values = values[inside_mask]
-        return np.max(subset_values)
-        #return subset_indexes, subset_values
-
     def find_valued_areas(self, node, value):
         all_indexes = self.indexes(node)
         values = self.values(node)
@@ -390,36 +372,6 @@ class SparsePileupData:
             lines = self.index_value_pairs(node)
             for line in lines:
                 yield "%s\t%s\t%s\t%s\n" % (node, line[0], line[1], line[2])
-
-    @classmethod
-    def combine_valued_indexes(cls, indexes1, values1, indexes2, values2):
-
-        a = indexes1[:-1]*2
-        b = indexes2[:-1]*2+1
-        all_idxs = np.concatenate([a, b])
-        all_idxs.sort()
-
-        values_list = []
-        for i, vi in enumerate((values1, values2)):
-            idxs = np.nonzero((all_idxs % 2) == i)[0]
-            all_values = vi
-            value_diffs = np.diff(all_values)
-            values = np.zeros(all_idxs.shape)
-            values[idxs[1:]] = value_diffs
-            values[0] = all_values[0]
-            values_list.append(values.cumsum())
-
-        values = np.array([values_list[0], values_list[1]])
-        idxs = all_idxs // 2
-        unique_idxs = np.append(np.nonzero(np.diff(idxs))[0], len(idxs)-1)
-        idxs = idxs[unique_idxs]
-        values = values[:, unique_idxs]
-
-        return (idxs, np.transpose(values))
-
-        #obj = cls(idxs[1:], np.transpose(values[:, 1:]),
-        #          values[:, 0], vi_a.length)
-        #return obj
 
 
 class SparsePileup(Pileup):
@@ -505,11 +457,6 @@ class SparsePileup(Pileup):
         for node in self.data.nodes:
             self.data.sanitize_node(node)
         logging.info("Sanitize done")
-
-    def sanitize_indices(self):
-        raise NotImplementedError()
-        for node in self.data.nodes:
-            self.data.sanitize_node_indices(node)
 
     def find_valued_areas(self, value, only_check_nodes=None):
         if value:
@@ -705,40 +652,6 @@ class SparsePileup(Pileup):
     def threshold(self, cutoff):
         self.data.threshold(cutoff)
         self.sanitize()
-
-    def add_area(self, region_path, start, end, value):
-        """
-        NAIVE method to add single area to valued_inexes
-        Assumes it comes from a complete set of areas
-        """
-        raise NotImplementedError()
-
-    def fix_tmp_values(self):
-        raise NotImplementedError()
-
-    @classmethod
-    def from_bed_graph(cls, graph, filename):
-        pileup = super().from_bed_graph(graph, filename)
-        assert isinstance(pileup, cls)
-        pileup.fix_tmp_values()
-        return pileup
-
-    @classmethod
-    def from_bed_file(cls, graph, filename):
-        f = open(filename, "r")
-        starts = defaultdict(list)
-        ends = defaultdict(list)
-        for line in f:
-            if line.startswith("track"):
-                continue
-
-            data = line.split()
-            block_id = int(data[0])
-            starts[block_id].append(int(data[1]))
-            ends[block_id].append(int(data[2]))
-        starts = {block_id: np.array(start_list) for block_id, start_list in starts.items() if start_list}
-        ends = {block_id: np.array(ends_list) for block_id, ends_list in ends.items() if ends_list}
-        return cls.from_starts_and_ends(graph, starts, ends)
 
     def to_bed_file(self, filename):
         f = open(filename, "w")
