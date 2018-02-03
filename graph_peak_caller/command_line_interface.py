@@ -534,7 +534,6 @@ interface = \
                     ('with_control', 'True/False'),
                     ('fragment_length', ''),
                     ('read_length', ''),
-                    ('run_callpeaks_whole_genome', ''),
                     ('stop_after_p_values', 'True/False - whether to only run until p-value track is computed (before peak calling)')
                 ],
             'method': run_callpeaks_whole_genome
