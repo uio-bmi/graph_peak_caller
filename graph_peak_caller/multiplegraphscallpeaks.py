@@ -38,6 +38,8 @@ class MultipleGraphsCallpeaks:
         self.samples = samples
         self.controls = controls
         self.stop_after_p_values = stop_after_p_values
+        if self.stop_after_p_values:
+            logging.info("Will only run until p-values have been computed.")
         #self.run()
 
     @classmethod

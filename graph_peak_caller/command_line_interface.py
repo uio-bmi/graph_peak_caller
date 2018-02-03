@@ -332,7 +332,7 @@ def run_callpeaks_whole_genome(args):
     caller.run()
 
 def run_callpeaks_whole_genome_from_p_values(args):
-    logging.info("Running whole genome.")
+    logging.info("Running whole genome from p-values.")
     chromosome = args.chromosome
     chromosomes = args.chromosomes.split(",")
     graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
@@ -534,7 +534,8 @@ interface = \
                     ('with_control', 'True/False'),
                     ('fragment_length', ''),
                     ('read_length', ''),
-                    ('run_callpeaks_whole_genome', '')
+                    ('run_callpeaks_whole_genome', ''),
+                    ('stop_after_p_values', 'True/False - whether to only run until p-value track is computed (before peak calling)')
                 ],
             'method': run_callpeaks_whole_genome
         },
