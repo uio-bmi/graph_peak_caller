@@ -553,8 +553,7 @@ interface = \
                     ('out_base_name', 'eg experiment1_'),
                     ('with_control', 'True/False'),
                     ('fragment_length', ''),
-                    ('read_length', ''),
-                    ('run_callpeaks_whole_genome', '')
+                    ('read_length', '')
                 ],
             'method': run_callpeaks_whole_genome_from_p_values
         },
