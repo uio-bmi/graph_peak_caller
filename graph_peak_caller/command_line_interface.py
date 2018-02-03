@@ -328,7 +328,7 @@ def run_callpeaks_whole_genome(args):
         sequence_retrievers=sequence_retrievers,
         out_base_name=args.out_base_name,
         stop_after_p_values=args.stop_after_p_values == "True"
-    )
+    )1
     caller.run()
 
 def run_callpeaks_whole_genome_from_p_values(args):
@@ -556,7 +556,7 @@ interface = \
                     ('read_length', ''),
                     ('run_callpeaks_whole_genome', '')
                 ],
-            'method': callpeaks_whole_genome_from_p_values
+            'method': run_callpeaks_whole_genome_from_p_values
         },
     'estimate_shift':
         {
