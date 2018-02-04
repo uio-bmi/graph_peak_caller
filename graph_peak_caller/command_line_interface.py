@@ -232,21 +232,9 @@ def create_ob_graph(args):
 def create_linear_map_interface(args):
     logging.info("Reading ob graph from file")
     ob_graph = obg.GraphWithReversals.from_numpy_file(args.obg_file_name)
-    print(ob_graph)
-    print(ob_graph.reverse_adj_list._values)
-    print(ob_graph.reverse_adj_list._indices)
-    print(ob_graph.reverse_adj_list.node_id_offset)
-    print(ob_graph.reverse_adj_list[-4])
-    print(ob_graph.reverse_adj_list.node_id_offset)
-
-
     logging.info("Converting to dict format, allowing graph to "
                  "be changed by linear map process")
     ob_graph.convert_to_dict_backend()
-    print(ob_graph.reverse_adj_list)
-    print(ob_graph)
-    print("Reverse edges")
-    print(ob_graph.reverse_adj_list)
     logging.info("Creating linear map")
     create_linear_map(ob_graph, args.vg_snarls_file_name, args.out_file_base_name, copy_graph=False)
 

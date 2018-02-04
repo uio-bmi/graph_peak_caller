@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 
-graph_peak_caller create_ob_numpy_graph haplo1kg50-mhc.json graph
 graph_peak_caller create_ob_graph haplo1kg50-mhc.json graph.obg
 
 # Create snarls
 graph_peak_caller create_linear_map graph.obg haplo1kg50-mhc.snarls linear_map
 
 # Call peaks
-graph_peak_caller callpeaks_with_numpy_graph graph haplo1kg50-mhc.vg linear_map reads.json reads.json False test_ 135 36
+graph_peak_caller callpeaks graph.obg haplo1kg50-mhc.vg linear_map reads.json reads.json False test_ 135 36
 
 # Run fimo
 fimo -oc fimo_test_sequences MA0139.1.meme test_sequences.fasta
