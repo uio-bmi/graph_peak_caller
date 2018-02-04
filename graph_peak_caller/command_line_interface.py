@@ -80,19 +80,34 @@ def filter_reads_in_graph(args):
     logging.info("Wrote resulting intervals to %s" % args.out_file_name)
 
 
-def run_with_intervals(ob_graph,
-                       sample_intervals,
-                       control_intervals,
-                       out_name,
-                       has_control=True,
-                       vg_graph_file_name="haplo1kg50-mhc.vg",
-                       fragment_length=135,
-                       read_length=36,
-                       linear_map="haplo1kg50-mhc.lm"):
-    logging.info("Running from intervals")
+def run_callpeaks(ob_graph,
+                  sample_file_name, control_file_name,
+                  vg_graph_file_name,
+                  out_name="real_data_",
+                  has_control=True,
+                  limit_to_chromosomes=False,
+                  fragment_length=135, read_length=36,
+                  linear_map_file_name=False):
+
+    logging.info("Running from gam files")
+
+    # Detect file format
+    if isinstance(sample_file_name, obg.IntervalCollection):
+        sample_intervals = sample_file_name
+        control_intervals = control_file_name
+    elif sample_file_name.endswith(".json"):
+        sample_intervals = vg_json_file_to_interval_collection(
+             None, sample_file_name, ob_graph)
+        control_intervals = vg_json_file_to_interval_collection(
+             None, control_file_name, ob_graph)
+    else:
+        sample_intervals = obg.IntervalCollection.from_file(
+            sample_file_name, graph=ob_graph)
+        control_intervals = obg.IntervalCollection.from_file(
+            control_file_name, graph=ob_graph)
+
     graph_size = ob_graph.number_of_basepairs()
     logging.info("Number of base pairs in graph: %d" % graph_size)
-    # logging.info("N nodes in graph: %d" % len(ob_graph.blocks))
 
     experiment_info = ExperimentInfo(graph_size, fragment_length, read_length)
     config = Configuration(
@@ -104,46 +119,11 @@ def run_with_intervals(ob_graph,
         ob_graph, sample_intervals, control_intervals,
         experiment_info=experiment_info,
         out_file_base_name=out_name, has_control=has_control,
-        linear_map=linear_map,
+        linear_map=linear_map_file_name,
         configuration=config
     )
     retriever = SequenceRetriever.from_vg_graph(vg_graph_file_name)
     caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
-
-
-def run_with_json(ob_graph,
-                  json_file_name, json_control_file,
-                  vg_graph_file_name,
-                  out_name="real_data_",
-                  has_control=True,
-                  limit_to_chromosomes=False,
-                  fragment_length=135, read_length=36,
-                  linear_map_file_name=False):
-
-    logging.info("Running from gam files")
-
-    # ob_graph = obg.GraphWithReversals.from_file(ob_graph_file_name)
-
-    if json_file_name.endswith(".json"):
-        reads_intervals = vg_json_file_to_interval_collection(
-             None, json_file_name, ob_graph)
-
-        control_intervals = vg_json_file_to_interval_collection(
-             None, json_control_file, ob_graph)
-    else:
-        reads_intervals = obg.IntervalCollection.from_file(
-            json_file_name, graph=ob_graph
-        )
-        control_intervals = obg.IntervalCollection.from_file(
-            json_control_file, graph=ob_graph
-        )
-
-    run_with_intervals(ob_graph, reads_intervals, control_intervals,
-                       out_name=out_name, has_control=has_control,
-                       vg_graph_file_name=vg_graph_file_name,
-                       fragment_length=fragment_length,
-                       read_length=read_length,
-                       linear_map=linear_map_file_name)
 
 
 def intervals_to_fasta(args):
@@ -157,73 +137,20 @@ def intervals_to_fasta(args):
         intervals, args.out_file_name, retriever)
 
 
-def run_callpeaks(args):
-    logging.info("Creating offset based graph")
-    json_file_name = args.vg_json_graph_file_name
-    obg_file_name = json_file_name.replace(".json", ".obg")
-
-    n_nodes = 0  # args.n_nodes
-    if not os.path.isfile(obg_file_name):
-        ob_graph = json_file_to_obg_graph(json_file_name, n_nodes)
-        logging.info("Writing ob graph to file")
-        #ob_graph.to_numpy_files(obg_file_name)
-        ob_graph.to_file(obg_file_name)
-    else:
-        logging.info("Reading graph from file (graph already existing on disk)")
-        # ob_graph = obg.GraphWithReversals.from_numpy_files(obg_file_name)
-        ob_graph = obg.GraphWithReversals.from_file(obg_file_name)
-
-    if not os.path.isfile(args.linear_map_base_name + "_starts.pickle"):
-        logging.info("Creating linear map")
-        create_linear_map(ob_graph, args.vg_snarls_file_name,
-                          args.linear_map_base_name)
-        logging.info("Linear map created")
-    else:
-        logging.info("Not creating linear map. Already existing")
-
-    has_control = True
-    if args.with_control == "False":
-        has_control = False
-
-    run_with_json(
-        ob_graph,
-        args.sample_reads_file_name,
-        args.control_reads_file_name,
-        args.vg_graph_file_name,
-        args.out_base_name,
-        has_control=has_control,
-        fragment_length=int(args.fragment_length),
-        read_length=int(args.read_length),
-        linear_map_file_name=args.linear_map_base_name
-    )
-
-
 # @profile
-def run_callpeaks_with_numpy_graph(args):
+def run_callpeaks_interface(args):
     logging.info("Read offset based graph")
 
-    ob_graph = obg.GraphWithReversals.from_numpy_files(
-        args.numpy_graph_base_name)
+    ob_graph = obg.GraphWithReversals.from_numpy_file(
+        args.graph_file_name)
 
-    if not os.path.isfile(args.linear_map_base_name + "_starts.pickle"):
-        logging.info("Creating linear map")
-        create_linear_map(ob_graph, args.vg_snarls_file_name,
-                          args.linear_map_base_name)
-        logging.info("Linear map created")
-    else:
-        logging.info("Not creating linear map. Already existing")
-
-    has_control = True
-    if args.with_control == "False":
-        has_control = False
-
-    run_with_json(
+    run_callpeaks(
         ob_graph,
         args.sample_reads_file_name,
         args.control_reads_file_name,
         args.vg_graph_file_name,
         args.out_base_name,
-        has_control=has_control,
+        has_control=args.with_control == "True",
         fragment_length=int(args.fragment_length),
         read_length=int(args.read_length),
         linear_map_file_name=args.linear_map_base_name
@@ -304,7 +231,22 @@ def create_ob_graph(args):
 
 def create_linear_map_interface(args):
     logging.info("Reading ob graph from file")
-    ob_graph = obg.GraphWithReversals.from_unknown_file_format(args.obg_file_name)
+    ob_graph = obg.GraphWithReversals.from_numpy_file(args.obg_file_name)
+    print(ob_graph)
+    print(ob_graph.reverse_adj_list._values)
+    print(ob_graph.reverse_adj_list._indices)
+    print(ob_graph.reverse_adj_list.node_id_offset)
+    print(ob_graph.reverse_adj_list[-4])
+    print(ob_graph.reverse_adj_list.node_id_offset)
+
+
+    logging.info("Converting to dict format, allowing graph to "
+                 "be changed by linear map process")
+    ob_graph.convert_to_dict_backend()
+    print(ob_graph.reverse_adj_list)
+    print(ob_graph)
+    print("Reverse edges")
+    print(ob_graph.reverse_adj_list)
     logging.info("Creating linear map")
     create_linear_map(ob_graph, args.vg_snarls_file_name, args.out_file_base_name, copy_graph=False)
 
@@ -416,12 +358,12 @@ def plot_motif_enrichment(args):
 interface = \
 {
 
-    'callpeaks_with_numpy_graph':
+    'callpeaks':
         {
             'help': 'Callpeaks',
             'arguments':
                 [
-                    ('numpy_graph_base_name', ""),
+                    ('graph_file_name', ""),
                     ('vg_graph_file_name', "Graph file name (.vg)"),
                     ('linear_map_base_name', "Set to desired base name. Will be used if exists, created if not."),
                     ('sample_reads_file_name', ' '),
@@ -431,7 +373,7 @@ interface = \
                     ('fragment_length', ''),
                     ('read_length', '')
                 ],
-            'method': run_callpeaks_with_numpy_graph
+            'method': run_callpeaks_interface
         },
     'callpeaks_whole_genome':
         {

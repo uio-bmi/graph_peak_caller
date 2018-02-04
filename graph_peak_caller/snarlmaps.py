@@ -15,7 +15,7 @@ class LinearSnarlMap(object):
 
     @classmethod
     def from_snarl_graph(cls, snarl_graph, graph):
-        graph = graph
+        print(snarl_graph)
         length = snarl_graph.length()
         starts, ends = snarl_graph.get_distance_dicts()
         return cls(starts, ends, length, graph)

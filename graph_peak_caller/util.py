@@ -148,7 +148,7 @@ def create_linear_map(ob_graph, snarl_file_name = "haplo1kg50-mhc.snarls", out_f
         ob_graph,
         snarl_file_name)
     snarlgraph = builder.build_snarl_graphs()
-    linear_map = LinearSnarlMap.from_snarl_graph(snarlgraph, ob_graph.copy())
+    linear_map = LinearSnarlMap.from_snarl_graph(snarlgraph, ob_graph)
     linear_map.to_json_files(out_file_name)
     logging.info("Created linear snarl map, wrote to file %s" % out_file_name)
 
