@@ -26,7 +26,7 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
 def main():
-    pass
+    create_argument_parser()
 
 def shift_estimation(args):
 
@@ -111,33 +111,6 @@ def run_with_intervals(ob_graph,
     caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
 
 
-def run_with_gam(ob_graph,
-                 gam_file_name, gam_control_file,
-                 vg_graph_file_name,
-                 out_name="real_data_",
-                 has_control=True,
-                 limit_to_chromosomes=False,
-                 fragment_length=135, read_length=36,
-                 linear_map_file_name=False):
-
-    logging.info("Running from gam files")
-
-    #ob_graph = obg.GraphWithReversals.from_file(ob_graph_file_name)
-    reads_intervals = vg_gam_file_to_interval_collection(
-         None, gam_file_name, ob_graph)
-
-    control_intervals = vg_gam_file_to_interval_collection(
-         None, gam_control_file, ob_graph)
-
-    run_with_intervals(ob_graph, reads_intervals, control_intervals,
-                       out_name=out_name, has_control=has_control,
-                       vg_graph_file_name=vg_graph_file_name,
-                       fragment_length=fragment_length,
-                       read_length=read_length,
-                       linear_map=linear_map_file_name)
-
-
-# @profile
 def run_with_json(ob_graph,
                   json_file_name, json_control_file,
                   vg_graph_file_name,
@@ -171,52 +144,6 @@ def run_with_json(ob_graph,
                        fragment_length=fragment_length,
                        read_length=read_length,
                        linear_map=linear_map_file_name)
-
-
-def run_mhc_ctcf_example():
-    create_ob_graph_from_vg("tests/mhc/graph.json", "tests/mhc/graph.obg")
-    logging.info("Reading graph from file")
-    ob_graph = obg.Graph.from_file("tests/mhc/graph.obg")
-    create_linear_map(ob_graph, "tests/mhc/graph.snarls",
-                      "tests/mhc/linear_map.lm")
-
-    run_with_gam(
-        "tests/mhc/graph.obg",
-        "tests/mhc/macs_remapped_mhc.gam",
-        "tests/mhc/macs_remapped_mhc.gam",
-        "tests/mhc/graph.vg",
-        "tests/mhc/macs_reads_remapped_",
-        has_control=False,
-        fragment_length=135,
-        read_length=36,
-        linear_map_file_name="tests/mhc/linear_map.lm"
-    )
-
-
-def run_callpeaks_from_q_values(args):
-    name = args.out_base_name
-    logging.info("Reading obgraph from file")
-    ob_graph = obg.GraphWithReversals.from_file(args.obg_file_name)
-    logging.info("Number of nodes in graph: %d" %  len(ob_graph.blocks))
-
-    logging.info("Creating q values pileup from file")
-    q_values = SparsePileup.from_pickle(name + "q_values.pickle", ob_graph)
-    logging.info("Getting touched nodes and exp info from file")
-    with open(name + "touched_nodes.pickle", "rb") as f:
-        touched_nodes = pickle.loads(f.read())
-
-    experiment_info = ExperimentInfo.from_file(name + "experiment_info.pickle")
-    logging.info("All prev data fetched")
-
-    caller = CallPeaksFromQvalues(
-        ob_graph,
-        q_values,
-        experiment_info,
-        args.out_base_name,
-        touched_nodes=touched_nodes,
-        graph_is_partially_ordered=True
-    )
-    caller.callpeaks()
 
 
 def intervals_to_fasta(args):
@@ -363,29 +290,16 @@ def run_callpeaks_whole_genome_from_p_values(args):
 def linear_peaks_to_fasta(args):
     from graph_peak_caller.nongraphpeaks import NonGraphPeakCollection
     collection = NonGraphPeakCollection.from_bed_file(args.linear_reads_file_name)
-    #collection.filter_peaks_outside_region("chr6", 28510119, 33480577)
     collection.set_peak_sequences_using_fasta(fasta_file_location=args.fasta_file)
     collection.save_to_sorted_fasta(args.out_file_name)
     logging.info("Saved sequences to %s" % args.out_file_name)
 
-
 def create_ob_graph(args):
-    # Get node count
-    #command = ["vg", "stats", "--node-count", args.vg_json_file_name]
-    #result = subprocess.check_output(command, shell=True)
-    #n_nodes = int(result)
-    logging.info("Creating obgraph")
-    ob_graph = json_file_to_obg_graph(args.vg_json_file_name, 0)
-    logging.info("Writing ob graph to file")
-    ob_graph.to_file(args.out_file_name)
-
-
-def create_ob_numpy_graph(args):
     logging.info("Creating obgraph")
     ob_graph = json_file_to_obg_numpy_graph(args.vg_json_file_name, 0)
 
     logging.info("Writing ob graph to file")
-    ob_graph.to_numpy_files(args.out_file_name)
+    ob_graph.to_numpy_file(args.out_file_name)
 
 
 def create_linear_map_interface(args):
@@ -592,23 +506,13 @@ interface = \
         },
     'create_ob_graph':
         {
-            'help': 'Creates and stores an obgraph from a vg json graph',
+            'help': 'Creates Offset Based Graph from a vg json graph file. Stores the resulting graph to a file.',
             'arguments':
                 [
                     ('vg_json_file_name', 'Vg json file name (created by running vg view -Vj graph.vg > graph.json'),
                     ('out_file_name', 'E.g. graph.obg')
                 ],
             'method': create_ob_graph
-        },
-    'create_ob_numpy_graph':
-        {
-            'help': 'Creates and stores an obgraph from a vg json graph (using numpy data structures)',
-            'arguments':
-                [
-                    ('vg_json_file_name', 'Vg json file name (created by running vg view -Vj graph.vg > graph.json'),
-                    ('out_file_name', 'E.g. graph.obg')
-                ],
-            'method': create_ob_numpy_graph
         },
     'create_linear_map':
         {
@@ -697,4 +601,5 @@ def create_argument_parser():
     else:
         parser.help()
 
-create_argument_parser()
+if __name__ == "__main__":
+    create_argument_parser()

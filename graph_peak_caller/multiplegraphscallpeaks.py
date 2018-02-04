@@ -80,7 +80,7 @@ class MultipleGraphsCallpeaks:
                 lin_map, self._config,
                 stop_after_p_values=True
             )
-            logging.info("Done until p values for %d")
+            logging.info("Done until p values.")
 
     def create_joined_q_value_mapping(self):
         mapper = PToQValuesMapper.from_files(self._base_name)
