@@ -158,30 +158,6 @@ class DensePileupData:
         indexes = np.append(indexes, self.node_size(node))
         return indexes, values
 
-    @classmethod
-    def combine_valued_indexes(cls, indexes1, values1, indexes2, values2):
-        a = indexes1[:-1]*2
-        b = indexes2[:-1]*2+1
-        all_idxs = np.concatenate([a, b])
-        all_idxs.sort()
-
-        values_list = []
-        for i, vi in enumerate((values1, values2)):
-            idxs = np.nonzero((all_idxs % 2) == i)[0]
-            all_values = vi
-            value_diffs = np.diff(all_values)
-            values = np.zeros(all_idxs.shape)
-            values[idxs[1:]] = value_diffs
-            values[0] = all_values[0]
-            values_list.append(values.cumsum())
-
-        values = np.array([values_list[0], values_list[1]])
-        idxs = all_idxs // 2
-        unique_idxs = np.append(np.nonzero(np.diff(idxs))[0], len(idxs)-1)
-        idxs = idxs[unique_idxs]
-        values = values[:, unique_idxs]
-        return (idxs, np.transpose(values))
-
     def find_valued_areas(self, node, value, changes=None):
         # Return list[start, end, start2, end2,...] having this value inside
         index = node - self.min_node
@@ -496,19 +472,6 @@ class DensePileup(Pileup):
         self.filename = filename
         self.is_written = True
         return filename
-
-    @classmethod
-    def from_pickle(cls, file_name, graph):
-        with open("%s" % file_name, "rb") as f:
-            data = pickle.loads(f.read())
-            #assert isinstance(SparsePileupData, cls)
-            obj = cls(graph)
-            obj.data = data
-            return obj
-
-    def to_pickle(self, file_name):
-        with open("%s" % file_name, "wb") as f:
-            pickle.dump(self.data, f)
 
     def to_bed_file(self, filename):
         f = open(filename, "w")

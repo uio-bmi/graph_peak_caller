@@ -151,6 +151,21 @@ class TestDensePileup(unittest.TestCase):
         self.assertEqual(valued_areas[3], [0, 10])
         self.assertEqual(valued_areas[2], [])
 
+    def test_fill_small_holes_non_dag_simple(self):
+        pileup= DensePileup.from_intervals(graph,
+                                           [
+                                               Interval(1, 8, [1]),
+                                               Interval(2, 3, [2]),
+                                               Interval(9, 4, [2, 3])
+                                           ])
+
+        pileup.fill_small_wholes(4)
+        correct_pileup = DensePileup.from_intervals(graph,
+                                           [
+                                               Interval(1, 3, [1, 2]),
+                                               Interval(9, 4, [2, 3])
+                                           ])
+        self.assertEqual(pileup, correct_pileup)
 
 if __name__ == "__main__":
     unittest.main()
