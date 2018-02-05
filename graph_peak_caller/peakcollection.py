@@ -7,10 +7,11 @@ from offsetbasedgraph import DirectedInterval
 
 class Peak(obg.DirectedInterval):
     def __init__(self, start_position, end_position,
-                 region_paths=None, graph=None, direction=None, score=0):
+                 region_paths=None, graph=None, direction=None, score=0, unique_id=None):
         super().__init__(start_position, end_position,
                          region_paths, graph, direction)
         self.score = score
+        self.unique_id = unique_id
 
     def __str__(self):
         return super().__str__() + " [%s]" % self.score
@@ -91,16 +92,46 @@ class PeakCollection(obg.IntervalCollection):
 
     @classmethod
     def _is_in_graph(cls, peak, chrom, start_offset, end_offset):
-        if peak.chrom != chrom:
+        if peak.chromosome != chrom:
             return False
         if (peak.start < start_offset or peak.end > end_offset):
             return False
         return True
 
     @classmethod
+    def create_from_nongraph_peak_collection(
+            cls, ob_graph, peak_collection,
+            linear_path_interval,
+            graph_region=None):
+        peaks = peak_collection.peaks
+        intervals_on_graph = []
+        i = 0
+        graph_start_offset = 0 if graph_region is None else graph_region.start
+        for peak in peaks:
+            start = peak.start - graph_start_offset
+            end = peak.end - graph_start_offset
+            end = min(end, linear_path_interval.length())
+            if graph_region is not None:
+                if not cls._is_in_graph(peak, graph_region.chromosome,
+                                        graph_region.start,
+                                        graph_region.end):
+                    logging.info("Filtered out peak")
+                    continue
+            if i % 100 == 0:
+                print("Interval %i" % (i))
+            i += 1
+            linear_interval = linear_path_interval.get_subinterval(start, end)
+            linear_interval.graph = ob_graph
+            graph_peak = Peak.from_interval_and_score(
+                linear_interval, peak.score)
+            graph_peak.sequence = peak.sequence
+            intervals_on_graph.append(graph_peak)
+
+    @classmethod
     def create_from_linear_intervals_in_bed_file(
             cls, ob_graph, linear_path_interval, bed_file_name,
             graph_region=None):
+        # todo re-use above method
         peaks = BedTool(bed_file_name)
         intervals_on_graph = []
         i = 0
@@ -165,3 +196,26 @@ class PeakCollection(obg.IntervalCollection):
             if i.overlaps(interval, minimum_overlap=minimum_overlap):
                 overlapping.append(i)
         return overlapping
+
+    @classmethod
+    def from_fasta_file(cls, file_name):
+        f = open(file_name)
+        peaks = []
+        while True:
+            header = f.readline()
+            sequence = f.readline()
+            if not sequence:
+                break
+
+            header = header.split(maxsplit=1)
+            id = header[0]
+            interval_json = header[1]
+            print("Interval json: %s" % interval_json)
+            peak = Peak.from_file_line(interval_json)
+            peak.unique_id = id
+            peak.sequence = sequence
+
+            peaks.append(peak)
+
+        return cls(peaks)
+
