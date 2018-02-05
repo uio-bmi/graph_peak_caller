@@ -327,8 +327,8 @@ class SampleAndControlCreator(SampleAndControlCreatorO):
         logging.info(self.sample_intervals)
         logging.info("Processing areas")
         pileup = samplemain(self.sample_intervals, self.graph,
-                            self.info.fragment_length-self.info.read_length)
-
+                            self.info.fragment_length-self.info.read_length,
+                            self.out_file_base_name+"direct_pileup")
         self.touched_nodes = pileup.data._touched_nodes
 
         self._sample_track = self.out_file_base_name + "sample_track.bdg"

@@ -25,7 +25,6 @@ class DensePileupData:
         self.dtype = dtype
         self._create_empty(ndim, base_value=base_value)
 
-
     def _create_empty(self, ndim=1, base_value=0):
         logging.info("Sorting nodes")
         self._nodes = sorted(self._graph.blocks.keys())

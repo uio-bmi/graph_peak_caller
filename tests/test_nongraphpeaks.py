@@ -1,5 +1,6 @@
 import unittest
 import math
+import numpy as np
 from graph_peak_caller.nongraphpeaks import NonGraphPeak, NonGraphPeakCollection
 
 
@@ -41,7 +42,7 @@ class TestNonGraphPeakCollection(unittest.TestCase):
     def test_sort_on_sore(self):
         peaks = NonGraphPeakCollection.from_bed_file("test_bed_file.bed")
         peaks._sort_on_score_descending()
-        self.assertTrue(math.isclose(peaks.peaks[0].score, 5.5))
+        self.assertTrue(np.isclose(peaks.peaks[0].score, 5.5))
 
     def test_set_sequences(self):
         peaks = NonGraphPeakCollection.from_bed_file("test_bed_file.bed")
