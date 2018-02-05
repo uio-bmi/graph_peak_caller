@@ -2,7 +2,7 @@ import unittest
 from offsetbasedgraph import Block, Interval, DirectedInterval, GraphWithReversals
 from graph_peak_caller.callpeaks import CallPeaksFromQvalues, CallPeaks, ExperimentInfo
 from graph_peak_caller.sparsepileup import SparsePileup, ValuedIndexes
-from graph_peak_caller.sparsepileupv2 import SparsePileup as SparsePileupV2
+from graph_peak_caller.densepileup import DensePileup, DensePileupData
 import logging
 logging.basicConfig(level=logging.ERROR)
 
@@ -76,7 +76,7 @@ class TestCallPeaksFromQValues(unittest.TestCase):
 
 
     def _run_caller(self, graph, pileup):
-        pileup = SparsePileupV2.create_from_old_sparsepileup(pileup)
+        pileup = DensePileup.create_from_old_sparsepileup(pileup)
         graph_size = sum(block.length() for block in graph.blocks.values())
         experiment_info = ExperimentInfo(graph_size, self.fragment_length,
                                          self.read_length)
@@ -89,7 +89,8 @@ class TestCallPeaksFromQValues(unittest.TestCase):
     def _assert_finds_max_paths(self, max_paths, graph, pileup):
         found_max_paths = self._run_caller(graph, pileup)
         for path in max_paths:
-            self.assertTrue(path in found_max_paths,
+            path.graph = graph
+            self.assertTrue(path in found_max_paths or path.get_reverse() in found_max_paths,
                 "\nPath %s not found in max paths. Max paths: \n %s" % \
                 (path, '\n'.join([str(p) for p in found_max_paths])))
 

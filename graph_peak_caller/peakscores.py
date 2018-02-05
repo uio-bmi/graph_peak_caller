@@ -1,7 +1,7 @@
 from collections import deque, defaultdict
 import numpy as np
 from .peakcollection import Peak
-from .sparsepileupv2 import SparsePileup, RpScore
+from .sparsepileupv2 import RpScore
 from .sparsepileup import ValuedIndexes
 
 

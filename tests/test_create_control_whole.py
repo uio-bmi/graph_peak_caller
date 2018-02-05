@@ -5,7 +5,6 @@ from graph_peak_caller.callpeaks import ExperimentInfo, CallPeaks
 from graph_peak_caller.snarls import SnarlGraph, SnarlGraphBuilder, SimpleSnarl
 from graph_peak_caller.linearsnarls import LinearSnarlMap, create_control
 from graph_peak_caller.sparsepileup import SparsePileup as OldSparsePileup, ValuedIndexes
-from graph_peak_caller.sparsepileupv2 import SparsePileup
 import numpy as np
 
 

@@ -1,6 +1,5 @@
 import json
 import pickle
-from .sparsepileupv2 import SparsePileupData, SparsePileup
 from .densepileup import DensePileup
 from .linearintervals import LinearIntervalCollection
 import logging
@@ -79,52 +78,6 @@ class LinearSnarlMap(object):
                 pileup.data.set_values(node_id, start, end, value)
                 j += 1
 
-        return pileup
-
-    def to_numpy_sparse_pileup(self, unmapped_indices_dict):
-        nodes = unmapped_indices_dict.keys()
-        lengths = []
-        assert self._graph is not None
-        i = 0
-        for node_id, unmapped_indices in unmapped_indices_dict.items():
-            if i % 100000 == 0:
-                logging.info("Processing node %d" % i)
-            i += 1
-            n_indices = len(unmapped_indices.get_index_array()) + 2
-            lengths.append(n_indices)
-
-        pileup_data = SparsePileupData(nodes, lengths, graph=self._graph)
-        del lengths
-
-        i = 0
-        for node_id, unmapped_indices in unmapped_indices_dict.items():
-            if i % 100000 == 0:
-                logging.info("Processing node %d" % i)
-            i += 1
-
-            scale, offset = self.get_scale_and_offset(node_id)
-            new_idxs = (unmapped_indices.get_index_array()-offset) / scale
-            new_idxs = new_idxs.astype("int")
-            new_idxs[0] = max(0, new_idxs[0])
-
-            length = self._graph.node_size(node_id)
-            indexes = new_idxs
-            values = unmapped_indices.get_values_array()
-            start_value = values[0]
-            # Sanitize indexes
-            diffs = np.where(np.diff(indexes) > 0)[0]
-            indexes = indexes[diffs+1]
-            values = values[diffs+1]
-
-            pileup_data.set_indexes(node_id, indexes)
-            pileup_data.set_end_index(node_id, length)
-            pileup_data.set_start_value(node_id, start_value)
-            pileup_data.set_values(node_id, values)
-
-        pileup = SparsePileup(self._graph)
-        pileup.data = pileup_data
-        #pileup.sanitize_indices()
-        pileup.sanitize()
         return pileup
 
     def map_graph_interval(self, interval):
