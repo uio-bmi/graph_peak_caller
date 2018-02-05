@@ -91,7 +91,6 @@ class ScoredPeak(object):
     def get_max_path(self):
         sums = {node_id: float(scores.sum()) for node_id, scores
                 in self._scores.items()}
-
         # Handle peaks that are on one node
         if len(self._peak.internal_intervals) > 0:
             node, start_end = list(self._peak.internal_intervals.items())[0]
@@ -99,7 +98,8 @@ class ScoredPeak(object):
             interval = Peak(start_end[0], start_end[1],
                             [node], graph=self._graph)
             score = sums[node]
-            interval.set_score(self._scores[node].max_value()) # score / interval.length())
+            interval.set_score(
+                self._scores[node].max_value()) # score / interval.length())
             return interval
 
         self.__clean_sums(sums)

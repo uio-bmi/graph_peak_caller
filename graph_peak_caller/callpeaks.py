@@ -13,6 +13,7 @@ from .peakcollection import Peak
 # from memory_profiler import profile
 from .pvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
 from .sampleandcontrolcreator import SampleAndControlCreator
+from .directsamplepileup import DirectPileup
 
 
 class Configuration:
@@ -145,7 +146,7 @@ class CallPeaksFromQvalues(object):
                  experiment_info,
                  out_file_base_name="",
                  cutoff=0.1, raw_pileup=None, touched_nodes=None,
-                 config=None):
+                 config=None, q_values_max_path=False):
         self.graph = graph
         self.q_values = q_values_pileup
         self.info = experiment_info
@@ -156,6 +157,7 @@ class CallPeaksFromQvalues(object):
         self.touched_nodes = touched_nodes
         self.save_tmp_results_to_file = True
         self.graph_is_partially_ordered = False
+        self.q_values_max_path = q_values_max_path
 
         if config is not None:
             self.cutoff = config.p_val_cutoff
@@ -261,7 +263,14 @@ class CallPeaksFromQvalues(object):
 
     def __get_max_paths(self):
         logging.info("Getting maxpaths")
-        _pileup = self.raw_pileup if self.raw_pileup is not None else self.q_values
+        if not self.q_values_max_path:
+            print("<", self.out_file_base_name+"direct_pileup")
+            _pileup = DirectPileup.from_file(
+                self.graph,
+                self.out_file_base_name+"direct_pileup")
+        else:
+            _pileup = self.q_values
+        # _pileup = self.raw_pileup if self.raw_pileup is not None else self.q_values
         scored_peaks = (ScoredPeak.from_peak_and_numpy_pileup(peak, _pileup)
                         for peak in self.binary_peaks)
         max_paths = [peak.get_max_path() for peak in scored_peaks]

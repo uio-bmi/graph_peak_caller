@@ -7,7 +7,6 @@ import logging
 logging.basicConfig(level=logging.ERROR)
 
 
-
 class TestCallPeaksFromQValues(unittest.TestCase):
 
     def setUp(self):
@@ -34,7 +33,6 @@ class TestCallPeaksFromQValues(unittest.TestCase):
                 1: ValuedIndexes([5, 7], [2, 0], 0, 10),
                 2: ValuedIndexes([3], [0], 2, 10)
             }
-
 
         self.split_graph = GraphWithReversals(
             {i: Block(10) for i in range(1, 5)},
@@ -74,15 +72,14 @@ class TestCallPeaksFromQValues(unittest.TestCase):
         self.fragment_length = 6
         self.read_length = 2
 
-
     def _run_caller(self, graph, pileup):
         pileup = DensePileup.create_from_old_sparsepileup(pileup)
         graph_size = sum(block.length() for block in graph.blocks.values())
         experiment_info = ExperimentInfo(graph_size, self.fragment_length,
                                          self.read_length)
         caller = CallPeaksFromQvalues(graph, pileup, experiment_info,
-                                    out_file_base_name="test_",
-                                    cutoff=0.1)
+                                      out_file_base_name="test_",
+                                      cutoff=0.1, q_values_max_path=True)
         caller.callpeaks()
         return caller.max_paths
 

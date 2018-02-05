@@ -29,6 +29,21 @@ class DirectPileup:
             self._handle_interval(interval)
             counter += 1
 
+    def to_file(self, base_name):
+        indices = np.nonzero(self._pileup.data._values)
+        values = self._pileup.data._values[indices]
+        np.save(base_name + "_diffindices.npy", indices)
+        np.save(base_name + "_diffvalues.npy", values)
+
+    @staticmethod
+    def from_file(graph, base_name):
+        pileup = DensePileup(graph)
+        indices = np.load(base_name + "_diffindices.npy")
+        values = np.load(base_name + "_diffvalues.npy")
+        pileup.data._values[indices] = values
+        pileup.data._values = np.cumsum(pileup.data._values)
+        return pileup
+
 
 class SparseDirectPileup:
     def add_neg_interval(self, interval):
@@ -80,6 +95,23 @@ class SparseDirectPileup:
             self._handle_interval(interval)
             i += 1
 
+    def to_file(self, base_name):
+        indices = np.nonzero(self._pileup)
+        values = self._pileup[indices]
+        np.save(base_name + "_diffindices.npy", indices)
+        np.save(base_name + "_diffvalues.npy", values)
+
+    @staticmethod
+    def from_file(graph, base_name):
+        pileup = DensePileup(graph)
+        indices = np.load(base_name + "_diffindices.npy")
+        values = np.load(base_name + "_diffvalues.npy")
+
+        pileup.data._values[indices] = values
+        pileup.data._values = np.cumsum(pileup.data._values[:-1])
+        return pileup
+
+
 
 class Starts:
     def __init__(self, d):
@@ -103,14 +135,14 @@ def check_touched(pileup, node_ids):
             np.count_nonzero(pileup.data.values(node_id))}
 
 
-def main(intervals, graph, extension_size):
+def main(intervals, graph, extension_size, savedirectname=None):
     pileup = DensePileup(graph)
     my_pileup = np.zeros(pileup.data._values.size+2, dtype="int")
     direct_pileup = SparseDirectPileup(graph, intervals, pileup,
                                        out=my_pileup[1:])
     direct_pileup.run()
-    # my_pileup = direct_pileup._pileup[:-1]
-    # pileup.data._values = np.cumsum(direct_pileup._pileup[:-1])
+    if savedirectname is not None:
+        direct_pileup.to_file(savedirectname)
     pileup_neg = np.zeros(pileup.data._values.size+1, dtype="int")
 
     creator = ReversePileupCreator(
@@ -120,8 +152,6 @@ def main(intervals, graph, extension_size):
     creator.run_linear()
 
     my_pileup[1:-1] -= creator._pileup[:0:-1]
-    # del pileup_neg
-    #extension_pileup = np.zeros(pileup.data._values.size+1, dtype="int")
     extension_pileup = my_pileup[1:]
     creator = PileupCreator(
         graph, Starts(direct_pileup._pos_ends), extension_pileup)

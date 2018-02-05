@@ -10,7 +10,7 @@ setup(name='graph_peak_caller',
       packages=['graph_peak_caller'],
       zip_safe=False,
       install_requires=['pymysql', 'numpy', 'filecache', 'scipy', 'pybedtools', 'pyBigWig',
-                        'memory_profiler', 'python-coveralls', 'matplotlib', 'codecov', 'pytest-cov',
+                        'memory_profiler', 'python-coveralls', 'matplotlib',
                         'biopython', 'pyfaidx'],
       classifiers=[
             'Programming Language :: Python :: 3'

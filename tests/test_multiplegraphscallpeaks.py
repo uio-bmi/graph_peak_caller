@@ -4,6 +4,8 @@ import unittest
 from graph_peak_caller.snarls import SnarlGraph, SnarlGraphBuilder, SimpleSnarl
 from graph_peak_caller.linearsnarls import LinearSnarlMap
 from pyvg.sequences import SequenceRetriever
+import logging
+logging.basicConfig(level=logging.WARNING)
 
 
 class TestMultipleGraphsCallPeaks(unittest.TestCase):
@@ -23,9 +25,9 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
         node_offset = 1
         graphs = []
         for chrom_number, chromosome in enumerate(self.chromosomes):
-
-            graph  = Graph({i + node_offset: Block(10) for i in range(0, 3)},
-                      {i+node_offset: [i+1+node_offset] for i in range(0, 2)})
+            graph = Graph(
+                {i + node_offset: Block(10) for i in range(0, 3)},
+                {i+node_offset: [i+1+node_offset] for i in range(0, 2)})
 
             snarls = {
                 4+node_offset: SimpleSnarl(node_offset, node_offset+2, 4+node_offset)
@@ -53,11 +55,13 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
             for i in range(0, 10):
                 left_sub = peak.get_subinterval(0, self.read_length)
                 sample_reads.append(left_sub)
-                right_sub = peak.get_subinterval(self.fragment_length - self.read_length,
-                                                 self.fragment_length)
+                control_reads.append(left_sub)
+                right_sub = peak.get_subinterval(
+                    self.fragment_length - self.read_length,
+                    self.fragment_length)
                 right_sub_reverse = right_sub.get_reverse()
+                sample_reads.append(right_sub_reverse)
                 control_reads.append(right_sub_reverse)
-
         self.sample_reads.append(IntervalCollection(sample_reads))
         self.control_reads.append(IntervalCollection(control_reads))
 
@@ -80,7 +84,8 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
 
     def do_asserts(self):
         for i, chromosome in enumerate(self.chromosomes):
-            final_peaks = IntervalCollection.create_list_from_file("multigraphs_" + chromosome + "_max_paths.intervalcollection")
+            final_peaks = IntervalCollection.create_list_from_file(
+                "multigraphs_" + chromosome + "_max_paths.intervalcollection")
             for peak in self.peaks[i]:
                 assert peak in final_peaks
 
