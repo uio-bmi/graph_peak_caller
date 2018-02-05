@@ -27,29 +27,63 @@ class PeaksComparerV2(object):
         self.graph_matching_motif = self._get_peaks_matching_motif(
             graph_peaks_fimo_results_file)
 
+        print("Motif matches")
+        print(self.linear_matching_motif)
+        print(self.graph_matching_motif)
+
         vg_graph = pyvg.vg.Graph.create_from_file(vg_json_file_name)
         self.linear_path = create_linear_path(graph, vg_graph)
-        self.peaks1 = PeakCollection.from_fasta_file(self.graph_peaks_fasta_file_name)
+        self.peaks1 = PeakCollection.from_fasta_file(self.graph_peaks_fasta_file_name,
+                                                     graph)
 
         nongraphpeaks = NonGraphPeakCollection.from_fasta(self.linear_peaks_fasta_file_name)
         nongraphpeaks.filter_peaks_outside_region("chr6", 28510119, 33480577)
-        self.peaks2 = PeakCollection.create_from_nongraph_peak_collection(graph,
-                                                                          nongraphpeaks,
-                                                                          self.linear_path,
-                                                                          graph_region=LinearRegion("chr6", 28510119, 33480577))
+        self.peaks2 = PeakCollection.create_from_nongraph_peak_collection(
+            graph,
+            nongraphpeaks,
+            self.linear_path,
+            graph_region=LinearRegion("chr6", 28510119, 33480577))
 
+
+        self.peaks1_not_in_peaks2 = []
+        self.peaks2_not_in_peaks1 = []
         self.run_all_analysis()
 
     def run_all_analysis(self):
-        pass
+        self.check_similarity()
+        self.check_non_matching_for_motif_hits()
+
+    def check_non_matching_for_motif_hits(self):
+        print("\n--- Checking peaks that are not in other set for motif hits --- ")
+        i = 1
+        for not_matching in [self.peaks1_not_in_peaks2, self.peaks2_not_in_peaks1]:
+            if i == 1:
+                print("Graph peaks")
+                matching_motif = self.graph_matching_motif
+            else:
+                print("Linear peaks")
+                matching_motif = self.linear_matching_motif
+
+            n = self.count_matching_motif(matching_motif, not_matching)
+            print("N matching motif: %d" % n)
+            i += 1
+
+    def count_matching_motif(self, matching_motif_ids, peak_list):
+        n = 0
+        for peak in peak_list:
+            print(peak.unique_id)
+            assert peak.unique_id is not None
+            if peak.unique_id in matching_motif_ids:
+                n += 1
+        return n
 
     def _get_peaks_matching_motif(self, fimo_file_name):
-        matches = []
+        matches = set()
         f = open(fimo_file_name)
         for line in f:
             l = line.split()
             sequence_id = l[2]
-            matches.append(sequence_id)
+            matches.add(sequence_id)
         f.close()
         return matches
 
@@ -128,22 +162,22 @@ class PeaksComparerV2(object):
             matching = []
             counter = 0
             for peak in sorted(peaks1, key=lambda x: x.score, reverse=True)[0:analyse_first_n_peaks]:
+                assert peak.unique_id is not None
                 counter += 1
                 if peaks2.contains_interval(peak):
-                    #print(counter, peak.score, "\t", 1, peak.start_position)
                     n_identical += 1
 
                 similar_intervals = peaks2.get_overlapping_intervals(peak, 50)
                 if len(similar_intervals) > 0:
                     n_similar += 1
                     tot_n_similar += len(similar_intervals)
-                    print(counter, peak.score, peak.start_position)
                     matching.append(peak)
-                    #for j in similar_intervals:
-                    #    print("\t", j.score, j.start_position)
                 else:
                     not_matching.append(peak)
-                    print(peak, "\t", 0)
+                    if i == 1:
+                        self.peaks1_not_in_peaks2.append(peak)
+                    else:
+                        self.peaks2_not_in_peaks1.append(peak)
 
                 n_tot += 1
 
@@ -296,7 +330,6 @@ class PeaksComparer(object):
             for peak in sorted(peaks1, key=lambda x: x.score, reverse=True)[0:analyse_first_n_peaks]:
                 counter += 1
                 if peaks2.contains_interval(peak):
-                    #print(counter, peak.score, "\t", 1, peak.start_position)
                     n_identical += 1
 
                 similar_intervals = peaks2.get_overlapping_intervals(peak, 50)
@@ -305,8 +338,6 @@ class PeaksComparer(object):
                     tot_n_similar += len(similar_intervals)
                     print(counter, peak.score, peak.start_position)
                     matching.append(peak)
-                    #for j in similar_intervals:
-                    #    print("\t", j.score, j.start_position)
                 else:
                     not_matching.append(peak)
                     print(peak, "\t", 0)

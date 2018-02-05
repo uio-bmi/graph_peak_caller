@@ -117,13 +117,12 @@ class NonGraphPeakCollection(object):
                 break
 
             header = header.split(maxsplit=1)
-            id = header[0]
+            id = header[0].replace(">", "")
             interval_json = header[1]
-            print("Interval json: %s" % interval_json)
             peak = NonGraphPeak.from_file_line(interval_json)
             peak.unique_id = id
+            assert peak.unique_id is not None
             peak.sequence = sequence
-
             peaks.append(peak)
 
         return cls(peaks)

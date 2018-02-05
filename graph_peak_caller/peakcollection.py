@@ -124,8 +124,11 @@ class PeakCollection(obg.IntervalCollection):
             linear_interval.graph = ob_graph
             graph_peak = Peak.from_interval_and_score(
                 linear_interval, peak.score)
+            graph_peak.unique_id = peak.unique_id
             graph_peak.sequence = peak.sequence
             intervals_on_graph.append(graph_peak)
+
+        return cls(intervals_on_graph)
 
     @classmethod
     def create_from_linear_intervals_in_bed_file(
@@ -198,7 +201,7 @@ class PeakCollection(obg.IntervalCollection):
         return overlapping
 
     @classmethod
-    def from_fasta_file(cls, file_name):
+    def from_fasta_file(cls, file_name, graph=None):
         f = open(file_name)
         peaks = []
         while True:
@@ -208,13 +211,12 @@ class PeakCollection(obg.IntervalCollection):
                 break
 
             header = header.split(maxsplit=1)
-            id = header[0]
+            id = header[0].replace(">", "")
             interval_json = header[1]
-            print("Interval json: %s" % interval_json)
             peak = Peak.from_file_line(interval_json)
             peak.unique_id = id
             peak.sequence = sequence
-
+            peak.graph = graph
             peaks.append(peak)
 
         return cls(peaks)
