@@ -15,7 +15,6 @@ class LinearSnarlMap(object):
 
     @classmethod
     def from_snarl_graph(cls, snarl_graph, graph):
-        print(snarl_graph)
         length = snarl_graph.length()
         starts, ends = snarl_graph.get_distance_dicts()
         return cls(starts, ends, length, graph)
@@ -77,7 +76,6 @@ class LinearSnarlMap(object):
             j = 0
             for start, end in zip(indexes[:-1], indexes[1:]):
                 value = values[j]
-                #print("    Setting %d, %d, %d, %d" % (node_id, start, end, value))
                 pileup.data.set_values(node_id, start, end, value)
                 j += 1
 
@@ -152,7 +150,6 @@ class LinearSnarlMap(object):
             start, end = self.map_graph_interval(interval)
             starts.append(start)
             ends.append(end)
-            #print("Mapping interval %s to %d, %d" % (interval, start, end))
         return LinearIntervalCollection(starts, ends)
 
     def to_json_files(self, base_name):

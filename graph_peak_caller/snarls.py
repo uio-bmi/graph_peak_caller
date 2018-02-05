@@ -302,13 +302,11 @@ class SnarlGraphBuilder:
         # Add dummy start and end to graph
         new_start = self.id_counter
         new_end = new_start + 1
-        print("Added new end %d" % new_end)
 
         for block in self.graph.get_first_blocks():
             self.graph._add_edge(new_start, block)
 
         for block in self.graph.get_last_blocks():
-            print("Last block %d" % block)
             self.graph._add_edge(block, new_end)
 
         logging.info("%d snarls with 0 nodes" % n_zero_nodes)
