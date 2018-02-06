@@ -21,12 +21,14 @@ class Configuration:
                  graph_is_partially_ordered=False,
                  skip_read_validation=False,
                  save_tmp_results_to_file=False,
-                 p_val_cutoff=0.1):
+                 p_val_cutoff=0.1,
+                 use_global_min_value=None):
         self.skip_filter_duplicates = skip_filter_duplicates
         self.graph_is_partially_ordered = graph_is_partially_ordered
         self.skip_read_validation = skip_read_validation
         self.save_tmp_results_to_file = save_tmp_results_to_file
         self.p_val_cutoff = p_val_cutoff
+        self.use_global_min_value = use_global_min_value
 
     @classmethod
     def default(cls):

@@ -112,7 +112,7 @@ def run_callpeaks(ob_graph,
     experiment_info = ExperimentInfo(graph_size, fragment_length, read_length)
     config = Configuration(
         skip_read_validation=True, save_tmp_results_to_file=False,
-        skip_filter_duplicates=True, p_val_cutoff=0.05,
+        skip_filter_duplicates=False, p_val_cutoff=0.05,
         graph_is_partially_ordered=True)
 
     caller = CallPeaks.run_from_intervals(

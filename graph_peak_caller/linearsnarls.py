@@ -14,7 +14,8 @@ def create_control(linear_map_name, *args, **kwargs):
 
 
 def create_control_from_objs(linear_map, reads, extension_sizes,
-                             fragment_length, ob_graph=None, touched_nodes=None):
+                             fragment_length, ob_graph=None, touched_nodes=None,
+                             use_global_min_value=None):
     """
     :param snarl_graph: Hierarchical snarl graph
     """
@@ -28,6 +29,10 @@ def create_control_from_objs(linear_map, reads, extension_sizes,
     logging.info(
         "Average control value: %.4f (sum of pileup: %d, linear size: %d)" % (
             average_value, mapped_reads.n_basepairs_covered(), linear_size))
+
+    if use_global_min_value is not None:
+        average_value = use_global_min_value
+        logging.warning("Using global min value %.5f" % use_global_min_value)
 
     max_pileup = LinearPileup([0], [average_value])
     logging.info("Extending control reads with extension sizes: %s" %

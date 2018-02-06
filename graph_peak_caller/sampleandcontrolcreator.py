@@ -82,6 +82,7 @@ class SampleAndControlCreatorO(object):
         self.skip_filter_duplicates = skip_filter_duplicates
         self.skip_read_validation = skip_read_validation
         self.save_tmp_results_to_file = save_tmp_results_to_file
+        self.n_duplicates_found_sample = 0
 
         self.max_paths = None
         self.peaks_as_subgraphs = None
@@ -97,6 +98,11 @@ class SampleAndControlCreatorO(object):
             self.skip_read_validation = configuration.skip_read_validation
             self.save_tmp_results_to_file = configuration.save_tmp_results_to_file
 
+        self.config = configuration
+
+        if self.config.use_global_min_value is not None:
+            logging.info("Will use global min value %.4f when creating background signal" % self.config.use_global_min_value)
+            
         if self.skip_filter_duplicates:
             logging.warning("Not removing duplicates")
         else:
@@ -108,7 +114,7 @@ class SampleAndControlCreatorO(object):
             self.info = ExperimentInfo.find_info(
                 self.ob_graph, self.sample_intervals, self.control_intervals)
         self.create_sample_pileup()
-        self.create_control()
+        self.create_control(use_global_min_value=self.config.use_global_min_value)
         self.scale_tracks()
 
     def preprocess(self):
@@ -147,6 +153,8 @@ class SampleAndControlCreatorO(object):
                 hash = interval.hash()
                 if hash in interval_hashes:
                     n_duplicates += 1
+                    if not is_control:
+                        self.n_duplicates_found_sample += 1
                     continue
 
                 interval_hashes[hash] = True
@@ -346,6 +354,7 @@ class SampleAndControlCreator(SampleAndControlCreatorO):
             logging.info("Not saving sample pileup to files.")
 
         self._sample_pileup = pileup
+        logging.info("Found in total %d duplicate reads that were removed" % self.n_duplicates_found_sample)
 
         # Delete sample intervals
         self.sample_intervals = None
