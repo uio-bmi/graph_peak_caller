@@ -15,7 +15,7 @@ from graph_peak_caller.sparsepileup import SparsePileup
 from graph_peak_caller.snarls import SnarlGraphBuilder, SimpleSnarl
 from graph_peak_caller.linearsnarls import LinearSnarlMap
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
-from peakscomparer import PeaksComparer
+from graph_peak_caller.peakscomparer import PeaksComparer
 logging.basicConfig(level=logging.INFO)
 
 
