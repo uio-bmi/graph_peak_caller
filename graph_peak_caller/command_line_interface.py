@@ -344,13 +344,21 @@ def plot_motif_enrichment(args):
 
 def analyse_peaks(args):
     from graph_peak_caller.peakscomparer import PeaksComparerV2
+    from graph_peak_caller.analyse_peaks import LinearRegion
     graph = obg.GraphWithReversals.from_numpy_file(args.ob_graph_file_name)
+
+    end = int(args.graph_end)
+    if end == 0:
+        region = None
+    else:
+        region = LinearRegion(args.graph_chromosome, int(args.graph_start), end)
     analyser = PeaksComparerV2(graph,
                                args.vg_graph_file_name,
                                args.linear_peaks_fasta_file_name,
                                args.graph_peaks_fasta_file_name,
                                args.linear_peaks_fimo_results_file,
-                               args.graph_peaks_fimo_results_file)
+                               args.graph_peaks_fimo_results_file,
+                               region=region)
 
 
 
@@ -523,7 +531,10 @@ interface = \
                     ('linear_peaks_fasta_file_name', ''),
                     ('graph_peaks_fasta_file_name', ''),
                     ('linear_peaks_fimo_results_file', ''),
-                    ('graph_peaks_fimo_results_file', '')
+                    ('graph_peaks_fimo_results_file', ''),
+                    ('graph_chromosome', 'None if not relevant'),
+                    ('graph_start', 'Start pos in chromosome of graph.'),
+                    ('graph_end', 'End pos in chromosome of graph. 0 if covering whole chromosome')
                 ],
             'method': analyse_peaks
         }
