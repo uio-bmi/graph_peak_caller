@@ -112,7 +112,6 @@ class SparseDirectPileup:
         return pileup
 
 
-
 class Starts:
     def __init__(self, d):
         self._dict = d
