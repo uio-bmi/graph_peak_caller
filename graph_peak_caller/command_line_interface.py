@@ -342,6 +342,19 @@ def plot_motif_enrichment(args):
         run_fimo=args.run_fimo == "True"
     )
 
+def analyse_peaks(args):
+    from graph_peak_caller.peakscomparer import PeaksComparerV2
+    graph = obg.GraphWithReversals.from_numpy_file(args.ob_graph_file_name)
+    analyser = PeaksComparerV2(graph,
+                               args.vg_graph_file_name,
+                               args.linear_peaks_fasta_file_name,
+                               args.graph_peaks_fasta_file_name,
+                               args.linear_peaks_fimo_results_file,
+                               args.graph_peaks_fimo_results_file)
+
+
+
+
 
 interface = \
 {
@@ -499,8 +512,21 @@ interface = \
                     ('out_file_name', '')
                 ],
             'method': filter_reads_in_graph
+        },
+    'analyse_peaks':
+        {
+            'help': 'Analyse linear peaks and graph peaks.',
+            'arguments':
+                [
+                    ('ob_graph_file_name', ''),
+                    ('vg_graph_file_name', ''),
+                    ('linear_peaks_fasta_file_name', ''),
+                    ('graph_peaks_fasta_file_name', ''),
+                    ('linear_peaks_fimo_results_file', ''),
+                    ('graph_peaks_fimo_results_file', '')
+                ],
+            'method': analyse_peaks
         }
-
 }
 
 

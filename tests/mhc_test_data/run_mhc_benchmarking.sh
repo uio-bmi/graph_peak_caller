@@ -15,4 +15,7 @@ fimo -oc fimo_macs_sequences MA0139.1.meme macs_sequences.fasta
 # Motif enrichment
 graph_peak_caller plot_motif_enrichment test_sequences.fasta macs_sequences.fasta MA0139.1.meme plot.png True
 
+# graph_peak_caller analyse_peaks graph.obg haplo1kg50-mhc.json macs_sequences_chr6.fasta test_sequences.fasta fimo_test_sequences/fimo.txt fimo_macs_sequences/fimo.txt
+
+
 #ls plot.png
