@@ -1,4 +1,3 @@
-import pyBigWig
 import numpy as np
 import pybedtools
 from pybedtools import BedTool
