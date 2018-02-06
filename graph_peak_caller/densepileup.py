@@ -169,7 +169,7 @@ class DensePileupData:
         # changes = np.nonzero(np.ediff1d(is_value))[0]+1
         if self._values[start] == value:
             if self._values[end-1] == value:
-                return [0]+list(changes)+[end-start]
+                return [0] + list(changes)+[end-start]
             return [0]+list(changes)
         if self._values[end-1]:
             return list(changes)+[end-start]
@@ -237,18 +237,17 @@ class DensePileupData:
 
         values = np.zeros(interval.length())
         offset = 0
-        """
-        find_reversed = False
-        use_interval = interval
+        # find_reversed = False
+        # use_interval = interval
 
-        if np.all([rp < 0 for rp in interval.region_paths]):
+        if all([rp < 0 for rp in interval.region_paths]):
             # Reverse before finding
-            find_reversed = True
-            use_interval = interval.get_reverse()
-        else:
-            assert np.all([rp > 0 for rp in interval.region_paths]), \
-                "This method only supports intervals with single rp direction"
-        """
+            # find_reversed = True
+            interval = interval.get_reverse()
+        # else:
+            # assert all([rp > 0 for rp in interval.region_paths]), \
+            #     "This method only supports intervals with single rp direction"
+
         for i, rp in enumerate(interval.region_paths):
             assert rp > 0, "Currently only implemented for forward directed intervals"
             start = 0
@@ -402,13 +401,16 @@ class DensePileup(Pileup):
         logging.info("Finding valued areas equal to %d" % value)
         changes = np.diff(self.data._values == value)
         if value:
-            return SparseAreasDict({node_id: self.data.find_valued_areas(node_id, value, changes)
-                               for node_id in self.data._graph.blocks
-                                }, graph=self.graph)
+            return SparseAreasDict({
+                node_id: self.data.find_valued_areas(node_id, value, changes)
+                for node_id in self.data._graph.blocks
+            }, graph=self.graph)
         else:
-            return SparseAreasDict({node_id: self.data.find_valued_areas(node_id, value, changes)
-                                   for node_id in self.data._touched_nodes
-                                    }, graph=self.graph)
+            return SparseAreasDict(
+                {node_id: self.data.find_valued_areas(node_id, value, changes)
+                 for node_id in self.data._touched_nodes},
+                graph=self.graph)
+
     @classmethod
     def from_intervals(cls, graph, intervals):
         starts, ends = intervals_to_start_and_ends(graph, intervals)
