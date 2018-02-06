@@ -4,6 +4,7 @@ from .extender import Extender
 import offsetbasedgraph as obg
 import logging
 
+
 class DagHoleCleaner(object):
     """
     Efficient Hole cleaner for DensePileup on Directed Acyclic Graph
@@ -28,7 +29,8 @@ class DagHoleCleaner(object):
         explicitly checking all node starts
         """
         logging.info("Getting left side of holes")
-        node_lengths = [self.pileup.data.node_size(node) for node in self.pileup.data._nodes[0:-1]]
+        node_lengths = [self.pileup.data.node_size(node)
+                        for node in self.pileup.data._nodes[0:-1]]
         start_node_indices = np.cumsum(node_lengths)
         diffs = np.diff(self.pileup.data._values * 1)
 
@@ -36,17 +38,20 @@ class DagHoleCleaner(object):
             diffs[start_node_indices-1] = 0  # Ignore start of nodes here, we cannot be sure they are holes
 
         left_hole_indices = np.where(diffs == -1)[0] + 1
-        positions = self.pileup.data.value_indexes_to_nodes_and_offsets(left_hole_indices)
+        positions = self.pileup.data.value_indexes_to_nodes_and_offsets(
+            left_hole_indices)
 
         # Check all node starts
         logging.info("Adding node starts")
-        is_hole = set(np.where(self.pileup.data._values == False)[0])
+        is_hole = set(
+            np.where(self.pileup.data._values == False)[0])
         logging.info("Step 1 done")
         is_hole_and_start = is_hole.intersection(set(start_node_indices))
         logging.info("Step 2 done")
         is_hole_and_start = sorted(list(is_hole_and_start))
         logging.info("Step 3 done")
-        start_positions = self.pileup.data.value_indexes_to_nodes_and_offsets(is_hole_and_start)
+        start_positions = self.pileup.data.value_indexes_to_nodes_and_offsets(
+            is_hole_and_start)
 
         logging.info("Going through each start")
         for start_position in start_positions:
@@ -79,7 +84,8 @@ class DagHoleCleaner(object):
 
             node = position[0]
             offset = position[1]
-            interval = obg.DirectedInterval(int(offset), int(offset) + 1, [node])
+            interval = obg.DirectedInterval(
+                int(offset), int(offset) + 1, [node])
             areas = extender.extend_interval(interval)
             self.pileup.set_area_to_value(areas, True)
 

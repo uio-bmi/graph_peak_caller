@@ -204,7 +204,7 @@ class CallPeaksFromQvalues(object):
                 self.info.fragment_length)
             logging.info("Small peaks removed")
 
-    def trim_max_path_intervals(self, intervals, end_to_trim=-1):
+    def trim_max_path_intervals(self, intervals, end_to_trim=-1, trim_raw=False):
         # Right trim max path intervals, remove right end where q values are 0
         # If last base pair in interval has 0 in p-value, remove hole size
         logging.info("Trimming max path intervals. End: %d" % end_to_trim)
@@ -219,8 +219,11 @@ class CallPeaksFromQvalues(object):
                 assert np.all([rp > 0 for rp in interval.region_paths]), \
                 "This method only supports intervals with single rp direction"
 
-            pileup_values = self.q_values.data.get_interval_values(use_interval)
-            pileup_values = 1 * (pileup_values >= -np.log10(self.cutoff))
+            if not trim_raw:
+                pileup_values = self.q_values.data.get_interval_values(use_interval)
+                pileup_values = 1 * (pileup_values >= -np.log10(self.cutoff))
+            else:
+                pileup_values = self.raw_pileup.data.get_interval_values(use_interval)
             assert len(pileup_values) == use_interval.length()
 
             if end_to_trim == 1:
@@ -228,7 +231,6 @@ class CallPeaksFromQvalues(object):
 
             cumsum = np.cumsum(pileup_values)
             n_zeros_beginning = np.sum(cumsum == 0)
-
 
             if n_zeros_beginning == use_interval.length():
                 logging.warning("Trimming interval of length %d with %d bp"
@@ -268,18 +270,23 @@ class CallPeaksFromQvalues(object):
             _pileup = DirectPileup.from_file(
                 self.graph,
                 self.out_file_base_name+"direct_pileup")
+            self.raw_pileup = _pileup
         else:
             _pileup = self.q_values
         # _pileup = self.raw_pileup if self.raw_pileup is not None else self.q_values
         scored_peaks = (ScoredPeak.from_peak_and_numpy_pileup(peak, _pileup)
                         for peak in self.binary_peaks)
         max_paths = [peak.get_max_path() for peak in scored_peaks]
-
+        max_paths = [max_path for max_path in max_paths
+                     if max_path is not None]
         max_paths.sort(key=lambda p: p.score, reverse=True)
 
         if isinstance(self.q_values, DensePileup):
             max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1)
             max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1)
+        if not self.q_values_max_path:
+            max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1, trim_raw=True)
+            max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1, trim_raw=True)
 
         file_name = self.out_file_base_name + "max_paths.intervalcollection"
         PeakCollection(max_paths).to_file(
