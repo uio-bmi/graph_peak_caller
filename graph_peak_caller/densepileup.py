@@ -27,7 +27,12 @@ class DensePileupData:
 
     def _create_empty(self, ndim=1, base_value=0):
         logging.info("Sorting nodes")
+        #if isinstance(self._graph.blocks, BlockArray):
+        #    self._nodes = self._graph.blocks.get_sorted_node_ids()
+        #    logging.info("Used direct method to get sorted nodes")
+        #else:
         self._nodes = sorted(self._graph.blocks.keys())
+
         sorted_nodes = self._nodes
         self.min_node = sorted_nodes[0]
         max_node = sorted_nodes[-1]
