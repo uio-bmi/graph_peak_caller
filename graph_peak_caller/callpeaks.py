@@ -279,8 +279,10 @@ class CallPeaksFromQvalues(object):
         max_paths = [peak.get_max_path() for peak in scored_peaks]
         max_paths = [max_path for max_path in max_paths
                      if max_path is not None]
+        for max_path in max_paths:
+            max_path.set_score(np.max(
+                self.q_values.data.get_interval_values(max_path)))
         max_paths.sort(key=lambda p: p.score, reverse=True)
-
         if isinstance(self.q_values, DensePileup):
             max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1)
             max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1)
@@ -289,6 +291,7 @@ class CallPeaksFromQvalues(object):
             max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1, trim_raw=True)
 
         file_name = self.out_file_base_name + "max_paths.intervalcollection"
+        
         PeakCollection(max_paths).to_file(
             file_name,
             text_file=True)
