@@ -170,7 +170,7 @@ class DensePileupData:
         if self._values[start] == value:
             if self._values[end-1] == value:
                 return [0] + list(changes)+[end-start]
-            return [0]+list(changes)
+            return [0] + list(changes)
         if self._values[end-1]:
             return list(changes)+[end-start]
         return list(changes)
@@ -400,6 +400,10 @@ class DensePileup(Pileup):
     def find_valued_areas(self, value):
         logging.info("Finding valued areas equal to %d" % value)
         changes = np.diff(self.data._values == value)
+        # start_values = self.data._values[
+        #     self.data._node_indexes[:-1]]
+        # end_values = self.data._values[
+        #     self.data._node_indexes[1:]-1]
         if value:
             return SparseAreasDict({
                 node_id: self.data.find_valued_areas(node_id, value, changes)
