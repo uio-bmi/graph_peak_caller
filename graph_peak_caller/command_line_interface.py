@@ -162,7 +162,7 @@ def count_unique_reads_interface(args):
     reads_file_names = [args.reads_base_name + chrom + ".json"
                         for chrom in chromosomes]
 
-    count_unique_reads_interface(chromosomes, graph_file_names,
+    count_unique_reads(chromosomes, graph_file_names,
                                   reads_file_names)
 
 
