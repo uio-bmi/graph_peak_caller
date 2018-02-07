@@ -44,6 +44,31 @@ class MultipleGraphsCallpeaks:
         #self.run()
 
     @classmethod
+    def count_number_of_unique_reads(cls, sample_reads):
+        n_unique = 0
+        for reads in sample_reads:
+            logging.info("Processing sample")
+
+            interval_hashes = {}
+            n_duplicates = 0
+            i = 0
+            for interval in reads.intervals:
+                if i % 500000 == 0:
+                    logging.info("%d reads processed" % i)
+                i += 1
+                hash = interval.hash()
+                if hash in interval_hashes:
+                    n_duplicates += 1
+                else:
+                    n_unique += 1
+                interval_hashes[hash] = True
+
+            print("Found %d duplicates" % n_duplicates)
+
+        logging.info("In total %d unique reads" % n_unique)
+        return n_unique
+
+    @classmethod
     def from_file_base_names(cls):
         # Create lists of names, graphs, sample, control linear maps
         pass
