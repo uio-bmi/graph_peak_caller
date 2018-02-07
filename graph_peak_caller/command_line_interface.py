@@ -156,18 +156,24 @@ def run_callpeaks_interface(args):
         linear_map_file_name=args.linear_map_base_name
     )
 
-def get_global_background_average(args):
+def get_global_background_average_interface(args):
     chromosomes = args.chromosomes.split(",")
     graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
     reads_file_names = [args.reads_base_name + chrom + ".json"
                         for chrom in chromosomes]
+
+    get_global_background_average(chromosomes, graph_file_names,
+                                  reads_file_names, int(args.genome_size))
+
+
+def get_global_background_average(chromosomes, graph_file_names, reads_file_names, genome_size):
 
     graphs = (obg.GraphWithReversals.from_numpy_file(f) for f in graph_file_names)
     reads = (vg_json_file_to_interval_collection(None, f, graph)
              for f, graph in zip(reads_file_names, graphs))
 
     unique_reads = MultipleGraphsCallpeaks.count_number_of_unique_reads(reads)
-    print(unique_reads / int(args.genome_size))
+    print(unique_reads / genome_size)
 
 
 def run_callpeaks_whole_genome(args):
@@ -562,7 +568,7 @@ interface = \
                     ('reads_base_name', 'Will use files *_[chromosome].json'),
                     ('genome_size', 'Total length of genome covered by graphs.')
                 ],
-            'method': get_global_background_average
+            'method': get_global_background_average_interface
         }
 }
 
