@@ -49,11 +49,11 @@ class MultipleGraphsCallpeaks:
         for reads in sample_reads:
             logging.info("Processing sample")
 
-            interval_hashes = {}
+            interval_hashes = set()
             n_duplicates = 0
             i = 0
             for interval in reads.intervals:
-                if i % 500000 == 0:
+                if i % 20000 == 0:
                     logging.info("%d reads processed" % i)
                 i += 1
                 hash = interval.hash()
@@ -61,7 +61,7 @@ class MultipleGraphsCallpeaks:
                     n_duplicates += 1
                 else:
                     n_unique += 1
-                interval_hashes[hash] = True
+                interval_hashes.add(hash)
 
             print("Found %d duplicates" % n_duplicates)
 

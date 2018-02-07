@@ -164,7 +164,7 @@ def get_global_background_average(args):
 
     graphs = (obg.GraphWithReversals.from_numpy_file(f) for f in graph_file_names)
     reads = (vg_json_file_to_interval_collection(None, f, graph)
-             for f, graph in zip(reads_file_names, graph_file_names))
+             for f, graph in zip(reads_file_names, graphs))
 
     unique_reads = MultipleGraphsCallpeaks.count_number_of_unique_reads(reads)
     print(unique_reads / int(args.genome_size))
