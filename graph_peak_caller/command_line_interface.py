@@ -156,24 +156,24 @@ def run_callpeaks_interface(args):
         linear_map_file_name=args.linear_map_base_name
     )
 
-def get_global_background_average_interface(args):
+def count_unique_reads_interface(args):
     chromosomes = args.chromosomes.split(",")
     graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
     reads_file_names = [args.reads_base_name + chrom + ".json"
                         for chrom in chromosomes]
 
-    get_global_background_average(chromosomes, graph_file_names,
-                                  reads_file_names, int(args.genome_size))
+    count_unique_reads_interface(chromosomes, graph_file_names,
+                                  reads_file_names)
 
 
-def get_global_background_average(chromosomes, graph_file_names, reads_file_names, genome_size):
+def count_unique_reads_interface(chromosomes, graph_file_names, reads_file_names):
 
     graphs = (obg.GraphWithReversals.from_numpy_file(f) for f in graph_file_names)
     reads = (vg_json_file_to_interval_collection(None, f, graph)
              for f, graph in zip(reads_file_names, graphs))
 
     unique_reads = MultipleGraphsCallpeaks.count_number_of_unique_reads(reads)
-    print(unique_reads / genome_size)
+    print(unique_reads)
 
 
 def run_callpeaks_whole_genome(args):
@@ -558,17 +558,16 @@ interface = \
                 ],
             'method': analyse_peaks
         },
-    'compute_whole_genome_background':
+    'count_unique_reads':
         {
-            'help': 'Compute average background signal in whole genome.',
+            'help': 'Count unique reads for whole genome set of read files.',
             'arguments':
                 [
                     ('chromosomes', 'Comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
                     ('graphs_location', 'Will use the graphs *_[chromosome]'),
-                    ('reads_base_name', 'Will use files *_[chromosome].json'),
-                    ('genome_size', 'Total length of genome covered by graphs.')
+                    ('reads_base_name', 'Will use files *_[chromosome].json')
                 ],
-            'method': get_global_background_average_interface
+            'method': count_unique_reads_interface
         }
 }
 
