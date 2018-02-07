@@ -288,9 +288,9 @@ class CallPeaksFromQvalues(object):
         if isinstance(self.q_values, DensePileup):
             max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1)
             max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1)
-        if not self.q_values_max_path:
-            max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1, trim_raw=True)
-            max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1, trim_raw=True)
+        #if not self.q_values_max_path:
+        #    max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1, trim_raw=True)
+        #    max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1, trim_raw=True)
 
         file_name = self.out_file_base_name + "max_paths.intervalcollection"
         
