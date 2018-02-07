@@ -167,7 +167,7 @@ def get_global_background_average(args):
              for f, graph in zip(reads_file_names, graph_file_names))
 
     unique_reads = MultipleGraphsCallpeaks.count_number_of_unique_reads(reads)
-    print(unique_reads)
+    print(unique_reads / int(args.genome_size))
 
 
 def run_callpeaks_whole_genome(args):
@@ -560,6 +560,7 @@ interface = \
                     ('chromosomes', 'Comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
                     ('graphs_location', 'Will use the graphs *_[chromosome]'),
                     ('reads_base_name', 'Will use files *_[chromosome].json'),
+                    ('genome_size', 'Total length of genome covered by graphs.')
                 ],
             'method': get_global_background_average
         }
