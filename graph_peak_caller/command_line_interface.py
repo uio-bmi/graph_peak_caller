@@ -190,6 +190,9 @@ def run_callpeaks_whole_genome(args):
                         for chrom in chromosomes]
 
 
+    min_background = int(args.unique_reads) * int(args.fragment_length) / int(args.genome_size)
+
+
     caller = MultipleGraphsCallpeaks(
         chromosomes,
         graph_file_names,
@@ -419,7 +422,9 @@ interface = \
                     ('with_control', 'True/False'),
                     ('fragment_length', ''),
                     ('read_length', ''),
-                    ('stop_after_p_values', 'True/False - whether to only run until p-value track is computed (before peak calling)')
+                    ('stop_after_p_values', 'True/False - whether to only run until p-value track is computed (before peak calling)'),
+                    ('unique_reads', 'Number of unique reads. Found by calling count_unique_reads'),
+                    ('genome_size', 'Number of base pairs covered by graphs in total (on a linear genome)')
                 ],
             'method': run_callpeaks_whole_genome
         },
