@@ -166,7 +166,7 @@ def count_unique_reads_interface(args):
                                   reads_file_names)
 
 
-def count_unique_reads_interface(chromosomes, graph_file_names, reads_file_names):
+def count_unique_reads(chromosomes, graph_file_names, reads_file_names):
 
     graphs = (obg.GraphWithReversals.from_numpy_file(f) for f in graph_file_names)
     reads = (vg_json_file_to_interval_collection(None, f, graph)
