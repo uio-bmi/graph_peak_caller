@@ -18,6 +18,8 @@ before_install:
 
     - sudo apt-get -y install macs
     - pip install nose
+    - pip install pytest-cov
+    - pip install codecov
     - pwd
     - ls
     - git clone https://github.com/uio-cels/OffsetBasedGraph.git
