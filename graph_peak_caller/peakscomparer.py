@@ -7,7 +7,7 @@ import pyvg
 
 class AnalysisResults:
     def __init__(self):
-        pass
+
 
 
 class PeaksComparerV2(object):
@@ -27,10 +27,6 @@ class PeaksComparerV2(object):
         self.graph_matching_motif = self._get_peaks_matching_motif(
             graph_peaks_fimo_results_file)
 
-        print("Motif matches")
-        print(self.linear_matching_motif)
-        print(self.graph_matching_motif)
-
         vg_graph = pyvg.vg.Graph.create_from_file(vg_json_file_name)
         self.linear_path = create_linear_path(graph, vg_graph)
         self.peaks1 = PeakCollection.from_fasta_file(self.graph_peaks_fasta_file_name,
@@ -44,6 +40,8 @@ class PeaksComparerV2(object):
             self.linear_path,
             graph_region=LinearRegion("chr6", 28510119, 33480577))
 
+
+        self.results = AnalysisResults()
 
         self.peaks1_not_in_peaks2 = []
         self.peaks2_not_in_peaks1 = []
@@ -113,19 +111,6 @@ class PeaksComparerV2(object):
 
         return same_pos
 
-    def compare_q_values_for_similar_peaks(self):
-
-        for peak in self.peaks1:
-            similar = self.peaks2.get_similar_intervals(
-                peak, allowed_mismatches=10)
-            if len(similar) > 0:
-                print("Found match(es) for %s" % peak)
-                for matched_peak in similar:
-                    print("   Match agsinst %s with scores %.3f, %.3f" %
-                          (matched_peak, peak.score, matched_peak.score))
-            else:
-                print("No match for peak %s" % peak)
-
     @classmethod
     def create_from_graph_peaks_and_linear_peaks(
             cls,
@@ -180,6 +165,9 @@ class PeaksComparerV2(object):
                         self.peaks2_not_in_peaks1.append(peak)
 
                 n_tot += 1
+
+            self.results.peaks1_not_in_peaks2 = len(self.peaks1_not_in_peaks2)
+            self.results.peaks2_not_in_peaks1 = len(self.peaks2_not_in_peaks1)
 
             not_matching = IntervalCollection(not_matching)
             not_matching.to_file("not_matching_set%d.intervals" % i, text_file=True)
