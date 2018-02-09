@@ -52,6 +52,7 @@ def get_linear_paths_in_graph(ob_graph, vg_graph, write_to_file_name=None):
         intervals[obg_interval.name] = obg_interval
 
     if write_to_file_name is not None:
+        logging.info("Writing linear path to %s" % write_to_file_name)
         collection = obg.IntervalCollection(intervals.values())
         collection.to_file(write_to_file_name, text_file=True)
 
@@ -158,9 +159,9 @@ def create_ob_graph_from_vg(vg_json_graph_file_name, ob_graph_file_name="graph.o
     logging.info("Wrote obgraph to %s" % ob_graph_file_name)
 
 
-def create_linear_path(ob_graph, vg_graph, path_name="ref"):
+def create_linear_path(ob_graph, vg_graph, path_name="ref", write_to_file="linear_path.intervalcollection"):
     assert ob_graph is not None
-    linear_paths = get_linear_paths_in_graph(ob_graph, vg_graph, "linear_maps")
+    linear_paths = get_linear_paths_in_graph(ob_graph, vg_graph, write_to_file_name=write_to_file)
     ref_path = linear_paths[path_name].to_indexed_interval()
     return ref_path
 

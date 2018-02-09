@@ -319,7 +319,7 @@ def concatenate_sequence_files(args):
 
     all_fasta_entries = []
     for chromosome in chromosomes:
-        logging.info("Processing chromosome %s" % chromosome)
+        print("Processing chromosome %s" % chromosome)
         fasta_file = open(chromosome + "_sequences.fasta")
         for line in fasta_file:
             if line.startswith(">"):
@@ -327,6 +327,7 @@ def concatenate_sequence_files(args):
             else:
                 # This is sequence, add to prev entry
                 all_fasta_entries[-1][1] = line
+        #fasta_file.close()
 
     peaks = []
     for fasta_entry in all_fasta_entries:
@@ -384,6 +385,21 @@ def analyse_peaks(args):
                                args.graph_peaks_fimo_results_file,
                                region=region)
 
+
+
+def analyse_manually_classified_peaks(args):
+    for chromosome in args.chromosomes.split():
+        graph_file_name = args.graphs_location + "/" + chromosome + ".nobg"
+        graph = obg.GraphWithReversals.from_numpy_file(graph_file_name)
+
+        from .manually_classified_peaks import CheckOverlapWithManuallyClassifiedPeaks
+        CheckOverlapWithManuallyClassifiedPeaks.from_graph_peaks_in_fasta(
+                graph,
+                args.graphs_location + "/" + chromosome  + ".json",
+                chromosome,
+                args.reads_base_name + chromosome + "_sequences.fasta",
+                args.regions_file,
+                args.manually_classified_peaks_file)
 
 
 
@@ -574,8 +590,23 @@ interface = \
                     ('reads_base_name', 'Will use files *_[chromosome].json')
                 ],
             'method': count_unique_reads_interface
+        },
+    'analyse_manually_classified_peaks':
+        {
+            'help': '',
+            'arguments':
+                [
+                    ('chromosomes', 'Comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
+                    ('graphs_location', 'Will use the graphs *_[chromosome]'),
+                    ('reads_base_name', 'Will use files *_[chromosome].json'),
+                    ('regions_file', ''),
+                    ('manually_classified_peaks_file', '')
+                ],
+            'method': analyse_manually_classified_peaks
         }
 }
+
+
 
 
 def create_argument_parser():
