@@ -49,7 +49,6 @@ class MotifMatcher():
         for peak in self.sorted_peaks:
             if peak in self.peaks_matching_motif:
                 n_matched += 1
-
             n_checked += 1
             true_positives.append(n_matched / n_checked)
 

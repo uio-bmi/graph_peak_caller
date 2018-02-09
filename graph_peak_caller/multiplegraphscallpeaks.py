@@ -20,13 +20,15 @@ class MultipleGraphsCallpeaks:
                  out_base_name="multigraphs_",
                  skip_filter_duplicates=False,
                  save_tmp_results_to_file=False,
-                 stop_after_p_values=False
+                 stop_after_p_values=False,
+                 min_background=None
                  ):
 
         self._config = Configuration(
             skip_read_validation=True, save_tmp_results_to_file=save_tmp_results_to_file,
             skip_filter_duplicates=skip_filter_duplicates, p_val_cutoff=0.05,
-            graph_is_partially_ordered=True)
+            graph_is_partially_ordered=True,
+            use_global_min_value=min_background)
         self.names = graph_names
         self.graph_file_names = graph_file_names
         self.fragment_length = fragment_length
@@ -41,6 +43,31 @@ class MultipleGraphsCallpeaks:
         if self.stop_after_p_values:
             logging.info("Will only run until p-values have been computed.")
         #self.run()
+
+    @classmethod
+    def count_number_of_unique_reads(cls, sample_reads):
+        n_unique = 0
+        for reads in sample_reads:
+            logging.info("Processing sample")
+
+            interval_hashes = set()
+            n_duplicates = 0
+            i = 0
+            for interval in reads.intervals:
+                if i % 20000 == 0:
+                    logging.info("%d reads processed" % i)
+                i += 1
+                hash = interval.hash()
+                if hash in interval_hashes:
+                    n_duplicates += 1
+                else:
+                    n_unique += 1
+                interval_hashes.add(hash)
+
+            print("Found %d duplicates" % n_duplicates)
+
+        logging.info("In total %d unique reads" % n_unique)
+        return n_unique
 
     @classmethod
     def from_file_base_names(cls):

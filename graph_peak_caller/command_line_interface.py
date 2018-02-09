@@ -112,7 +112,7 @@ def run_callpeaks(ob_graph,
     experiment_info = ExperimentInfo(graph_size, fragment_length, read_length)
     config = Configuration(
         skip_read_validation=True, save_tmp_results_to_file=False,
-        skip_filter_duplicates=True, p_val_cutoff=0.05,
+        skip_filter_duplicates=False, p_val_cutoff=0.05,
         graph_is_partially_ordered=True)
 
     caller = CallPeaks.run_from_intervals(
@@ -156,6 +156,25 @@ def run_callpeaks_interface(args):
         linear_map_file_name=args.linear_map_base_name
     )
 
+def count_unique_reads_interface(args):
+    chromosomes = args.chromosomes.split(",")
+    graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
+    reads_file_names = [args.reads_base_name + chrom + ".json"
+                        for chrom in chromosomes]
+
+    count_unique_reads(chromosomes, graph_file_names,
+                                  reads_file_names)
+
+
+def count_unique_reads(chromosomes, graph_file_names, reads_file_names):
+
+    graphs = (obg.GraphWithReversals.from_numpy_file(f) for f in graph_file_names)
+    reads = (vg_json_file_to_interval_collection(None, f, graph)
+             for f, graph in zip(reads_file_names, graphs))
+
+    unique_reads = MultipleGraphsCallpeaks.count_number_of_unique_reads(reads)
+    print(unique_reads)
+
 
 def run_callpeaks_whole_genome(args):
     logging.info("Running whole genome.")
@@ -170,6 +189,10 @@ def run_callpeaks_whole_genome(args):
     control_file_names = [args.sample_reads_base_name + chrom + ".json"
                         for chrom in chromosomes]
 
+
+    min_background = int(args.unique_reads) * int(args.fragment_length) / int(args.genome_size)
+    logging.info("Computed min background signal to be %.3f" % min_background)
+
     caller = MultipleGraphsCallpeaks(
         chromosomes,
         graph_file_names,
@@ -181,7 +204,8 @@ def run_callpeaks_whole_genome(args):
         has_control=args.with_control=="True",
         sequence_retrievers=sequence_retrievers,
         out_base_name=args.out_base_name,
-        stop_after_p_values=args.stop_after_p_values == "True"
+        stop_after_p_values=args.stop_after_p_values == "True",
+        min_background=min_background
     )
     caller.run()
 
@@ -344,13 +368,21 @@ def plot_motif_enrichment(args):
 
 def analyse_peaks(args):
     from graph_peak_caller.peakscomparer import PeaksComparerV2
+    from graph_peak_caller.analyse_peaks import LinearRegion
     graph = obg.GraphWithReversals.from_numpy_file(args.ob_graph_file_name)
+
+    end = int(args.graph_end)
+    if end == 0:
+        region = None
+    else:
+        region = LinearRegion(args.graph_chromosome, int(args.graph_start), end)
     analyser = PeaksComparerV2(graph,
                                args.vg_graph_file_name,
                                args.linear_peaks_fasta_file_name,
                                args.graph_peaks_fasta_file_name,
                                args.linear_peaks_fimo_results_file,
-                               args.graph_peaks_fimo_results_file)
+                               args.graph_peaks_fimo_results_file,
+                               region=region)
 
 
 
@@ -391,7 +423,9 @@ interface = \
                     ('with_control', 'True/False'),
                     ('fragment_length', ''),
                     ('read_length', ''),
-                    ('stop_after_p_values', 'True/False - whether to only run until p-value track is computed (before peak calling)')
+                    ('stop_after_p_values', 'True/False - whether to only run until p-value track is computed (before peak calling)'),
+                    ('unique_reads', 'Number of unique reads. Found by calling count_unique_reads'),
+                    ('genome_size', 'Number of base pairs covered by graphs in total (on a linear genome)')
                 ],
             'method': run_callpeaks_whole_genome
         },
@@ -523,9 +557,23 @@ interface = \
                     ('linear_peaks_fasta_file_name', ''),
                     ('graph_peaks_fasta_file_name', ''),
                     ('linear_peaks_fimo_results_file', ''),
-                    ('graph_peaks_fimo_results_file', '')
+                    ('graph_peaks_fimo_results_file', ''),
+                    ('graph_chromosome', 'None if not relevant'),
+                    ('graph_start', 'Start pos in chromosome of graph.'),
+                    ('graph_end', 'End pos in chromosome of graph. 0 if covering whole chromosome')
                 ],
             'method': analyse_peaks
+        },
+    'count_unique_reads':
+        {
+            'help': 'Count unique reads for whole genome set of read files.',
+            'arguments':
+                [
+                    ('chromosomes', 'Comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
+                    ('graphs_location', 'Will use the graphs *_[chromosome]'),
+                    ('reads_base_name', 'Will use files *_[chromosome].json')
+                ],
+            'method': count_unique_reads_interface
         }
 }
 

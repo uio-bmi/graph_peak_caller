@@ -16,7 +16,8 @@ class PeaksComparerV2(object):
                  linear_peaks_fasta_file_name,
                  graph_peaks_fasta_file_name,
                  linear_peaks_fimo_results_file,
-                 graph_peaks_fimo_results_file):
+                 graph_peaks_fimo_results_file,
+                 region=None):
 
         self.graph = graph
         self.graph_peaks_fasta_file_name = graph_peaks_fasta_file_name
@@ -33,12 +34,14 @@ class PeaksComparerV2(object):
                                                      graph)
 
         nongraphpeaks = NonGraphPeakCollection.from_fasta(self.linear_peaks_fasta_file_name)
-        nongraphpeaks.filter_peaks_outside_region("chr6", 28510119, 33480577)
+
+        if region is not None:
+            nongraphpeaks.filter_peaks_outside_region(region.chrom, region.start, region.end)
         self.peaks2 = PeakCollection.create_from_nongraph_peak_collection(
             graph,
             nongraphpeaks,
             self.linear_path,
-            graph_region=LinearRegion("chr6", 28510119, 33480577))
+            graph_region=region)
 
 
         self.results = AnalysisResults()

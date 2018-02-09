@@ -1,4 +1,5 @@
 from collections import deque, defaultdict
+import logging
 import numpy as np
 from .peakcollection import Peak
 from .sparsepileupv2 import RpScore
@@ -88,6 +89,18 @@ class ScoredPeak(object):
             if sum_value == np.inf:
                 sums[node_id] = max_finite_value+1
 
+    def clean_path(self, path, sums):
+        if sums[-(path.region_paths[0])]:
+            return path
+        for i, region_path in enumerate(path.region_paths[1:]):
+            if sums[region_path]:
+                offset = np.nonzero(self._scores[region_path])[0][0]
+                p = Peak(
+                    offset, path.end_position.offset,
+                    path.region_paths[i+1:], graph=self._graph)
+                p.set_score(path.score)
+                return p
+
     def get_max_path(self):
         sums = {node_id: float(scores.sum()) for node_id, scores
                 in self._scores.items()}
@@ -113,11 +126,16 @@ class ScoredPeak(object):
         start_values = [sums[-node_id] if (-node_id in self._peak.starts)
                         else sums[abs(node_id)]
                         for node_id in ends]
-        memo = defaultdict(int)
+
+        memo = defaultdict(lambda: -1)
         stack = deque(zip([[e] for e in ends], start_values))
-        assert any(v > 0 for v in start_values), "Peak has only start values 0: %s \n Sums: %s" % (self._peak, sums)
+        if not any(sums.values()):
+            logging.warning(
+                "Peak has only values 0: %s",
+                self._peak)
+            return None
         assert stack, str(self._peak)
-        global_max = 0
+        global_max = -1
         global_max_path = None
         while stack:
             node_ids, value = stack.popleft()
@@ -161,7 +179,6 @@ class ScoredPeak(object):
         max_path_peak = Peak(
             int(start_offset), int(end_offset),
             global_max_path, graph=self._graph)
-
 
         score = max_score_in_peak  # global_max / max_path_peak.length()
         # score = global_max / max_path_peak.length()

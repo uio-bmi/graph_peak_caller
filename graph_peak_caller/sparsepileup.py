@@ -372,6 +372,14 @@ class SparsePileupData(dict):
         return ((key, self.__getitem__(key)) for key in self.graph.blocks)
 
 
+class NpSparseAreasDict(dict):
+    def __init__(self, diffs, changes):
+        self._diffs = diffs
+        self._changes = changes
+
+    def __getitem__(self, item):
+        pass
+
 class SparseAreasDict(dict):
     """
     Used as return object in SparsePileup.get_valued_areas() to speedup.
