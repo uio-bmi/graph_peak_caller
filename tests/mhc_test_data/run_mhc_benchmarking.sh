@@ -10,12 +10,12 @@ graph_peak_caller callpeaks graph.nobg haplo1kg50-mhc.vg linear_map reads.json r
 
 # Run fimo
 fimo -oc fimo_test_sequences MA0139.1.meme test_sequences.fasta
-fimo -oc fimo_macs_sequences MA0139.1.meme macs_sequences.fasta
+fimo -oc fimo_macs_sequences MA0139.1.meme macs_sequences_mhc.fasta
 
 # Motif enrichment
-graph_peak_caller plot_motif_enrichment test_sequences.fasta macs_sequences.fasta MA0139.1.meme plot.png True
+graph_peak_caller plot_motif_enrichment test_sequences.fasta macs_sequences_mhc.fasta MA0139.1.meme plot.png True
 
-# graph_peak_caller analyse_peaks graph.obg haplo1kg50-mhc.json macs_sequences_chr6.fasta test_sequences.fasta fimo_test_sequences/fimo.txt fimo_macs_sequences/fimo.txt chr6 28510119 33480577
+# graph_peak_caller analyse_peaks graph.obg haplo1kg50-mhc.json macs_sequences_mhc.fasta test_sequences.fasta fimo_test_sequences/fimo.txt fimo_macs_sequences_mhc/fimo.txt chr6 28510119 33480577
 
 
 #ls plot.png

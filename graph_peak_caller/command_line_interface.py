@@ -383,6 +383,7 @@ def analyse_peaks(args):
                                args.graph_peaks_fasta_file_name,
                                args.linear_peaks_fimo_results_file,
                                args.graph_peaks_fimo_results_file,
+                               linear_path_name=args.linear_path_name,
                                region=region)
 
 
@@ -574,6 +575,7 @@ interface = \
                     ('graph_peaks_fasta_file_name', ''),
                     ('linear_peaks_fimo_results_file', ''),
                     ('graph_peaks_fimo_results_file', ''),
+                    ('linear_path_name', 'Ref of chromosome name. Used to find path in vg json file'),
                     ('graph_chromosome', 'None if not relevant'),
                     ('graph_start', 'Start pos in chromosome of graph.'),
                     ('graph_end', 'End pos in chromosome of graph. 0 if covering whole chromosome')

@@ -1,13 +1,24 @@
 from graph_peak_caller.peakcollection import PeakCollection
 from graph_peak_caller.nongraphpeaks import NonGraphPeakCollection
 from offsetbasedgraph import IntervalCollection
-from .analyse_peaks import create_linear_path, LinearRegion
+from graph_peak_caller.util import create_linear_path
 import pyvg
+import logging
 
 
 class AnalysisResults:
     def __init__(self):
+        pass
 
+    def __repr__(self):
+        out = " ------- RESULTS ----- \n"
+        return out
+
+    def __str__(self):
+        return self.__repr__()
+
+
+# $ graph_peak_caller analyse_peaks graph.nobg haplo1kg50-mhc.json  macs_sequences_mhc.fasta test_sequences.fasta  fimo_macs_sequences/fimo.txt fimo_test_sequences/fimo.txt chr6 28510119 33480577
 
 
 class PeaksComparerV2(object):
@@ -17,7 +28,8 @@ class PeaksComparerV2(object):
                  graph_peaks_fasta_file_name,
                  linear_peaks_fimo_results_file,
                  graph_peaks_fimo_results_file,
-                 region=None):
+                 region=None,
+                 linear_path_name="ref"):
 
         self.graph = graph
         self.graph_peaks_fasta_file_name = graph_peaks_fasta_file_name
@@ -28,24 +40,43 @@ class PeaksComparerV2(object):
         self.graph_matching_motif = self._get_peaks_matching_motif(
             graph_peaks_fimo_results_file)
 
-        vg_graph = pyvg.vg.Graph.create_from_file(vg_json_file_name)
-        self.linear_path = create_linear_path(graph, vg_graph)
+
+        linear_path_file = "linear_path_%s.intervalcollection" % linear_path_name
+        try:
+            linear_path = IntervalCollection.create_list_from_file(linear_path_file, graph=graph).intervals[0]
+            self.linear_path = linear_path.to_indexed_interval()
+        except FileNotFoundError:
+            vg_graph = pyvg.vg.Graph.create_from_file(vg_json_file_name)
+            self.linear_path = create_linear_path(graph, vg_graph, path_name=linear_path_name, write_to_file=linear_path_file)
+
+        logging.info("Length of linear path: %d" % self.linear_path.length())
+
         self.peaks1 = PeakCollection.from_fasta_file(self.graph_peaks_fasta_file_name,
                                                      graph)
+
+        self.peaks1.create_node_index()
 
         nongraphpeaks = NonGraphPeakCollection.from_fasta(self.linear_peaks_fasta_file_name)
 
         if region is not None:
-            nongraphpeaks.filter_peaks_outside_region(region.chrom, region.start, region.end)
+            nongraphpeaks.filter_peaks_outside_region(region.chromosome, region.start, region.end)
+        else:
+            logging.info("Graph region is None")
+
         self.peaks2 = PeakCollection.create_from_nongraph_peak_collection(
             graph,
             nongraphpeaks,
             self.linear_path,
             graph_region=region)
 
+        print("%d linear peaks converted to graph" % len(self.peaks2.intervals))
+
+        self.peaks2.create_node_index()
 
         self.results = AnalysisResults()
 
+        self.peaks1_in_peaks2 = []
+        self.peaks2_in_peaks1 = []
         self.peaks1_not_in_peaks2 = []
         self.peaks2_not_in_peaks1 = []
         self.run_all_analysis()
@@ -53,6 +84,30 @@ class PeaksComparerV2(object):
     def run_all_analysis(self):
         self.check_similarity()
         self.check_non_matching_for_motif_hits()
+        self.check_matching_for_motif_hits()
+
+        print(self.results)
+
+    def check_matching_for_motif_hits(self):
+        print("\n--- Checking peaks matching for motif hits --- ")
+        i = 1
+        for matching in [self.peaks1_in_peaks2, self.peaks2_in_peaks1]:
+            if i == 1:
+                print("Checking graph peaks, in total %d in other set" % len(matching))
+                matching_motif = self.graph_matching_motif
+            else:
+                print("Checking linear peaks, in total %d in other set" % len(matching))
+                matching_motif = self.linear_matching_motif
+
+            n = self.count_matching_motif(matching_motif, matching)
+            print("Found n peaks that matches motif: %d" % n)
+
+            if i == 1:
+                self.results.peaks1_in_peaks2_matching_motif = n
+            else:
+                self.results.peaks2_in_peaks2_matching_motif = n
+
+            i += 1
 
     def check_non_matching_for_motif_hits(self):
         print("\n--- Checking peaks that are not in other set for motif hits --- ")
@@ -67,12 +122,17 @@ class PeaksComparerV2(object):
 
             n = self.count_matching_motif(matching_motif, not_matching)
             print("N matching motif: %d" % n)
+
+            if i == 1:
+                self.results.peaks1_not_in_peaks2_matching_motif = n
+            else:
+                self.results.peaks2_not_in_peaks2_matching_motif = n
+
             i += 1
 
     def count_matching_motif(self, matching_motif_ids, peak_list):
         n = 0
         for peak in peak_list:
-            print(peak.unique_id)
             assert peak.unique_id is not None
             if peak.unique_id in matching_motif_ids:
                 n += 1
@@ -135,7 +195,7 @@ class PeaksComparerV2(object):
                                  graph_peaks_file_name)
         return comparer
 
-    def check_similarity(self, analyse_first_n_peaks=250):
+    def check_similarity(self, analyse_first_n_peaks=10000000):
         i = 1
         for peak_datasets in [(self.peaks1, self.peaks2),
                               (self.peaks2, self.peaks1)]:
@@ -152,13 +212,23 @@ class PeaksComparerV2(object):
             for peak in sorted(peaks1, key=lambda x: x.score, reverse=True)[0:analyse_first_n_peaks]:
                 assert peak.unique_id is not None
                 counter += 1
-                if peaks2.contains_interval(peak):
-                    n_identical += 1
+                #if peaks2.contains_interval(peak):
+                #    n_identical += 1
 
-                similar_intervals = peaks2.get_overlapping_intervals(peak, 50)
-                if len(similar_intervals) > 0:
+                if counter % 500 == 0:
+                    logging.info("Checked %d peaks" % counter)
+
+
+                #similar_intervals = peaks2.get_overlapping_intervals(peak, 50)
+                #print("Peak %s is overlapping with %d other peaks" % (peak.unique_id, len(similar_intervals)))
+                #if len(similar_intervals) > 0:
+                if peaks2.approx_contains_part_of_interval(peak):
                     n_similar += 1
-                    tot_n_similar += len(similar_intervals)
+                    if i == 1:
+                        self.peaks1_in_peaks2.append(peak)
+                    else:
+                        self.peaks2_in_peaks1.append(peak)
+
                     matching.append(peak)
                 else:
                     not_matching.append(peak)
@@ -178,7 +248,6 @@ class PeaksComparerV2(object):
             matching.to_file("matching_set%d.intervals" % i, text_file=True)
 
             print("Total peaks in main set: %d" % n_tot)
-            print("N identical to peak in other set: %d " % n_identical)
             print("N similar to peak in other set: %d " % n_similar)
             print("Total number of similar hits (counting all hits for each peaks): %d " % tot_n_similar)
 

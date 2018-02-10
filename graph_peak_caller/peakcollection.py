@@ -2,6 +2,7 @@ import json
 import offsetbasedgraph as obg
 from pybedtools import BedTool
 import logging
+from collections import defaultdict
 from offsetbasedgraph import DirectedInterval
 
 
@@ -97,6 +98,24 @@ class PeakCollection(obg.IntervalCollection):
         if (peak.start < start_offset or peak.end > end_offset):
             return False
         return True
+
+    def create_node_index(self):
+        # Creates an index from region path to intervals touching the rp,
+        # making it fast to do approx. overlap
+        index = defaultdict(list)
+        for peak in self.intervals:
+            for rp in peak.region_paths:
+                index[abs(rp)].append(peak)
+
+        self._index = index
+
+    def approx_contains_part_of_interval(self, interval):
+        assert hasattr(self, "_index"), "Create index first by calling create_node_index()"
+        for rp in interval.region_paths:
+            if len(self._index[abs(rp)]) > 0:
+                return True
+
+        return False
 
     @classmethod
     def create_from_nongraph_peak_collection(
