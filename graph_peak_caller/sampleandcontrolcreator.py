@@ -12,7 +12,7 @@ IntervalCollection.interval_class = DirectedInterval
 from .pvalues import PValuesFinder, PToQValuesMapper
 from .experiment_info import ExperimentInfo
 from .directsamplepileup import main as samplemain
-
+from .sparsesampleandcontrolcreator import SparseControl
 
 def enable_filewrite(func):
     def wrapper(*args, **kwargs):
@@ -243,13 +243,20 @@ class SampleAndControlCreatorO(object):
     def create_control(self):
         logging.info("Creating control track using linear map %s" % self.linear_map)
         extensions = [self.info.fragment_length, 1000, 10000] if self.has_control else [10000]
-        control_pileup = linearsnarls.create_control(
-            self.linear_map,  self.control_intervals,
-            extensions, self.info.fragment_length,
-            ob_graph=self.graph,
-            touched_nodes=self.touched_nodes,
-            use_global_min_value=self.use_global_min_value
-        )
+        sparse_control = SparseControl(
+            self.linear_map, self.graph, extensions,
+            self.info.fragment_length, self.touched_nodes)
+        if self.use_global_min_value:
+            sparse_control.set_min_value(self.use_global_min_value)
+        control_pileup = sparse_control.create(self.control_intervals)
+
+        # control_pileup = linearsnarls.create_control(
+        #     self.linear_map,  self.control_intervals,
+        #     extensions, self.info.fragment_length,
+        #     ob_graph=self.graph,
+        #     touched_nodes=self.touched_nodes,
+        #     use_global_min_value=self.use_global_min_value
+        # )
 
         # Delete linear map
         self.linear_map = None

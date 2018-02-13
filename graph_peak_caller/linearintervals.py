@@ -22,8 +22,8 @@ class LinearIntervalCollection(object):
         return self.__class__(extended_starts, extended_ends)
 
     def extend_np(self, extension_size):
-        return np.add.outer(self.starts,
-                            np.array([-extension_size, extension_size]))
+        return np.add.outer(np.array([-extension_size, extension_size]),
+                            self.starts)
 
     def n_basepairs_covered(self):
         return np.sum(np.abs(self.ends - self.starts))

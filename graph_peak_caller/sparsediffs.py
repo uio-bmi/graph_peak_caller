@@ -11,6 +11,15 @@ class SparseDiffs:
     def __repr__(self):
         return "SD(%s, %s)" % (self._indices, self._diffs)
 
+    def clip_min(self, min_value):
+        values = np.cumsum(self._diffs)
+        print(values)
+        np.clip(values, min_value, None, values)
+        print(values)
+        self._diffs = np.ediff1d(values, to_begin=values[0])
+        self._sanitize()
+        print(self._diffs)
+
     def maximum(self, other):
         all_indices = np.r_[self._indices, other._indices]
         sorted_args = np.argsort(all_indices, kind="mergesort")
@@ -30,12 +39,6 @@ class SparseDiffs:
         return SparseDiffs(new_indexes, new_diffs, True)
 
     def _sanitize(self):
-        # Remove duplicate indexes
-        index_diffs = np.ediff1d(self._indices, to_end=1)
-        changes = index_diffs != 0
-        self._indices = self._indices[changes]
-        self._diffs = self._diffs[changes]
-
         # Remove duplicated values
         changes = self._diffs != 0
         self._indices = self._indices[changes]
