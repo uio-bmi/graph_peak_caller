@@ -5,6 +5,7 @@ from .snarlmaps import LinearSnarlMap
 import logging
 from memory_profiler import profile
 
+
 def create_control(linear_map_name, *args, **kwargs):
     logging.info("Reading linear map from file")
     linear_map = LinearSnarlMap.from_json_files(linear_map_name, kwargs["ob_graph"])
@@ -21,11 +22,7 @@ def create_control_from_objs(linear_map, reads, extension_sizes,
     """
     linear_size = linear_map._length
     mapped_reads = linear_map.map_interval_collection(reads)
-    logging.info("N reads observed by linear map: %d" % mapped_reads.n_intervals)
-    logging.info("Fragment length used to compute control pileup sum: %d" % fragment_length)
     average_value = mapped_reads.n_intervals*fragment_length / linear_size
-
-
     logging.info(
         "Average control value: %.4f (sum of pileup: %d, linear size: %d)" % (
             average_value, mapped_reads.n_basepairs_covered(), linear_size))
@@ -49,7 +46,6 @@ def create_control_from_objs(linear_map, reads, extension_sizes,
         max_pileup.maximum(linear_pileup)
 
     logging.info("All extensions done. Grating valued indexes from pileup")
-
 
     logging.info("Making sparsepilup from valued indexes")
     graph_pileup = max_pileup.to_sparse_pileup(linear_map, touched_nodes=touched_nodes)
