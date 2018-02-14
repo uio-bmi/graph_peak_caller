@@ -153,7 +153,6 @@ class LinearPileup(object):
         cur_index = 0
         cur_value = 0
         for index, code, value in event_sorter:
-            print(index, code, value)
             if code == event_sorter.NODE_START:
                 value = int(value)
                 cur_nodes.add(value)
