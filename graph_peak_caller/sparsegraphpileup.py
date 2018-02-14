@@ -98,9 +98,11 @@ class ReadsAdderWDirect(ReadsAdder):
         end_pos = interval.end_position
         rp = end_pos.region_path_id
         if rp < 0:
-            self.neg_read_ends.append(abs(rp)+1-self.min_id-end_pos.offset)
+            self.neg_read_ends.append(
+                self._node_indexes[abs(rp)+1-self.min_id]-end_pos.offset)
         else:
-            self.pos_read_ends.append(abs(rp)-self.min_id+end_pos.offset)
+            self.pos_read_ends.append(
+                self._node_indexes[abs(rp)-self.min_id]+end_pos.offset)
 
 
 class SparseExtender:
@@ -234,17 +236,18 @@ class SamplePileupGenerator:
     def save_direct(self, base_name):
         new_pileup = SparseGraphPileup(self._graph)
         new_pileup.ends = self._pileup.ends + self._reads_adder.pos_read_ends
-        new_pileup.starts = self._pileup.ends + self._reads_adder.neg_read_ends
+        new_pileup.starts = self._pileup.starts + self._reads_adder.neg_read_ends
         new_pileup.node_starts = self._pileup.node_starts
         sparsediff = SparseDiffs.from_pileup(
             new_pileup, self._graph.node_indexes)
         sparsediff.clean()
+        print("###", sparsediff._indices)
+        print("###", sparsediff._diffs)
         print(base_name)
         np.save(base_name + "_diffindices.npy", sparsediff._indices)
         np.save(base_name + "_diffvalues.npy", sparsediff._diffs)
 
     def run(self, reads, save_name=None):
-        reads = list(reads)
         print(self._graph)
         print(reads)
         self._reads_adder.add_reads(reads)
