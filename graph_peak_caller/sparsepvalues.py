@@ -31,8 +31,6 @@ class PValuesFinder:
 class PToQValuesMapper:
 
     def __init__(self, p_values, cum_counts):
-        print(p_values)
-        print(cum_counts)
         self.p_values = p_values
         self.cum_counts = cum_counts
 
@@ -75,7 +73,6 @@ class PToQValuesMapper:
             base_file_name = filename.replace("_indexes.npy", "")
             logging.info("Reading p values from file %s" % base_file_name)
             indices, values = cls.__read_file(base_file_name)
-            print(values)
             sub_counts.append(np.diff(indices))
             p_values.append(values)
         return cls._from_subcounts(
@@ -88,7 +85,6 @@ class PToQValuesMapper:
             1+np.r_[0, self.cum_counts[:-1]])-logN
         q_values[0] = max(0, q_values[0])
         q_values = np.minimum.accumulate(q_values)
-        print(q_values)
         d = dict(zip(self.p_values, q_values))
         d[0] = 0
         return d
@@ -103,7 +99,6 @@ class QValuesFinder:
         assert isinstance(p_to_q_values, dict)
         self.p_values = p_values_pileup
         self.p_to_q_values = p_to_q_values
-        print(self.p_to_q_values)
 
     def get_q_values(self):
         q_values = SparseValues(
@@ -120,10 +115,10 @@ class QValuesFinder:
             # if math.isnan(x):
             #    return 0
             # x = "%.7f" % x
-            if x not in self.p_to_q_values:
-                print(self.p_to_q_values)
-                print(x)
-                logging.error("P value not found in mapping dict. Could be due to rounding errors.")
+            # if x not in self.p_to_q_values:
+            #     print(self.p_to_q_values)
+            #     print(x)
+            #     logging.error("P value not found in mapping dict. Could be due to rounding errors.")
             return self.p_to_q_values[x]
 
         trans = np.vectorize(translation, otypes=[np.float])

@@ -1,6 +1,7 @@
 import json
 import pickle
 from .densepileup import DensePileup
+from .sparsediffs import SparseDiffs
 from .linearintervals import LinearIntervalCollection
 import logging
 import numpy as np
@@ -52,38 +53,30 @@ class LinearSnarlMap(object):
         return scale, offset
 
     def to_sparse_pileup(self, unmapped_indices_dict):
-        pileup = DensePileup(self._graph, dtype=np.uint8)
+        all_indices = []
+        all_values = []
         i = 0
-        for node_id, unmapped_indices in unmapped_indices_dict.items():
+        node_idxs = self._graph.node_indexes
+        min_idx = self._graph.min_node
+        for i in range(node_idxs.size-1):
             if i % 100000 == 0:
                 logging.info("Processing node %d" % i)
-            i += 1
-
+            node_id = i+min_idx
+            if node_id not in unmapped_indices_dict:
+                all_indices.append(node_idxs[i])
+                all_values.append(0)
+                continue
+            unmapped_indices = unmapped_indices_dict[node_id]
             scale, offset = self.get_scale_and_offset(node_id)
-            new_idxs = (unmapped_indices.get_index_array()-offset) / scale
-            new_idxs = new_idxs.astype("int")
-            new_idxs[0] = max(0, new_idxs[0])
-
-            length = self._graph.node_size(node_id)
-            indexes = new_idxs
-            values = unmapped_indices.get_values_array()
-            start_value = values[0]
-            # Sanitize indexes
-            diffs = np.where(np.diff(indexes) > 0)[0]
-            indexes = indexes[diffs+1]
-            values = values[diffs+1]
-
-            indexes = np.insert(indexes, 0, 0)
-            indexes = np.append(indexes, length)
-            values = np.insert(values, 0, start_value)
-
-            j = 0
-            for start, end in zip(indexes[:-1], indexes[1:]):
-                value = values[j]
-                pileup.data.set_values(node_id, start, end, value)
-                j += 1
-
-        return pileup
+            new_idxs = [(idx-offset)//scale+node_idxs[i]
+                        for idx in unmapped_indices.indices]
+            new_idxs[0] = max(node_idxs[i], new_idxs[0])
+            assert new_idxs[0] == node_idxs[i]
+            all_indices.extend(new_idxs)
+            all_values.extend(unmapped_indices.values)
+        return SparseDiffs(
+            np.array(all_indices, dtype="int"),
+            np.diff(np.r_[0, all_values]))
 
     def to_dense_pileup(self, unmapped_indices_dict):
         pileup = DensePileup(self._graph, dtype=np.uint8)
@@ -116,7 +109,6 @@ class LinearSnarlMap(object):
                 value = values[j]
                 pileup.data.set_values(node_id, start, end, value)
                 j += 1
-
         return pileup
 
     def map_graph_interval(self, interval):

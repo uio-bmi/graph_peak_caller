@@ -78,9 +78,6 @@ class CallPeaks(object):
         self.p_values_pileup = PValuesFinder(
             self.sample_pileup, self.control_pileup).get_p_values_pileup()
         self.p_values_pileup.track_size = self.graph.node_indexes[-1]
-        print("P", self.p_values_pileup)
-        # self.p_values_pileup.to_bed_graph(
-        # self.out_file_base_name + "pvalues.bdg")
         self.sample_pileup = None
         self.control_pileup = None
 
@@ -96,7 +93,6 @@ class CallPeaks(object):
         finder = QValuesFinder(self.p_values_pileup,
                                self.p_to_q_values_mapping)
         self.q_values_pileup = finder.get_q_values()
-        print("Q:", self.q_values_pileup)
         q_values = DensePileup(self.graph)
         q_values.data._values = self.q_values_pileup.to_dense_pileup(
             self.graph.node_indexes[-1])

@@ -252,8 +252,8 @@ class SampleAndControlCreatorO(object):
         if self.use_global_min_value:
             sparse_control.set_min_value(self.use_global_min_value)
         control_pileup = sparse_control.create(self.control_intervals)
-        control_pileup = SparseDiffs.from_dense_pileup(
-            control_pileup.data._values)
+        # control_pileup = SparseDiffs.from_dense_pileup(
+        #     control_pileup.data._values)
         # control_pileup = linearsnarls.create_control(
         #     self.linear_map,  self.control_intervals,
         #     extensions, self.info.fragment_length,
