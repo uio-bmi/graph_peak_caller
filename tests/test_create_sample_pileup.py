@@ -4,6 +4,7 @@ from offsetbasedgraph import GraphWithReversals as Graph, Block, DirectedInterva
 from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo, Configuration
 from graph_peak_caller.sampleandcontrolcreator import SampleAndControlCreator
 from graph_peak_caller.densepileup import DensePileup as Pileup
+from graph_peak_caller.sparsediffs import SparseDiffs
 
 
 class Tester(unittest.TestCase):
@@ -21,13 +22,14 @@ class Tester(unittest.TestCase):
             self.sample_reads.append(right_sub_reverse)
 
     def assert_final_pileup_equals_correct_pileup(self):
-        correct_pileup = self.correct_pileup
-        found_pileup = self.creator._sample_pileup
+        found_pileup = self.creator._sample_pileup.to_dense_pileup(
+            self.graph_size)
+        correct_pileup = self.correct_pileup.data._values
         print("Found pileup")
         print(found_pileup)
         print("Correct pileup")
         print(correct_pileup)
-        self.assertEqual(found_pileup, correct_pileup)
+        self.assertTrue(np.all(found_pileup == correct_pileup))
 
     def setUp(self):
         self.set_graph()

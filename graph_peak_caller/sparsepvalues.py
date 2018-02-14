@@ -22,16 +22,19 @@ class PValuesFinder:
             return p_values
 
         p_values = self.sample.apply_binary_func(
-            clean_p_values, self.control)
+            clean_p_values, self.control,
+            return_values=True)
 
         return p_values
 
 
 class PToQValuesMapper:
 
-    def __init__(self, p_values, counts):
-        self._p_values = p_values
-        self._counts = counts
+    def __init__(self, p_values, cum_counts):
+        print(p_values)
+        print(cum_counts)
+        self.p_values = p_values
+        self.cum_counts = cum_counts
 
     @classmethod
     def __read_file(cls, file_name):
@@ -43,16 +46,16 @@ class PToQValuesMapper:
     def _from_subcounts(cls, p_values, counts):
         p_values = p_values.ravel()
         counts = counts.ravel()
-        args = np.argsort(p_values, reverse=True)
+        args = np.argsort(p_values)[::-1]
         sorted_ps = p_values[args]
         sorted_lens = counts[args]
         cum_counts = np.cumsum(sorted_lens)
         changes = np.ediff1d(sorted_ps, to_end=1) != 0
         cum_counts = cum_counts[changes]
-        return cls(p_values, cum_counts)
+        return cls(sorted_ps[changes], cum_counts)
 
     @classmethod
-    def from_p_values_sparse_pileup(cls, p_values):
+    def from_p_values_pileup(cls, p_values):
         logging.info("Creating mapping from p value dense pileup")
         sub_counts = np.ediff1d(
             p_values.indices,
@@ -72,18 +75,23 @@ class PToQValuesMapper:
             base_file_name = filename.replace("_indexes.npy", "")
             logging.info("Reading p values from file %s" % base_file_name)
             indices, values = cls.__read_file(base_file_name)
+            print(values)
             sub_counts.append(np.diff(indices))
             p_values.append(values)
         return cls._from_subcounts(
-            np.concatenate(sub_counts), np.concatenate(p_values))
+            np.concatenate(p_values),
+            np.concatenate(sub_counts))
 
     def get_p_to_q_values(self):
-        logN = np.log10(np.sum(self._counter))
-        q_values = self._p_values + np.log10(
-            np.r_[1, np.cumsum(self.counts[:-1])])-logN
+        logN = np.log10(self.cum_counts[-1])
+        q_values = self.p_values + np.log10(
+            1+np.r_[0, self.cum_counts[:-1]])-logN
         q_values[0] = max(0, q_values[0])
-        q_values = np.maximum.accumulate(q_values)
-        return dict(zip(self.p_values, q_values))
+        q_values = np.minimum.accumulate(q_values)
+        print(q_values)
+        d = dict(zip(self.p_values, q_values))
+        d[0] = 0
+        return d
 
     def to_file(self, base_name):
         with open(base_name + 'p2q.pkl', 'wb') as f:
@@ -95,6 +103,7 @@ class QValuesFinder:
         assert isinstance(p_to_q_values, dict)
         self.p_values = p_values_pileup
         self.p_to_q_values = p_to_q_values
+        print(self.p_to_q_values)
 
     def get_q_values(self):
         q_values = SparseValues(
@@ -106,13 +115,14 @@ class QValuesFinder:
         assert isinstance(p_values, np.ndarray)
 
         def translation(x):
-            if abs(x) < 1e-9:
-                return 0
-            if math.isnan(x):
-                return 0
-            x = "%.7f" % x
+            # if abs(x) < 1e-9:
+            #    return 0
+            # if math.isnan(x):
+            #    return 0
+            # x = "%.7f" % x
             if x not in self.p_to_q_values:
                 print(self.p_to_q_values)
+                print(x)
                 logging.error("P value not found in mapping dict. Could be due to rounding errors.")
             return self.p_to_q_values[x]
 

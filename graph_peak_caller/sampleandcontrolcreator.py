@@ -7,12 +7,13 @@ from .densepileup import DensePileup
 
 from .extender import Extender
 from .areas import ValuedAreas
-from . import linearsnarls
-IntervalCollection.interval_class = DirectedInterval
-from .pvalues import PValuesFinder, PToQValuesMapper
+from .sparsepvalues import PValuesFinder, PToQValuesMapper
 from .experiment_info import ExperimentInfo
-from .directsamplepileup import main as samplemain
+# from .directsamplepileup import main as samplemain
 from .sparsesampleandcontrolcreator import SparseControl
+from .sparsediffs import SparseDiffs
+IntervalCollection.interval_class = DirectedInterval
+
 
 def enable_filewrite(func):
     def wrapper(*args, **kwargs):
@@ -201,8 +202,9 @@ class SampleAndControlCreatorO(object):
                 raise Exception("Interval not in graph")
 
     def scale_tracks(self, update_saved_files=False):
-        logging.info("Scaling tracks to ratio: %d / %d" % (self.info.n_sample_reads,
-                                                    self.info.n_control_reads))
+        logging.info("Scaling tracks to ratio: %d / %d" % (
+            self.info.n_sample_reads,
+            self.info.n_control_reads))
         ratio = self.info.n_sample_reads/self.info.n_control_reads
 
         if self.info.n_sample_reads == self.info.n_control_reads:
@@ -213,6 +215,7 @@ class SampleAndControlCreatorO(object):
 
         if ratio > 1:
             logging.warning("More reads in sample than in control")
+            self._sample_pileup *= ratio
             self._sample_pileup.scale(1/ratio)
             self._sample_pileup.to_bed_graph(
                 self.out_file_base_name + "scaled_treat.bdg")
@@ -220,7 +223,7 @@ class SampleAndControlCreatorO(object):
                 self._sample_pileup.to_bed_graph(self._sample_track)
         else:
             logging.info("Scaling control pileup down using ration %.3f" % ratio)
-            self._control_pileup.scale(ratio)
+            self._control_pileup *= ratio  # .scale(ratio)
             self._control_pileup.to_bed_graph(
                 self.out_file_base_name + "scaled_control.bdg")
             if update_saved_files:
@@ -249,7 +252,8 @@ class SampleAndControlCreatorO(object):
         if self.use_global_min_value:
             sparse_control.set_min_value(self.use_global_min_value)
         control_pileup = sparse_control.create(self.control_intervals)
-
+        control_pileup = SparseDiffs.from_dense_pileup(
+            control_pileup.data._values)
         # control_pileup = linearsnarls.create_control(
         #     self.linear_map,  self.control_intervals,
         #     extensions, self.info.fragment_length,
@@ -261,10 +265,10 @@ class SampleAndControlCreatorO(object):
         # Delete linear map
         self.linear_map = None
 
-        control_pileup.graph = self.ob_graph
+        # control_pileup.graph = self.ob_graph
         logging.info("Number of control reads: %d" % self.info.n_control_reads)
 
-        if self.save_tmp_results_to_file:
+        if self.save_tmp_results_to_file and False:
             self._control_track = self.out_file_base_name + "control_track.bdg"
             control_pileup.to_bed_graph(self._control_track)
             logging.info("Saved control pileup to " + self._control_track)
@@ -276,7 +280,6 @@ class SampleAndControlCreatorO(object):
 
     def get_score(self):
         logging.info("Getting p valyes.")
-
         p_values_finder = PValuesFinder(self._sample_pileup, self._control_pileup)
         self._p_values_pileup = p_values_finder.get_p_values_pileup()
 
@@ -338,17 +341,23 @@ class SampleAndControlCreatorO(object):
 
 class SampleAndControlCreator(SampleAndControlCreatorO):
     def create_sample_pileup(self):
+        from .sparsegraphpileup import SamplePileupGenerator
         logging.debug("In sample pileup")
         logging.info("Creating sample pileup")
         logging.info(self.sample_intervals)
         logging.info("Processing areas")
-        pileup = samplemain(self.sample_intervals, self.graph,
-                            self.info.fragment_length-self.info.read_length,
-                            self.out_file_base_name+"direct_pileup")
-        self.touched_nodes = pileup.data._touched_nodes
+        generator = SamplePileupGenerator(
+            self.graph, self.info.fragment_length-self.info.read_length)
+        pileup = generator.run(self.sample_intervals,
+                               self.out_file_base_name+"direct_pileup")
+        # pileup = samplemain(self.sample_intervals, self.graph,
+        #                     self.info.fragment_length-self.info.read_length,
+        #                     self.out_file_base_name+"direct_pileup")
+        # assert np.all(pileup.data._values == pileup2.data._values)
+        # self.touched_nodes = pileup.data._touched_nodes
 
         self._sample_track = self.out_file_base_name + "sample_track.bdg"
-        if self.save_tmp_results_to_file:
+        if self.save_tmp_results_to_file and False:
             logging.info("Saving sample pileup to file")
             pileup.to_bed_graph(self._sample_track)
             logging.info("Saved sample pileup to " + self._sample_track)

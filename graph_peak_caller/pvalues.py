@@ -15,8 +15,8 @@ class PValuesFinder:
 
     def get_p_values_pileup(self):
         p_values = poisson.logsf(
-                                self.sample.data._values,
-                                self.control.data._values)
+            self.sample.data._values,
+            self.control.data._values)
         baseEtoTen = np.log(10)
         p_values_array = -p_values / baseEtoTen
 
@@ -89,7 +89,6 @@ class PToQValuesMapper:
             p_to_q_values["%.7f" % p_value] = q_value
             pre_q = q_value
             rank += value_count
-
 
         self.p_to_q_values = p_to_q_values
         logging.info("Done creating mapping")

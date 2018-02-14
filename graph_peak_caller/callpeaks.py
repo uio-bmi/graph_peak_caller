@@ -11,9 +11,9 @@ from .experiment_info import ExperimentInfo
 from .subgraphcollection import SubgraphCollectionPartiallyOrderedGraph
 from .peakcollection import Peak
 # from memory_profiler import profile
-from .pvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
 from .sampleandcontrolcreator import SampleAndControlCreator
 from .directsamplepileup import DirectPileup
+from .sparsepvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
 
 
 class Configuration:
@@ -77,13 +77,16 @@ class CallPeaks(object):
         assert self.control_pileup is not None
         self.p_values_pileup = PValuesFinder(
             self.sample_pileup, self.control_pileup).get_p_values_pileup()
-        self.p_values_pileup.to_bed_graph(self.out_file_base_name + "pvalues.bdg")
+        self.p_values_pileup.track_size = self.graph.node_indexes[-1]
+        print("P", self.p_values_pileup)
+        # self.p_values_pileup.to_bed_graph(
+        # self.out_file_base_name + "pvalues.bdg")
         self.sample_pileup = None
         self.control_pileup = None
 
     def get_p_to_q_values_mapping(self):
         assert self.p_values_pileup is not None
-        finder = PToQValuesMapper.from_p_values_dense_pileup(
+        finder = PToQValuesMapper.from_p_values_pileup(
             self.p_values_pileup)
         self.p_to_q_values_mapping = finder.get_p_to_q_values()
 
@@ -93,7 +96,13 @@ class CallPeaks(object):
         finder = QValuesFinder(self.p_values_pileup,
                                self.p_to_q_values_mapping)
         self.q_values_pileup = finder.get_q_values()
-        self.q_values_pileup.to_bed_graph(self.out_file_base_name + "qvalues.bdg")
+        print("Q:", self.q_values_pileup)
+        q_values = DensePileup(self.graph)
+        q_values.data._values = self.q_values_pileup.to_dense_pileup(
+            self.graph.node_indexes[-1])
+        self.q_values_pileup = q_values
+        self.q_values_pileup.to_bed_graph(
+            self.out_file_base_name + "qvalues.bdg")
 
     def call_peaks_from_q_values(self, experiment_info, config=None):
         assert self.q_values_pileup is not None
@@ -133,6 +142,7 @@ class CallPeaks(object):
         caller.run_pre_callpeaks(has_control, experiment_info,
                                  linear_map, configuration)
         caller.get_p_values()
+        caller.p_values_pileup.track_size = graph.node_indexes[-1]
         if stop_after_p_values:
             return caller.p_values_pileup.to_sparse_files(
                 out_file_base_name + "pvalues")

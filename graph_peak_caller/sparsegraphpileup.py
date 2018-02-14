@@ -129,7 +129,6 @@ class SparseExtender:
         self._pileup.ends.append(index)
 
     def run_linear(self, starts_dict):
-        print(starts_dict)
         node_ids = self.get_node_ids()
         node_infos = defaultdict(NodeInfo)
         cur_id = 0
@@ -151,7 +150,6 @@ class SparseExtender:
                 if end <= node_size:
                     self._add_end(cur_array_idx+end)
                 else:
-                    # print("#", node_id, end, node_size)
                     d[idx] = end-node_size
             cur_array_idx += node_size
             cur_id = cur_id + n_starts
@@ -175,11 +173,9 @@ class ReverseSparseExtender(SparseExtender):
                 self._graph.get_sorted_node_ids(reverse=True))
 
     def _add_node_end(self, node_id, value):
-        print("NODEND:", node_id, value)
         self._pileup.node_starts[-node_id-self._graph.min_node] += value
 
     def _add_node_start(self, node_id, value):
-        print("NODESTART:", node_id, value)
         self._pileup.node_starts[-node_id+1-self._graph.min_node] -= value
 
     def _add_end(self, index):
@@ -216,21 +212,16 @@ class SamplePileupGenerator:
     def __to_dense(self):
         diffs = SparseDiffs.from_pileup(self._pileup,
                                         self._graph.node_indexes)
-        print(diffs)
         sparse_values = diffs.get_sparse_values()
-        print(sparse_values)
         densepileup = DensePileup(self._graph)
         for start, end, value in zip(
                 sparse_values.indices,
                 chain(sparse_values.indices[1:], [densepileup.data._values.size]),
                 sparse_values.values):
-            print("#", start, end, value)
             densepileup.data._values[start:end] = value
         densepileup.data._touched_nodes = {
             node_id for node_id in self._graph.blocks if
             np.count_nonzero(densepileup.data.values(node_id))}
-        print(densepileup.data._values)
-        print(densepileup.data._touched_nodes)
         return densepileup
 
     def save_direct(self, base_name):
@@ -241,21 +232,15 @@ class SamplePileupGenerator:
         sparsediff = SparseDiffs.from_pileup(
             new_pileup, self._graph.node_indexes)
         sparsediff.clean()
-        print("###", sparsediff._indices)
-        print("###", sparsediff._diffs)
-        print(base_name)
         np.save(base_name + "_diffindices.npy", sparsediff._indices)
         np.save(base_name + "_diffvalues.npy", sparsediff._diffs)
 
     def run(self, reads, save_name=None):
-        print(self._graph)
-        print(reads)
         self._reads_adder.add_reads(reads)
         if save_name is not None:
             self.save_direct(save_name)
-        print(self._pileup)
         self._pos_extender.run_linear(self._reads_adder.get_pos_ends())
-        print(self._pileup)
         self._neg_extender.run_linear(self._reads_adder.get_neg_ends())
-        print(self._pileup)
-        return self.__to_dense()
+        return SparseDiffs.from_pileup(self._pileup,
+                                       self._graph.node_indexes)
+    # return self.__to_dense()

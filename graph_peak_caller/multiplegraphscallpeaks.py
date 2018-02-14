@@ -2,8 +2,9 @@ import offsetbasedgraph as obg
 from pyvg.util import vg_json_file_to_interval_collection
 from .experiment_info import ExperimentInfo
 from .callpeaks import CallPeaks, Configuration
-from .pvalues import PToQValuesMapper
+from .sparsepvalues import PToQValuesMapper
 from .densepileup import DensePileup
+from .sparsediffs import SparseValues
 import logging
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s, %(levelname)s: %(message)s")
@@ -124,13 +125,17 @@ class MultipleGraphsCallpeaks:
                 graph_file_name)
             graph_size = sum(
                 block.length() for block in ob_graph.blocks.values())
+            ob_graph.node_indexes = [graph_size]
             info = ExperimentInfo(
                 graph_size, self.fragment_length, self.read_length)
             assert ob_graph is not None
             caller = CallPeaks(ob_graph, self._base_name + name + "_")
             caller.p_to_q_values_mapping = self._q_value_mapping
-            caller.p_values_pileup = DensePileup.from_sparse_files(
-                ob_graph, self._base_name + name + "_" + "pvalues")
+            caller.p_values_pileup = SparseValues.from_sparse_files(
+                self._base_name + name + "_" + "pvalues")
+            print("PP:", caller.p_values_pileup)
+            # DensePileup.from_sparse_files(
+            #    ob_graph, self._base_name + name + "_" + "pvalues")
             caller.get_q_values()
             caller.call_peaks_from_q_values(
                 experiment_info=info, config=self._config)

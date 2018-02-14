@@ -1,12 +1,13 @@
 import unittest
+import logging
+logging.basicConfig(level=logging.WARNING, format="%(asctime)s, %(levelname)s: %(message)s")
 from offsetbasedgraph import GraphWithReversals, Block, \
         Interval, DirectedInterval, IntervalCollection
 from graph_peak_caller.callpeaks import ExperimentInfo, CallPeaks, Configuration
 from graph_peak_caller.snarls import SnarlGraph, SnarlGraphBuilder, SimpleSnarl
 from graph_peak_caller.linearsnarls import LinearSnarlMap
 from graph_peak_caller.sparsepileup import SparsePileup
-import logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
+
 
 class TestWholeCallPeaks(unittest.TestCase):
 

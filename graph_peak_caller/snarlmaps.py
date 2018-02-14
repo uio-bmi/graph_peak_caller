@@ -6,6 +6,11 @@ import logging
 import numpy as np
 
 
+class LinearSnarlMapNP:
+    def __init__(self, starts_ends, ):
+        self._start_ends = start_ends
+
+
 class LinearSnarlMap(object):
     def __init__(self, starts, ends, length, graph):
         self._graph = graph
@@ -47,7 +52,38 @@ class LinearSnarlMap(object):
         return scale, offset
 
     def to_sparse_pileup(self, unmapped_indices_dict):
-        pass
+        pileup = DensePileup(self._graph, dtype=np.uint8)
+        i = 0
+        for node_id, unmapped_indices in unmapped_indices_dict.items():
+            if i % 100000 == 0:
+                logging.info("Processing node %d" % i)
+            i += 1
+
+            scale, offset = self.get_scale_and_offset(node_id)
+            new_idxs = (unmapped_indices.get_index_array()-offset) / scale
+            new_idxs = new_idxs.astype("int")
+            new_idxs[0] = max(0, new_idxs[0])
+
+            length = self._graph.node_size(node_id)
+            indexes = new_idxs
+            values = unmapped_indices.get_values_array()
+            start_value = values[0]
+            # Sanitize indexes
+            diffs = np.where(np.diff(indexes) > 0)[0]
+            indexes = indexes[diffs+1]
+            values = values[diffs+1]
+
+            indexes = np.insert(indexes, 0, 0)
+            indexes = np.append(indexes, length)
+            values = np.insert(values, 0, start_value)
+
+            j = 0
+            for start, end in zip(indexes[:-1], indexes[1:]):
+                value = values[j]
+                pileup.data.set_values(node_id, start, end, value)
+                j += 1
+
+        return pileup
 
     def to_dense_pileup(self, unmapped_indices_dict):
         pileup = DensePileup(self._graph, dtype=np.uint8)
