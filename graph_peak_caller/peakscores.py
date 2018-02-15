@@ -105,6 +105,7 @@ class ScoredPeak(object):
         logging.info("Processing peak")
         sums = {node_id: float(scores.sum()) for node_id, scores
                 in self._scores.items()}
+        logging.info(" Sums fetched")
         # Handle peaks that are on one node
         if len(self._peak.internal_intervals) > 0:
             node, start_end = list(self._peak.internal_intervals.items())[0]
@@ -116,6 +117,7 @@ class ScoredPeak(object):
                 self._scores[node].max_value()) # score / interval.length())
             return interval
 
+        logging.info("Clean sums")
         self.__clean_sums(sums)
         for key in list(sums.keys()):
             if key in self._peak.full_areas:
