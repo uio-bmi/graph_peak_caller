@@ -387,6 +387,29 @@ def analyse_peaks(args):
                                region=region)
 
 
+def analyse_peaks_whole_genome(args):
+    from graph_peak_caller.peakscomparer import PeaksComparerV2
+    chromosomes = args.chromosomes.split(",")
+    graph_file_names = (args.graphs_dir + chrom + ".nobg" for chrom in chromosomes)
+    graphs = (obg.GraphWithReversals.from_numpy_file(fn) for fn in graph_file_names)
+    vg_file_names = (args.graphs_dir + chrom + ".vg" for chrom in chromosomes)
+
+    for chrom in chromosomes:
+        graph = obg.GraphWithReversals.from_numpy_file(
+            args.graphs_dir + chrom + ".nobg")
+
+        analyser = PeaksComparerV2(
+            graph,
+            args.graphs_dir + chrom + ".json",
+            args.results_dir + "macs_sequences_chr%s.fasta" % chrom,
+            args.results_dir + "%s_sequences.fasta" % chrom,
+            args.results_dir + "/fimo_macs_chr%s/fimo.txt" % chrom,
+            args.results_dir + "/fimo_graph_chr%s/fimo.txt" % chrom,
+            linear_path_name=chrom
+        )
+
+
+
 
 def analyse_manually_classified_peaks(args):
     for chromosome in args.chromosomes.split():
@@ -403,6 +426,14 @@ def analyse_manually_classified_peaks(args):
                 args.manually_classified_peaks_file)
 
 
+def find_linear_path(args):
+    from graph_peak_caller.util import create_linear_path
+    import pyvg
+    graph = obg.GraphWithReversals.from_numpy_file(args.ob_graph_file_name)
+    vg_graph = pyvg.vg.Graph.create_from_file(args.vg_json_graph_file_name)
+    linear_path = create_linear_path(graph, vg_graph, path_name=args.linear_path_name)
+    linear_path.to_file(args.out_file_name)
+    logging.info("Wrote to file %s" % args.out_file_name)
 
 
 interface = \
@@ -582,6 +613,17 @@ interface = \
                 ],
             'method': analyse_peaks
         },
+    'analyse_peaks_whole_genome':
+        {
+            'help': "Analyse peak results from whole genome run",
+            'arguments':
+                [
+                    ('chromosomes', 'Comma seaparated list of chromosomes to use'),
+                    ('results_dir', 'Directory of result files (should contain fasta files from both linear and graph peak calling'),
+                    ('graphs_dir', 'Dir containing obg graphs on form 1.nobg, 2.nobg, ... and vg graphs 1.json, 2.json, ...')
+                ],
+            'method': analyse_peaks_whole_genome
+        },
     'count_unique_reads':
         {
             'help': 'Count unique reads for whole genome set of read files.',
@@ -605,6 +647,18 @@ interface = \
                     ('manually_classified_peaks_file', '')
                 ],
             'method': analyse_manually_classified_peaks
+        },
+    'find_linear_path':
+        {
+            'help': 'Finds lineat path through graph. Saves as indexed interval to file.',
+            'arguments':
+                [
+                    ('vg_json_graph_file_name', ''),
+                    ('ob_graph_file_name', ''),
+                    ('linear_path_name', 'Name of path in the vg graph (typically ref or chromosome name'),
+                    ('out_file_name', ''),
+                ],
+            'method': find_linear_path
         }
 }
 

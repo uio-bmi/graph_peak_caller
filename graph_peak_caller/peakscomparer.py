@@ -21,6 +21,8 @@ class AnalysisResults:
 # $ graph_peak_caller analyse_peaks graph.nobg haplo1kg50-mhc.json  macs_sequences_mhc.fasta test_sequences.fasta  fimo_macs_sequences/fimo.txt fimo_test_sequences/fimo.txt chr6 28510119 33480577
 # $ graph_peak_caller analyse_peaks ~/dev/graph_peak_caller/tests/whole_genome/22.nobg ~/dev/graph_peak_caller/tests/whole_genome/22.json macs_sequences_chr22.fasta 22_sequences.fasta fimo_macs_chr22/fimo.txt fimo_graph_chr22/fimo.txt 22 22 0 0
 
+
+
 class PeaksComparerV2(object):
 
     def __init__(self, graph, vg_json_file_name,
