@@ -1,6 +1,7 @@
 from .sparsediffs import SparseDiffs
 from .densepileup import DensePileup
 from itertools import chain
+import offsetbasedgraph as obg
 from collections import defaultdict
 import numpy as np
 import logging
@@ -27,6 +28,7 @@ class SparseGraphPileup:
         self.starts = []
         self.ends = []
         self.node_starts = np.zeros(len(graph.blocks)+2)
+        self.touched_nodes = np.zeros(self.node_starts.size, dtype="bool")
 
     def __str__(self):
         return("\n".join([str(self.starts), str(self.ends), str(self.node_starts)]))
@@ -67,12 +69,14 @@ class ReadsAdder:
 
     def add_open_pos_interval(self, interval):
         rps = [rp-self.min_id for rp in interval.region_paths]
+        self._pileup.touched_nodes[rps] = True
         self._pileup.node_starts[rps[1:]] += 1
         self._pileup.node_starts[1:][rps[:-1]] -= 1
         self._add_start_pos(interval.start_position)
 
     def add_open_neg_interval(self, interval):
         rps = [abs(rp)-self.min_id for rp in interval.region_paths]
+        self._pileup.touched_nodes[rps] = True
         self._pileup.node_starts[1:][rps[1:]] -= 1
         self._pileup.node_starts[rps[:-1]] += 1
         self._add_start_pos(interval.start_position)
@@ -136,6 +140,8 @@ class SparseExtender:
         cur_array_idx = 0
         for node_id in node_ids:
             info = node_infos.pop(node_id, empty)
+            if info._dist_dict:
+                self._pileup.touched_nodes[abs(node_id)-self._graph.min_node] = True
             node_size = self._graph.node_size(node_id)
             starts = starts_dict[node_id]
             n_starts = len(starts)
@@ -179,11 +185,18 @@ class ReverseSparseExtender(SparseExtender):
         self._pileup.node_starts[-node_id+1-self._graph.min_node] -= value
 
     def _add_end(self, index):
-        # print(self._graph_size, index)
         self._pileup.starts.append(self._graph_size-index)
 
 
 def _get_node_indexes(graph):
+    if isinstance(graph.blocks, obg.BlockArray):
+        # Quicker way to make node_indexes array
+        logging.info("(using cumsum on np block array)")
+        node_indexes = np.cumsum(graph.blocks._array, dtype=np.uint32)
+        logging.info("Node indexes created...")
+        graph.min_node = (graph.blocks.node_id_offset+1)
+        return node_indexes
+    logging.info("(using sorted nodes on blocks)")
     sorted_nodes = sorted(graph.blocks.keys())
     min_node = sorted_nodes[0]
     graph.min_node = min_node
@@ -241,6 +254,8 @@ class SamplePileupGenerator:
             self.save_direct(save_name)
         self._pos_extender.run_linear(self._reads_adder.get_pos_ends())
         self._neg_extender.run_linear(self._reads_adder.get_neg_ends())
-        return SparseDiffs.from_pileup(self._pileup,
-                                       self._graph.node_indexes)
+        sdiffs = SparseDiffs.from_pileup(self._pileup,
+                                         self._graph.node_indexes)
+        sdiffs.touched_nodes = set(np.flatnonzero(self._pileup.touched_nodes[:-2])+self._graph.min_node)
+        return sdiffs
     # return self.__to_dense()

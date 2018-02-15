@@ -16,7 +16,7 @@ from graph_peak_caller.snarls import SnarlGraphBuilder, SimpleSnarl
 from graph_peak_caller.linearsnarls import LinearSnarlMap
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 from graph_peak_caller.peakscomparer import PeaksComparer
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 
 
 class SimpleInterval(object):
@@ -523,8 +523,14 @@ class MACSTests(object):
             linear_peaks_file, graph_peaks_file, self.graph, linear_path,
             graph_region=None
         )
+        # for i, j in zip(sorted(comparer.peaks1.intervals, key=lambda x: x.region_paths[0]),
+        #                 sorted(comparer.peaks2.intervals, key=lambda x: x.region_paths[0])):
+        #     print(i, j)
+
         assert len(comparer.peaks1.intervals) == len(comparer.peaks2.intervals)
         matches = comparer.get_peaks_at_same_position()
+        # for m in matches:
+        #     print(m)
         assert len(matches) == len(comparer.peaks1.intervals)
 
     def test_whole_pipeline(self):
@@ -606,7 +612,7 @@ class MacsTestUsingMultipleGraphsInterface(MACSTests):
 
 
 def small_test(with_control=False):
-    return MACSTests(100, 1000, 60, read_length=10,
+    return MACSTests(1000, 100, 60, read_length=10,
                      fragment_length=50, with_control=with_control)
 
 

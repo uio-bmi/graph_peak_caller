@@ -12,6 +12,9 @@ from .experiment_info import ExperimentInfo
 # from .directsamplepileup import main as samplemain
 from .sparsesampleandcontrolcreator import SparseControl
 from .sparsediffs import SparseDiffs
+from .sparsegraphpileup import SamplePileupGenerator
+
+
 IntervalCollection.interval_class = DirectedInterval
 
 
@@ -307,8 +310,8 @@ class SampleAndControlCreatorO(object):
         #touched_nodes = set()  # Speedup thing, keep track of nodes where areas are on
         pileup = DensePileup.create_from_binary_continous_areas(
                     self.ob_graph, areas_list)
-        print(np.sum(pileup.data._values))
-        print(len(pileup.data._touched_nodes))
+        # print(np.sum(pileup.data._values))
+        # print(len(pileup.data._touched_nodes))
         for node_id in pileup.data._touched_nodes:
             assert np.sum(pileup.data.values(node_id)) > 0
 
@@ -341,7 +344,6 @@ class SampleAndControlCreatorO(object):
 
 class SampleAndControlCreator(SampleAndControlCreatorO):
     def create_sample_pileup(self):
-        from .sparsegraphpileup import SamplePileupGenerator
         logging.debug("In sample pileup")
         logging.info("Creating sample pileup")
         logging.info(self.sample_intervals)
@@ -354,7 +356,7 @@ class SampleAndControlCreator(SampleAndControlCreatorO):
         #                     self.info.fragment_length-self.info.read_length,
         #                     self.out_file_base_name+"direct_pileup")
         # assert np.all(pileup.data._values == pileup2.data._values)
-        # self.touched_nodes = pileup.data._touched_nodes
+        self.touched_nodes = pileup.touched_nodes
 
         self._sample_track = self.out_file_base_name + "sample_track.bdg"
         if self.save_tmp_results_to_file and False:

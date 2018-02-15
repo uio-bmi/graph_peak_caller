@@ -52,7 +52,7 @@ class LinearSnarlMap(object):
         offset = self.get_node_start(node_id)
         return scale, offset
 
-    def to_sparse_pileup(self, unmapped_indices_dict):
+    def to_sparse_pileup(self, unmapped_indices_dict, min_value=0):
         all_indices = []
         all_values = []
         i = 0
@@ -64,14 +64,15 @@ class LinearSnarlMap(object):
             node_id = i+min_idx
             if node_id not in unmapped_indices_dict:
                 all_indices.append(node_idxs[i])
-                all_values.append(0)
+                all_values.append(min_value)
                 continue
             unmapped_indices = unmapped_indices_dict[node_id]
             scale, offset = self.get_scale_and_offset(node_id)
             new_idxs = [(idx-offset)//scale+node_idxs[i]
                         for idx in unmapped_indices.indices]
             new_idxs[0] = max(node_idxs[i], new_idxs[0])
-            assert new_idxs[0] == node_idxs[i]
+            # assert new_idxs[0] == node_idxs[i]
+            # assert new_idxs[-1] < node_idxs[i+1]
             all_indices.extend(new_idxs)
             all_values.extend(unmapped_indices.values)
         return SparseDiffs(

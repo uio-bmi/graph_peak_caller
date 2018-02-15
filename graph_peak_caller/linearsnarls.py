@@ -102,14 +102,14 @@ class LinearPileup(object):
         es = EventSort([starts, ends], [1, -1])
         return LinearPileup(es.indices, es.values)
 
-    def to_sparse_pileup(self, linear_map, touched_nodes=None):
+    def to_sparse_pileup(self, linear_map, touched_nodes=None, min_value=0):
         logging.info("Getting event sorter")
         event_sorter = self.get_event_sorter(linear_map, touched_nodes)
         logging.info("Getting unmapped indices")
         unmapped_indices = self.from_event_sorter(event_sorter)
         logging.info("Mapping linear map to graph pileup")
         #return linear_map.to_numpy_sparse_pileup(unmapped_indices)
-        return linear_map.to_sparse_pileup(unmapped_indices)
+        return linear_map.to_sparse_pileup(unmapped_indices, min_value)
 
     def to_dense_pileup(self, linear_map, touched_nodes=None):
         logging.info("Getting event sorter")
