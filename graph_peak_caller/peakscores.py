@@ -142,7 +142,7 @@ class ScoredPeak(object):
 
             if memo[node_ids[-1]] >= value:
                 continue
-            if value > global_max:
+            if value >= global_max:
                 global_max_path = node_ids
                 global_max = value
 
