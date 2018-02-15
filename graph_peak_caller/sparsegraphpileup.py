@@ -121,7 +121,8 @@ class SparseExtender:
         self._adj_list = self._graph.adj_list
 
     def get_node_ids(self):
-        return self._graph.get_sorted_node_ids()
+        return range(self._graph.min_node, self._graph._id+1)
+    # return self._graph.get_sorted_node_ids()
 
     def _add_node_end(self, node_id, value):
         self._pileup.node_starts[node_id+1-self._graph.min_node] -= value
@@ -175,8 +176,9 @@ class ReverseSparseExtender(SparseExtender):
         self._adj_list = self._graph.reverse_adj_list
 
     def get_node_ids(self):
-        return (-node_id for node_id in
-                self._graph.get_sorted_node_ids(reverse=True))
+        return range(-self._graph._id, -self._graph.min_node+1)
+    # return (-node_id for node_id in
+    #             self._graph.get_sorted_node_ids(reverse=True))
 
     def _add_node_end(self, node_id, value):
         self._pileup.node_starts[-node_id-self._graph.min_node] += value
