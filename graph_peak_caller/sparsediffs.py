@@ -47,9 +47,11 @@ class SparseValues:
         # return new
 
     def to_dense_pileup(self, size):
+        print("#TODENSE", self)
         diffs = np.ediff1d(self.values, to_begin=self.values[0])
         pileup = np.zeros(size+1, dtype=self.values.dtype)
-        pileup[self.indices] = diffs
+        indices = self.indices[:diffs.size]
+        pileup[indices] = diffs
         return np.cumsum(pileup[:-1])
 
 
