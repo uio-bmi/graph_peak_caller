@@ -59,8 +59,6 @@ class EventSorter(object):
         return zip(self.indices, self.codes, self.values)
 
 
-
-
 class EventSort(object):
     def __init__(self, index_lists, codes, names=None):
         #print("Running eventnsorter for indexes %s with codes %s" % (index_lists, codes))

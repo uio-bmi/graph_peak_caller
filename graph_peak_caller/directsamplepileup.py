@@ -42,7 +42,10 @@ class DirectPileup:
         pileup = DensePileup(graph)
         indices = np.load(base_name + "_diffindices.npy")
         values = np.load(base_name + "_diffvalues.npy")
-        pileup.data._values[indices] = values
+        pileup.data._values[indices[:-1]] = values[:-1]
+        if indices[-1] < pileup.data._values.size:
+            pileup.data._values[indices[-1]] = values[-1]
+        # pileup.data._values[indices] = values
         pileup.data._values = np.cumsum(pileup.data._values)
         return pileup
 
@@ -111,7 +114,9 @@ class SparseDirectPileup:
         indices = np.load(base_name + "_diffindices.npy")
         values = np.load(base_name + "_diffvalues.npy")
 
-        pileup.data._values[indices] = values
+        pileup.data._values[indices[:-1]] = values[:-1]
+        if indices[-1] < pileup.data._values.size:
+            pileup.data._values[indices[-1]] = values[-1]
         pileup.data._values = np.cumsum(pileup.data._values[:-1])
         return pileup
 

@@ -1,9 +1,15 @@
 import json
 import pickle
 from .densepileup import DensePileup
+from .sparsediffs import SparseDiffs
 from .linearintervals import LinearIntervalCollection
 import logging
 import numpy as np
+
+
+class LinearSnarlMapNP:
+    def __init__(self, starts_ends, ):
+        self._start_ends = start_ends
 
 
 class LinearSnarlMap(object):
@@ -46,6 +52,33 @@ class LinearSnarlMap(object):
         offset = self.get_node_start(node_id)
         return scale, offset
 
+    def to_sparse_pileup(self, unmapped_indices_dict, min_value=0):
+        all_indices = []
+        all_values = []
+        i = 0
+        node_idxs = self._graph.node_indexes
+        min_idx = self._graph.min_node
+        for i in range(node_idxs.size-1):
+            if i % 100000 == 0:
+                logging.info("Processing node %d" % i)
+            node_id = i+min_idx
+            if node_id not in unmapped_indices_dict:
+                all_indices.append(node_idxs[i])
+                all_values.append(min_value)
+                continue
+            unmapped_indices = unmapped_indices_dict[node_id]
+            scale, offset = self.get_scale_and_offset(node_id)
+            new_idxs = [(idx-offset)//scale+node_idxs[i]
+                        for idx in unmapped_indices.indices]
+            new_idxs[0] = max(node_idxs[i], new_idxs[0])
+            # assert new_idxs[0] == node_idxs[i]
+            # assert new_idxs[-1] < node_idxs[i+1]
+            all_indices.extend(new_idxs)
+            all_values.extend(unmapped_indices.values)
+        return SparseDiffs(
+            np.array(all_indices, dtype="int"),
+            np.diff(np.r_[0, all_values]))
+
     def to_dense_pileup(self, unmapped_indices_dict):
         pileup = DensePileup(self._graph, dtype=np.uint8)
         i = 0
@@ -77,7 +110,6 @@ class LinearSnarlMap(object):
                 value = values[j]
                 pileup.data.set_values(node_id, start, end, value)
                 j += 1
-
         return pileup
 
     def map_graph_interval(self, interval):

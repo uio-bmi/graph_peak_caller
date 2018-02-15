@@ -90,5 +90,3 @@ class DagHoleCleaner(object):
             self.pileup.set_area_to_value(areas, True)
 
         self.pileup.threshold(0.5)
-
-

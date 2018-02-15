@@ -23,10 +23,12 @@ from graph_peak_caller.shift_estimation_multigraph import MultiGraphShiftEstimat
 from pyvg.util import vg_gam_file_to_intervals
 
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
+    level=logging.WARNING, format="%(asctime)s, %(levelname)s: %(message)s")
+
 
 def main():
     create_argument_parser()
+
 
 def shift_estimation(args):
 
