@@ -388,15 +388,21 @@ def analyse_peaks(args):
 
 
 def analyse_peaks_whole_genome(args):
-    from graph_peak_caller.peakscomparer import PeaksComparerV2
+    from graph_peak_caller.peakscomparer import PeaksComparerV2, AnalysisResults
+    from offsetbasedgraph import IndexedInterval
     chromosomes = args.chromosomes.split(",")
     graph_file_names = (args.graphs_dir + chrom + ".nobg" for chrom in chromosomes)
     graphs = (obg.GraphWithReversals.from_numpy_file(fn) for fn in graph_file_names)
     vg_file_names = (args.graphs_dir + chrom + ".vg" for chrom in chromosomes)
 
+
+    results = AnalysisResults()
+
     for chrom in chromosomes:
         graph = obg.GraphWithReversals.from_numpy_file(
             args.graphs_dir + chrom + ".nobg")
+        logging.info("Reading linear path")
+        linear_path = IndexedInterval.from_file(args.graphs_dir + chrom + "_linear_path.interval")
 
         analyser = PeaksComparerV2(
             graph,
@@ -405,10 +411,18 @@ def analyse_peaks_whole_genome(args):
             args.results_dir + "%s_sequences.fasta" % chrom,
             args.results_dir + "/fimo_macs_chr%s/fimo.txt" % chrom,
             args.results_dir + "/fimo_graph_chr%s/fimo.txt" % chrom,
-            linear_path_name=chrom
+            linear_path
         )
+        results = results + analyser.results
 
+    print(" === Final results for all chromosomes ===")
+    print(results)
 
+    results.to_file(args.out_file + ".pickle")
+    with open(args.out_file + ".txt", "w") as f:
+        f.write(str(results))
+    logging.info("Wrote results as pickle to %s and as text to %s" \
+                 % (args.out_file + ".pickle", args.out_file + ".txt"))
 
 
 def analyse_manually_classified_peaks(args):
@@ -620,7 +634,8 @@ interface = \
                 [
                     ('chromosomes', 'Comma seaparated list of chromosomes to use'),
                     ('results_dir', 'Directory of result files (should contain fasta files from both linear and graph peak calling'),
-                    ('graphs_dir', 'Dir containing obg graphs on form 1.nobg, 2.nobg, ... and vg graphs 1.json, 2.json, ...')
+                    ('graphs_dir', 'Dir containing obg graphs on form 1.nobg, 2.nobg, ... and vg graphs 1.json, 2.json, ...'),
+                    ('out_file', 'Out file base name (file endings for different formats will be appended)')
                 ],
             'method': analyse_peaks_whole_genome
         },
