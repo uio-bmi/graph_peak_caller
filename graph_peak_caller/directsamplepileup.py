@@ -47,6 +47,7 @@ class DirectPileup:
             pileup.data._values[indices[-1]] = values[-1]
         # pileup.data._values[indices] = values
         pileup.data._values = np.cumsum(pileup.data._values)
+        logging.info("Done creating direct pileup from file")
         return pileup
 
 

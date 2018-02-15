@@ -285,6 +285,7 @@ class CallPeaksFromQvalues(object):
         scored_peaks = (ScoredPeak.from_peak_and_numpy_pileup(peak, _pileup)
                         for peak in self.binary_peaks)
         max_paths = [peak.get_max_path() for peak in scored_peaks]
+        logging.info("All max paths found")
         max_paths = [max_path for max_path in max_paths
                      if max_path is not None]
         for max_path in max_paths:

@@ -102,6 +102,7 @@ class ScoredPeak(object):
                 return p
 
     def get_max_path(self):
+        logging.info("Processing peak")
         sums = {node_id: float(scores.sum()) for node_id, scores
                 in self._scores.items()}
         # Handle peaks that are on one node
