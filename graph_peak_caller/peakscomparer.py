@@ -253,7 +253,7 @@ class PeaksComparerV2(object):
             if i == 1:
                 self.results.tot_peaks1 = len(peaks1.intervals)
             else:
-                self.results.tot_peaks2 = len(peaks2.intervals)
+                self.results.tot_peaks2 = len(peaks1.intervals)
 
             not_matching = []
             matching = []
