@@ -43,6 +43,8 @@ class AnalysisResults:
         return self.__repr__()
 
     def __add__(self, other):
+        self.tot_peaks1 += other.tot_peaks1
+        self.tot_peaks2 += other.tot_peaks2
         self.peaks1_in_peaks2 += other.peaks1_in_peaks2
         self.peaks2_in_peaks1 += other.peaks2_in_peaks1
         self.peaks2_not_in_peaks1 += other.peaks2_not_in_peaks1
