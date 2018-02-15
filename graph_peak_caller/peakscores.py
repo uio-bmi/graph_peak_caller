@@ -138,6 +138,7 @@ class ScoredPeak(object):
         assert stack, str(self._peak)
         global_max = -1
         global_max_path = None
+        n_iterations = 0
         while stack:
             node_ids, value = stack.popleft()
 
@@ -154,6 +155,10 @@ class ScoredPeak(object):
                 for next_node in nexts
                 if next_node not in node_ids[1:] and next_node in sums]
             stack.extend(new_items)
+
+            if n_iterations % 20 == 0:
+                logging.info("  %d iterations" % n_iterations)
+            n_iterations += 1
 
         start_node = global_max_path[0]
         start_pos = [pos for pos in start_positions if
