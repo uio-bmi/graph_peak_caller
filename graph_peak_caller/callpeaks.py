@@ -93,6 +93,7 @@ class CallPeaks(object):
         finder = QValuesFinder(self.p_values_pileup,
                                self.p_to_q_values_mapping)
         self.q_values_pileup = finder.get_q_values()
+        self.q_values_pileup.track_size = self.p_values_pileup.track_size
         self.q_values_pileup.to_sparse_files(
             self.out_file_base_name + "qvalues")
         logging.info("Wrote q values to sparse files with base name %s " % \
