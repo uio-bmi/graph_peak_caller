@@ -36,6 +36,18 @@ class SparseValues:
     def __repr__(self):
         return "SV(%s, %s)" % (self.indices, self.values)
 
+    def __eq__(self, other):
+        if not np.all(self.indices == other.indices):
+            return False
+
+        if not np.all(self.values == other.values):
+            return False
+
+        if self.track_size != other.track_size:
+            return False
+
+        return True
+
     def to_bed_graph(self, filename):
         logging.warning("Not writing to %s", filename)
 
