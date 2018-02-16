@@ -55,10 +55,17 @@ class PToQValuesMapper:
     @classmethod
     def from_p_values_pileup(cls, p_values):
         logging.info("Creating mapping from p value dense pileup")
-        sub_counts = np.ediff1d(
-            p_values.indices,
-            to_end=p_values.track_size-p_values.indices[-1])
+        sub_counts = cls.__get_sub_counts(p_values)
+        # sub_counts = np.ediff1d(
+        #     p_values.indices,
+        #     to_end=p_values.track_size-p_values.indices[-1])
         return cls._from_subcounts(p_values.values, sub_counts)
+
+    @classmethod
+    def __get_sub_counts(cls, sparse_values):
+        return np.ediff1d(
+            sparse_values.indices,
+            to_end=sparse_values.track_size-sparse_values.indices[-1])
 
     @classmethod
     def from_files(cls, base_file_name):
@@ -72,9 +79,11 @@ class PToQValuesMapper:
         for filename in files:
             base_file_name = filename.replace("_indexes.npy", "")
             logging.info("Reading p values from file %s" % base_file_name)
-            indices, values = cls.__read_file(base_file_name)
-            sub_counts.append(np.diff(indices))
-            p_values.append(values)
+            chr_p_values = SparseValues.from_sparse_files(base_file_name)
+            sub_counts.append(cls.__get_sub_counts(chr_p_values))
+            p_values.append(chr_p_values.values)
+            assert sub_counts[-1].size == p_values[-1].size
+
         return cls._from_subcounts(
             np.concatenate(p_values),
             np.concatenate(sub_counts))

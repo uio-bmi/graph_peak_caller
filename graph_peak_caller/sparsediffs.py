@@ -24,7 +24,7 @@ class SparseValues:
         indices = np.load(file_base_name + "_indexes.npy")
         values = np.load(file_base_name + "_values.npy")
         size = indices[-1]
-        obj = cls(indices, values)
+        obj = cls(indices[:-1], values)
         obj.track_size = size
         return obj
 
@@ -36,18 +36,26 @@ class SparseValues:
     def __repr__(self):
         return "SV(%s, %s)" % (self.indices, self.values)
 
+    def __eq__(self, other):
+        if not np.all(self.indices == other.indices):
+            return False
+
+        if not np.all(self.values == other.values):
+            return False
+
+        if self.track_size != other.track_size:
+            return False
+
+        return True
+
     def to_bed_graph(self, filename):
         logging.warning("Not writing to %s", filename)
 
     def threshold_copy(self, cutoff):
         values = self.values >= cutoff
         return SparseValues(self.indices, values)
-        # new._values = new._values >= cutoff
-        # logging.info("Thresholding done.")
-        # return new
 
     def to_dense_pileup(self, size):
-        print("#TODENSE", self)
         diffs = np.ediff1d(self.values, to_begin=self.values[0])
         pileup = np.zeros(size+1, dtype=self.values.dtype)
         indices = self.indices[:diffs.size]

@@ -93,12 +93,15 @@ class CallPeaks(object):
         finder = QValuesFinder(self.p_values_pileup,
                                self.p_to_q_values_mapping)
         self.q_values_pileup = finder.get_q_values()
+        self.q_values_pileup.track_size = self.p_values_pileup.track_size
+        self.q_values_pileup.to_sparse_files(
+            self.out_file_base_name + "qvalues")
+        logging.info("Wrote q values to sparse files with base name %s " % \
+                     (self.out_file_base_name + "qvalues"))
         q_values = DensePileup(self.graph)
         q_values.data._values = self.q_values_pileup.to_dense_pileup(
             self.graph.node_indexes[-1])
         self.q_values_pileup = q_values
-        self.q_values_pileup.to_bed_graph(
-            self.out_file_base_name + "qvalues.bdg")
 
     def call_peaks_from_q_values(self, experiment_info, config=None):
         assert self.q_values_pileup is not None
@@ -300,7 +303,7 @@ class CallPeaksFromQvalues(object):
         #    max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1, trim_raw=True)
 
         file_name = self.out_file_base_name + "max_paths.intervalcollection"
-        
+
         PeakCollection(max_paths).to_file(
             file_name,
             text_file=True)

@@ -133,7 +133,6 @@ class MultipleGraphsCallpeaks:
             caller.p_to_q_values_mapping = self._q_value_mapping
             caller.p_values_pileup = SparseValues.from_sparse_files(
                 self._base_name + name + "_" + "pvalues")
-            print("PP:", caller.p_values_pileup)
             # DensePileup.from_sparse_files(
             #    ob_graph, self._base_name + name + "_" + "pvalues")
             caller.get_q_values()

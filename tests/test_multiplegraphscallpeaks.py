@@ -5,6 +5,7 @@ from graph_peak_caller.snarls import SnarlGraph, SnarlGraphBuilder, SimpleSnarl
 from graph_peak_caller.linearsnarls import LinearSnarlMap
 from pyvg.sequences import SequenceRetriever
 import logging
+import os
 logging.basicConfig(level=logging.WARNING)
 
 
@@ -18,6 +19,17 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
         self.linear_maps = []
         self.sequence_retrievers = []
         self.peaks = []
+
+        for chrom in self.chromosomes:
+            # Delete old files if existing
+            if os.path.isfile("multigraphs_%s_pvalues_indexes.npy" % chrom):
+                os.remove("multigraphs_%s_pvalues_indexes.npy" % chrom)
+                os.remove("multigraphs_%s_pvalues_values.npy" % chrom)
+
+            # Delete old files if existing
+            if os.path.isfile("multigraphs_%s_max_paths.intervalcollection" % chrom):
+                os.remove("multigraphs_%s_max_paths.intervalcollection" % chrom)
+
 
         self._create_data()
 
@@ -43,7 +55,7 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
             )
             self._create_reads(chrom_number, chromosome, graph)
             node_offset += 3
-            graph.to_file(chromosome)
+            graph.to_file(chromosome + ".obg")
 
     def _create_reads(self, chrom_number, chrom, graph):
         i = chrom_number
@@ -80,6 +92,41 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
             skip_filter_duplicates=True
         )
         caller.run()
+        self.do_asserts()
+
+    def test_run_from_init_in_two_steps(self):
+
+        caller = MultipleGraphsCallpeaks(
+            self.chromosomes,
+            self.chromosomes,
+            self.sample_reads,
+            self.control_reads,
+            self.linear_maps,
+            self.fragment_length,
+            self.read_length,
+            has_control=False,
+            sequence_retrievers=None,
+            skip_filter_duplicates=True,
+            stop_after_p_values=True
+        )
+        caller.run()
+
+        for i, chromosome in enumerate(self.chromosomes):
+            print("Running chrom %s" % chromosome)
+            caller = MultipleGraphsCallpeaks(
+                self.chromosomes,
+                self.chromosomes,
+                self.sample_reads,
+                self.control_reads,
+                self.linear_maps,
+                self.fragment_length,
+                self.read_length,
+                has_control=False,
+                sequence_retrievers=None,
+                skip_filter_duplicates=True
+            )
+            caller.create_joined_q_value_mapping()
+            caller.run_from_p_values(only_chromosome=chromosome)
         self.do_asserts()
 
     def do_asserts(self):
