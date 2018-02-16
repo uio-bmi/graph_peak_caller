@@ -358,11 +358,12 @@ def plot_motif_enrichment(args):
     meme = args.meme_motif_file
 
     plot_true_positives(
-        {
-            "file1": fasta1,
-            "file2": fasta2
-        },
+        [
+            ("Graph Peak Caller", fasta1),
+            ("MACS2", fasta2)
+        ],
         meme,
+        plot_title=args.plot_title,
         save_to_file=args.out_figure_file_name,
         run_fimo=args.run_fimo == "True"
     )
@@ -594,7 +595,8 @@ interface = \
                     ('fasta2', ''),
                     ('meme_motif_file', 'something.meme'),
                     ('out_figure_file_name', ''),
-                    ('run_fimo', 'Set to True if fimo has not already been run.')
+                    ('run_fimo', 'Set to True if fimo has not already been run.'),
+                    ('plot_title', 'Title above plot')
                 ],
             'method': plot_motif_enrichment
         },
