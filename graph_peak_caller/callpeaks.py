@@ -97,6 +97,7 @@ class CallPeaks(object):
         q_values.data._values = self.q_values_pileup.to_dense_pileup(
             self.graph.node_indexes[-1])
         self.q_values_pileup = q_values
+        # self.q_values_pileup.data._touched_nodes = self.touched_nodes
         self.q_values_pileup.to_bed_graph(
             self.out_file_base_name + "qvalues.bdg")
 

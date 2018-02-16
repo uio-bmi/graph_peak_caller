@@ -88,7 +88,7 @@ class MultipleGraphsCallpeaks:
             zip(self.names, self.graph_file_names,
                 self.samples, self.controls, self.linear_maps):
             logging.info("Running %s" % name)
-            ob_graph = obg.GraphWithReversals.from_unknown_file_format(
+            ob_graph = obg.GraphWithReversals.from_numpy_file(
                 graph_file_name)
             if isinstance(sample, obg.IntervalCollection):
                 logging.info("Sample is already intervalcollection.")
@@ -121,7 +121,7 @@ class MultipleGraphsCallpeaks:
                     logging.info("Skipping %s" % str(name))
                     continue
             graph_file_name = self.graph_file_names[i]
-            ob_graph = obg.GraphWithReversals.from_unknown_file_format(
+            ob_graph = obg.GraphWithReversals.from_numpy_file(
                 graph_file_name)
             graph_size = sum(
                 block.length() for block in ob_graph.blocks.values())
@@ -133,7 +133,6 @@ class MultipleGraphsCallpeaks:
             caller.p_to_q_values_mapping = self._q_value_mapping
             caller.p_values_pileup = SparseValues.from_sparse_files(
                 self._base_name + name + "_" + "pvalues")
-            print("PP:", caller.p_values_pileup)
             # DensePileup.from_sparse_files(
             #    ob_graph, self._base_name + name + "_" + "pvalues")
             caller.get_q_values()
