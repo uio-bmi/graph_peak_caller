@@ -1,7 +1,7 @@
 from graph_peak_caller.peakcollection import PeakCollection
 from graph_peak_caller.nongraphpeaks import NonGraphPeakCollection
 from offsetbasedgraph import IntervalCollection
-from offsetbasedgraph import IndexedInterval
+from offsetbasedgraph import IndexedInterval, NumpyIndexedInterval
 from graph_peak_caller.util import create_linear_path
 import pickle
 import pyvg
@@ -73,13 +73,18 @@ class AnalysisResults:
 
 class PeaksComparerV2(object):
 
-    def __init__(self, graph, vg_json_file_name,
+    def __init__(self, graph,
                  linear_peaks_fasta_file_name,
                  graph_peaks_fasta_file_name,
                  linear_peaks_fimo_results_file,
                  graph_peaks_fimo_results_file,
                  linear_path,
                  region=None):
+
+        assert isinstance(linear_path, NumpyIndexedInterval), \
+            "Linear path should be numpy indexed interval for fast comparison"
+
+        print(linear_path)
 
         self.graph = graph
         self.graph_peaks_fasta_file_name = graph_peaks_fasta_file_name
@@ -90,11 +95,7 @@ class PeaksComparerV2(object):
         self.graph_matching_motif = self._get_peaks_matching_motif(
             graph_peaks_fimo_results_file)
 
-        assert isinstance(linear_path, IndexedInterval)
         self.linear_path = linear_path
-
-        logging.info("Length of linear path: %d" % self.linear_path.length())
-
         self.peaks1 = PeakCollection.from_fasta_file(self.graph_peaks_fasta_file_name,
                                                      graph)
 

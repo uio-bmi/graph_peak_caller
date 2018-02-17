@@ -137,7 +137,7 @@ class PeakCollection(obg.IntervalCollection):
                     logging.info("Filtered out peak")
                     continue
             if i % 100 == 0:
-                print("Interval %i" % (i))
+                logging.info("%d peaks processed" % (i))
             i += 1
             linear_interval = linear_path_interval.get_subinterval(start, end)
             linear_interval.graph = ob_graph

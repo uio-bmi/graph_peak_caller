@@ -394,7 +394,7 @@ def analyse_peaks(args):
 
 def analyse_peaks_whole_genome(args):
     from graph_peak_caller.peakscomparer import PeaksComparerV2, AnalysisResults
-    from offsetbasedgraph import IndexedInterval
+    from offsetbasedgraph import NumpyIndexedInterval
     chromosomes = args.chromosomes.split(",")
     graph_file_names = (args.graphs_dir + chrom + ".nobg" for chrom in chromosomes)
     graphs = (obg.GraphWithReversals.from_numpy_file(fn) for fn in graph_file_names)
@@ -407,11 +407,10 @@ def analyse_peaks_whole_genome(args):
         graph = obg.GraphWithReversals.from_numpy_file(
             args.graphs_dir + chrom + ".nobg")
         logging.info("Reading linear path")
-        linear_path = IndexedInterval.from_file(args.graphs_dir + chrom + "_linear_path.interval")
+        linear_path = NumpyIndexedInterval.from_file(args.graphs_dir + chrom + "_linear_path.interval")
 
         analyser = PeaksComparerV2(
             graph,
-            args.graphs_dir + chrom + ".json",
             args.results_dir + "macs_sequences_chr%s.fasta" % chrom,
             args.results_dir + "%s_sequences.fasta" % chrom,
             args.results_dir + "/fimo_macs_chr%s/fimo.txt" % chrom,
