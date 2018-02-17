@@ -153,7 +153,9 @@ class PeakCollection(obg.IntervalCollection):
     def create_from_linear_intervals_in_bed_file(
             cls, ob_graph, linear_path_interval, bed_file_name,
             graph_region=None):
-        # todo re-use above method
+        # todo:
+        # Duplicate of above. Maybe not used and can be deleted
+        # since the same can be achieved by creating NonGraphPeaks from bed and converting
         peaks = BedTool(bed_file_name)
         intervals_on_graph = []
         i = 0

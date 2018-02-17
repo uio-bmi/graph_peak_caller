@@ -162,7 +162,8 @@ def create_ob_graph_from_vg(vg_json_graph_file_name, ob_graph_file_name="graph.o
 def create_linear_path(ob_graph, vg_graph, path_name="ref", write_to_file="linear_path.intervalcollection"):
     assert ob_graph is not None
     linear_paths = get_linear_paths_in_graph(ob_graph, vg_graph, write_to_file_name=write_to_file)
-    ref_path = linear_paths[path_name].to_indexed_interval()
+    #ref_path = linear_paths[path_name].to_indexed_interval()
+    ref_path = obg.NumpyIndexedInterval.from_interval(linear_paths[path_name])
     return ref_path
 
 if __name__ == "__main__":

@@ -22,6 +22,8 @@ from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 from graph_peak_caller.shift_estimation_multigraph import MultiGraphShiftEstimator
 from pyvg.util import vg_gam_file_to_intervals
 
+
+
 logging.basicConfig(
     level=logging.WARNING, format="%(asctime)s, %(levelname)s: %(message)s")
 
@@ -448,7 +450,8 @@ def find_linear_path(args):
     import pyvg
     graph = obg.GraphWithReversals.from_numpy_file(args.ob_graph_file_name)
     vg_graph = pyvg.vg.Graph.create_from_file(args.vg_json_graph_file_name)
-    linear_path = create_linear_path(graph, vg_graph, path_name=args.linear_path_name)
+    linear_path = create_linear_path(graph, vg_graph,
+                                     path_name=args.linear_path_name, write_to_file=None)
     linear_path.to_file(args.out_file_name)
     logging.info("Wrote to file %s" % args.out_file_name)
 

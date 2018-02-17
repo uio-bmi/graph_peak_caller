@@ -93,7 +93,7 @@ class MultipleGraphsCallpeaks:
             if isinstance(sample, obg.IntervalCollection):
                 logging.info("Sample is already intervalcollection.")
             else:
-                logging.info("Creating interval collecftions from files")
+                logging.info("Creating interval collections from files")
                 sample = vg_json_file_to_interval_collection(
                     None, sample, ob_graph)
                 control = vg_json_file_to_interval_collection(
