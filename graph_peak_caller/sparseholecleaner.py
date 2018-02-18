@@ -2,6 +2,7 @@ from itertools import chain
 from collections import defaultdict
 import scipy.sparse.csgraph as csgraph
 from scipy.sparse import csr_matrix
+from .holes_analyzer import HolesAnalyzer
 import numpy as np
 
 """
@@ -221,14 +222,33 @@ class HolesCleaner:
         keep = (ends-starts) >= self._max_size
         self._kept.append(np.vstack((starts[keep], ends[keep])))
 
+    def classify_holes(self, hole_starts, hole_ends, start_ids, end_ids, is_multinodes):
+        is_starts = hole_starts == self._node_indexes[start_ids-1]
+        is_ends = hole_ends == self._node_indexes[end_ids]
+        full_start_filter = is_starts & (is_ends | is_multinodes)
+        full_end_filter = is_ends & (is_multinodes)
+        starts_filter = is_starts ^ full_start_filter
+        ends_filter = is_ends ^ (is_starts | is_multinodes)
+        return starts_filter, ends_filter, full_start_filter, full_end_filter
+
+    def divide_on_nodes(self, holes, node_ids):
+        multinodes = nodes_ids[:, 0] != node_ids[:, 1]
+
     def run(self):
-        print(self._holes)
-        starts = self._holes[:, 0]
-        ends = self._holes[:, 1]
+        analyzer = HolesAnalyzer(
+            self._holes, self.node_ids, self.node_indexes)
+        analyzer.run()
+
+        hole_starts = self._holes[:, 0]
+        hole_ends = self._holes[:, 1]
         start_ids = self._node_ids[:, 0]
         end_ids = self._node_ids[:, 1]
-
         are_internal = start_ids == end_ids
+        filters = self.classify_holes(hole_starts, hole_ends,
+                                      start_ids, end_ids, are_internal)
+        print(self._get_starts(hole_starts[filters[0]], start_ids[filters[0]]))
+        print(self._get_ends(hole_ends[filters[1]], end_ids[filters[1]]))
+        return 
         are_starts = starts == self._node_indexes[start_ids-1]
         print("MS:", end_ids[are_starts])
         are_ends = ends == self._node_indexes[end_ids]
