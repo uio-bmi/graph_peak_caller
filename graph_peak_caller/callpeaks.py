@@ -221,6 +221,8 @@ class CallPeaksFromQvalues(object):
         logging.info("Trimming max path intervals. End: %d" % end_to_trim)
         new_intervals = []
         n_intervals_trimmed = 0
+        intervals_too_short = []
+        intervals_too_short_untrimmed = []
         for interval in intervals:
             if np.all([rp < 0 for rp in interval.region_paths]):
                 use_interval = interval.get_reverse()
@@ -260,6 +262,8 @@ class CallPeaksFromQvalues(object):
             new_interval.score = use_interval.score
 
             if new_interval.length() < self.info.fragment_length:
+                intervals_too_short.append(new_interval)
+                intervals_too_short_untrimmed.append(use_interval)
                 continue
             new_interval = Peak(new_interval.start_position,
                                 new_interval.end_position,
@@ -268,6 +272,12 @@ class CallPeaksFromQvalues(object):
                                 score=use_interval.score)
 
             new_intervals.append(new_interval)
+
+        logging.info("N peaks removed because too short after trimming: %d. Written to file." % len(intervals_too_short))
+        intervals_too_short = IntervalCollection(intervals_too_short)
+        intervals_too_short_untrimmed = IntervalCollection(intervals_too_short_untrimmed)
+        intervals_too_short.to_file(self.out_file_base_name + "too_short_peaks.intervals")
+        intervals_too_short_untrimmed.to_file(self.out_file_base_name + "too_short_peaks_untrimmed.intervals")
 
         logging.info("Trimmed in total %d intervals" % n_intervals_trimmed)
         logging.info("N intervals left: %d" % len(new_intervals))
