@@ -3,6 +3,7 @@ import offsetbasedgraph as obg
 from pybedtools import BedTool
 import logging
 from collections import defaultdict
+import numpy as np
 from offsetbasedgraph import DirectedInterval
 
 
@@ -239,6 +240,8 @@ class PeakCollection(obg.IntervalCollection):
             peak.sequence = sequence
             peak.graph = graph
             peaks.append(peak)
+        avg_peak_size = np.mean([p.length() for p in peaks])
+        logging.info("Avg peak size: %2.f" % avg_peak_size)
 
         return cls(peaks)
 
