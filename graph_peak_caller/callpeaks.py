@@ -274,10 +274,11 @@ class CallPeaksFromQvalues(object):
             new_intervals.append(new_interval)
 
         logging.info("N peaks removed because too short after trimming: %d. Written to file." % len(intervals_too_short))
-        intervals_too_short = IntervalCollection(intervals_too_short)
-        intervals_too_short_untrimmed = IntervalCollection(intervals_too_short_untrimmed)
-        intervals_too_short.to_file(self.out_file_base_name + "too_short_peaks.intervals")
-        intervals_too_short_untrimmed.to_file(self.out_file_base_name + "too_short_peaks_untrimmed.intervals")
+        intervals_too_short = PeakCollection(intervals_too_short)
+        intervals_too_short_untrimmed = PeakCollection(intervals_too_short_untrimmed)
+        intervals_too_short.to_file(self.out_file_base_name + "too_short_peaks.intervals", text_file=True)
+        intervals_too_short_untrimmed.to_file(self.out_file_base_name + "too_short_peaks_untrimmed.intervals",
+                                              text_file=True)
 
         logging.info("Trimmed in total %d intervals" % n_intervals_trimmed)
         logging.info("N intervals left: %d" % len(new_intervals))
@@ -306,6 +307,8 @@ class CallPeaksFromQvalues(object):
                 self.q_values.data.get_interval_values(max_path)))
         max_paths.sort(key=lambda p: p.score, reverse=True)
         if isinstance(self.q_values, DensePileup):
+            PeakCollection(max_paths).to_file(self.out_file_base_name + "max_paths_before_trimming.intervalcollection",
+                                              text_file=True)
             max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1)
             max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1)
         #if not self.q_values_max_path:
