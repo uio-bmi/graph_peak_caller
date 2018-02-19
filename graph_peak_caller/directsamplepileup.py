@@ -30,7 +30,6 @@ class DirectPileup:
             counter += 1
 
     def to_file(self, base_name):
-        print("!!!!! Writing", base_name)
         indices = np.nonzero(self._pileup.data._values)
         values = self._pileup.data._values[indices]
         np.save(base_name + "_diffindices.npy", indices)
@@ -38,7 +37,6 @@ class DirectPileup:
 
     @staticmethod
     def from_file(graph, base_name):
-        print("!!!!! Reading", base_name)
         pileup = DensePileup(graph)
         indices = np.load(base_name + "_diffindices.npy")
         values = np.load(base_name + "_diffvalues.npy")
@@ -101,8 +99,6 @@ class SparseDirectPileup:
             i += 1
 
     def to_file(self, base_name):
-        print("!!!!! Writing", base_name)
-        print(self._pileup.size)
         indices = np.nonzero(self._pileup[:-1])
         values = self._pileup[indices]
         np.save(base_name + "_diffindices.npy", indices)

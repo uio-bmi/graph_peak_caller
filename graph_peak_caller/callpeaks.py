@@ -292,7 +292,6 @@ class CallPeaksFromQvalues(object):
     def __get_max_paths(self):
         logging.info("Getting maxpaths")
         if not self.q_values_max_path:
-            print("<", self.out_file_base_name+"direct_pileup")
             _pileup = DirectPileup.from_file(
                 self.graph,
                 self.out_file_base_name+"direct_pileup")
