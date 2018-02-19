@@ -34,9 +34,6 @@ class TestWholeCallPeaks(unittest.TestCase):
 
     def run_callpeaks(self):
         self._create_reads()
-        #for read in self.sample_reads:
-        #    print(read)
-
         control_reads = self.sample_reads.copy()
 
         self.graph_size = sum(block.length() for block in self.graph.blocks.values())
