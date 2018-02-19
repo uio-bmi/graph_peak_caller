@@ -19,7 +19,7 @@ class PValuesFinder:
             p_values = poisson.logsf(counts, lambdas)
             p_values /= -baseEtoTen
             p_values[counts == 0] = 0
-            p_values[p_values.isinf()] = 1000
+            p_values[np.isinf(p_values)] = 1000
             return p_values
 
         p_values = self.sample.apply_binary_func(
