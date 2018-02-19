@@ -255,6 +255,7 @@ class SampleAndControlCreatorO(object):
         if self.use_global_min_value:
             sparse_control.set_min_value(self.use_global_min_value)
         control_pileup = sparse_control.create(self.control_intervals)
+        control_pileup.to_sparse_files(self.out_file_base_name + "control_track")
         # control_pileup = SparseDiffs.from_dense_pileup(
         #     control_pileup.data._values)
         # control_pileup = linearsnarls.create_control(
@@ -358,10 +359,10 @@ class SampleAndControlCreator(SampleAndControlCreatorO):
         # assert np.all(pileup.data._values == pileup2.data._values)
         self.touched_nodes = pileup.touched_nodes
 
-        self._sample_track = self.out_file_base_name + "sample_track.bdg"
-        if self.save_tmp_results_to_file and False:
+        self._sample_track = self.out_file_base_name + "sample_track"
+        if self.save_tmp_results_to_file or True:
             logging.info("Saving sample pileup to file")
-            pileup.to_bed_graph(self._sample_track)
+            pileup.to_sparse_files(self._sample_track)
             logging.info("Saved sample pileup to " + self._sample_track)
 
             logging.info("Writing touched nodes to file")
