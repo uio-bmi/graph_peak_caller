@@ -10,8 +10,6 @@ from graph_peak_caller.sparsepileup import SparsePileup
 
 
 class TestWholeCallPeaks(unittest.TestCase):
-
-
     def _create_reads(self):
         self.sample_reads = []
         for peak in self.peaks:

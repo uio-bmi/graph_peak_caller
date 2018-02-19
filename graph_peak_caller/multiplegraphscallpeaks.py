@@ -5,6 +5,7 @@ from .callpeaks import CallPeaks, Configuration
 from .sparsepvalues import PToQValuesMapper
 from .densepileup import DensePileup
 from .sparsediffs import SparseValues
+from .sparsegraphpileup import _get_node_indexes
 import logging
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s, %(levelname)s: %(message)s")
@@ -125,7 +126,8 @@ class MultipleGraphsCallpeaks:
                 graph_file_name)
             graph_size = sum(
                 block.length() for block in ob_graph.blocks.values())
-            ob_graph.node_indexes = [graph_size]
+            ob_graph.node_indexes = _get_node_indexes(ob_graph)
+            # ob_graph.node_indexes = [graph_size]
             info = ExperimentInfo(
                 graph_size, self.fragment_length, self.read_length)
             assert ob_graph is not None

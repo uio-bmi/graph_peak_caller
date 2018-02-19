@@ -200,19 +200,15 @@ class CallPeaksFromQvalues(object):
                 self.pre_processed_peaks,
                 self.info.read_length).run()
 
-            # self.pre_processed_peaks.fill_small_wholes(
-            #     self.info.read_length,
-            #     self.out_file_base_name + "_holes.intervals",
-            #     touched_nodes=self.touched_nodes)
-        d_peaks = DensePileup(self.graph)
-        d_peaks.data._values = self.pre_processed_peaks.to_dense_pileup(
-            self.graph.node_indexes[-1])
-        self.pre_processed_peaks = d_peaks
+            d_peaks = DensePileup(self.graph)
+            d_peaks.data._values = self.pre_processed_peaks.to_dense_pileup(
+                self.graph.node_indexes[-1])
+            self.pre_processed_peaks = d_peaks
 
-        q_values = DensePileup(self.graph)
-        q_values.data._values = self.q_values.to_dense_pileup(
-            self.graph.node_indexes[-1])
-        self.q_values = q_values
+            q_values = DensePileup(self.graph)
+            q_values.data._values = self.q_values.to_dense_pileup(
+                self.graph.node_indexes[-1])
+            self.q_values = q_values
 
         if self.save_tmp_results_to_file:
             self.pre_processed_peaks.to_bed_file(
