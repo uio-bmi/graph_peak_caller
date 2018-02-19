@@ -3,6 +3,7 @@ from collections import defaultdict
 import scipy.sparse.csgraph as csgraph
 from scipy.sparse import csr_matrix
 from .holes_analyzer import HolesAnalyzer
+from .sparsediffs import SparseValues
 import numpy as np
 
 """
@@ -76,6 +77,7 @@ class LineGraph:
         self.kept_ends = np.vstack((ends[0][~self.filtered._ends_mask],
                                     ends[1][~self.filtered._ends_mask]))
         self.kept_fulls = full[0][~self.filtered._fulls_mask]
+        self.kept_fulls = self.kept_fulls.astype("int")
 
         self.full_nodes = self.filtered.filtered_fulls
         self.start_nodes = self.filtered.filtered_starts
@@ -84,14 +86,15 @@ class LineGraph:
         self._all_nodes = np.r_[self.start_nodes,
                                 self.full_nodes,
                                 self.end_nodes]
-
+        self._all_nodes = self._all_nodes.astype("int")
         self._all_sizes = np.r_[self.start_size,
                                 self.full_size,
                                 self.end_size]
+        self._all_sizes = self._all_sizes.astype("int")
         self.ob_graph = ob_graph
 
         self.n_starts = self.start_nodes.size
-        self.n_ends = self.start_nodes.size
+        self.n_ends = self.end_nodes.size
         self.n_nodes = self._all_nodes.size
 
         self._matrix = self.make_graph()
@@ -121,14 +124,17 @@ class LineGraph:
         to_nodes.extend([self.end_stub]*end_nodes.size)
         from_nodes.extend(list(end_nodes))
         sizes.extend(self._all_sizes[end_nodes])
-        self.n_starts = n_starts
+        # self.n_starts = n_starts
         self._graph_node_sizes = sizes
         return csr_matrix((np.array(sizes), (np.array(from_nodes),
                                              np.array(to_nodes))),
                           [self.end_stub+1, self.end_stub+1])
 
     def get_masked(self, mask):
+        print("GET MASKED")
         n_starts, n_ends = self.n_starts, self.n_ends
+        print(n_starts, n_ends)
+        print(self._all_nodes)
         starts = np.vstack((self._all_nodes[:n_starts][mask[:n_starts]],
                             self._all_sizes[:n_starts][mask[:n_starts]]))
         fulls = self._all_nodes[n_starts:-n_ends][mask[n_starts:-n_ends]]
@@ -145,6 +151,8 @@ class LineGraph:
         start_nodes = np.r_[np.arange(self.n_starts),
                             self.n_starts+self.filtered._full_starts,
                             self.n_nodes-self.n_ends+self.filtered._end_starts]
+        if not start_nodes.size:
+            return np.array([], dtype="bool")
         shortest_paths = csgraph.shortest_path(self._matrix)
         to_dist = np.min(shortest_paths[start_nodes], axis=0)
         from_dist = shortest_paths[:, self.end_stub]
@@ -153,12 +161,16 @@ class LineGraph:
 
 class HolesCleaner:
     def __init__(self, graph, sparse_values, max_size):
+        print("IN:", sparse_values)
+        sparse_values.indices = sparse_values.indices.astype("int")
         self._graph = graph
         self._node_indexes = graph.node_indexes
+        print("NI", self._node_indexes)
         self._sparse_values = sparse_values
         self._holes = self.get_holes()
-        print(self._holes)
+        print("HOLES", self._holes)
         self._node_ids = self.get_node_ids()
+        print("NODEIDS", self._node_ids)
         self._max_size = max_size
         self._kept = []
 
@@ -169,9 +181,18 @@ class HolesCleaner:
         end_idx = self._sparse_values.indices.size
         if self._sparse_values.values[-1] == 0:
             end_idx -= 1
-
         return self._sparse_values.indices[start_idx:end_idx].reshape(
             (end_idx-start_idx)//2, 2)
+
+    def build_sparse_values(self, holes):
+        indices = np.sort(holes.ravel())
+        values = np.arange(indices.size) % 2
+        if indices[0] != 0:
+            indices = np.r_[0, indices]
+            values = np.r_[1, values]
+        print("I", indices, indices.size)
+        print("V", values, values.size)
+        return SparseValues(indices, values, sanitize=True)
 
     def get_node_ids(self):
         node_ids = np.empty_like(self._holes)
@@ -228,12 +249,13 @@ class HolesCleaner:
         analyzer = HolesAnalyzer(
             self._holes, self._node_ids, self._node_indexes)
         analyzer.run()
+        self._handle_internal(analyzer.internals)
         linegraph = LineGraph(analyzer.get_ends(), analyzer.get_fulls(),
                               analyzer.get_starts(), self._graph)
         mask = linegraph.filter_small(self._max_size)
         self._kept_borders = linegraph.get_masked(mask)
-        self._handle_internal(analyzer._internal_holes)
-        return(self.build_kept_holes())
+
+        return self.build_sparse_values(self.build_kept_holes())
 
     def build_kept_holes(self):
         starts, fulls, ends = self._kept_borders
@@ -241,16 +263,26 @@ class HolesCleaner:
         n_internals = self._kept_internals.shape[0]
         all_holes = np.empty((n_starts+n_fulls+n_ends+n_internals, 2),
                              dtype="int")
-        all_holes[:n_starts, 0] = self._node_indexes[starts[0]]-starts[1]
-        all_holes[:n_starts, 1] = self._node_indexes[starts[0]]
+        if all_holes.shape == self._kept_internals.shape:
+            return self._kept_internals
+        if n_starts:
+            all_holes[:n_starts, 0] = self._node_indexes[starts[0]]-starts[1]
+            all_holes[:n_starts, 1] = self._node_indexes[starts[0]]
         n_border = n_starts+n_fulls+n_ends
-        all_holes[n_starts:n_starts+n_fulls, 0] = self._node_indexes[fulls-1]
-        all_holes[n_starts:n_starts+n_fulls, 1] = self._node_indexes[fulls]
-        all_holes[n_starts+n_fulls:n_border, 0] = self._node_indexes[ends[0]-1]
-        all_holes[n_starts+n_fulls:n_border, 1] = self._node_indexes[ends[0]-1] + ends[1]
+        if fulls.size:
+            print("FULLS", fulls)
+            all_holes[n_starts:n_starts+n_fulls, 0] = self._node_indexes[fulls-1]
+            all_holes[n_starts:n_starts+n_fulls, 1] = self._node_indexes[fulls]
+        if ends.size:
+            print(ends)
+            all_holes[n_starts+n_fulls:n_border, 0] = self._node_indexes[ends[0]-1]
+            all_holes[n_starts+n_fulls:n_border, 1] = self._node_indexes[ends[0]-1] + ends[1]
         all_holes[n_border:] = self._kept_internals
+        print(self._kept_internals)
+        print(n_starts, n_fulls, n_ends)
+        print("->\n", all_holes)
         all_holes.sort(axis=0)
-        print("#", all_holes)
+        print("#\n", all_holes)
         return all_holes
 
     def handle_border_holes(self, holes, node_ids):

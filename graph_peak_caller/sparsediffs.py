@@ -11,13 +11,18 @@ class SparseValues:
         self.track_size = None
 
     def _sanitize(self):
-        unique_mask = np.ediff1d(self.indices, to_end=1) != 0
+
+        unique_mask = np.r_[self.indices[1:] != self.indices[:-1], True]
+        print(unique_mask)
+        # unique_mask = np.ediff1d(self.indices, to_end=1) != 0
         self.indices = self.indices[unique_mask]
         self.values = self.values[unique_mask]
 
-        values_mask = np.ediff1d(self.values, to_begin=1) != 0
+        values_mask = np.r_[True, self.values[1:] != self.values[:-1]]
+        # values_mask = np.ediff1d(self.values, to_begin=1) != 0
         self.indices = self.indices[values_mask]
         self.values = self.values[values_mask]
+
 
     @classmethod
     def from_sparse_files(cls, file_base_name):
@@ -51,9 +56,14 @@ class SparseValues:
     def to_bed_graph(self, filename):
         logging.warning("Not writing to %s", filename)
 
+    def to_bed_file(self, filename):
+        logging.warning("Not writing to %s", filename)
+
     def threshold_copy(self, cutoff):
+        print("V", self.values)
         values = self.values >= cutoff
-        return SparseValues(self.indices, values)
+        print("T", cutoff, values)
+        return SparseValues(self.indices, values, sanitize=True)
 
     def to_dense_pileup(self, size):
         diffs = np.ediff1d(self.values, to_begin=self.values[0])

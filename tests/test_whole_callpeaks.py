@@ -195,14 +195,12 @@ class TestWholeCallPeaksHierarchical(TestWholeCallPeaks):
         LinearSnarlMap.from_snarl_graph(self.snarlgraph, self.graph).to_json_files("test_linear_map.tmp")
 
     def test_single_peak(self):
-        
         self.peaks = [
             DirectedInterval(1, 1, [1, 2, 7], self.graph),
         ]
         self.do_asserts()
 
     def test_multiple_peaks(self):
-        
         self.peaks = [
             DirectedInterval(2, 2, [1, 3, 4], self.graph),
             DirectedInterval(2, 2, [6, 10, 12], self.graph),
