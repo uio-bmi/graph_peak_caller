@@ -77,6 +77,11 @@ class SparseDiffs:
         # pileup[self._indices] = self._diffs
         # return np.cumsum(pileup[:-1])
 
+    def to_sparse_files(self, file_base_name):
+        np.save(file_base_name + "_indexes.npy",
+                self._indices)
+        np.save(file_base_name + "_values.npy", self._diffs)
+
     def to_bed_graph(self, filename):
         logging.warning("Not writing to %s", filename)
 
