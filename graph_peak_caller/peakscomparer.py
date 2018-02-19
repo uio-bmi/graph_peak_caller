@@ -1,35 +1,90 @@
 from graph_peak_caller.peakcollection import PeakCollection
 from graph_peak_caller.nongraphpeaks import NonGraphPeakCollection
 from offsetbasedgraph import IntervalCollection
+from offsetbasedgraph import IndexedInterval, NumpyIndexedInterval
 from graph_peak_caller.util import create_linear_path
+import pickle
 import pyvg
 import logging
 
 
 class AnalysisResults:
     def __init__(self):
-        pass
+        self.tot_peaks1 = 0
+        self.tot_peaks2 = 0
+        self.peaks1_in_peaks2 = 0
+        self.peaks2_in_peaks1 = 0
+        self.peaks2_not_in_peaks1 = 0
+        self.peaks1_not_in_peaks2 = 0
+        self.peaks2_not_in_peaks1_matching_motif = 0
+        self.peaks1_not_in_peaks2_matching_motif = 0
+        self.peaks1_in_peaks2_matching_motif = 0
+        self.peaks2_in_peaks1_matching_motif = 0
+
 
     def __repr__(self):
-        out = " ------- RESULTS ----- \n"
+        out = ""
+        out += "Number of peaks1: %d \n" % self.tot_peaks1
+        out += "Number of peaks2: %d \n" % self.tot_peaks2
+        out += "Number of peaks1 also found in peaks2: %d (%d with motif hit) \n" % \
+               (self.peaks1_in_peaks2, self.peaks1_in_peaks2_matching_motif)
+        out += "Number of peaks2 also found in peaks1: %d (%d with motif hit) \n" % \
+               (self.peaks2_in_peaks1, self.peaks2_in_peaks1_matching_motif)
+
+        out += "\n"
+        out += "Number of peaks1 NOT found in peaks 2: %d (%d with motif hit) \n" % \
+               (self.peaks1_not_in_peaks2, self.peaks1_not_in_peaks2_matching_motif)
+        out += "Number of peaks2 NOT found in peaks 1: %d (%d with motif hit) \n" % \
+               (self.peaks2_not_in_peaks1, self.peaks2_not_in_peaks1_matching_motif)
+        out += "\n \n"
         return out
 
     def __str__(self):
         return self.__repr__()
 
+    def __add__(self, other):
+        self.tot_peaks1 += other.tot_peaks1
+        self.tot_peaks2 += other.tot_peaks2
+        self.peaks1_in_peaks2 += other.peaks1_in_peaks2
+        self.peaks2_in_peaks1 += other.peaks2_in_peaks1
+        self.peaks2_not_in_peaks1 += other.peaks2_not_in_peaks1
+        self.peaks1_not_in_peaks2 += other.peaks1_not_in_peaks2
+        self.peaks2_not_in_peaks1_matching_motif += other.peaks2_not_in_peaks1_matching_motif
+        self.peaks1_not_in_peaks2_matching_motif += other.peaks1_not_in_peaks2_matching_motif
+        self.peaks2_in_peaks1_matching_motif += other.peaks2_in_peaks1_matching_motif
+        self.peaks1_in_peaks2_matching_motif += other.peaks1_in_peaks2_matching_motif
+        return self
+
+    def to_file(self, file_name):
+        with open(file_name, "wb") as f:
+            pickle.dump(self, f)
+
+    @classmethod
+    def from_file(cls, file_name):
+        f = open(file_name, "rb")
+        results = pickle.load(f)
+        f.close()
+        return results
 
 # $ graph_peak_caller analyse_peaks graph.nobg haplo1kg50-mhc.json  macs_sequences_mhc.fasta test_sequences.fasta  fimo_macs_sequences/fimo.txt fimo_test_sequences/fimo.txt chr6 28510119 33480577
+# $ graph_peak_caller analyse_peaks ~/dev/graph_peak_caller/tests/whole_genome/22.nobg ~/dev/graph_peak_caller/tests/whole_genome/22.json macs_sequences_chr22.fasta 22_sequences.fasta fimo_macs_chr22/fimo.txt fimo_graph_chr22/fimo.txt 22 22 0 0
+
 
 
 class PeaksComparerV2(object):
 
-    def __init__(self, graph, vg_json_file_name,
+    def __init__(self, graph,
                  linear_peaks_fasta_file_name,
                  graph_peaks_fasta_file_name,
                  linear_peaks_fimo_results_file,
                  graph_peaks_fimo_results_file,
-                 region=None,
-                 linear_path_name="ref"):
+                 linear_path,
+                 region=None):
+
+        assert isinstance(linear_path, NumpyIndexedInterval), \
+            "Linear path should be numpy indexed interval for fast comparison"
+
+        print(linear_path)
 
         self.graph = graph
         self.graph_peaks_fasta_file_name = graph_peaks_fasta_file_name
@@ -40,17 +95,7 @@ class PeaksComparerV2(object):
         self.graph_matching_motif = self._get_peaks_matching_motif(
             graph_peaks_fimo_results_file)
 
-
-        linear_path_file = "linear_path_%s.intervalcollection" % linear_path_name
-        try:
-            linear_path = IntervalCollection.create_list_from_file(linear_path_file, graph=graph).intervals[0]
-            self.linear_path = linear_path.to_indexed_interval()
-        except FileNotFoundError:
-            vg_graph = pyvg.vg.Graph.create_from_file(vg_json_file_name)
-            self.linear_path = create_linear_path(graph, vg_graph, path_name=linear_path_name, write_to_file=linear_path_file)
-
-        logging.info("Length of linear path: %d" % self.linear_path.length())
-
+        self.linear_path = linear_path
         self.peaks1 = PeakCollection.from_fasta_file(self.graph_peaks_fasta_file_name,
                                                      graph)
 
@@ -61,7 +106,7 @@ class PeaksComparerV2(object):
         if region is not None:
             nongraphpeaks.filter_peaks_outside_region(region.chromosome, region.start, region.end)
         else:
-            logging.info("Graph region is None")
+            logging.info("Graph region is None. Whole graph will be used and no filtering on peaks will be done.")
 
         self.peaks2 = PeakCollection.create_from_nongraph_peak_collection(
             graph,
@@ -105,7 +150,7 @@ class PeaksComparerV2(object):
             if i == 1:
                 self.results.peaks1_in_peaks2_matching_motif = n
             else:
-                self.results.peaks2_in_peaks2_matching_motif = n
+                self.results.peaks2_in_peaks1_matching_motif = n
 
             i += 1
 
@@ -126,7 +171,7 @@ class PeaksComparerV2(object):
             if i == 1:
                 self.results.peaks1_not_in_peaks2_matching_motif = n
             else:
-                self.results.peaks2_not_in_peaks2_matching_motif = n
+                self.results.peaks2_not_in_peaks1_matching_motif = n
 
             i += 1
 
@@ -206,6 +251,11 @@ class PeaksComparerV2(object):
             print("\n-- Comparing set %d against set %d ---" % (i, i % 2 + 1))
             peaks1, peaks2 = peak_datasets
             print("Number of peaks in main set: %d" % len(peaks1.intervals))
+            if i == 1:
+                self.results.tot_peaks1 = len(peaks1.intervals)
+            else:
+                self.results.tot_peaks2 = len(peaks1.intervals)
+
             not_matching = []
             matching = []
             counter = 0
@@ -238,6 +288,8 @@ class PeaksComparerV2(object):
                         self.peaks2_not_in_peaks1.append(peak)
 
                 n_tot += 1
+            self.results.peaks1_in_peaks2 = len(self.peaks1_in_peaks2)
+            self.results.peaks2_in_peaks1 = len(self.peaks2_in_peaks1)
 
             self.results.peaks1_not_in_peaks2 = len(self.peaks1_not_in_peaks2)
             self.results.peaks2_not_in_peaks1 = len(self.peaks2_not_in_peaks1)
@@ -249,7 +301,6 @@ class PeaksComparerV2(object):
 
             print("Total peaks in main set: %d" % n_tot)
             print("N similar to peak in other set: %d " % n_similar)
-            print("Total number of similar hits (counting all hits for each peaks): %d " % tot_n_similar)
 
             i += 1
 

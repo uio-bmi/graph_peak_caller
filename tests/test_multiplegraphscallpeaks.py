@@ -55,7 +55,7 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
             )
             self._create_reads(chrom_number, chromosome, graph)
             node_offset += 3
-            graph.to_file(chromosome)
+            graph.to_file(chromosome + ".obg")
 
     def _create_reads(self, chrom_number, chrom, graph):
         i = chrom_number
@@ -94,7 +94,7 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
         caller.run()
         self.do_asserts()
 
-    def _test_run_from_init_in_two_steps(self):
+    def test_run_from_init_in_two_steps(self):
 
         caller = MultipleGraphsCallpeaks(
             self.chromosomes,

@@ -22,6 +22,8 @@ from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 from graph_peak_caller.shift_estimation_multigraph import MultiGraphShiftEstimator
 from pyvg.util import vg_gam_file_to_intervals
 
+
+
 logging.basicConfig(
     level=logging.WARNING, format="%(asctime)s, %(levelname)s: %(message)s")
 
@@ -360,11 +362,12 @@ def plot_motif_enrichment(args):
     meme = args.meme_motif_file
 
     plot_true_positives(
-        {
-            "file1": fasta1,
-            "file2": fasta2
-        },
+        [
+            ("Graph Peak Caller", fasta1),
+            ("MACS2", fasta2)
+        ],
         meme,
+        plot_title=args.plot_title,
         save_to_file=args.out_figure_file_name,
         run_fimo=args.run_fimo == "True"
     )
@@ -389,6 +392,42 @@ def analyse_peaks(args):
                                region=region)
 
 
+def analyse_peaks_whole_genome(args):
+    from graph_peak_caller.peakscomparer import PeaksComparerV2, AnalysisResults
+    from offsetbasedgraph import NumpyIndexedInterval
+    chromosomes = args.chromosomes.split(",")
+    graph_file_names = (args.graphs_dir + chrom + ".nobg" for chrom in chromosomes)
+    graphs = (obg.GraphWithReversals.from_numpy_file(fn) for fn in graph_file_names)
+    vg_file_names = (args.graphs_dir + chrom + ".vg" for chrom in chromosomes)
+
+
+    results = AnalysisResults()
+
+    for chrom in chromosomes:
+        graph = obg.GraphWithReversals.from_numpy_file(
+            args.graphs_dir + chrom + ".nobg")
+        logging.info("Reading linear path")
+        linear_path = NumpyIndexedInterval.from_file(args.graphs_dir + chrom + "_linear_path.interval")
+
+        analyser = PeaksComparerV2(
+            graph,
+            args.results_dir + "macs_sequences_chr%s.fasta" % chrom,
+            args.results_dir + "%s_sequences.fasta" % chrom,
+            args.results_dir + "/fimo_macs_chr%s/fimo.txt" % chrom,
+            args.results_dir + "/fimo_graph_chr%s/fimo.txt" % chrom,
+            linear_path
+        )
+        results = results + analyser.results
+
+    print(" === Final results for all chromosomes ===")
+    print(results)
+
+    results.to_file(args.out_file + ".pickle")
+    with open(args.out_file + ".txt", "w") as f:
+        f.write(str(results))
+    logging.info("Wrote results as pickle to %s and as text to %s" \
+                 % (args.out_file + ".pickle", args.out_file + ".txt"))
+
 
 def analyse_manually_classified_peaks(args):
     for chromosome in args.chromosomes.split():
@@ -405,6 +444,15 @@ def analyse_manually_classified_peaks(args):
                 args.manually_classified_peaks_file)
 
 
+def find_linear_path(args):
+    from graph_peak_caller.util import create_linear_path
+    import pyvg
+    graph = obg.GraphWithReversals.from_numpy_file(args.ob_graph_file_name)
+    vg_graph = pyvg.vg.Graph.create_from_file(args.vg_json_graph_file_name)
+    linear_path = create_linear_path(graph, vg_graph,
+                                     path_name=args.linear_path_name, write_to_file=None)
+    linear_path.to_file(args.out_file_name)
+    logging.info("Wrote to file %s" % args.out_file_name)
 
 
 interface = \
@@ -551,7 +599,8 @@ interface = \
                     ('fasta2', ''),
                     ('meme_motif_file', 'something.meme'),
                     ('out_figure_file_name', ''),
-                    ('run_fimo', 'Set to True if fimo has not already been run.')
+                    ('run_fimo', 'Set to True if fimo has not already been run.'),
+                    ('plot_title', 'Title above plot')
                 ],
             'method': plot_motif_enrichment
         },
@@ -584,6 +633,18 @@ interface = \
                 ],
             'method': analyse_peaks
         },
+    'analyse_peaks_whole_genome':
+        {
+            'help': "Analyse peak results from whole genome run",
+            'arguments':
+                [
+                    ('chromosomes', 'Comma seaparated list of chromosomes to use'),
+                    ('results_dir', 'Directory of result files (should contain fasta files from both linear and graph peak calling'),
+                    ('graphs_dir', 'Dir containing obg graphs on form 1.nobg, 2.nobg, ... and vg graphs 1.json, 2.json, ...'),
+                    ('out_file', 'Out file base name (file endings for different formats will be appended)')
+                ],
+            'method': analyse_peaks_whole_genome
+        },
     'count_unique_reads':
         {
             'help': 'Count unique reads for whole genome set of read files.',
@@ -607,6 +668,18 @@ interface = \
                     ('manually_classified_peaks_file', '')
                 ],
             'method': analyse_manually_classified_peaks
+        },
+    'find_linear_path':
+        {
+            'help': 'Finds lineat path through graph. Saves as indexed interval to file.',
+            'arguments':
+                [
+                    ('vg_json_graph_file_name', ''),
+                    ('ob_graph_file_name', ''),
+                    ('linear_path_name', 'Name of path in the vg graph (typically ref or chromosome name'),
+                    ('out_file_name', ''),
+                ],
+            'method': find_linear_path
         }
 }
 

@@ -102,8 +102,10 @@ class ScoredPeak(object):
                 return p
 
     def get_max_path(self):
+        logging.info("Processing peak")
         sums = {node_id: float(scores.sum()) for node_id, scores
                 in self._scores.items()}
+        logging.info(" Sums fetched")
         # Handle peaks that are on one node
         if len(self._peak.internal_intervals) > 0:
             node, start_end = list(self._peak.internal_intervals.items())[0]
@@ -115,6 +117,7 @@ class ScoredPeak(object):
                 self._scores[node].max_value()) # score / interval.length())
             return interval
 
+        logging.info("Clean sums")
         self.__clean_sums(sums)
         for key in list(sums.keys()):
             if key in self._peak.full_areas:
@@ -137,12 +140,13 @@ class ScoredPeak(object):
         assert stack, str(self._peak)
         global_max = -1
         global_max_path = None
+        n_iterations = 0
         while stack:
             node_ids, value = stack.popleft()
 
             if memo[node_ids[-1]] >= value:
                 continue
-            if value > global_max:
+            if value >= global_max:
                 global_max_path = node_ids
                 global_max = value
 
@@ -153,6 +157,10 @@ class ScoredPeak(object):
                 for next_node in nexts
                 if next_node not in node_ids[1:] and next_node in sums]
             stack.extend(new_items)
+
+            if n_iterations % 20 == 0:
+                logging.info("  %d iterations" % n_iterations)
+            n_iterations += 1
 
         start_node = global_max_path[0]
         start_pos = [pos for pos in start_positions if

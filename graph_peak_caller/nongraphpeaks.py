@@ -5,6 +5,7 @@ import logging
 from pyfaidx import Fasta
 import json
 from .peakcollection import PeakCollection
+import numpy as np
 
 logging.basicConfig(level=logging.INFO)
 
@@ -124,6 +125,9 @@ class NonGraphPeakCollection(object):
             assert peak.unique_id is not None
             peak.sequence = sequence
             peaks.append(peak)
+
+        avg_peak_size = np.mean([p.end - p.start for p in peaks])
+        logging.info("Avg peak size: %.2f" % avg_peak_size)
 
         return cls(peaks)
 

@@ -3,6 +3,7 @@ import offsetbasedgraph as obg
 from pybedtools import BedTool
 import logging
 from collections import defaultdict
+import numpy as np
 from offsetbasedgraph import DirectedInterval
 
 
@@ -137,7 +138,7 @@ class PeakCollection(obg.IntervalCollection):
                     logging.info("Filtered out peak")
                     continue
             if i % 100 == 0:
-                print("Interval %i" % (i))
+                logging.info("%d peaks processed" % (i))
             i += 1
             linear_interval = linear_path_interval.get_subinterval(start, end)
             linear_interval.graph = ob_graph
@@ -153,7 +154,9 @@ class PeakCollection(obg.IntervalCollection):
     def create_from_linear_intervals_in_bed_file(
             cls, ob_graph, linear_path_interval, bed_file_name,
             graph_region=None):
-        # todo re-use above method
+        # todo:
+        # Duplicate of above. Maybe not used and can be deleted
+        # since the same can be achieved by creating NonGraphPeaks from bed and converting
         peaks = BedTool(bed_file_name)
         intervals_on_graph = []
         i = 0
@@ -237,6 +240,8 @@ class PeakCollection(obg.IntervalCollection):
             peak.sequence = sequence
             peak.graph = graph
             peaks.append(peak)
+        avg_peak_size = np.mean([p.length() for p in peaks])
+        logging.info("Avg peak size: %2.f" % avg_peak_size)
 
         return cls(peaks)
 

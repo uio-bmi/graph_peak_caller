@@ -88,12 +88,12 @@ class MultipleGraphsCallpeaks:
             zip(self.names, self.graph_file_names,
                 self.samples, self.controls, self.linear_maps):
             logging.info("Running %s" % name)
-            ob_graph = obg.GraphWithReversals.from_numpy_file(
+            ob_graph = obg.GraphWithReversals.from_unknown_file_format(
                 graph_file_name)
             if isinstance(sample, obg.IntervalCollection):
                 logging.info("Sample is already intervalcollection.")
             else:
-                logging.info("Creating interval collecftions from files")
+                logging.info("Creating interval collections from files")
                 sample = vg_json_file_to_interval_collection(
                     None, sample, ob_graph)
                 control = vg_json_file_to_interval_collection(
@@ -121,7 +121,7 @@ class MultipleGraphsCallpeaks:
                     logging.info("Skipping %s" % str(name))
                     continue
             graph_file_name = self.graph_file_names[i]
-            ob_graph = obg.GraphWithReversals.from_numpy_file(
+            ob_graph = obg.GraphWithReversals.from_unknown_file_format(
                 graph_file_name)
             graph_size = sum(
                 block.length() for block in ob_graph.blocks.values())
