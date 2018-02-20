@@ -4,6 +4,7 @@ import scipy.sparse.csgraph as csgraph
 from scipy.sparse import csr_matrix
 from .holes_analyzer import HolesAnalyzer
 from .sparsediffs import SparseValues
+import logging
 import numpy as np
 
 """
@@ -149,7 +150,6 @@ class LineGraph:
         if not start_nodes.size:
             return np.array([], dtype="bool")
         connected_components = csgraph.connected_components(self._matrix)
-        print("######################")
         shortest_paths = csgraph.shortest_path(self._matrix)
         to_dist = np.min(shortest_paths[start_nodes], axis=0)
         from_dist = shortest_paths[:, self.end_stub]
@@ -165,52 +165,42 @@ class DividedLinegraph(LineGraph):
             return np.array([], dtype="bool")
         start_nodes_mask = np.zeros(self.end_stub, dtype="bool")
         start_nodes_mask[start_nodes] = True
-        print("ALL\n", self._all_nodes)
-        print(start_nodes)
-        print(start_nodes_mask)
+
         if not start_nodes.size:
             return np.array([], dtype="bool")
-        print(self._matrix)
         n_components, connected_components = csgraph.connected_components(
             self._matrix[:self.end_stub, :self.end_stub])
-        print(n_components, connected_components)
+        logging.info("Found %s components", n_components)
         complete_mask = np.zeros(self.end_stub, dtype="bool")
         for comp in range(n_components):
-            print("########", comp, "##########")
             idxs = np.r_[np.flatnonzero(
                 connected_components == comp), self.end_stub]
-            print(idxs)
+            logging.info("Handling component %s with size %s", comp, idxs.size-1)
+            if idxs.size-1 > 36:
+                logging.info("Dropping component %s", comp)
+                complete_mask[idxs[:-1]] = True
+                continue
             subgraph = self._matrix[idxs][:, idxs]
-            print(subgraph)
             shortest_paths = csgraph.shortest_path(subgraph)
-            print(shortest_paths)
             my_mask = start_nodes_mask[idxs[:-1]]
-            print(idxs)
-            print(my_mask)
             start_nodes = np.flatnonzero(my_mask)
             if not start_nodes.size:
                 continue
-            print(start_nodes)
             to_dist = np.min(shortest_paths[start_nodes], axis=0)
             from_dist = shortest_paths[:, -1]
             complete_mask[idxs[:-1]] = (to_dist+from_dist)[:-1] > max_size
 
         return complete_mask
-# (to_dist+from_dist)[:-1] > max_size
 
 
 class HolesCleaner:
     def __init__(self, graph, sparse_values, max_size):
-        print(graph.node_indexes)
-        print(sparse_values)
         sparse_values.indices = sparse_values.indices.astype("int")
         self._graph = graph
         self._node_indexes = graph.node_indexes
         self._sparse_values = sparse_values
         self._holes = self.get_holes()
-        print("#\n", self._holes)
         self._node_ids = self.get_node_ids()
-        print("#\n", self._node_ids)
         self._max_size = max_size
         self._kept = []
 
