@@ -235,7 +235,8 @@ class PosDividedLineGraph(DividedLinegraph):
         while cur > 0:
             path.append(cur)
             cur = max_row[cur]
-        path += [start]
+        if path[-1] != start:
+            path += [start]
         print(path)
         return path
 
@@ -253,16 +254,15 @@ class PosDividedLineGraph(DividedLinegraph):
         n_components, connected_components = csgraph.connected_components(
             self._matrix[:self.end_stub, :self.end_stub])
         print(self._matrix)
-        print(connected_components)
+        print("CONNECTED", connected_components)
         logging.info("Found %s components", n_components)
         for comp in range(n_components):
             idxs = np.r_[np.flatnonzero(
                 connected_components == comp), self.end_stub]
-            logging.info("Handling component %s with size %s", comp, idxs.size-1)
-            if idxs.size-1 > 36:
-                logging.info("Dropping component %s", comp)
-                complete_mask[idxs[:-1]] = True
+            if idxs.size == 2:
+                paths.append([idxs[0]])
                 continue
+            logging.info("Handling component %s with size %s", comp, idxs.size-1)
             subgraph = -self._matrix[idxs][:, idxs]
             print(subgraph.todense())
             distances, predecessors = csgraph.shortest_path(subgraph, return_predecessors=True, method="BF")
@@ -390,7 +390,7 @@ class HolesCleaner:
             self._node_indexes[fulls]-self._node_indexes[fulls-1]))
 
     def _handle_internal(self, internal_holes):
-        keep = (internal_holes[:, 1]-internal_holes[:, 0]) >= self._max_size
+        keep = (internal_holes[:, 1]-internal_holes[:, 0]) > self._max_size
         self._kept_internals = internal_holes[keep]
 
     def classify_holes(self, hole_starts, hole_ends, start_ids, end_ids, is_multinodes):

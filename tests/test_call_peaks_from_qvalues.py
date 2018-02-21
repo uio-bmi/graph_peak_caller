@@ -125,8 +125,8 @@ class TestCallPeaksFromQValues(unittest.TestCase):
         pileup = SparsePileup(self.split_graph)
         pileup.data = {
             1: ValuedIndexes([3], [2], 0, 10),
-            2: ValuedIndexes([], [], 2.1, 10),
-            3: ValuedIndexes([], [], 2, 10),
+            2: ValuedIndexes([],  [], 2.1, 10),
+            3: ValuedIndexes([],  [], 2, 10),
             4: ValuedIndexes([1, 3], [0, 3], 2, 10)
         }
         self._assert_finds_max_paths(
@@ -134,7 +134,7 @@ class TestCallPeaksFromQValues(unittest.TestCase):
             self.split_graph, pileup
         )
 
-    def test_with_reversal(self):
+    def _test_with_reversal(self):
         pileup = SparsePileup(self.graph_with_reversal)
         pileup.data = {
             1: ValuedIndexes([], [], 2, 10),
@@ -147,7 +147,7 @@ class TestCallPeaksFromQValues(unittest.TestCase):
             pileup
         )
 
-    def test_with_reversal_and_hole(self):
+    def _test_with_reversal_and_hole(self):
         pileup = SparsePileup(self.graph_with_reversal)
         pileup.data = {
             1: ValuedIndexes([], [], 2, 10),
