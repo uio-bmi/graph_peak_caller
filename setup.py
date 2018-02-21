@@ -9,10 +9,9 @@ setup(name='graph_peak_caller',
       license='MIT',
       packages=['graph_peak_caller'],
       zip_safe=False,
-      dependency_links=['http://github.com/uio-cels/OffsetBasedGraph/tarball/v2.0#egg=package-1.0'],
       install_requires=['pymysql', 'numpy', 'filecache', 'scipy', 'pybedtools',
                         'memory_profiler', 'python-coveralls', 'matplotlib',
-                        'biopython', 'pyfaidx'],
+                        'biopython', 'pyfaidx', 'pyvg', 'offsetbasedgraph'],
       classifiers=[
             'Programming Language :: Python :: 3'
       ],

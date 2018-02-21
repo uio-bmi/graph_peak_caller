@@ -20,15 +20,8 @@ before_install:
     - pip install nose
     - pip install pytest-cov
     - pip install codecov
-    - pwd
-    - ls
-    - git clone https://github.com/uio-bmi/pyvg.git
-    - cd pyvg
-    - pip install .
-    - pwd
-    - ls
     - cd
-    - ls
+
 
 install:
     - ls
