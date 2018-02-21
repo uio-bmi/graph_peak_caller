@@ -336,7 +336,6 @@ class CallPeaksFromQvalues(object):
         self.max_paths = max_paths
 
     def __get_subgraphs(self):
-
         logging.info("Creating subgraphs from peak regions")
         peaks_as_subgraphs = self.filtered_peaks.to_subgraphs()
         logging.info("Writing subgraphs to file")
