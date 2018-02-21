@@ -4,8 +4,8 @@ import numpy as np
 
 class SparseValues:
     def __init__(self, indices, values, sanitize=False):
-        self.indices = indices
-        self.values = values
+        self.indices = np.asanyarray(indices)
+        self.values = np.asanyarray(values)
         if sanitize:
             self._sanitize()
         self.track_size = None
@@ -20,7 +20,6 @@ class SparseValues:
         self.indices = self.indices[values_mask]
         self.values = self.values[values_mask]
 
-
     @classmethod
     def from_sparse_files(cls, file_base_name):
         indices = np.load(file_base_name + "_indexes.npy")
@@ -31,6 +30,7 @@ class SparseValues:
         return obj
 
     def to_sparse_files(self, file_base_name):
+        print(self)
         np.save(file_base_name + "_indexes.npy",
                 np.r_[self.indices, self.track_size])
         np.save(file_base_name + "_values.npy", self.values)
@@ -66,6 +66,18 @@ class SparseValues:
         indices = self.indices[:diffs.size]
         pileup[indices] = diffs
         return np.cumsum(pileup[:-1])
+
+    @classmethod
+    def from_dense_pileup(cls, pileup):
+        print(pileup)
+        print("-->")
+        changes = pileup[1:] != pileup[:-1]
+        indices = np.r_[0, np.flatnonzero(changes)+1]
+        values = pileup[indices]
+        obj = cls(indices, values)
+        obj.track_size = pileup.size
+        print(obj)
+        return obj
 
 
 class SparseDiffs:
@@ -111,6 +123,7 @@ class SparseDiffs:
         diffs = self._diffs[args]
         values = np.cumsum(diffs)
         return SparseValues(self._indices[args], values, sanitize=True)
+
 
     def maximum(self, other):
         all_indices = np.r_[self._indices, other._indices]

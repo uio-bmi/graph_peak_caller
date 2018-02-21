@@ -247,8 +247,11 @@ class SamplePileupGenerator:
         sparsediff = SparseDiffs.from_pileup(
             new_pileup, self._graph.node_indexes)
         sparsediff.clean()
-        np.save(base_name + "_diffindices.npy", sparsediff._indices)
-        np.save(base_name + "_diffvalues.npy", sparsediff._diffs)
+        sparse_values = sparsediff.get_sparse_values()
+        sparse_values.track_size = self._graph.node_indexes[-1]
+        sparse_values.to_sparse_files(base_name)
+        # np.save(base_name + "_diffindices.npy", sparsediff._indices)
+        # np.save(base_name + "_diffvalues.npy", sparsediff._diffs)
 
     def run(self, reads, save_name=None):
         self._reads_adder.add_reads(reads)

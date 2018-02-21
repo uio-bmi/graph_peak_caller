@@ -15,6 +15,8 @@ from .sampleandcontrolcreator import SampleAndControlCreator
 from .directsamplepileup import DirectPileup
 from .sparsepvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
 from .sparseholecleaner import HolesCleaner
+from .sparsediffs import SparseValues
+from .sparsemaxpaths import SparseMaxPaths
 
 
 class Configuration:
@@ -192,23 +194,18 @@ class CallPeaksFromQvalues(object):
         logging.info("Filling small Holes")
 
         if isinstance(self.pre_processed_peaks, DensePileup):
-            self.pre_processed_peaks.fill_small_wholes_on_dag(
-                                    self.info.read_length)
-        else:
-            self.pre_processed_peaks = HolesCleaner(
-                self.graph,
-                self.pre_processed_peaks,
-                self.info.read_length).run()
+            self.pre_processed_peaks = SparseValues.from_dense_pileup(
+                self.pre_processed_peaks.data._values)
 
-            d_peaks = DensePileup(self.graph)
-            d_peaks.data._values = self.pre_processed_peaks.to_dense_pileup(
-                self.graph.node_indexes[-1])
-            self.pre_processed_peaks = d_peaks
-
-            q_values = DensePileup(self.graph)
-            q_values.data._values = self.q_values.to_dense_pileup(
-                self.graph.node_indexes[-1])
-            self.q_values = q_values
+            # self.pre_processed_peaks.fill_small_wholes_on_dag(
+            #                         self.info.read_length)
+        print(self.pre_processed_peaks)
+        self.pre_processed_peaks = HolesCleaner(
+            self.graph,
+            self.pre_processed_peaks,
+            self.info.read_length).run()
+        print("Holes")
+        print(self.pre_processed_peaks)
 
         if self.save_tmp_results_to_file:
             self.pre_processed_peaks.to_bed_file(
@@ -217,7 +214,7 @@ class CallPeaksFromQvalues(object):
 
         logging.info("Removing small peaks")
 
-        if isinstance(self.pre_processed_peaks, DensePileup):
+        if isinstance(self.pre_processed_peaks, DensePileup) or isinstance(self.pre_processed_peaks, SparseValues):
             # If dense pileup, we are filtering small peaks while trimming later
             self.filtered_peaks = self.pre_processed_peaks
             logging.info("Not removing small peaks.")
@@ -299,19 +296,23 @@ class CallPeaksFromQvalues(object):
     def __get_max_paths(self):
         logging.info("Getting maxpaths")
         if not self.q_values_max_path:
-            _pileup = DirectPileup.from_file(
-                self.graph,
+            _pileup = SparseValues.from_sparse_files(
                 self.out_file_base_name+"direct_pileup")
             self.raw_pileup = _pileup
+            print(type(self.raw_pileup))
         else:
-            _pileup = self.q_values
-        # _pileup = self.raw_pileup if self.raw_pileup is not None else self.q_values
-        scored_peaks = (ScoredPeak.from_peak_and_numpy_pileup(peak, _pileup)
-                        for peak in self.binary_peaks)
-        max_paths = [peak.get_max_path() for peak in scored_peaks]
+            _pileup = SparseValues.from_dense_pileup(self.q_values.data._values)
+            print("#", type(_pileup))
+        print(_pileup)
+        print(self.filtered_peaks)
+        max_paths = SparseMaxPaths(self.filtered_peaks, self.graph, _pileup).run()
         logging.info("All max paths found")
-        max_paths = [max_path for max_path in max_paths
-                     if max_path is not None]
+        # Create dense q
+        if not isinstance(self.q_values, DensePileup):
+            q_values = DensePileup(self.graph)
+            q_values.data._values = self.q_values.to_dense_pileup(
+                self.graph.node_indexes[-1])
+            self.q_values = q_values
         for max_path in max_paths:
             max_path.set_score(np.max(
                 self.q_values.data.get_interval_values(max_path)))
@@ -352,7 +353,7 @@ class CallPeaksFromQvalues(object):
         logging.info("Calling peaks")
         self.__threshold()
         self.__postprocess()
-        self.__get_subgraphs()
+        # self.__get_subgraphs()
         self.filtered_peaks.to_bed_file(
             self.out_file_base_name + "final_peaks.bed")
         self.__get_max_paths()

@@ -100,16 +100,20 @@ class LineGraph:
                                     ends[1][~self.filtered._ends_mask]))
         self.kept_fulls = full[0][~self.filtered._fulls_mask]
         self.kept_fulls = self.kept_fulls.astype("int")
+
         self.full_nodes = self.filtered.filtered_fulls
         self.start_nodes = self.filtered.filtered_starts
         self.end_nodes = self.filtered.filtered_ends
+
         print("-", self.full_nodes)
         print("-", self.start_nodes)
         print("-", self.end_nodes)
+
         self._all_nodes = np.r_[self.start_nodes,
                                 self.full_nodes,
                                 self.end_nodes]
         self._all_nodes = self._all_nodes.astype("int")
+        print(self._all_nodes)
         self._all_sizes = np.r_[self.start_size,
                                 self.full_size,
                                 self.end_size]
@@ -119,7 +123,6 @@ class LineGraph:
         self.n_starts = self.start_nodes.size
         self.n_ends = self.end_nodes.size
         self.n_nodes = self._all_nodes.size
-
         self._matrix = self.make_graph()
 
     def make_graph(self):
@@ -127,15 +130,20 @@ class LineGraph:
         n_ends = self.end_nodes.size
         to_nodes_dict = {node: n_starts+i for i, node in
                          enumerate(self._all_nodes[n_starts:])}
+        print(to_nodes_dict)
         self.end_stub = self._all_nodes.size
         from_nodes = []
         to_nodes = []
         sizes = []
         possible_to_nodes = set(list(self._all_nodes[n_starts:]))
-        for i, node_id in enumerate(self._all_nodes[:-n_ends]):
+        print(possible_to_nodes)
+        print(n_ends)
+        for i, node_id in enumerate(self._all_nodes[:self._all_nodes.size-n_ends]):
             adj_nodes = self.ob_graph.adj_list[node_id]
             next_nodes = [to_nodes_dict[node] for node in
                           adj_nodes if node in possible_to_nodes]
+            print(i, node_id, next_nodes)
+
             from_nodes.extend([i]*len(next_nodes))
             to_nodes.extend(next_nodes)
             sizes.extend([self._all_sizes[i]]*len(next_nodes))
@@ -160,6 +168,7 @@ class LineGraph:
         fulls = self._all_nodes[n_starts:-n_ends][mask[n_starts:-n_ends]]
         ends = np.vstack((self._all_nodes[-n_ends:][mask[-n_ends:]],
                           self._all_sizes[-n_ends:][mask[-n_ends:]]))
+        print("K", self.kept_starts, self.kept_ends)
         starts = np.hstack((starts, self.kept_starts))
         ends = np.hstack((ends, self.kept_ends))
         fulls = np.r_[fulls, self.kept_fulls]
@@ -255,8 +264,8 @@ class PosDividedLineGraph(DividedLinegraph):
                 complete_mask[idxs[:-1]] = True
                 continue
             subgraph = -self._matrix[idxs][:, idxs]
-            print(subgraph)
-            distances, predecessors = csgraph.shortest_path(subgraph, return_predecessors=True)
+            print(subgraph.todense())
+            distances, predecessors = csgraph.shortest_path(subgraph, return_predecessors=True, method="BF")
             print(distances)
             print(predecessors)
             local_idxs = self._backtrace(distances, predecessors)
@@ -318,7 +327,9 @@ class HolesCleaner:
         self._node_indexes = graph.node_indexes
         self._sparse_values = sparse_values
         self._holes = self.get_holes()
+        print("H", self._holes)
         self._node_ids = self.get_node_ids()
+        print("N", self._node_ids)
         self._max_size = max_size
         self._kept = []
 
@@ -338,7 +349,10 @@ class HolesCleaner:
         if (not indices.size) or indices[0] != 0:
             indices = np.r_[0, indices]
             values = np.r_[1, values]
-        return SparseValues(indices, values, sanitize=True)
+        if self._sparse_values.values[-1] == 0:
+            indices = np.r_[indices, self._sparse_values.indices[-1]]
+            values = np.r_[values, 0]
+        return SparseValues(indices.astype("int"), values.astype("bool"), sanitize=True)
 
     def get_node_ids(self):
         node_ids = np.empty_like(self._holes)
@@ -396,11 +410,12 @@ class HolesCleaner:
             self._holes, self._node_ids, self._node_indexes)
         analyzer.run()
         self._handle_internal(analyzer.internals)
+        print("INT", analyzer.internals)
         linegraph = DividedLinegraph(analyzer.get_ends(), analyzer.get_fulls(),
                                      analyzer.get_starts(), self._graph)
         mask = linegraph.filter_small(self._max_size)
         self._kept_borders = linegraph.get_masked(mask)
-
+        print(self._kept_borders)
         return self.build_sparse_values(self.build_kept_holes())
 
     def build_kept_holes(self):

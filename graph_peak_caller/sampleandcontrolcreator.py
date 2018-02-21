@@ -351,6 +351,7 @@ class SampleAndControlCreator(SampleAndControlCreatorO):
         logging.info("Processing areas")
         generator = SamplePileupGenerator(
             self.graph, self.info.fragment_length-self.info.read_length)
+        print("#######", self.out_file_base_name+"direct_pileup")
         pileup = generator.run(self.sample_intervals,
                                self.out_file_base_name+"direct_pileup")
         # pileup = samplemain(self.sample_intervals, self.graph,

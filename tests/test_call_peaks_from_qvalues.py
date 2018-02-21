@@ -192,7 +192,7 @@ class TestCallPeaksFromQValues(unittest.TestCase):
                 1: [2, 3, 4],
                 2: [5],
                 4: [5],
-                4: [5]
+                3: [5]
             }
         )
 
