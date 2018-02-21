@@ -22,9 +22,6 @@ before_install:
     - pip install codecov
     - pwd
     - ls
-    - git clone https://github.com/uio-cels/OffsetBasedGraph.git
-    - cd OffsetBasedGraph && git checkout develop && pip install .
-    - cd
     - git clone https://github.com/uio-bmi/pyvg.git
     - cd pyvg
     - pip install .
