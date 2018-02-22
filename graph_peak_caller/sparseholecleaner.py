@@ -69,12 +69,12 @@ class StubsFilter:
 class PosStubFilter(StubsFilter):
     def find_sub_starts(self, nodes):
         return np.array([not any(-adj in self._pos_from_nodes
-                                 for adj in self._graph.reverse_adj_list[-node])
+                                 for adj in self._graph.reverse_adj_list[-int(node)])
                          for node in nodes], dtype="bool")
 
     def find_sub_ends(self, nodes):
         return np.array([not any(adj in self._pos_to_nodes
-                                 for adj in self._graph.adj_list[node])
+                                 for adj in self._graph.adj_list[int(node)])
                          for node in nodes], dtype="bool")
 
     def filter_start_stubs(self):
@@ -89,6 +89,9 @@ class LineGraph:
     stub_class = StubsFilter
 
     def __init__(self, starts, full, ends, ob_graph):
+        starts[0] += ob_graph.min_node-1
+        full[0] += ob_graph.min_node-1
+        ends[0] += ob_graph.min_node-1
         self.filtered = self.stub_class(starts[0], full[0], ends[0], ob_graph)
         self.full_size = full[1][self.filtered._fulls_mask]
         self.start_size = starts[1][self.filtered._starts_mask]
@@ -104,16 +107,10 @@ class LineGraph:
         self.full_nodes = self.filtered.filtered_fulls
         self.start_nodes = self.filtered.filtered_starts
         self.end_nodes = self.filtered.filtered_ends
-
-        print("-", self.full_nodes)
-        print("-", self.start_nodes)
-        print("-", self.end_nodes)
-
         self._all_nodes = np.r_[self.start_nodes,
                                 self.full_nodes,
                                 self.end_nodes]
         self._all_nodes = self._all_nodes.astype("int")
-        print(self._all_nodes)
         self._all_sizes = np.r_[self.start_size,
                                 self.full_size,
                                 self.end_size]
@@ -130,19 +127,15 @@ class LineGraph:
         n_ends = self.end_nodes.size
         to_nodes_dict = {node: n_starts+i for i, node in
                          enumerate(self._all_nodes[n_starts:])}
-        print(to_nodes_dict)
         self.end_stub = self._all_nodes.size
         from_nodes = []
         to_nodes = []
         sizes = []
         possible_to_nodes = set(list(self._all_nodes[n_starts:]))
-        print(possible_to_nodes)
-        print(n_ends)
         for i, node_id in enumerate(self._all_nodes[:self._all_nodes.size-n_ends]):
             adj_nodes = self.ob_graph.adj_list[node_id]
             next_nodes = [to_nodes_dict[node] for node in
                           adj_nodes if node in possible_to_nodes]
-            print(i, node_id, next_nodes)
 
             from_nodes.extend([i]*len(next_nodes))
             to_nodes.extend(next_nodes)
@@ -163,12 +156,23 @@ class LineGraph:
 
     def get_masked(self, mask):
         n_starts, n_ends = self.n_starts, self.n_ends
+        print(self._all_nodes)
+        self._all_nodes -= (self.ob_graph.min_node-1)
+        print("--->")
+        print(self._all_nodes)
         starts = np.vstack((self._all_nodes[:n_starts][mask[:n_starts]],
                             self._all_sizes[:n_starts][mask[:n_starts]]))
         fulls = self._all_nodes[n_starts:-n_ends][mask[n_starts:-n_ends]]
         ends = np.vstack((self._all_nodes[-n_ends:][mask[-n_ends:]],
                           self._all_sizes[-n_ends:][mask[-n_ends:]]))
-        print("K", self.kept_starts, self.kept_ends)
+        print("------------_")
+        d = self.ob_graph.min_node-1
+        self.kept_starts[0] -= d
+        self.kept_ends[0] -= d
+        self.kept_fulls -= d
+        print(self.kept_starts)
+        print(self.kept_ends)
+        print(self.kept_fulls)
         starts = np.hstack((starts, self.kept_starts))
         ends = np.hstack((ends, self.kept_ends))
         fulls = np.r_[fulls, self.kept_fulls]
@@ -206,7 +210,7 @@ class DividedLinegraph(LineGraph):
         for comp in range(n_components):
             idxs = np.r_[np.flatnonzero(
                 connected_components == comp), self.end_stub]
-            logging.info("Handling component %s with size %s", comp, idxs.size-1)
+            # logging.info("Handling component %s with size %s", comp, idxs.size-1)
             if idxs.size-1 > 36:
                 logging.info("Dropping component %s", comp)
                 complete_mask[idxs[:-1]] = True
@@ -228,16 +232,15 @@ class PosDividedLineGraph(DividedLinegraph):
     stub_class = PosStubFilter
 
     def _backtrace(self, dists, predecessors):
-        start = np.argmin(dists[:, -1])
+        start = np.argmin(dists[:-1, -1])
         max_row = predecessors[start]
         cur = max_row[-1]
         path = []
         while cur > 0:
             path.append(cur)
             cur = max_row[cur]
-        if path[-1] != start:
+        if (not path) or path[-1] != start:
             path += [start]
-        print(path)
         return path
 
     def max_paths(self):
@@ -253,8 +256,6 @@ class PosDividedLineGraph(DividedLinegraph):
             return np.array([], dtype="bool")
         n_components, connected_components = csgraph.connected_components(
             self._matrix[:self.end_stub, :self.end_stub])
-        print(self._matrix)
-        print("CONNECTED", connected_components)
         logging.info("Found %s components", n_components)
         for comp in range(n_components):
             idxs = np.r_[np.flatnonzero(
@@ -262,27 +263,14 @@ class PosDividedLineGraph(DividedLinegraph):
             if idxs.size == 2:
                 paths.append([idxs[0]])
                 continue
-            logging.info("Handling component %s with size %s", comp, idxs.size-1)
             subgraph = -self._matrix[idxs][:, idxs]
-            print(subgraph.todense())
-            distances, predecessors = csgraph.shortest_path(subgraph, return_predecessors=True, method="BF")
-            print(distances)
-            print(predecessors)
+            distances, predecessors = csgraph.shortest_path(
+                subgraph, return_predecessors=True, method="BF")
             local_idxs = self._backtrace(distances, predecessors)
-            print(local_idxs)
             global_idxs = idxs[local_idxs]
-            print(global_idxs)
-            # path = self._all_nodes[global_idxs]
+            assert np.all(global_idxs != self.end_stub)
             paths.append(global_idxs[::-1])
-            # my_mask = start_nodes_mask[idxs[:-1]]
-            # start_nodes = np.flatnonzero(my_mask)
-            # if not start_nodes.size:
-            #     continue
-            # to_dist = np.min(shortest_paths[start_nodes], axis=0)
-            # from_dist = shortest_paths[:, -1]
-            # complete_mask[idxs[:-1]] = (to_dist+from_dist)[:-1] >= min_size
         return paths
-        # return complete_mask
 
     def filter_big(self, min_size):
         start_nodes = np.r_[np.arange(self.n_starts),
@@ -302,9 +290,9 @@ class PosDividedLineGraph(DividedLinegraph):
         for comp in range(n_components):
             idxs = np.r_[np.flatnonzero(
                 connected_components == comp), self.end_stub]
-            logging.info("Handling component %s with size %s", comp, idxs.size-1)
+            # logging.info("Handling component %s with size %s", comp, idxs.size-1)
             if idxs.size-1 > 36:
-                logging.info("Dropping component %s", comp)
+                logging.debug("Dropping component %s", comp)
                 complete_mask[idxs[:-1]] = True
                 continue
             subgraph = self._matrix[idxs][:, idxs]
@@ -327,9 +315,7 @@ class HolesCleaner:
         self._node_indexes = graph.node_indexes
         self._sparse_values = sparse_values
         self._holes = self.get_holes()
-        print("H", self._holes)
         self._node_ids = self.get_node_ids()
-        print("N", self._node_ids)
         self._max_size = max_size
         self._kept = []
 
@@ -410,12 +396,11 @@ class HolesCleaner:
             self._holes, self._node_ids, self._node_indexes)
         analyzer.run()
         self._handle_internal(analyzer.internals)
-        print("INT", analyzer.internals)
         linegraph = DividedLinegraph(analyzer.get_ends(), analyzer.get_fulls(),
                                      analyzer.get_starts(), self._graph)
         mask = linegraph.filter_small(self._max_size)
         self._kept_borders = linegraph.get_masked(mask)
-        print(self._kept_borders)
+        print("KEPT", self._kept_borders)
         return self.build_sparse_values(self.build_kept_holes())
 
     def build_kept_holes(self):
@@ -438,6 +423,7 @@ class HolesCleaner:
             all_holes[n_starts+n_fulls:n_border, 1] = self._node_indexes[ends[0]-1] + ends[1]
         all_holes[n_border:] = self._kept_internals
         all_holes.sort(axis=0)
+        print(all_holes)
         return all_holes
 
     def handle_border_holes(self, holes, node_ids):

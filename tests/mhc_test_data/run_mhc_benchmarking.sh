@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-graph_peak_caller create_ob_graph haplo1kg50-mhc.json graph.nobg
+# graph_peak_caller create_ob_graph haplo1kg50-mhc.json graph.nobg
 
 # Create snarls
-graph_peak_caller create_linear_map graph.nobg haplo1kg50-mhc.snarls linear_map
+# graph_peak_caller create_linear_map graph.nobg haplo1kg50-mhc.snarls linear_map
 
 # Call peaks
 graph_peak_caller callpeaks graph.nobg haplo1kg50-mhc.vg linear_map reads.json reads.json False test_ 135 36
