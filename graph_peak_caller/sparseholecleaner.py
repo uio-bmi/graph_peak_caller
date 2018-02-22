@@ -134,11 +134,12 @@ class LineGraph:
         to_nodes = []
         sizes = []
         possible_to_nodes = set(list(self._all_nodes[n_starts:]))
+        print("POS:", possible_to_nodes)
         for i, node_id in enumerate(self._all_nodes[:self._all_nodes.size-n_ends]):
             adj_nodes = self.ob_graph.adj_list[node_id]
             next_nodes = [to_nodes_dict[node] for node in
                           adj_nodes if node in possible_to_nodes]
-            print(i, node_id, next_nodes)
+            print(i, node_id, [a for a in adj_nodes if a in possible_to_nodes])
             from_nodes.extend([i]*len(next_nodes))
             to_nodes.extend(next_nodes)
             sizes.extend([self._all_sizes[i]]*len(next_nodes))
@@ -231,7 +232,7 @@ class PosDividedLineGraph(DividedLinegraph):
     def _backtrace(self, dists, predecessors, start_nodes):
         print(predecessors)
         print(start_nodes)
-        start = np.argmin(dists[start_nodes, -1])
+        start = start_nodes[np.argmin(dists[start_nodes, -1])]
         print(start)
         max_row = predecessors[start]
         cur = max_row[-1]
