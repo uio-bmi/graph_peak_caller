@@ -387,21 +387,3 @@ class CallPeaksFromQvalues(object):
                 logging.info("Writing sequence # %d" % i)
         f.close()
 
-
-if __name__ == "__main__":
-    chromosome = "chr2R"
-    vg_graph = vg.Graph.create_from_file(
-        "dm_test_data/x_%s.json" % chromosome, 30000, chromosome)
-    ofbg = vg_graph.get_offset_based_graph()
-    interval_file = vg.util.vg_mapping_file_to_interval_file(
-        "intervals_reads3_chr2R", vg_graph,
-        "dm_test_data/reads3_small.json", ofbg)
-    ofbg.to_file("graph.tmp")
-
-    caller = CallPeaks("graph.tmp", interval_file)
-    caller.create_graph()
-    caller.find_info()
-    caller.determine_shift()
-    caller.sample_file_name = caller.remove_alignments_not_in_graph(
-        caller.sample_file_name)
-    caller.sample_file_name = caller.filter_duplicates(caller.sample_file_name)

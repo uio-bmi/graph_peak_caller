@@ -165,36 +165,3 @@ def create_linear_path(ob_graph, vg_graph, path_name="ref", write_to_file="linea
     #ref_path = linear_paths[path_name].to_indexed_interval()
     ref_path = obg.NumpyIndexedInterval.from_interval(linear_paths[path_name])
     return ref_path
-
-if __name__ == "__main__":
-    """
-    values = get_average_signal_values_within_peaks("../data/sample1_signal_1.bigwig", "../data/sample1_peaks_1.bed")
-    values = values[np.logical_not(np.isnan(values))]
-    values = values[values < 8]
-    print("Mean", np.mean(values))
-    print("Std:", np.std(values))
-    plt.hist(values, 100)
-    plt.show()
-    #longest_segment("../data/sample1_signal_1.bedGraph")
-    """
-    from graph_peak_caller.peakcollection import PeakCollection, ReadCollection
-    from pyvg.vg import Graph
-    import logging
-    logging.basicConfig(level=logging.INFO)
-
-    ob_graph = obg.GraphWithReversals.from_file("../tests/mhc/graph.obg")
-    vg_graph = Graph.create_from_file("../tests/mhc/graph.json")
-
-    #print(vg_graph.paths.keys())
-
-    linear_path = create_linear_path(ob_graph, vg_graph, path_name="ref")
-
-    linear_reads = \
-        ReadCollection.create_from_linear_intervals_in_bed_file(
-                            ob_graph,
-                            linear_path,
-                            #"../tests/ENCFF639IFG_lrc.bed",
-                            "ENCFF639IFG.bed",
-                            graph_region=MHC_REGION)
-
-    linear_reads.to_file("../tests/mhc/macs_reads_on_graph.intervals", text_file=True)

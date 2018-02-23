@@ -2,7 +2,6 @@ from itertools import chain
 import numpy as np
 import offsetbasedgraph as obg
 from pyvg.sequences import SequenceRetriever
-from pyvg.util import vg_gam_file_to_interval_collection
 from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo
 import random
 import logging
@@ -193,7 +192,6 @@ class EvaluateSimulations:
 
     def map(self, n=5):
         from pyvg.mapping import map
-        from pyvg.util import vg_gam_file_to_interval_collection
         self.write_sequence_and_intervals(n)
         graph = self.graph
         gam_file_name = "mapped_reads.gam"
