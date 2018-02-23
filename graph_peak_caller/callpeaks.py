@@ -192,15 +192,17 @@ class CallPeaksFromQvalues(object):
 
     def __postprocess(self):
         logging.info("Filling small Holes")
-
         if isinstance(self.pre_processed_peaks, DensePileup):
+            print("!!!!!!!!!!")
             self.pre_processed_peaks = SparseValues.from_dense_pileup(
                 self.pre_processed_peaks.data._values)
+        print(self.pre_processed_peaks)
         self.pre_processed_peaks = HolesCleaner(
             self.graph,
             self.pre_processed_peaks,
             self.info.read_length).run()
-
+        print("------>")
+        print(self.pre_processed_peaks)
         if self.save_tmp_results_to_file:
             self.pre_processed_peaks.to_bed_file(
                 self.out_file_base_name + "after_hole_cleaning.bed")

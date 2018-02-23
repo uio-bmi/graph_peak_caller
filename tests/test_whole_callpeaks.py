@@ -1,6 +1,6 @@
 import unittest
 import logging
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s, %(levelname)s: %(message)s")
 from offsetbasedgraph import GraphWithReversals, Block, \
     DirectedInterval, IntervalCollection
