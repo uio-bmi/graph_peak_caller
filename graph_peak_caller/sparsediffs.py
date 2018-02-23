@@ -61,16 +61,21 @@ class SparseValues:
         return SparseValues(self.indices, values, sanitize=True)
 
     def to_dense_pileup(self, size):
-        diffs = np.ediff1d(self.values, to_begin=self.values[0])
+        if self.values.dtype == np.bool:
+            values = self.values.astype("int")
+        else:
+            values = self.values
+        diffs = np.ediff1d(values, to_begin=values[0])
         pileup = np.zeros(size+1, dtype=self.values.dtype)
         indices = self.indices[:diffs.size]
         pileup[indices] = diffs
-        return np.cumsum(pileup[:-1])
+        pileup = np.cumsum(pileup[:-1])
+        if self.values.dtype == np.bool:
+            pileup = pileup.astype("bool")
+        return pileup
 
     @classmethod
     def from_dense_pileup(cls, pileup):
-        print(pileup)
-        print("-->")
         changes = pileup[1:] != pileup[:-1]
         indices = np.r_[0, np.flatnonzero(changes)+1]
         values = pileup[indices]

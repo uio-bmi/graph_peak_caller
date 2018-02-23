@@ -200,7 +200,8 @@ class CallPeaksFromQvalues(object):
                 self.pre_processed_peaks.data._values)
         else:
             dense = DensePileup(self.graph)
-            dense.data._values = self.pre_processed_peaks.to_dense_pileup(self.graph.node_indexes[-1])
+            dense.data._values = self.pre_processed_peaks.to_dense_pileup(
+                self.graph.node_indexes[-1])
         dense.fill_small_wholes_on_dag(
             self.info.read_length)
         self.dense = SparseValues.from_dense_pileup(dense.data._values)
@@ -303,8 +304,11 @@ class CallPeaksFromQvalues(object):
             self.raw_pileup = _pileup
         else:
             _pileup = SparseValues.from_dense_pileup(self.q_values.data._values)
-        max_paths = SparseMaxPaths(self.filtered_peaks, self.graph, _pileup).run()
+        logging.info("Running Dense Max Paths")
         dense_max_paths = SparseMaxPaths(self.dense, self.graph, _pileup).run()
+        logging.info("Running Sparse Max Paths")
+        max_paths = SparseMaxPaths(self.filtered_peaks, self.graph, _pileup).run()
+
 
         logging.info("All max paths found")
         # Create dense q
