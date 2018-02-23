@@ -155,6 +155,8 @@ class LineGraph:
 
     def get_masked(self, mask):
         n_starts, n_ends = self.n_starts, self.n_ends
+        print(self._all_nodes)
+        print(self._all_sizes)
         self._all_nodes -= (self.ob_graph.min_node-1)
         T = self._all_nodes.size
         starts = np.vstack((self._all_nodes[:n_starts][mask[:n_starts]],
@@ -402,7 +404,6 @@ class HolesCleaner:
 
     def build_kept_holes(self):
         starts, fulls, ends = self._kept_borders
-        # logging.debug(self._kept_borders)
         n_starts, n_fulls, n_ends = starts.shape[1], fulls.size, ends.shape[1]
         logging.debug("#", n_starts, n_fulls, n_ends)
         n_internals = self._kept_internals.shape[0]
