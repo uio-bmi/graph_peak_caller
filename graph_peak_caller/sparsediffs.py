@@ -66,7 +66,7 @@ class SparseValues:
         else:
             values = self.values
         diffs = np.ediff1d(values, to_begin=values[0])
-        pileup = np.zeros(size+1, dtype=self.values.dtype)
+        pileup = np.zeros(size+1, dtype=values.dtype)
         indices = self.indices[:diffs.size]
         pileup[indices] = diffs
         pileup = np.cumsum(pileup[:-1])
