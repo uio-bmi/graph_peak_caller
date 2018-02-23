@@ -139,10 +139,14 @@ class SparseExtender:
         cur_id = 0
         empty = NodeInfo()
         cur_array_idx = 0
+        n_nodes = len(node_ids)
         for node_id in node_ids:
+            if node_id % 100000 == 0:
+                logging.info("Handling node %s of %s", node_id, n_nodes)
             info = node_infos.pop(node_id, empty)
             if info._dist_dict:
-                self._pileup.touched_nodes[abs(node_id)-self._graph.min_node] = True
+                self._pileup.touched_nodes[
+                    abs(node_id)-self._graph.min_node] = True
             node_size = self._graph.node_size(node_id)
             starts = starts_dict[node_id]
             n_starts = len(starts)

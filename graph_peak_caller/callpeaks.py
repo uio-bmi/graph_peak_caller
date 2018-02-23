@@ -194,18 +194,20 @@ class CallPeaksFromQvalues(object):
         logging.info("Filling small Holes")
 
         if isinstance(self.pre_processed_peaks, DensePileup):
+            print("Converting from dense")
+            dense = self.pre_processed_peaks
             self.pre_processed_peaks = SparseValues.from_dense_pileup(
                 self.pre_processed_peaks.data._values)
-
-            # self.pre_processed_peaks.fill_small_wholes_on_dag(
-            #                         self.info.read_length)
-        print(self.pre_processed_peaks)
+        else:
+            dense = DensePileup(self.graph)
+            dense.data._values = self.pre_processed_peaks.to_dense_pileup(self.graph.node_indexes[-1])
+        dense.fill_small_wholes_on_dag(
+            self.info.read_length)
+        self.dense = SparseValues.from_dense_pileup(dense.data._values)
         self.pre_processed_peaks = HolesCleaner(
             self.graph,
             self.pre_processed_peaks,
             self.info.read_length).run()
-        print("Holes")
-        print(self.pre_processed_peaks)
 
         if self.save_tmp_results_to_file:
             self.pre_processed_peaks.to_bed_file(
@@ -299,13 +301,11 @@ class CallPeaksFromQvalues(object):
             _pileup = SparseValues.from_sparse_files(
                 self.out_file_base_name+"direct_pileup")
             self.raw_pileup = _pileup
-            print(type(self.raw_pileup))
         else:
             _pileup = SparseValues.from_dense_pileup(self.q_values.data._values)
-            print("#", type(_pileup))
-        print(_pileup)
-        print(self.filtered_peaks)
         max_paths = SparseMaxPaths(self.filtered_peaks, self.graph, _pileup).run()
+        dense_max_paths = SparseMaxPaths(self.dense, self.graph, _pileup).run()
+
         logging.info("All max paths found")
         # Create dense q
         if not isinstance(self.q_values, DensePileup):
@@ -317,11 +317,12 @@ class CallPeaksFromQvalues(object):
             max_path.set_score(np.max(
                 self.q_values.data.get_interval_values(max_path)))
         max_paths.sort(key=lambda p: p.score, reverse=True)
-        if isinstance(self.q_values, DensePileup):
-            PeakCollection(max_paths).to_file(self.out_file_base_name + "max_paths_before_trimming.intervalcollection",
-                                              text_file=True)
-            max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1)
-            max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1)
+        max_paths = [p for p in max_paths if p.length() >= self.info.fragment_length]
+        # if isinstance(self.q_values, DensePileup):
+        #     PeakCollection(max_paths).to_file(self.out_file_base_name + "max_paths_before_trimming.intervalcollection",
+        #                                       text_file=True)
+        #     max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1)
+        #     max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1)
         #if not self.q_values_max_path:
         #    max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1, trim_raw=True)
         #    max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1, trim_raw=True)
