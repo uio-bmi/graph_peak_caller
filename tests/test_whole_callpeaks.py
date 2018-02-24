@@ -119,7 +119,7 @@ class TestWholeCallPeaksHierarchical(TestWholeCallPeaks):
                 7: [9],
                 8: [9],
                 9: [10],
-                # 10: [12]
+                10: [12]
              })
 
         self.graph.blocks[11] = Block(500)
