@@ -109,7 +109,7 @@ class TestWholeCallPeaksHierarchical(TestWholeCallPeaks):
         self.graph = GraphWithReversals(
             {i: Block(3) for i in range(1, 13)},
             {
-                11: [1],
+                # 11: [1],
                 1: [2, 3],
                 2: [7, 8],
                 3: [4, 5],
@@ -119,7 +119,7 @@ class TestWholeCallPeaksHierarchical(TestWholeCallPeaks):
                 7: [9],
                 8: [9],
                 9: [10],
-                10: [12]
+                # 10: [12]
              })
 
         self.graph.blocks[11] = Block(500)
