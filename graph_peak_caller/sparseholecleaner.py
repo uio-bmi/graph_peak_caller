@@ -195,6 +195,16 @@ class LineGraph:
 
 
 class DividedLinegraph(LineGraph):
+
+    def _get_subgraph(self, idxs):
+        self._lookup[idxs] = np.arange(idxs.size)
+        sub_matrix = self._matrix[idxs]
+        new_indices = self._lookup[sub_matrix.indices]
+        sub_matrix = csr_matrix((sub_matrix.data,
+                                 new_indices,
+                                 sub_matrix.indptr), shape=(idxs.size, idxs.size))
+        return sub_matrix
+
     def filter_small(self, max_size):
         start_nodes = np.r_[np.arange(self.n_starts),
                             self.n_starts+self.filtered._full_starts,
@@ -209,6 +219,7 @@ class DividedLinegraph(LineGraph):
             self._matrix[:self.end_stub, :self.end_stub])
         logging.info("Found %s components", n_components)
         complete_mask = np.zeros(self.end_stub, dtype="bool")
+        self._lookup = np.empty(self.end_stub+1, dtype="int")
         for comp in range(n_components):
             if comp % 100 == 0:
                 logging.info("Component %s of %s", comp, n_components)
@@ -217,7 +228,7 @@ class DividedLinegraph(LineGraph):
             if idxs.size-1 > 36:
                 complete_mask[idxs[:-1]] = True
                 continue
-            subgraph = self._matrix[idxs][:, idxs]
+            subgraph = self._get_subgraph(idxs)
             shortest_paths = csgraph.shortest_path(subgraph)
             my_mask = start_nodes_mask[idxs[:-1]]
             start_nodes = np.flatnonzero(my_mask)
