@@ -200,7 +200,9 @@ class CallPeaksFromQvalues(object):
         self.pre_processed_peaks = HolesCleaner(
             self.graph,
             self.pre_processed_peaks,
-            self.info.read_length).run()
+            self.info.read_length,
+            self.touched_nodes
+        ).run()
         print("------>")
         print(self.pre_processed_peaks)
         if self.save_tmp_results_to_file:

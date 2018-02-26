@@ -7,14 +7,22 @@ from .sparsediffs import SparseValues
 import logging
 import numpy as np
 
+class DummyTouched:
+    def __contains__(self, item):
+        return True
+
 
 class StubsFilter:
-    def __init__(self, starts, fulls, ends, graph, last_node=None):
+    def __init__(self, starts, fulls, ends, graph, last_node=None, touched_nodes=None):
         self._last_node = last_node
         self._graph = graph
         self._starts = starts
         self._fulls = fulls
         self._ends = ends
+
+        self._touched_nodes = touched_nodes
+        if touched_nodes is None:
+            self._touched_nodes = DummyTouched()
 
         self._starts_mask = np.ones_like(starts, dtype="bool")
         self._fulls_mask = np.ones_like(fulls, dtype="bool")
@@ -22,9 +30,6 @@ class StubsFilter:
 
         self.filter_start_stubs()
         self.filter_end_stubs()
-
-
-
         self.filtered_ends = self._ends[self._ends_mask]
         self.filtered_starts = self._starts[self._starts_mask]
         self.filtered_fulls = self._fulls[self._fulls_mask]
@@ -36,13 +41,12 @@ class StubsFilter:
         self._start_ends = np.flatnonzero(self.find_sub_ends(self.filtered_starts))
 
     def find_sub_starts(self, nodes):
-        return np.array([not all(-adj in self._pos_from_nodes
+        return np.array([not all(-adj in self._pos_from_nodes or adj not in self._touched_nodes
                                  for adj in self._graph.reverse_adj_list[-node])
                          for node in nodes], dtype="bool")
 
     def find_sub_ends(self, nodes):
-
-        a = np.array([not all(adj in self._pos_to_nodes or adj > self._last_node
+        a = np.array([not all(adj in self._pos_to_nodes or adj > self._last_node or adj not in self._touched_nodes
                               for adj in self._graph.adj_list[node])
                       for node in nodes], dtype="bool")
         return a
@@ -96,13 +100,14 @@ class PosStubFilter(StubsFilter):
 class LineGraph:
     stub_class = StubsFilter
 
-    def __init__(self, starts, full, ends, ob_graph, last_node=None):
+    def __init__(self, starts, full, ends, ob_graph, last_node=None, touched_nodes=None):
         if last_node is not None:
             last_node += ob_graph.min_node-1
         starts[0] += ob_graph.min_node-1
         full[0] += ob_graph.min_node-1
         ends[0] += ob_graph.min_node-1
-        self.filtered = self.stub_class(starts[0], full[0], ends[0], ob_graph, last_node)
+        self.filtered = self.stub_class(starts[0], full[0], ends[0],
+                                        ob_graph, last_node, touched_nodes)
         self.full_size = full[1][self.filtered._fulls_mask]
         self.start_size = starts[1][self.filtered._starts_mask]
         self.end_size = ends[1][self.filtered._ends_mask]
@@ -158,8 +163,9 @@ class LineGraph:
         sizes.extend(self._all_sizes[end_nodes])
         # self.n_starts = n_starts
         self._graph_node_sizes = sizes
-        return csr_matrix((np.array(sizes), (np.array(from_nodes),
-                                             np.array(to_nodes))),
+        return csr_matrix((np.array(sizes, dtype="int32"),
+                           (np.array(from_nodes, dtype="int32"),
+                            np.array(to_nodes, dtype="int32"))),
                           [self.end_stub+1, self.end_stub+1])
 
     def get_masked(self, mask):
@@ -202,7 +208,8 @@ class DividedLinegraph(LineGraph):
         new_indices = self._lookup[sub_matrix.indices]
         sub_matrix = csr_matrix((sub_matrix.data,
                                  new_indices,
-                                 sub_matrix.indptr), shape=(idxs.size, idxs.size))
+                                 sub_matrix.indptr),
+                                shape=(idxs.size, idxs.size))
         return sub_matrix
 
     def filter_small(self, max_size):
@@ -228,12 +235,13 @@ class DividedLinegraph(LineGraph):
             if idxs.size-1 > 36:
                 complete_mask[idxs[:-1]] = True
                 continue
-            subgraph = self._get_subgraph(idxs)
-            shortest_paths = csgraph.shortest_path(subgraph)
             my_mask = start_nodes_mask[idxs[:-1]]
             start_nodes = np.flatnonzero(my_mask)
             if not start_nodes.size:
                 complete_mask[idxs[:-1]] = True
+                continue
+            subgraph = self._get_subgraph(idxs)
+            shortest_paths = csgraph.shortest_path(subgraph)
             to_dist = np.min(shortest_paths[start_nodes], axis=0)
             from_dist = shortest_paths[:, -1]
             complete_mask[idxs[:-1]] = (to_dist+from_dist)[:-1] > max_size
@@ -290,8 +298,9 @@ class PosDividedLineGraph(DividedLinegraph):
             paths.append(global_idxs[::-1])
         return paths
 
+
 class HolesCleaner:
-    def __init__(self, graph, sparse_values, max_size):
+    def __init__(self, graph, sparse_values, max_size, touched_nodes=None):
         sparse_values.indices = sparse_values.indices.astype("int")
         self._graph = graph
         self._node_indexes = graph.node_indexes
@@ -300,6 +309,9 @@ class HolesCleaner:
         self._node_ids = self.get_node_ids()
         self._max_size = max_size
         self._kept = []
+        self._touched_nodes = touched_nodes
+        if touched_nodes is None:
+            self._touched_nodes = DummyTouched()
 
     def get_holes(self):
         start_idx = 0
@@ -383,23 +395,32 @@ class HolesCleaner:
         ends_filter = is_ends ^ (is_starts | is_multinodes)
         return starts_filter, ends_filter, full_start_filter, full_end_filter
 
-    def divide_on_nodes(self, holes, node_ids):
-        multinodes = nodes_ids[:, 0] != node_ids[:, 1]
+    def _filter_touched_nodes(self, node_values):
+        if not self._touched_nodes:
+            return node_values
+        touched = [i for i, node in enumerate(node_values[0]) if node in self._touched_nodes]
+        self._not_touched = np.array(
+            [i for i in node_values[0] if i not in self._touched_nodes],
+            dtype="int")
+        return node_values[:, touched]
 
     def run(self):
         analyzer = SegmentAnalyzer(
             self._holes, self._node_ids, self._node_indexes)
         analyzer.run()
         self._handle_internal(analyzer.internals)
-        linegraph = DividedLinegraph(analyzer.get_ends(), analyzer.get_fulls(),
-                                     analyzer.get_starts(), self._graph,
-                                     self._last_node)
+        starts = analyzer.get_ends()
+        fulls = self._filter_touched_nodes(analyzer.get_fulls())
+        ends = analyzer.get_starts()
+        linegraph = DividedLinegraph(starts, fulls, ends, self._graph,
+                                     self._last_node, self._touched_nodes)
         mask = linegraph.filter_small(self._max_size)
         self._kept_borders = linegraph.get_masked(mask)
         return self.build_sparse_values(self.build_kept_holes())
 
     def build_kept_holes(self):
         starts, fulls, ends = self._kept_borders
+        fulls = np.r_[fulls, self._not_touched]
         n_starts, n_fulls, n_ends = starts.shape[1], fulls.size, ends.shape[1]
         logging.debug("#", n_starts, n_fulls, n_ends)
         n_internals = self._kept_internals.shape[0]
