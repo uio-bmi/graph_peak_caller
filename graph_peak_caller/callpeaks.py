@@ -308,22 +308,15 @@ class CallPeaksFromQvalues(object):
             q_values.data._values = self.q_values.to_dense_pileup(
                 self.graph.node_indexes[-1])
             self.q_values = q_values
-        # max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1)
-        # max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1)
 
         for max_path in max_paths:
             max_path.set_score(np.max(
                 self.q_values.data.get_interval_values(max_path)))
         max_paths.sort(key=lambda p: p.score, reverse=True)
-        max_paths = [p for p in max_paths if p.length() >= self.info.fragment_length]
-        # if isinstance(self.q_values, DensePileup):
-        #     PeakCollection(max_paths).to_file(self.out_file_base_name + "max_paths_before_trimming.intervalcollection",
-        #                                       text_file=True)
-        #     max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1)
-        #     max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1)
-        #if not self.q_values_max_path:
-        #    max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=-1, trim_raw=True)
-        #    max_paths = self.trim_max_path_intervals(max_paths, end_to_trim=1, trim_raw=True)
+        logging.info("N unfiltered peaks: %s", len(max_paths))
+        max_paths = [p for p in max_paths if
+                     p.length() >= self.info.fragment_length]
+        logging.info("N filtered peaks: %s", len(max_paths))
 
         file_name = self.out_file_base_name + "max_paths.intervalcollection"
 

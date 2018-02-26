@@ -140,9 +140,9 @@ class SparseExtender:
         empty = NodeInfo()
         cur_array_idx = 0
         n_nodes = len(node_ids)
-        for node_id in node_ids:
-            if node_id % 100000 == 0:
-                logging.info("Handling node %s of %s", node_id, n_nodes)
+        for i, node_id in enumerate(node_ids):
+            if i % 1000000 == 0:
+                logging.info("Handling node %s of %s", i, n_nodes)
             info = node_infos.pop(node_id, empty)
             if info._dist_dict:
                 self._pileup.touched_nodes[
