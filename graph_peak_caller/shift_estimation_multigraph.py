@@ -1,5 +1,5 @@
 
-from pyvg.linear_filter import LinearFilter
+from .linear_filter import LinearFilter
 from .shiftestimation import Opt, Treatment, PeakModel
 import logging
 

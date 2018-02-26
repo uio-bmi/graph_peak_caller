@@ -1,5 +1,5 @@
 import offsetbasedgraph as obg
-from pyvg.util import vg_json_file_to_interval_collection
+from pyvg.conversion import vg_json_file_to_interval_collection
 from .experiment_info import ExperimentInfo
 from .callpeaks import CallPeaks, Configuration
 from .sparsepvalues import PToQValuesMapper
@@ -94,10 +94,8 @@ class MultipleGraphsCallpeaks:
                 logging.info("Sample is already intervalcollection.")
             else:
                 logging.info("Creating interval collections from files")
-                sample = vg_json_file_to_interval_collection(
-                    None, sample, ob_graph)
-                control = vg_json_file_to_interval_collection(
-                    None, control, ob_graph)
+                sample = vg_json_file_to_interval_collection(sample, ob_graph)
+                control = vg_json_file_to_interval_collection(control, ob_graph)
 
             graph_size = ob_graph.number_of_basepairs()
             info = ExperimentInfo(

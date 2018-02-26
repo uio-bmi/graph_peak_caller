@@ -1,7 +1,6 @@
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import pyvg
-from pyvg.util import vg_gam_file_to_interval_list
 from pyvg.sequences import SequenceRetriever
 import offsetbasedgraph as obg
 from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
@@ -11,7 +10,6 @@ from graph_peak_caller.subgraphcollection import SubgraphCollection
 from graph_peak_caller.util import LinearRegion, get_linear_paths_in_graph
 from graph_peak_caller.sparsepileup import SparsePileup
 import numpy as np
-from pyvg.util import vg_gam_file_to_interval_collection
 
 MHC_REGION = LinearRegion("chr6", 28510119, 33480577)
 
@@ -127,19 +125,6 @@ def get_mappings_overlapping_with_interval(mappings, intervals):
                 n[j] += 1
 
     return n
-
-
-def check_mappings_in_peaks(peaks_file_name, vg_mapping_file):
-    ob_graph = obg.GraphWithReversals.from_file("haplo1kg50-mhc.obg")
-    mappings = vg_gam_file_to_interval_collection(
-            None, vg_mapping_file, ob_graph)
-
-    peaks = IntervalCollection.create_list_from_file(peaks_file_name, graph=ob_graph)
-    print(peaks.intervals)
-    n = get_mappings_overlapping_with_interval(mappings, peaks.intervals)
-
-    print(n)
-
 
 def analyse_pileups_on_peaks(ob_graph, pileups_file_names, peak_intervals_file_name):
     print("Analysing peaks")
