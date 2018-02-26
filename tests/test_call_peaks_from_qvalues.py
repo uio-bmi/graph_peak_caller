@@ -69,6 +69,17 @@ class TestCallPeaksFromQValues(unittest.TestCase):
                                3: [4, 5]
                            })
 
+        self.junction_graph = GraphWithReversals({i: Block(5) for i in range(10, 20)},
+                                     {
+                                        10: [15],
+                                        11: [15],
+                                        12: [15],
+                                        13: [15],
+                                        14: [15],
+                                        15: [16, 17, 18, 19]
+                                     })
+
+
         self.fragment_length = 6
         self.read_length = 2
 
@@ -245,6 +256,16 @@ class TestCallPeaksFromQValues(unittest.TestCase):
             ],
             self.multi_start_end_graph, pileup
         )
+
+    def __test_many_possible_holes(self):
+        pileup = SparsePileup(self.multi_start_end_graph)
+        pileup.data = {
+            10: ValuedIndexes([], [], 2, 10),
+            2: ValuedIndexes([], [], 2.2, 10),
+            3: ValuedIndexes([1, 9], [2, 0], 0, 10),
+            4: ValuedIndexes([], [], 2, 10),
+            5: ValuedIndexes([1], [3], 0, 10),
+        }
 
 
 if __name__ == "__main__":
