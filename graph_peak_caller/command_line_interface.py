@@ -1,28 +1,18 @@
 #!/usr/bin/python3
 import argparse
 import logging
-import os
-import pickle
 import sys
 
 import offsetbasedgraph as obg
-from pyvg.protoparser import json_file_to_obg_graph,\
-    json_file_to_obg_numpy_graph
 from pyvg.sequences import SequenceRetriever
-from pyvg.util import vg_gam_file_to_interval_collection,\
-    vg_json_file_to_interval_collection
+from pyvg.conversion import vg_json_file_to_interval_collection, json_file_to_obg_numpy_graph
 
 from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo,\
     CallPeaksFromQvalues, Configuration
 from graph_peak_caller.peakcollection import Peak
-from graph_peak_caller.sparsepileup import SparsePileup
 from graph_peak_caller.util import create_linear_map, create_ob_graph_from_vg
-# from memory_profiler import profile
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 from graph_peak_caller.shift_estimation_multigraph import MultiGraphShiftEstimator
-from pyvg.util import vg_gam_file_to_intervals
-
-
 
 logging.basicConfig(
     level=logging.WARNING, format="%(asctime)s, %(levelname)s: %(message)s")
@@ -60,30 +50,6 @@ def shift_estimation(args):
     print("Shift: %d" % d)
 
 
-def filter_reads_in_graph(args):
-    graph = obg.GraphWithReversals.from_unknown_file_format(args.graph_base_name)
-    intervals = vg_gam_file_to_intervals(None, args.gam_reads_file, graph)
-
-    filtered = []
-    kept = 0
-    i = 0
-    print("Starting")
-    for interval in intervals:
-        if True or i % 10 == 0:
-            logging.info("Processed %d intervals" % i)
-        i += 1
-
-        if interval.region_paths[0] in graph.blocks \
-                and interval.region_paths[-1] in graph.blocks:
-            filtered.append(interval)
-            kept += 1
-    logging.info("Kept %d intevals" % kept)
-
-    filtered = obg.IntervalCollection(filtered)
-    filtered.to_file(args.out_file_name)
-    logging.info("Wrote resulting intervals to %s" % args.out_file_name)
-
-
 def run_callpeaks(ob_graph,
                   sample_file_name, control_file_name,
                   vg_graph_file_name,
@@ -100,10 +66,8 @@ def run_callpeaks(ob_graph,
         sample_intervals = sample_file_name
         control_intervals = control_file_name
     elif sample_file_name.endswith(".json"):
-        sample_intervals = vg_json_file_to_interval_collection(
-             None, sample_file_name, ob_graph)
-        control_intervals = vg_json_file_to_interval_collection(
-             None, control_file_name, ob_graph)
+        sample_intervals = vg_json_file_to_interval_collection(sample_file_name, ob_graph)
+        control_intervals = vg_json_file_to_interval_collection(control_file_name, ob_graph)
     else:
         sample_intervals = obg.IntervalCollection.from_file(
             sample_file_name, graph=ob_graph)
@@ -173,7 +137,7 @@ def count_unique_reads_interface(args):
 def count_unique_reads(chromosomes, graph_file_names, reads_file_names):
 
     graphs = (obg.GraphWithReversals.from_numpy_file(f) for f in graph_file_names)
-    reads = (vg_json_file_to_interval_collection(None, f, graph)
+    reads = (vg_json_file_to_interval_collection(f, graph)
              for f, graph in zip(reads_file_names, graphs))
 
     unique_reads = MultipleGraphsCallpeaks.count_number_of_unique_reads(reads)
@@ -448,7 +412,7 @@ def find_linear_path(args):
     from graph_peak_caller.util import create_linear_path
     import pyvg
     graph = obg.GraphWithReversals.from_numpy_file(args.ob_graph_file_name)
-    vg_graph = pyvg.vg.Graph.create_from_file(args.vg_json_graph_file_name)
+    vg_graph = pyvg.Graph.create_from_file(args.vg_json_graph_file_name)
     linear_path = create_linear_path(graph, vg_graph,
                                      path_name=args.linear_path_name, write_to_file=None)
     linear_path.to_file(args.out_file_name)
@@ -603,17 +567,6 @@ interface = \
                     ('plot_title', 'Title above plot')
                 ],
             'method': plot_motif_enrichment
-        },
-    'filter_reads_in_graph':
-        {
-            'help': "Writes reads in graph to new json file.",
-            'arguments':
-                [
-                    ('gam_reads_file', ''),
-                    ('graph_base_name', ''),
-                    ('out_file_name', '')
-                ],
-            'method': filter_reads_in_graph
         },
     'analyse_peaks':
         {
