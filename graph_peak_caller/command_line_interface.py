@@ -297,12 +297,17 @@ def split_vg_json_reads_into_chromosomes(args):
         assert mapped_chrom is not None, "Found no match for node id %d" % node
         return mapped_chrom
 
+    n_without_node_id = 0
     for line in reads_file:
         if i % 100000 == 0:
             logging.info("Line #%d" % i)
         i += 1
 
-        groups = regex.search(line).groups()
+        groups = regex.search(line)
+        if groups is None:
+            n_without_node_id += 1
+            continue
+        groups = groups.groups()
         if len(groups) > 0:
             node = int(groups[0])
             mapped_chrom = get_mapped_chrom(node)
@@ -314,7 +319,7 @@ def split_vg_json_reads_into_chromosomes(args):
     for file in out_files.values():
         file.close()
 
-    logging.info("Done")
+    logging.info("Done. Found %d lines without node id" % n_without_node_id)
 
 
 def concatenate_sequence_files(args):
