@@ -33,7 +33,8 @@ class Peak(obg.DirectedInterval):
                   "end": int(self.end_position.offset),
                   "region_paths": [int(r) for r in self.region_paths],
                   "direction": int(self.direction),
-                  "average_q_value": float(self.score)
+                  "average_q_value": float(self.score),
+                  "unique_id": str(self.unique_id)
                   }
         try:
             d = json.dumps(object)
@@ -46,9 +47,13 @@ class Peak(obg.DirectedInterval):
     @classmethod
     def from_file_line(cls, line, graph=None):
         object = json.loads(line)
+        unique_id = None
+        if "unique_id" in object:
+            unique_id = object["unique_id"]
         return cls(object["start"], object["end"], object["region_paths"],
                    direction=object["direction"], graph=graph,
-                   score=object["average_q_value"])
+                   score=object["average_q_value"],
+                   unique_id=unique_id)
 
 
 class ReadCollection(obg.IntervalCollection):
