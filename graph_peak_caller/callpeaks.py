@@ -146,6 +146,8 @@ class CallPeaks(object):
         caller.get_p_values()
         caller.p_values_pileup.track_size = graph.node_indexes[-1]
         if stop_after_p_values:
+            np.save(out_file_base_name + "touched_nodes.npy",
+                    np.array(list(caller.touched_nodes), dtype="int"))
             return caller.p_values_pileup.to_sparse_files(
                 out_file_base_name + "pvalues")
 
@@ -193,18 +195,14 @@ class CallPeaksFromQvalues(object):
     def __postprocess(self):
         logging.info("Filling small Holes")
         if isinstance(self.pre_processed_peaks, DensePileup):
-            print("!!!!!!!!!!")
             self.pre_processed_peaks = SparseValues.from_dense_pileup(
                 self.pre_processed_peaks.data._values)
-        print(self.pre_processed_peaks)
         self.pre_processed_peaks = HolesCleaner(
             self.graph,
             self.pre_processed_peaks,
             self.info.read_length,
             self.touched_nodes
         ).run()
-        print("------>")
-        print(self.pre_processed_peaks)
         if self.save_tmp_results_to_file:
             self.pre_processed_peaks.to_bed_file(
                 self.out_file_base_name + "after_hole_cleaning.bed")

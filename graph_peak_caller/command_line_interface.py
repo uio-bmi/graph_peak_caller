@@ -177,6 +177,7 @@ def run_callpeaks_whole_genome(args):
     )
     caller.run()
 
+
 def run_callpeaks_whole_genome_from_p_values(args):
     logging.info("Running whole genome from p-values.")
     chromosome = args.chromosome
