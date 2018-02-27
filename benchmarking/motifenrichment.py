@@ -70,6 +70,8 @@ def plot_true_positives(peak_file_sets, meme_file_name, plot_title="", save_to_f
         print("True positives for %s: %d / %d = %.3f" % (name, n_matching, n_tot, n_matching/n_tot))
         plt.plot(true_positives, color=colors[i], label=name + " (%.2f)" % (100 * n_matching/n_tot))
         i += 1
+    axis = plt.gca()
+    #axis.set_ylim([0.75,1.0])
     plt.title(plot_title)
     plt.legend()
     if save_to_file is not None:
