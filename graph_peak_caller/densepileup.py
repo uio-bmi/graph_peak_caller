@@ -608,15 +608,19 @@ class DensePileup(Pileup):
         indexes = indexes[:-1]  # Remove length added to end
         assert np.all(indexes >= 0)
         values = np.load(base_file_name + "_values.npy")
-        touched_nodes = np.load(
-            base_file_name + "_touched_nodes.npy")
 
         diffs = np.ediff1d(values, to_begin=[values[0]])
         pileup_vals = pileup.data._values
         pileup_vals[indexes] = diffs
         pileup_vals = np.cumsum(pileup_vals)
         pileup.data._values = pileup_vals
-        pileup.data._touched_nodes = set(list(touched_nodes))
+	
+        try:
+            touched_nodes = np.load(
+                base_file_name + "_touched_nodes.npy")
+            pileup.data._touched_nodes = set(list(touched_nodes))
+        except FileNotFoundError:
+            logging.warning("Touched nodes not found on file. Not setting touched nodes")
 
         return pileup
 

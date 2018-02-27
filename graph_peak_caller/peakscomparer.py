@@ -296,11 +296,13 @@ class PeaksComparerV2(object):
 
             not_matching = IntervalCollection(not_matching)
             not_matching.to_file("not_matching_set%d.intervals" % i, text_file=True)
+            logging.info("Wrote peaks not matching to file not_matching_set%d.intervals" % i)
             matching = IntervalCollection(matching)
             matching.to_file("matching_set%d.intervals" % i, text_file=True)
 
-            print("Total peaks in main set: %d" % n_tot)
-            print("N similar to peak in other set: %d " % n_similar)
+            logging.info("Total peaks in main set: %d" % n_tot)
+            logging.info("N similar to peak in other set: %d " % n_similar)
+            logging.info("N not matching other set: %d " % len(not_matching.intervals))
 
             i += 1
 
