@@ -455,9 +455,9 @@ class PeaksComparer(object):
 
                 n_tot += 1
 
-            not_matching = IntervalCollection(not_matching)
+            not_matching = PeakCollection(not_matching)
             not_matching.to_file("not_matching_set%d.intervals" % i, text_file=True)
-            matching = IntervalCollection(matching)
+            matching = PeakCollection(matching)
             matching.to_file("matching_set%d.intervals" % i, text_file=True)
 
             print("Total peaks in main set: %d" % n_tot)
