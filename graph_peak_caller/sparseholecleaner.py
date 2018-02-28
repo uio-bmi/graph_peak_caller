@@ -4,8 +4,10 @@ import scipy.sparse.csgraph as csgraph
 from scipy.sparse import csr_matrix
 from .segmentanalyzer import SegmentAnalyzer
 from .sparsediffs import SparseValues
+from .subgraphanalyzer import SubGraphAnalyzer
 import logging
 import numpy as np
+
 
 class DummyTouched:
     def __contains__(self, item):
@@ -13,7 +15,8 @@ class DummyTouched:
 
 
 class StubsFilter:
-    def __init__(self, starts, fulls, ends, graph, last_node=None, touched_nodes=None):
+    def __init__(self, starts, fulls, ends, graph,
+                 last_node=None, touched_nodes=None):
         self._last_node = last_node
         self._graph = graph
         self._starts = starts
@@ -230,8 +233,10 @@ class DividedLinegraph(LineGraph):
         for comp in range(n_components):
             if comp % 100 == 0:
                 logging.info("Component %s of %s", comp, n_components)
+
             idxs = np.r_[np.flatnonzero(
                 connected_components == comp), self.end_stub]
+
             if idxs.size-1 > 36:
                 complete_mask[idxs[:-1]] = True
                 continue
@@ -268,12 +273,11 @@ class PosDividedLineGraph(DividedLinegraph):
                             self.n_starts+self.filtered._full_starts,
                             self.n_nodes-self.n_ends+self.filtered._end_starts]
         if not start_nodes.size:
-            return np.array([], dtype="bool")
+            return [], []
         start_nodes_mask = np.zeros(self.end_stub, dtype="bool")
         start_nodes_mask[start_nodes] = True
         paths = []
-        if not start_nodes.size:
-            return np.array([], dtype="bool")
+        infos = []
         self._matrix.data += 1
         n_components, connected_components = csgraph.connected_components(
             self._matrix[:self.end_stub, :self.end_stub])
@@ -285,6 +289,7 @@ class PosDividedLineGraph(DividedLinegraph):
                 connected_components == comp), self.end_stub]
             if idxs.size == 2:
                 paths.append([idxs[0]])
+                infos.append((0, 0))
                 continue
             subgraph = -self._matrix[idxs][:, idxs]
             subgraph.data += 1
@@ -296,7 +301,9 @@ class PosDividedLineGraph(DividedLinegraph):
             global_idxs = idxs[local_idxs]
             assert np.all(global_idxs != self.end_stub)
             paths.append(global_idxs[::-1])
-        return paths
+            infos.append(
+                SubGraphAnalyzer(subgraph, local_idxs[::-1], distances).get_info())
+        return paths, infos
 
 
 class HolesCleaner:

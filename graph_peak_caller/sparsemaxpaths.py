@@ -26,6 +26,9 @@ class SparseMaxPaths:
                                     graph=self._graph)
                                for offset, _id in zip(offsets, ids)]
 
+        for path in self.internal_paths:
+            path.info = (False, False)
+
     def get_segments(self):
         start_idx = 0
         if self._sparse_values.values[0] != 1:
@@ -59,18 +62,21 @@ class SparseMaxPaths:
                                         scored_segments[1],
                                         self._graph)
 
-        paths = linegraph.max_paths()
-        return self._convert_paths(paths)+self.internal_paths
+        paths, infos = linegraph.max_paths()
+        return self._convert_paths(paths, infos)+self.internal_paths
 
-    def _convert_paths(self, paths):
+    def _convert_paths(self, paths, infos):
         reverse_map = np.concatenate(
             [np.flatnonzero(mask) for mask in
              [self._analyzer.end_mask,
               self._analyzer.full_mask,
               self._analyzer.start_mask,
               ]])
-        return [self._convert_path(path, reverse_map)
-                for path in paths]
+        peaks = [self._convert_path(path, reverse_map)
+                 for path in paths]
+        for peak, info in zip(peaks, infos):
+            peak.info = info
+        return peaks
 
     def _convert_path(self, path, reverse_map):
         idxs = reverse_map[path]
