@@ -265,6 +265,8 @@ class SamplePileupGenerator:
         self._neg_extender.run_linear(self._reads_adder.get_neg_ends())
         sdiffs = SparseDiffs.from_pileup(self._pileup,
                                          self._graph.node_indexes)
-        sdiffs.touched_nodes = set(np.flatnonzero(self._pileup.touched_nodes[:-2])+self._graph.min_node)
+        sdiffs.touched_nodes = set(
+            np.flatnonzero(
+                self._pileup.touched_nodes[:-2]) + self._graph.min_node)
         return sdiffs
     # return self.__to_dense()

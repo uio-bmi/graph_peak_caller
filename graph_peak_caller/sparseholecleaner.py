@@ -38,15 +38,20 @@ class StubsFilter:
         self.filtered_fulls = self._fulls[self._fulls_mask]
         self._set_pos_nodes()
 
-        self._full_starts = np.flatnonzero(self.find_sub_starts(self.filtered_fulls))
-        self._end_starts = np.flatnonzero(self.find_sub_starts(self.filtered_ends))
-        self._full_ends = np.flatnonzero(self.find_sub_ends(self.filtered_fulls))
-        self._start_ends = np.flatnonzero(self.find_sub_ends(self.filtered_starts))
+        self._full_starts = np.flatnonzero(
+            self.find_sub_starts(self.filtered_fulls))
+        self._end_starts = np.flatnonzero(
+            self.find_sub_starts(self.filtered_ends))
+        self._full_ends = np.flatnonzero(
+            self.find_sub_ends(self.filtered_fulls))
+        self._start_ends = np.flatnonzero(
+            self.find_sub_ends(self.filtered_starts))
 
     def find_sub_starts(self, nodes):
-        return np.array([not all(-adj in self._pos_from_nodes or adj not in self._touched_nodes
-                                 for adj in self._graph.reverse_adj_list[-node])
-                         for node in nodes], dtype="bool")
+        r = np.array([not all(-adj in self._pos_from_nodes or adj not in self._touched_nodes
+                              for adj in self._graph.reverse_adj_list[-node])
+                      for node in nodes], dtype="bool")
+        return r
 
     def find_sub_ends(self, nodes):
         a = np.array([not all(adj in self._pos_to_nodes or adj > self._last_node or adj not in self._touched_nodes
@@ -405,9 +410,10 @@ class HolesCleaner:
     def _filter_touched_nodes(self, node_values):
         if not self._touched_nodes:
             return node_values
-        touched = [i for i, node in enumerate(node_values[0]) if node in self._touched_nodes]
+        touched = [i for i, node in enumerate(node_values[0])
+                   if node+self._graph.min_node-1 in self._touched_nodes]
         self._not_touched = np.array(
-            [i for i in node_values[0] if i not in self._touched_nodes],
+            [i for i in node_values[0] if i+self._graph.min_node-1 not in self._touched_nodes],
             dtype="int")
         return node_values[:, touched]
 
@@ -429,7 +435,7 @@ class HolesCleaner:
         starts, fulls, ends = self._kept_borders
         fulls = np.r_[fulls, self._not_touched]
         n_starts, n_fulls, n_ends = starts.shape[1], fulls.size, ends.shape[1]
-        logging.debug("#", n_starts, n_fulls, n_ends)
+        logging.debug("# %s, %s, %s", n_starts, n_fulls, n_ends)
         n_internals = self._kept_internals.shape[0]
         all_holes = np.empty((n_starts+n_fulls+n_ends+n_internals, 2),
                              dtype="int")

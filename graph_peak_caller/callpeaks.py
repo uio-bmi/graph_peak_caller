@@ -1,7 +1,6 @@
 import logging
 import numpy as np
 from offsetbasedgraph import IntervalCollection, DirectedInterval
-import pyvg as vg
 from .densepileup import DensePileup
 from .areas import BinaryContinousAreas, BCACollection
 from .peakscores import ScoredPeak
@@ -300,7 +299,8 @@ class CallPeaksFromQvalues(object):
         logging.info("Running Dense Max Paths")
         # max_paths = SparseMaxPaths(self.dense, self.graph, _pileup).run()
         logging.info("Running Sparse Max Paths")
-        max_paths = SparseMaxPaths(self.filtered_peaks, self.graph, _pileup).run()
+        max_paths = SparseMaxPaths(
+            self.filtered_peaks, self.graph, _pileup).run()
         logging.info("All max paths found")
         # Create dense q
         if not isinstance(self.q_values, DensePileup):
