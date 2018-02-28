@@ -426,7 +426,7 @@ def find_linear_path(args):
 
 
 def move_linear_reads_to_graph(args):
-    chromosomes = args.move_linear_reads_to_graph.split(",")
+    chromosomes = args.chromosomes.split(",")
     chrom_lookup = set(chromosomes)
     graphs = {}
     out_files = {}
@@ -439,10 +439,14 @@ def move_linear_reads_to_graph(args):
         out_files[chrom] = open(args.out_files_base_name + "_" + chrom + ".intervalcollection", "w")
 
     bedfile = open(args.bed_file_name, "r")
+    i = 0
     for line in bedfile:
+        if i % 100000 == 0:
+            logging.info("%d reads processed" % i)
+        i += 1
         line = line.split()
         is_reverse = line[5] == "-"
-        chrom = line[2].replace("chr", "")
+        chrom = line[0].replace("chr", "")
         if chrom not in chrom_lookup:
             continue
         start = int(line[1])
@@ -452,6 +456,7 @@ def move_linear_reads_to_graph(args):
 
         if is_reverse:
             graph_interval = graph_interval.get_reverse()
+            assert graph_interval.region_paths[0] < 0
         out_files[chrom].writelines(["%s\n" % graph_interval.to_file_line()])
 
     for chrom in chromosomes:
@@ -680,8 +685,8 @@ interface = \
                 [
                     ('bed_file_name', ''),
                     ('chromosomes', 'Comma separated list of chromosomes to use'),
-                    ('data_dir', 'Directory containing graphs and linear path files')
-                    ('out_files_base_name')
+                    ('data_dir', 'Directory containing graphs and linear path files'),
+                    ('out_files_base_name', '')
                 ],
             'method': move_linear_reads_to_graph
         }
