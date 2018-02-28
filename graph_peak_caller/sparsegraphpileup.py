@@ -202,7 +202,6 @@ def _get_node_indexes(graph):
         logging.info("Node indexes created...")
         graph.min_node = (graph.blocks.node_id_offset+1)
         return node_indexes
-    logging.info("(using sorted nodes on blocks)")
     sorted_nodes = sorted(graph.blocks.keys())
     min_node = sorted_nodes[0]
     graph.min_node = min_node
