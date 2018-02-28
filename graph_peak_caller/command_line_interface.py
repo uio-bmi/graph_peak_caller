@@ -152,9 +152,16 @@ def run_callpeaks_whole_genome(args):
     vg_graphs = [args.vg_graphs_location + chrom + ".vg" for chrom in chromosomes]
     sequence_retrievers = \
         (SequenceRetriever.from_vg_graph(fn) for fn in vg_graphs)
-    sample_file_names = [args.sample_reads_base_name + chrom + ".json"
+
+    if args.sample_reads_base_name.endswith(".intervalcollection"):
+        sample_file_names = [args.sample_reads_base_name.replace("chrom", chrom)
+                            for chrom in chromosomes]
+        control_file_names = [args.sample_reads_base_name.replace("chrom", chrom)
+                            for chrom in chromosomes]
+    else:
+        sample_file_names = [args.sample_reads_base_name + chrom + ".json"
                         for chrom in chromosomes]
-    control_file_names = [args.sample_reads_base_name + chrom + ".json"
+        control_file_names = [args.sample_reads_base_name + chrom + ".json"
                         for chrom in chromosomes]
 
 
@@ -418,11 +425,44 @@ def find_linear_path(args):
     from graph_peak_caller.util import create_linear_path
     import pyvg
     graph = obg.GraphWithReversals.from_numpy_file(args.ob_graph_file_name)
-    vg_graph = pyvg.Graph.create_from_file(args.vg_json_graph_file_name)
+    vg_graph = pyvg.Graph.from_file(args.vg_json_graph_file_name)
     linear_path = create_linear_path(graph, vg_graph,
                                      path_name=args.linear_path_name, write_to_file=None)
     linear_path.to_file(args.out_file_name)
     logging.info("Wrote to file %s" % args.out_file_name)
+
+
+def move_linear_reads_to_graph(args):
+    chromosomes = args.move_linear_reads_to_graph.split(",")
+    chrom_lookup = set(chromosomes)
+    graphs = {}
+    out_files = {}
+    linear_paths = {}
+    for chrom in chromosomes:
+        linear_paths[chrom] = obg.NumpyIndexedInterval.from_file(
+            args.data_dir + "/" + chrom + "_linear_pathv2.interval"
+        )
+        graphs[chrom] = obg.Graph.from_numpy_file(args.data_dir + "/" + chrom + ".nobg")
+        out_files[chrom] = open(args.out_files_base_name + "_" + chrom + ".intervalcollection", "w")
+
+    bedfile = open(args.bed_file_name, "r")
+    for line in bedfile:
+        line = line.split()
+        is_reverse = line[5] == "-"
+        chrom = line[2].replace("chr", "")
+        if chrom not in chrom_lookup:
+            continue
+        start = int(line[1])
+        end = int(line[2])
+        graph_interval = linear_paths[chrom].get_exact_subinterval(start, end)
+        graph_interval.graph = graphs[chrom]
+
+        if is_reverse:
+            graph_interval = graph_interval.get_reverse()
+        out_files[chrom].writelines(["%s\n" % graph_interval.to_file_line()])
+
+    for chrom in chromosomes:
+        out_files[chrom].close()
 
 
 interface = \
@@ -639,10 +679,20 @@ interface = \
                     ('out_file_name', ''),
                 ],
             'method': find_linear_path
+        },
+    'move_linear_reads_to_graph':
+        {
+            'help': 'Translate reads in sam file to reads on a graph. Writes to interval collection files.',
+            'arguments':
+                [
+                    ('bed_file_name', ''),
+                    ('chromosomes', 'Comma separated list of chromosomes to use'),
+                    ('data_dir', 'Directory containing graphs and linear path files')
+                    ('out_files_base_name')
+                ],
+            'method': move_linear_reads_to_graph
         }
 }
-
-
 
 
 def create_argument_parser():
