@@ -377,7 +377,7 @@ def analyse_peaks_whole_genome(args):
         graph = obg.GraphWithReversals.from_numpy_file(
             args.graphs_dir + chrom + ".nobg")
         logging.info("Reading linear path")
-        linear_path = NumpyIndexedInterval.from_file(args.graphs_dir + chrom + "_linear_path.interval")
+        linear_path = NumpyIndexedInterval.from_file(args.graphs_dir + chrom + "_linear_pathv2.interval")
 
         analyser = PeaksComparerV2(
             graph,
