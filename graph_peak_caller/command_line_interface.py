@@ -154,9 +154,9 @@ def run_callpeaks_whole_genome(args):
         (SequenceRetriever.from_vg_graph(fn) for fn in vg_graphs)
 
     if args.sample_reads_base_name.endswith(".intervalcollection"):
-        sample_file_names = [args.sample_reads_base_name + chrom + ".json"
+        sample_file_names = [args.sample_reads_base_name.replace("chrom", chrom)
                             for chrom in chromosomes]
-        control_file_names = [args.sample_reads_base_name + chrom + ".json"
+        control_file_names = [args.sample_reads_base_name.replace("chrom", chrom)
                             for chrom in chromosomes]
     else:
         sample_file_names = [args.sample_reads_base_name + chrom + ".json"
