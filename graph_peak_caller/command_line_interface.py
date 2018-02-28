@@ -687,7 +687,7 @@ interface = \
                 [
                     ('bed_file_name', ''),
                     ('chromosomes', 'Comma separated list of chromosomes to use'),
-                    ('data_dir', 'Directory containing graphs and linear path files')
+                    ('data_dir', 'Directory containing graphs and linear path files'),
                     ('out_files_base_name')
                 ],
             'method': move_linear_reads_to_graph
