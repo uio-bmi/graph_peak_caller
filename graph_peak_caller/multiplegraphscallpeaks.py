@@ -94,6 +94,9 @@ class MultipleGraphsCallpeaks:
                 graph_file_name)
             if isinstance(sample, obg.IntervalCollection):
                 logging.info("Sample is already intervalcollection.")
+            elif sample.endswith(".intervalcollection"):
+                sample = obg.IntervalCollection.create_generator_from_file(sample, graph=ob_graph)
+                control = obg.IntervalCollection.create_generator_from_file(control, graph=ob_graph)
             else:
                 logging.info("Creating interval collections from files")
                 sample = vg_json_file_to_interval_collection(sample, ob_graph)
