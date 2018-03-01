@@ -145,7 +145,7 @@ class PeakCollection(obg.IntervalCollection):
             if i % 100 == 0:
                 logging.info("%d peaks processed" % (i))
             i += 1
-            linear_interval = linear_path_interval.get_subinterval(start, end)
+            linear_interval = linear_path_interval.get_exact_subinterval(start, end)
             linear_interval.graph = ob_graph
             graph_peak = Peak.from_interval_and_score(
                 linear_interval, peak.score)

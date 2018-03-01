@@ -356,8 +356,10 @@ class HolesCleaner:
         if self._sparse_values.values[-1] == 0:
             indices = np.r_[indices, self._sparse_values.indices[-1]]
             values = np.r_[values, 0]
-        return SparseValues(indices.astype("int"),
+        new_pileup = SparseValues(indices.astype("int"),
                             values.astype("bool"), sanitize=True)
+        new_pileup.track_size = self._sparse_values.track_size
+        return new_pileup
 
     def get_node_ids(self):
         node_ids = np.empty_like(self._holes)

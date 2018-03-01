@@ -30,10 +30,10 @@ class SparseValues:
         return obj
 
     def to_sparse_files(self, file_base_name):
-        print(self)
         np.save(file_base_name + "_indexes.npy",
                 np.r_[self.indices, self.track_size])
         np.save(file_base_name + "_values.npy", self.values)
+        logging.info("Wrote to %s_indexes/values.npy" % file_base_name)
 
     def __repr__(self):
         return "SV(%s, %s)" % (self.indices, self.values)
@@ -58,7 +58,9 @@ class SparseValues:
 
     def threshold_copy(self, cutoff):
         values = self.values >= cutoff
-        return SparseValues(self.indices, values, sanitize=True)
+        new = SparseValues(self.indices, values, sanitize=True)
+        new.track_size = self.track_size
+        return new
 
     def to_dense_pileup(self, size):
         if self.values.dtype == np.bool:
