@@ -21,7 +21,6 @@ class AnalysisResults:
         self.peaks1_in_peaks2_matching_motif = 0
         self.peaks2_in_peaks1_matching_motif = 0
 
-
     def __repr__(self):
         out = ""
         out += "Number of peaks1: %d \n" % self.tot_peaks1
@@ -70,9 +69,7 @@ class AnalysisResults:
 # $ graph_peak_caller analyse_peaks ~/dev/graph_peak_caller/tests/whole_genome/22.nobg ~/dev/graph_peak_caller/tests/whole_genome/22.json macs_sequences_chr22.fasta 22_sequences.fasta fimo_macs_chr22/fimo.txt fimo_graph_chr22/fimo.txt 22 22 0 0
 
 
-
 class PeaksComparerV2(object):
-
     def __init__(self, graph,
                  linear_peaks_fasta_file_name,
                  graph_peaks_fasta_file_name,
@@ -104,9 +101,11 @@ class PeaksComparerV2(object):
         nongraphpeaks = NonGraphPeakCollection.from_fasta(self.linear_peaks_fasta_file_name)
 
         if region is not None:
-            nongraphpeaks.filter_peaks_outside_region(region.chromosome, region.start, region.end)
+            nongraphpeaks.filter_peaks_outside_region(
+                region.chromosome, region.start, region.end)
         else:
-            logging.info("Graph region is None. Whole graph will be used and no filtering on peaks will be done.")
+            logging.info(
+                "Graph region is None. Whole graph will be used and no filtering on peaks will be done.")
 
         self.peaks2 = PeakCollection.create_from_nongraph_peak_collection(
             graph,
@@ -135,6 +134,7 @@ class PeaksComparerV2(object):
 
     def check_matching_for_motif_hits(self):
         print("\n--- Checking peaks matching for motif hits --- ")
+        self._get_pair_ambig_status()
         i = 1
         for matching in [self.peaks1_in_peaks2, self.peaks2_in_peaks1]:
             if i == 1:
@@ -144,14 +144,16 @@ class PeaksComparerV2(object):
                 print("Checking linear peaks, in total %d in other set" % len(matching))
                 matching_motif = self.linear_matching_motif
 
-            n = self.count_matching_motif(matching_motif, matching)
+            a, b, c, d = self.count_matching_motif(matching_motif, matching, with_info=True)
+            n = a + b
             print("Found n peaks that matches motif: %d" % n)
 
             if i == 1:
+                print("MA: ", a, "MNA:", b, "NMA:", c, "NMNA:", d)
                 self.results.peaks1_in_peaks2_matching_motif = n
             else:
+                print("MA: ", a, "MNA:", b, "NMA:", c, "NMNA:", d)
                 self.results.peaks2_in_peaks1_matching_motif = n
-
             i += 1
 
     def check_non_matching_for_motif_hits(self):
@@ -175,13 +177,41 @@ class PeaksComparerV2(object):
 
             i += 1
 
-    def count_matching_motif(self, matching_motif_ids, peak_list):
+    def _get_pair_ambig_status(self):
+        peaks = self.peaks1_in_peaks2
+        matches = [self.peaks2.which_approx_contains_part_of_interval(peak)
+                   for peak in peaks]
+        my_motif_matches = [peak.unique_id in self.graph_matching_motif
+                            for peak in peaks]
+        other_motif_matches = [peak.unique_id in self.linear_matching_motif
+                               for peak in peaks]
+        is_ambiguous = [peak.info[0] for peak in peaks]
         n = 0
+        found = 0
+        for my_match, other_match, ambig in zip(my_motif_matches, other_motif_matches, is_ambiguous):
+            if other_match and not my_match:
+                n += 1
+                if ambig:
+                    found += 1
+        print("Ambigous of non-found: ", found, n)
+
+    def count_matching_motif(self, matching_motif_ids, peak_list, with_info=False):
+        a, b, c, d = (0, 0, 0, 0)
         for peak in peak_list:
             assert peak.unique_id is not None
-            if peak.unique_id in matching_motif_ids:
-                n += 1
-        return n
+            ambig = peak.info[0]
+            motif = peak.unique_id in matching_motif_ids
+            if motif and ambig:
+                a += 1
+            elif motif and not ambig:
+                b += 1
+            elif (not motif) and ambig:
+                c += 1
+            else:
+                d += 1
+        if with_info:
+            return a, b, c, d
+        return a+b
 
     def _get_peaks_matching_motif(self, fimo_file_name):
         matches = set()
