@@ -154,7 +154,7 @@ class SampleAndControlCreatorO(object):
         n_reads_left = 0
         for interval in intervals:
             if not self.skip_filter_duplicates:
-                hash = interval.hash()
+                hash = interval.hash(ignore_end_pos=True)
                 if hash in interval_hashes:
                     n_duplicates += 1
                     if not is_control:
