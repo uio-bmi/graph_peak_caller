@@ -69,10 +69,16 @@ def run_callpeaks(ob_graph,
         sample_intervals = vg_json_file_to_interval_collection(sample_file_name, ob_graph)
         control_intervals = vg_json_file_to_interval_collection(control_file_name, ob_graph)
     else:
-        sample_intervals = obg.IntervalCollection.from_file(
-            sample_file_name, graph=ob_graph)
-        control_intervals = obg.IntervalCollection.from_file(
-            control_file_name, graph=ob_graph)
+        try:
+            sample_intervals = obg.IntervalCollection.from_file(
+                sample_file_name, graph=ob_graph)
+            control_intervals = obg.IntervalCollection.from_file(
+                control_file_name, graph=ob_graph)
+        except OSError:
+            sample_intervals = obg.IntervalCollection.from_file(
+                sample_file_name, graph=ob_graph, text_file=True)
+            control_intervals = obg.IntervalCollection.from_file(
+                control_file_name, graph=ob_graph, text_file=True)
 
     graph_size = ob_graph.number_of_basepairs()
     logging.info("Number of base pairs in graph: %d" % graph_size)
@@ -90,7 +96,11 @@ def run_callpeaks(ob_graph,
         linear_map=linear_map_file_name,
         configuration=config
     )
-    retriever = SequenceRetriever.from_vg_graph(vg_graph_file_name)
+    try:
+        retriever = SequenceRetriever.from_vg_graph(vg_graph_file_name)
+    except OSError:
+        retriever = SequenceRetriever.from_vg_json_graph(vg_graph_file_name)
+
     caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
 
 
