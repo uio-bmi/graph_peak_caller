@@ -287,17 +287,21 @@ class PosDividedLineGraph(DividedLinegraph):
         n_components, connected_components = csgraph.connected_components(
             self._matrix[:self.end_stub, :self.end_stub])
         logging.info("Found %s components", n_components)
+        # node_id_refs = []
+        # subgraphs = []
         for comp in range(n_components):
             if comp % 100 == 0:
                 logging.info("Component %s of %s", comp, n_components)
             idxs = np.r_[np.flatnonzero(
                 connected_components == comp), self.end_stub]
+            # node_id_refs.append(self._all_nodes[idxs])
             if idxs.size == 2:
                 paths.append([idxs[0]])
                 infos.append((0, 0))
                 continue
             subgraph = -self._matrix[idxs][:, idxs]
             subgraph.data += 1
+            # subgraphs.append(subgraph)
             distances, predecessors = csgraph.shortest_path(
                 subgraph, return_predecessors=True, method="BF")
             my_mask = start_nodes_mask[idxs[:-1]]

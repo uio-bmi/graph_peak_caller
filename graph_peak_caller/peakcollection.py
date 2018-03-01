@@ -14,6 +14,7 @@ class Peak(obg.DirectedInterval):
                          region_paths, graph, direction)
         self.score = score
         self.unique_id = unique_id
+        self.info = (0, 0)
 
     def __str__(self):
         return super().__str__() + " [%s]" % self.score
@@ -34,7 +35,9 @@ class Peak(obg.DirectedInterval):
                   "region_paths": [int(r) for r in self.region_paths],
                   "direction": int(self.direction),
                   "average_q_value": float(self.score),
-                  "unique_id": str(self.unique_id)
+                  "unique_id": str(self.unique_id),
+                  "is_ambigous": int(self.info[1]),
+                  "is_diff": int(self.info[0])
                   }
         try:
             d = json.dumps(object)
@@ -50,10 +53,12 @@ class Peak(obg.DirectedInterval):
         unique_id = None
         if "unique_id" in object:
             unique_id = object["unique_id"]
-        return cls(object["start"], object["end"], object["region_paths"],
-                   direction=object["direction"], graph=graph,
-                   score=object["average_q_value"],
-                   unique_id=unique_id)
+        obj = cls(object["start"], object["end"], object["region_paths"],
+                  direction=object["direction"], graph=graph,
+                  score=object["average_q_value"],
+                  unique_id=unique_id)
+        obj.info = (object["is_diff"], object["is_ambigous"])
+        return obj
 
 
 class ReadCollection(obg.IntervalCollection):
@@ -122,6 +127,13 @@ class PeakCollection(obg.IntervalCollection):
                 return True
 
         return False
+
+    def which_approx_contains_part_of_interval(self, interval):
+        assert hasattr(self, "_index"), "Create index first by calling create_node_index()"
+        for rp in interval.region_paths:
+            containing = self._index[abs(rp)]
+            if len(containing) > 0:
+                return containing[0]
 
     @classmethod
     def create_from_nongraph_peak_collection(
