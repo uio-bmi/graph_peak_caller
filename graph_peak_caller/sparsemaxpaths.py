@@ -66,9 +66,6 @@ class SparseMaxPaths:
         converted = self._convert_paths(paths, infos)
         for path, subgraph in zip(converted, subgraphs):
             subgraph._node_ids += self._graph.min_node-1
-            print(subgraph._node_ids, path.region_paths)
-            assert all(rp in subgraph._node_ids
-                       for rp in path.region_paths)
 
         return converted+self.internal_paths, subgraphs
 

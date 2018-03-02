@@ -314,10 +314,7 @@ class PosDividedLineGraph(DividedLinegraph):
             start_nodes = np.flatnonzero(my_mask)
             local_idxs = self._backtrace(distances, predecessors, start_nodes)
             global_idxs = idxs[local_idxs]
-            assert np.all(global_idxs != self.end_stub)
             paths.append(global_idxs[::-1])
-            print(subgraphs[-1]._node_ids, local_idxs)
-            assert len(subgraphs[-1]._node_ids) >= len(local_idxs)
             infos.append(
                 SubGraphAnalyzer(subgraph, local_idxs[::-1], distances).get_info())
         return paths, infos, subgraphs

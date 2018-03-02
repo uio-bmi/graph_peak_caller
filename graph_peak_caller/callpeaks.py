@@ -326,11 +326,6 @@ class CallPeaksFromQvalues(object):
         logging.info("N filtered peaks: %s", len(pairs))
 
         file_name = self.out_file_base_name + "max_paths.intervalcollection"
-        for pair in pairs:
-            print(pair[1]._node_ids, pair[0].region_paths)
-            assert all(rp in pair[1]._node_ids
-                       for rp in pair[0].region_paths)
-
         PeakCollection([p[0] for p in pairs]).to_file(
             file_name,
             text_file=True)
