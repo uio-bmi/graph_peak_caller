@@ -170,7 +170,7 @@ class CallPeaksFromQvalues(object):
         self.raw_pileup = raw_pileup
         # self.graph.assert_correct_edge_dicts()
         self.touched_nodes = touched_nodes
-        self.save_tmp_results_to_file = True
+        self.save_tmp_results_to_file = False
         self.graph_is_partially_ordered = False
         self.q_values_max_path = q_values_max_path
 
@@ -188,8 +188,9 @@ class CallPeaksFromQvalues(object):
         self.pre_processed_peaks = self.q_values.threshold_copy(threshold)
 
         if self.save_tmp_results_to_file:
-            self.pre_processed_peaks.to_bed_file(
-                self.out_file_base_name + "pre_postprocess.bed")
+            self.pre_processed_peaks.to_sparse_files(
+                self.out_file_base_name + "peak_areas_pre_postprocess")
+            logging.info("Wrote peak pileup before post processing to file.")
 
     def __postprocess(self):
         logging.info("Filling small Holes")
@@ -203,9 +204,11 @@ class CallPeaksFromQvalues(object):
             self.touched_nodes
         ).run()
         if self.save_tmp_results_to_file:
-            self.pre_processed_peaks.to_bed_file(
-                self.out_file_base_name + "after_hole_cleaning.bed")
+            self.pre_processed_peaks.to_sparse_files(
+                self.out_file_base_name + "peaks_after_hole_cleaning")
             logging.info("Wrote results after holes cleaning to file")
+        else:
+            logging.info("Not writing results after hole cleaning")
 
         logging.info("Removing small peaks")
 
@@ -300,6 +303,9 @@ class CallPeaksFromQvalues(object):
         logging.info("Running Sparse Max Paths")
         max_paths, sub_graphs = SparseMaxPaths(
             self.filtered_peaks, self.graph, _pileup).run()
+        PeakCollection(max_paths).to_file(
+            self.out_file_base_name + "max_paths_before_length_filtering.intervalcollection",
+            text_file=True)
         logging.info("All max paths found")
 
         # Create dense q
@@ -356,8 +362,8 @@ class CallPeaksFromQvalues(object):
         self.__threshold()
         self.__postprocess()
         # self.__get_subgraphs()
-        self.filtered_peaks.to_bed_file(
-            self.out_file_base_name + "final_peaks.bed")
+        self.filtered_peaks.to_sparse_files(
+            self.out_file_base_name + "peaks_after_postprocessing")
         self.__get_max_paths()
 
     def save_max_path_sequences_to_fasta_file(self, file_name, sequence_retriever):

@@ -36,8 +36,9 @@ class TestPeakCollection(unittest.TestCase):
             {1: Block(10), 2: Block(10), 3: Block(10)},
             {1: [2], 2:[3]}
         )
+        graph.convert_to_numpy_backend()
         linear_path = Interval(0, 10, [1, 2, 3], graph)
-        linear_path = linear_path.to_indexed_interval()
+        linear_path = linear_path.to_numpy_indexed_interval()
 
         nongraph_peaks = NonGraphPeakCollection(
             [

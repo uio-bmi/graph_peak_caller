@@ -97,7 +97,7 @@ def run_callpeaks(ob_graph,
 
     experiment_info = ExperimentInfo(graph_size, fragment_length, read_length)
     config = Configuration(
-        skip_read_validation=True, save_tmp_results_to_file=False,
+        skip_read_validation=True, save_tmp_results_to_file=True,
         skip_filter_duplicates=False, p_val_cutoff=0.05,
         graph_is_partially_ordered=True)
 
@@ -188,7 +188,11 @@ def run_callpeaks_whole_genome(args):
 
 
     min_background = int(args.unique_reads) * int(args.fragment_length) / int(args.genome_size)
-    logging.info("Computed min background signal to be %.3f" % min_background)
+    logging.info("Computed min background signal to be %.3f using fragment length %f, "
+                 " %d unique reads, and genome size %d" % (int(min_background),
+                                                           int(args.fragment_length),
+                                                           int(args.unique_reads),
+                                                           int(min_background)))
 
     caller = MultipleGraphsCallpeaks(
         chromosomes,
@@ -264,7 +268,7 @@ def create_linear_map_interface(args):
 def split_vg_json_reads_into_chromosomes(args):
     reads_base_name = args.vg_json_reads_file_name.split(".")[0]
 
-    chromosomes = [str(i) for i in range(1, 23)] + ["X", "Y"]
+    chromosomes = args.chromosomes.split(",")
     chromosome_limits = {}
     logging.info("Found the following chromosome ranges:")
     for chrom in chromosomes:
@@ -284,11 +288,12 @@ def split_vg_json_reads_into_chromosomes(args):
     regex = re.compile(r"node_id\": ([0-9]+)")
 
     def get_mapped_chrom(node):
+        mapped_chrom = None
         for chrom in chromosomes:
             if node >= chromosome_limits[chrom][0] and node <= chromosome_limits[chrom][1]:
                 mapped_chrom = chrom
                 break
-        assert mapped_chrom is not None, "Found no match for node id %d" % node
+        #assert mapped_chrom is not None, "Found no match for node id %d" % node
         return mapped_chrom
 
     n_without_node_id = 0
@@ -305,6 +310,9 @@ def split_vg_json_reads_into_chromosomes(args):
         if len(groups) > 0:
             node = int(groups[0])
             mapped_chrom = get_mapped_chrom(node)
+            if mapped_chrom is None:
+                n_without_node_id += 1
+                continue
             out_files[mapped_chrom].writelines([line])
         else:
             print("No groups fond")
@@ -313,7 +321,7 @@ def split_vg_json_reads_into_chromosomes(args):
     for file in out_files.values():
         file.close()
 
-    logging.info("Done. Found %d lines without node id" % n_without_node_id)
+    logging.info("Done. Found %d lines without node id or not matching into the given list of chromosomes" % n_without_node_id)
 
 
 def concatenate_sequence_files(args):
@@ -612,6 +620,7 @@ interface = \
                     "Requires node_range_[chrom ID].txt to exist for each chromosome.",
             'arguments':
                 [
+                    ('chromosomes', 'Comma-separated list of chromosomes to split reads into'),
                     ('vg_json_reads_file_name', ''),
                     ('range_files_base_name', 'Base name, e.g. dir, to range files')
                 ],

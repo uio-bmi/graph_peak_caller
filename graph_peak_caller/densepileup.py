@@ -608,6 +608,9 @@ class DensePileup(Pileup):
         indexes = indexes[:-1]  # Remove length added to end
         assert np.all(indexes >= 0)
         values = np.load(base_file_name + "_values.npy")
+        if isinstance(values[0], np.bool_):
+            logging.warning("Converting from bool to uint8 to allow reading.")
+            values = values.astype(np.int8)
 
         diffs = np.ediff1d(values, to_begin=[values[0]])
         pileup_vals = pileup.data._values
