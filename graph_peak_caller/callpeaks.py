@@ -295,13 +295,13 @@ class CallPeaksFromQvalues(object):
                 self.out_file_base_name+"direct_pileup")
             self.raw_pileup = _pileup
         else:
-            _pileup = SparseValues.from_dense_pileup(self.q_values.data._values)
-        logging.info("Running Dense Max Paths")
-        # max_paths = SparseMaxPaths(self.dense, self.graph, _pileup).run()
+            _pileup = SparseValues.from_dense_pileup(
+                self.q_values.data._values)
         logging.info("Running Sparse Max Paths")
-        max_paths = SparseMaxPaths(
+        max_paths, sub_graphs = SparseMaxPaths(
             self.filtered_peaks, self.graph, _pileup).run()
         logging.info("All max paths found")
+
         # Create dense q
         if not isinstance(self.q_values, DensePileup):
             q_values = DensePileup(self.graph)
@@ -312,18 +312,28 @@ class CallPeaksFromQvalues(object):
         for max_path in max_paths:
             max_path.set_score(np.max(
                 self.q_values.data.get_interval_values(max_path)))
-        max_paths.sort(key=lambda p: p.score, reverse=True)
+        pairs = list(zip(max_paths, sub_graphs))
+        pairs.sort(key=lambda p: p[0].score, reverse=True)
         logging.info("N unfiltered peaks: %s", len(max_paths))
-        max_paths = [p for p in max_paths if
-                     p.length() >= self.info.fragment_length]
-        logging.info("N filtered peaks: %s", len(max_paths))
+        pairs = [p for p in pairs if
+                 p[0].length() >= self.info.fragment_length]
+        logging.info("N filtered peaks: %s", len(pairs))
 
         file_name = self.out_file_base_name + "max_paths.intervalcollection"
+        for pair in pairs:
+            print(pair[1]._node_ids, pair[0].region_paths)
+            assert all(rp in pair[1]._node_ids
+                       for rp in pair[0].region_paths)
 
-        PeakCollection(max_paths).to_file(
+        PeakCollection([p[0] for p in pairs]).to_file(
             file_name,
             text_file=True)
         logging.info("Wrote max paths to %s" % file_name)
+
+        np.savez(self.out_file_base_name + "sub_graphs.graphs",
+                 **{"peak%s" % i: p[1]._graph for i, p in enumerate(pairs)})
+        np.savez(self.out_file_base_name + "sub_graphs.nodeids",
+                 **{"peak%s" % i: p[1]._node_ids for i, p in enumerate(pairs)})
 
         assert max_paths is not None
         self.max_paths = max_paths

@@ -22,6 +22,18 @@ def main():
     create_argument_parser()
 
 
+def differential_expression(args):
+    from .differentialbinding import main
+    test_name = args.test_name
+    fimo_file_name = "fimo_%s_sequences/fimo.txt" % test_name
+    peaks_file_name = "%s_max_paths.intervalcollection" % test_name
+    subgraphs_file_name = "%s_sub_graphs.nodeids.npz" % test_name
+    node_ids_file_name = "%s_sub_graphs.graphs.npz" % test_name
+    graph = obg.GraphWithReversals.from_numpy_file(args.graph_name)
+    print(main(fimo_file_name, peaks_file_name, subgraphs_file_name,
+               node_ids_file_name, graph))
+
+
 def shift_estimation(args):
 
     """
@@ -706,6 +718,16 @@ interface = \
                     ('out_files_base_name', '')
                 ],
             'method': move_linear_reads_to_graph
+        },
+    'diffexpr':
+        {
+            'help': 'Find differentially expressed motif matches',
+            'arguments':
+                [
+                    ('test_name', ''),
+                    ('graph_name', '')
+                ],
+            'method': differential_expression
         }
 }
 
