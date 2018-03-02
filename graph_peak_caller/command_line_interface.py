@@ -176,7 +176,11 @@ def run_callpeaks_whole_genome(args):
 
 
     min_background = int(args.unique_reads) * int(args.fragment_length) / int(args.genome_size)
-    logging.info("Computed min background signal to be %.3f" % min_background)
+    logging.info("Computed min background signal to be %.3f using fragment length %f, "
+                 " %d unique reads, and genome size %d" % (int(min_background),
+                                                           int(args.fragment_length),
+                                                           int(args.unique_reads),
+                                                           int(min_background)))
 
     caller = MultipleGraphsCallpeaks(
         chromosomes,
