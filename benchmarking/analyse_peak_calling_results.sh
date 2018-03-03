@@ -12,9 +12,7 @@ genome_size=$8
 base_dir=$(pwd)
 n_threads=$(grep -c ^processor /proc/cpuinfo)
 
-echo "Will use $n_threads threads"
-
-echo "RUNNING"
+echo "Running analyse_peak_calling_results.sh"
 work_dir=data/${tf}_${encode_id}/${replicate}
 cd $work_dir
 
