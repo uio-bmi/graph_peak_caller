@@ -208,7 +208,7 @@ def run_callpeaks_whole_genome_from_p_values(args):
         (SequenceRetriever.from_vg_graph(fn) for fn in vg_graphs)
 
     caller = MultipleGraphsCallpeaks(
-        None,
+        chromosomes,
         None,
         None,
         None,

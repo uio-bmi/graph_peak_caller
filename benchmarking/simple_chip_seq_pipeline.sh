@@ -125,11 +125,11 @@ echo "Removing low quality reads."
 
 
 # Step 5: Split filtered into chromosomes
-#if [ ! -f filtered_1.json ]; then
+if ls files_low_qual_reads_removed_* 1> /dev/null 2>&1; then
+	echo "Not splitting into chromosomes, done before."
+else
 	graph_peak_caller split_vg_json_reads_into_chromosomes $chromosomes filtered_low_qual_reads_removed.json $graph_dir
-#else
-	#echo "Not splitting into chromosomes."
-#fi
+fi
 
 # Count unique reads in filtered files
 #if [ ! -f count_unique_reads_output.txt ]; then
