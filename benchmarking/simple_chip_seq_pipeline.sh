@@ -5,7 +5,6 @@
 # pipeline (using bwa aln + macs2) on an ENCODE Experiment.
 
 if (( $# != 9 )); then
-then
   echo "Required input arguments are missing. Check the documentation found in the Github repository."
   exit 1
 fi
