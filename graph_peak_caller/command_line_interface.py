@@ -351,7 +351,7 @@ def concatenate_sequence_files(args):
 
 
 def plot_motif_enrichment(args):
-    from benchmarking.motifenrichment import plot_true_positives
+    from graph_peak_caller.motifenrichment import plot_true_positives
     fasta1 = args.fasta1
     fasta2 = args.fasta2
     meme = args.meme_motif_file
