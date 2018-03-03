@@ -76,7 +76,7 @@ fi
 # Run macs with encode linear mapped reads
 if [ ! -f macs_output_whole_run.txt ]; then
         echo "Running macs2"
-        macs2 callpeak -g $genome_size -t linear_alignments.bam -n macs > macs_output_whole_run.txt 2>&1
+        macs2 callpeak -m 3 100 -g $genome_size -t linear_alignments.bam -n macs > macs_output_whole_run.txt 2>&1
 else
         echo "Not running max. Already done"
 fi
