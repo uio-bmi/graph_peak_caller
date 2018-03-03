@@ -11,7 +11,8 @@ setup(name='graph_peak_caller',
       zip_safe=False,
       install_requires=['pymysql', 'numpy', 'filecache', 'scipy', 'pybedtools',
                         'memory_profiler', 'python-coveralls', 'matplotlib',
-                        'biopython', 'pyfaidx', 'pyvg', 'offsetbasedgraph'],
+                        'biopython', 'pyfaidx', 'pyvg', 'offsetbasedgraph',
+                        "wget"],
       classifiers=[
             'Programming Language :: Python :: 3'
       ],
