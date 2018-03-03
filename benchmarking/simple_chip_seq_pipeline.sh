@@ -4,10 +4,10 @@
 # It run a Graph-based pipeline (using vg + graph peak caller) and a linear
 # pipeline (using bwa aln + macs2) on an ENCODE Experiment.
 
-if (( $# != 9 )); then
-  echo "Required input arguments are missing. Check the documentation found in the Github repository."
-  exit 1
-fi
+#if (( $# != 9 )); then
+#  echo "Required input arguments are missing. Check the documentation found in the Github repository."
+#  exit 1
+#fi
 
 set -e
 
