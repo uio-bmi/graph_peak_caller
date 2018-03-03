@@ -202,23 +202,17 @@ def run_callpeaks_whole_genome(args):
 def run_callpeaks_whole_genome_from_p_values(args):
     logging.info("Running whole genome from p-values.")
     chromosome = args.chromosome
-    chromosomes = args.chromosomes.split(",")
-    graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
-    linear_map_file_names = [args.linear_maps_location + chrom for chrom in chromosomes]
-    vg_graphs = [args.vg_graphs_location + chrom + ".vg" for chrom in chromosomes]
+    chromosomes = [chromosome]
+    vg_graphs = [args.graphs_location + chrom + ".vg" for chrom in chromosomes]
     sequence_retrievers = \
         (SequenceRetriever.from_vg_graph(fn) for fn in vg_graphs)
-    sample_file_names = [args.sample_reads_base_name + chrom + ".json"
-                        for chrom in chromosomes]
-    control_file_names = [args.sample_reads_base_name + chrom + ".json"
-                        for chrom in chromosomes]
 
     caller = MultipleGraphsCallpeaks(
-        chromosomes,
-        graph_file_names,
-        sample_file_names,
-        control_file_names,
-        linear_map_file_names,
+        None,
+        None,
+        None,
+        None,
+        None,
         int(args.fragment_length),
         int(args.read_length),
         has_control=args.with_control=="True",
@@ -227,6 +221,7 @@ def run_callpeaks_whole_genome_from_p_values(args):
     )
     caller.create_joined_q_value_mapping()
     caller.run_from_p_values(only_chromosome=chromosome)
+
 
 def linear_peaks_to_fasta(args):
     from graph_peak_caller.nongraphpeaks import NonGraphPeakCollection
@@ -531,16 +526,11 @@ interface = \
         },
     'callpeaks_whole_genome_from_p_values':
         {
-            'help': 'Callpeaks on whole genome, using one graph for each chromosome',
+            'help': 'Callpeaks on whole genome from pvalues. Assumes pvalue files are already computed.',
             'arguments':
                 [
-                    ('chromosome', 'Specific chromosome'),
-                    ('chromosomes', 'All chromosomes to compute q-values from, e.g. 1,2,3,4,X,Y'),
-                    ('graphs_location', 'Will use the graphs *_[chromosome]'),
-                    ('vg_graphs_location', ''),
-                    ('linear_maps_location', ''),
-                    ('sample_reads_base_name', 'Will use files *_[chromosome].json'),
-                    ('control_reads_base_name', 'Will use files *_[chromosome].json'),
+                    ('chromosome', 'Specific chromosome to find peaks for.'),
+                    ('graphs_location', 'Directory containing graphs.'),
                     ('out_base_name', 'eg experiment1_'),
                     ('with_control', 'True/False'),
                     ('fragment_length', ''),

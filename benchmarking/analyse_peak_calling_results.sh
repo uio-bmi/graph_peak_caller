@@ -28,7 +28,7 @@ do
     grep "${chromosome}\s" macs_peaks.narrowPeak >> macs_selected_chromosomes.bed
 
     # Also sort out specific chromosome, making later analysis faster
-    grep "${chromosome}\s" macs_peaks.narrowPeak > macs_peaks_chr${chromosome}.bed
+    grep "^${chromosome}\s" macs_peaks.narrowPeak > macs_peaks_chr${chromosome}.bed
     graph_peak_caller linear_peaks_to_fasta macs_peaks_chr${chromosome}.bed $linear_genome_fasta_file  macs_sequences_chr${chromosome}.fasta
 
 

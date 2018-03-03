@@ -182,11 +182,9 @@ do
     if [ -f ${chromosome}_max_paths.intervalcollection ]; then
     	echo "Peaks already called for $chromosome. Not calling"
     elif [ -f ${chromosome}_pvalues_values.npy ]; then
-	graph_peak_caller callpeaks_whole_genome_from_p_values $chromosome $chromosome \
+	graph_peak_caller callpeaks_whole_genome_from_p_values $chromosome \
 		$graph_dir/ \
-		$graph_dir/ \
-		$graph_dir/linear_map_ \
-		filtered_low_qual_reads_removed filtered_low_qual_reads_removed_ "" False $fragment_length $read_length \
+		"" False $fragment_length $read_length \
 		 > log_after_p_values_$chromosome.txt 2>&1 &
 	echo "Peak calling from p-values for chr $chromosome started as process. Log will be written to $work_dir/log_after_p_values_$chromosome.txt"
     else
