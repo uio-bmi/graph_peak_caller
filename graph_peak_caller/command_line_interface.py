@@ -15,7 +15,8 @@ from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 from graph_peak_caller.shift_estimation_multigraph import MultiGraphShiftEstimator
 
 logging.basicConfig(
-    level=logging.WARNING, format="%(asctime)s, %(levelname)s: %(message)s")
+    stream=sys.stdout, level=logging.WARNING,
+    format="%(asctime)s, %(levelname)s: %(message)s")
 
 
 def main():
@@ -166,12 +167,14 @@ def run_callpeaks_whole_genome(args):
     if args.sample_reads_base_name.endswith(".intervalcollection"):
         sample_file_names = [args.sample_reads_base_name.replace("chrom", chrom)
                             for chrom in chromosomes]
-        control_file_names = [args.sample_reads_base_name.replace("chrom", chrom)
+        control_file_names = [args.control_reads_base_name.replace("chrom", chrom)
                             for chrom in chromosomes]
     else:
-        sample_file_names = [args.sample_reads_base_name + chrom + ".json"
+        sample_base_name = args.sample_reads_base_name.replace(".json", "_")
+        control_base_name = args.control_reads_base_name.replace(".json", "_")
+        sample_file_names = [sample_base_name + chrom + ".json"
                         for chrom in chromosomes]
-        control_file_names = [args.sample_reads_base_name + chrom + ".json"
+        control_file_names = [control_base_name + chrom + ".json"
                         for chrom in chromosomes]
 
 
@@ -249,8 +252,10 @@ def create_linear_map_interface(args):
     create_linear_map(ob_graph, args.vg_snarls_file_name, args.out_file_base_name, copy_graph=False)
 
 
+
 def split_vg_json_reads_into_chromosomes(args):
     reads_base_name = args.vg_json_reads_file_name.split(".")[0]
+    logging.info("Will write reads to files %s_[chromosome].json" % reads_base_name)
 
     chromosomes = args.chromosomes.split(",")
     chromosome_limits = {}
