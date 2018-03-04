@@ -7,14 +7,19 @@
 ./simple_chip_seq_pipeline.sh ENCSR978WED 1 DM_JIM chr3R,chr3L,chr2R,chr2L,chrX,chr4 97958719 /media/storage1/dm6/dm3_main_chromosomes.fasta /media/storage1/dm6/wg.xg /media/storage1/dm6/wg.gcsa /media/storage1/dm6/ &
 ./simple_chip_seq_pipeline.sh ENCSR082RBU 1 DM_ANTP chr3R,chr3L,chr2R,chr2L,chrX,chr4 97958719 /media/storage1/dm6/dm3_main_chromosomes.fasta /media/storage1/dm6/wg.xg /media/storage1/dm6/wg.gcsa /media/storage1/dm6/ > dm_antp_output.txt 2 >&1 &
 
+./simple_chip_seq_pipeline.sh ENCSR000DUB 1 HUMAN_CTCF 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X 3080000000 ~/data/hg19/chromosomes/hg19_chr1-Y.fa ~/data/whole_genome/wg1.6.xg ~/data/whole_genome/wg1.6.gcsa ~/data/whole_genome/ > ctcf_output.txt 2 >&1 &
+./generate_paper_figures_and_tables.sh  ENCSR000DUB 1 CTCF28Feb 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X http://jaspar.genereg.net/api/v1/matrix/MA0139.1.meme
+
+
 wait
 
 ./analyse_peak_calling_results.sh  ENCSR471GSA 1 DM_JRA chr3R,chr3L,chr2R,chr2L,chrX,chr4 https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/DM_JRA.meme /media/storage1/dm6/ /media/storage1/dm6/dm3_main_chromosomes.fasta 97958719 &
 ./analyse_peak_calling_results.sh  ENCSR923VWW 1 DM_SQZ chr3R,chr3L,chr2R,chr2L,chrX,chr4  https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/DM_SQZ.meme /media/storage1/dm6/ /media/storage1/dm6/dm3_main_chromosomes.fasta 97958719 &
 ./analyse_peak_calling_results.sh  ENCSR082RBU 1 DM_ANTP chr3R,chr3L,chr2R,chr2L,chrX,chr4  https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/DM_ANTP.meme /media/storage1/dm6/ /media/storage1/dm6/dm3_main_chromosomes.fasta 97958719 &
 ./analyse_peak_calling_results.sh  ENCSR978WED 1 DM_JIM chr3R,chr3L,chr2R,chr2L,chrX,chr4  https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/DM_JIM.meme /media/storage1/dm6/ /media/storage1/dm6/dm3_main_chromosomes.fasta 97958719 &
+./analyse_peak_calling_results.sh  ENCSR000DUB 1 HUMAN_CTCF 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X  http://jaspar.genereg.net/api/v1/matrix/MA0139.1.meme ~/data/whole_genome/ ~/data/hg19/chromosomes/hg19_chr1-Y.fa 3080000000 &
 
 wait
 
 wget -O figures_tables/bootstrap.min.css https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css
-python3 generate_jenkins_report.py DM_JRA,DM_SQZ,DM_JIM,DM_ANTP figures_tables/index.html
+python3 generate_jenkins_report.py DM_JRA,DM_SQZ,DM_JIM,DM_ANTP,HUMAN_CTCF figures_tables/index.html
