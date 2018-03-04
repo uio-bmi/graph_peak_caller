@@ -125,9 +125,10 @@ echo "Removing low quality reads."
 
 
 # Step 5: Split filtered into chromosomes
-if ls files_low_qual_reads_removed_* 1> /dev/null 2>&1; then
+if ls filtered_low_qual_reads_removed_* 1> /dev/null 2>&1; then
 	echo "Not splitting into chromosomes, done before."
 else
+    echo "Splitting reads by chromosome."
 	graph_peak_caller split_vg_json_reads_into_chromosomes $chromosomes filtered_low_qual_reads_removed.json $graph_dir
 fi
 
