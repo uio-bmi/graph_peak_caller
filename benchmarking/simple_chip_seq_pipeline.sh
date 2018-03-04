@@ -140,10 +140,15 @@ fi
 #fi
 
 #unique_reads=$(tail -n 1 count_unique_reads_output.txt)
-echo "Counting unique reads"
-unique_reads=$(pcregrep -o1 '"sequence": "([ACGTNacgtn]{20,})"' filtered_low_qual_reads_removed.json | sort | uniq | wc -l)
-echo "$unique_reads unique reads in total"
-
+if [ ! -f unique_reads.txt ]; then
+    echo "Counting unique reads"
+    unique_reads=$(pcregrep -o1 '"sequence": "([ACGTNacgtn]{20,})"' filtered_low_qual_reads_removed.json | sort | uniq | wc -l)
+    echo $unique_reads > unique_reads.txt
+    echo "$unique_reads unique reads in total"
+else
+    echo "Using cached count for unique reads."
+    unique_reads=$(tail -n 1 unique_reads.txt)
+fi
 
 # Step 6 run peak caller to get p-values for every chromosome
 pids=""
