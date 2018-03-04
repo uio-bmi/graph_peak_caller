@@ -9,9 +9,10 @@ class HtmlReportGenerator:
         self._create_report_table()
         self._create_report_figures()
 
-    def _write_table_row(self, analysis_result):
+    def _write_table_row(self, tf, analysis_result):
         self.html += """
         <tr>
+            <td>%s</td>
             <td>%d</td>
             <td>%d (%d)</td>
             <td>%d (%d)</td>
@@ -21,7 +22,8 @@ class HtmlReportGenerator:
             <td>%d (%d)</td>
             <td>%d</td>
         </tr>
-        """ % (analysis_result.tot_peaks1,
+        """ % (tf,
+               analysis_result.tot_peaks1,
                analysis_result.peaks1_in_peaks2,
                analysis_result.peaks1_in_peaks2_matching_motif,
                analysis_result.peaks1_not_in_peaks2,
@@ -41,11 +43,13 @@ class HtmlReportGenerator:
             <h3>Overview of peaks found</h3>
             <thead>
                 <tr>
+                    <th></th>
                     <th colspan='4'>Graph Peak Caller</th>
                     <th colspan='4'>Macs2</th>
                 </tr>
             </theads>
             <tr>
+                <th>TF</th>
                 <th># Peaks found</th>
                 <th># Peaks also found by Macs2</th>
                 <th># Peaks NOT found by Macs2</th>
@@ -59,14 +63,14 @@ class HtmlReportGenerator:
 
         for tf in self.tfs:
             results = AnalysisResults.from_file("figures_tables/" + tf + ".pickle")
-            self._write_table_row(results)
+            self._write_table_row(tf, results)
 
         self.html += "</table>"
 
     def _create_report_figures(self):
         self.html += "<h3>Motifenrichment plots</h3>"
         for tf in self.tfs:
-            self.html += "<img style='max-width: 500px; height: auto; padding: 50px;' src='" + tf + ".png'/>"
+            self.html += "<img style='max-width: 300px; height: auto; padding: 50px;' src='" + tf + ".png'/>"
 
     def _html_start(self):
         return """
