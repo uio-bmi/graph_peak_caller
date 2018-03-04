@@ -192,3 +192,5 @@ do
         echo "P values not computed for $chromosome. Will not call peaks now."
     fi
 done
+
+wait
