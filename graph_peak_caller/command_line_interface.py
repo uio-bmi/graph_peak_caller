@@ -203,13 +203,14 @@ def run_callpeaks_whole_genome_from_p_values(args):
     logging.info("Running whole genome from p-values.")
     chromosome = args.chromosome
     chromosomes = [chromosome]
+    graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
     vg_graphs = [args.graphs_location + chrom + ".vg" for chrom in chromosomes]
     sequence_retrievers = \
         (SequenceRetriever.from_vg_graph(fn) for fn in vg_graphs)
 
     caller = MultipleGraphsCallpeaks(
         chromosomes,
-        None,
+        graph_file_names,
         None,
         None,
         None,
