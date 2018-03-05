@@ -49,8 +49,6 @@ class MotifMatcher():
         for peak in self.sorted_peaks:
             if peak in self.peaks_matching_motif:
                 n_matched += 1
-            else:
-                print("Peak %s not matching" % peak)
             n_checked += 1
             true_positives.append(n_matched / n_checked)
 
@@ -71,7 +69,7 @@ def plot_true_positives(peak_file_sets, meme_file_name, plot_title="", save_to_f
         plt.plot(true_positives, color=colors[i], label=name + " (%.2f)" % (100 * n_matching/n_tot))
         i += 1
     axis = plt.gca()
-    axis.set_ylim([0.75,1.0])
+    #axis.set_ylim([0.75,1.0])
     plt.title(plot_title)
     plt.legend()
     if save_to_file is not None:
