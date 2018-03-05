@@ -1,9 +1,10 @@
 import unittest
-from offsetbasedgraph import Block, Interval, DirectedInterval, GraphWithReversals
-from graph_peak_caller import CallPeaksFromQvalues, CallPeaks, ExperimentInfo
-from graph_peak_caller.sparsepileup import SparsePileup, ValuedIndexes
-from graph_peak_caller.densepileup import DensePileup, DensePileupData
 import logging
+from offsetbasedgraph import Block, Interval, GraphWithReversals
+from graph_peak_caller import CallPeaksFromQvalues, ExperimentInfo
+from graph_peak_caller.sparsepileup import SparsePileup, ValuedIndexes
+from graph_peak_caller.densepileup import DensePileup
+
 logging.basicConfig(level=logging.ERROR)
 
 
@@ -78,7 +79,6 @@ class TestCallPeaksFromQValues(unittest.TestCase):
                                         14: [15],
                                         15: [16, 17, 18, 19]
                                      })
-
 
         self.fragment_length = 6
         self.read_length = 2
