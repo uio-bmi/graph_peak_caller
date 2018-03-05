@@ -4,13 +4,10 @@ from pybedtools import BedTool, Interval
 import logging
 from pyfaidx import Fasta
 import json
-from .peakcollection import PeakCollection
 import numpy as np
 
-logging.basicConfig(level=logging.INFO)
 
-
-class NonGraphPeak():
+class NonGraphPeak:
     def __init__(self, chromosome, start, end, score=None, unique_id=None):
         self.chromosome = chromosome
         self.start = start
@@ -23,10 +20,23 @@ class NonGraphPeak():
         self.sequence = str(fasta_index[self.chromosome][self.start:self.end])
 
     def __str__(self):
-        return "Peak(%s, %d, %d, score=%.3f)" % (self.chromosome,
+        return "Peak(%s, %d, %d, score=%s)" % (self.chromosome,
                                                  self.start,
                                                  self.end,
                                                  self.score)
+
+    def __eq__(self, other):
+        if self.chromosome != other.chromosome:
+            return False
+        if self.start != other.start:
+            return False
+        if self.end != other.end:
+            return False
+
+        return True
+
+    def to_bed_line(self):
+        return "%s\t%d\t%d\n" % (self.chromosome, self.start, self.end)
 
     def to_file_line(self):
         object = {
@@ -70,7 +80,15 @@ class NonGraphPeakCollection(object):
                                       score))
         return cls(peaks)
 
+    def to_bed_file(self, file_name):
+        f = open(file_name, "w")
+        for peak in self.peaks:
+            f.writelines([peak.to_bed_line()])
+        f.close()
+        logging.info("Wrote to bed-file %s" % file_name)
+
     def get_graph_peak_collection(self, graph, linear_interval_through_graph, graph_region=None):
+        from .peakcollection import PeakCollection
         return PeakCollection.create_from_nongraph_peak_collection(graph, self,
                                                                    linear_interval_through_graph,
                                                                    graph_region)

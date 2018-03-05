@@ -29,7 +29,6 @@ class TestPeakCollection(unittest.TestCase):
             Peak(1, 2, [100])
         ))
 
-
     def test_create_from_nongraphpeakcollection(self):
 
         graph = Graph(
@@ -67,6 +66,34 @@ class TestPeakCollection(unittest.TestCase):
         self.assertEqual(
             peaks.intervals[1], Interval(0, 2, [2])
         )
+
+    def test_convert_to_approx_linear_peaks(self):
+        graph = Graph({i: Block(3) for i in range(1, 10)},
+                      {1: [2],
+                       2: [3],
+                       3: [4],
+                       4: [5],
+                       5: [6],
+                       6: [7, 8],
+                       7: [9],
+                       9: [9]})
+        graph.convert_to_numpy_backend()
+        linear_interval = Interval(0, 3, [2, 4, 8, 9], graph)
+        linear_interval = linear_interval.to_numpy_indexed_interval()
+
+        peaks = PeakCollection(
+            [
+                Peak(2, 2, [2, 3, 4]),
+                Peak(1, 1, [3, 4, 5])
+            ]
+        )
+        linear_peaks = peaks.to_approx_linear_peaks(linear_interval, "chr4")
+        linear_peaks = linear_peaks.peaks
+        print(linear_peaks)
+
+        self.assertEqual(linear_peaks[0], NonGraphPeak("chr4", 2, 5))
+        self.assertEqual(linear_peaks[1], NonGraphPeak("chr4", 3, 3))
+
 
 
 if __name__ == "__main__":
