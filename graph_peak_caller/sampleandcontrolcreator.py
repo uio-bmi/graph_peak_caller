@@ -5,7 +5,7 @@ import offsetbasedgraph as obg
 from .sparsepvalues import PValuesFinder, PToQValuesMapper
 from .experiment_info import ExperimentInfo
 from .sparsesampleandcontrolcreator import SparseControl
-from .sparsegraphpileup import SamplePileupGenerator
+from .sample import SamplePileupGenerator
 
 
 obg.IntervalCollection.interval_class = obg.DirectedInterval
