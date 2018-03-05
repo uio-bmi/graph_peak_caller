@@ -324,7 +324,6 @@ class CallPeaksFromQvalues(object):
         pairs = [p for p in pairs if
                  p[0].length() >= self.info.fragment_length]
         logging.info("N filtered peaks: %s", len(pairs))
-
         file_name = self.out_file_base_name + "max_paths.intervalcollection"
         PeakCollection([p[0] for p in pairs]).to_file(
             file_name,
@@ -335,9 +334,9 @@ class CallPeaksFromQvalues(object):
                  **{"peak%s" % i: p[1]._graph for i, p in enumerate(pairs)})
         np.savez(self.out_file_base_name + "sub_graphs.nodeids",
                  **{"peak%s" % i: p[1]._node_ids for i, p in enumerate(pairs)})
-
+        self.max_paths = [p[0] for p in pairs]
         assert max_paths is not None
-        self.max_paths = max_paths
+        # self.max_paths = max_paths
 
     def __get_subgraphs(self):
         logging.info("Creating subgraphs from peak regions")

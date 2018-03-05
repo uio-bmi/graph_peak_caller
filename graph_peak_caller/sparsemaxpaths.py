@@ -2,7 +2,8 @@ import numpy as np
 import logging
 from .segmentanalyzer import SegmentSplitter
 from .peakcollection import Peak
-from .sparseholecleaner import PosDividedLineGraph
+from .sparseholecleaner import PosDividedLineGraph, SubGraph
+from scipy.sparse import csr_matrix
 
 
 class SparseMaxPaths:
@@ -66,8 +67,9 @@ class SparseMaxPaths:
         converted = self._convert_paths(paths, infos)
         for path, subgraph in zip(converted, subgraphs):
             subgraph._node_ids += self._graph.min_node-1
-
-        return converted+self.internal_paths, subgraphs
+        small_subgraphs = [SubGraph(path.region_paths, csr_matrix(([], ([], [])), shape=(1, 1)))
+                           for path in self.internal_paths]
+        return converted+self.internal_paths, subgraphs+small_subgraphs
 
     def _convert_paths(self, paths, infos):
         reverse_map = np.concatenate(
@@ -88,8 +90,6 @@ class SparseMaxPaths:
         node_ids = node_ids[idxs]
         start_offset = self._segments[idxs[0], 0 ] - self._node_indexes[node_ids[0]-1]
         end_offset = self._segments[idxs[-1], 1] - self._node_indexes[node_ids[-1]-1]
-        # assert np.all(node_ids >= self._graph.blocks.node_id_offset), (self._graph.blocks.node_id_offset,
-        # node_ids[node_ids<self._graph.blocks.node_id_offset])
         return Peak(start_offset, end_offset, list(node_ids + self._graph.min_node-1), self._graph)
 
     def get_segment_scores(self):
@@ -101,16 +101,15 @@ class SparseMaxPaths:
         weighted_values = np.ediff1d(
             self._score_pileup.indices,
             self._score_pileup.track_size-self._score_pileup.indices[-1])*self._score_pileup.values
-        # assert np.all(weighted_values >= 0)
         pileup_cumsum = np.r_[0, np.cumsum(weighted_values)]
         base_scores = pileup_cumsum[pileup_idxs[:, 1]-1]-pileup_cumsum[
             pileup_idxs[:, 0]-1]
-        assert np.all(base_scores >= 0)
+        # assert np.all(base_scores >= 0)
         diffs = self._segments-self._score_pileup.indices[pileup_idxs-1]
-        assert np.all(diffs >= 0)
+        # assert np.all(diffs >= 0)
         values = self._score_pileup.values[pileup_idxs-1]
         # assert np.all(values[:, 1] >= values[:, 0])
         val_diffs = diffs*values
         offsets = val_diffs[:, 1] - val_diffs[:, 0]
         self.scores = base_scores + offsets
-        assert np.all(self.scores >= 0)
+        # assert np.all(self.scores >= 0)

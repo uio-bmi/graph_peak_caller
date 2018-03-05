@@ -284,7 +284,7 @@ class PosDividedLineGraph(DividedLinegraph):
                             self.n_starts+self.filtered._full_starts,
                             self.n_nodes-self.n_ends+self.filtered._end_starts]
         if not start_nodes.size:
-            return [], []
+            return [], [], []
         start_nodes_mask = np.zeros(self.end_stub, dtype="bool")
         start_nodes_mask[start_nodes] = True
         paths = []

@@ -176,9 +176,10 @@ class TestCallPeaksFromQValues(unittest.TestCase):
         pileup.data = {
             1: ValuedIndexes([5, 9], [2, 0], 0, 20)
         }
-        self._assert_finds_max_paths([],
-                    self.single_block_graph,
-                    pileup)
+        self._assert_finds_max_paths(
+            [],
+            self.single_block_graph,
+            pileup)
 
     def test_finds_internal_peak_with_internal_hole(self):
         pileup = SparsePileup(self.single_block_graph)
