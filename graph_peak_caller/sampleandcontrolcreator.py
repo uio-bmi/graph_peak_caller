@@ -1,34 +1,27 @@
 import logging
 import pickle
-import numpy as np
-from offsetbasedgraph import IntervalCollection, DirectedInterval
-import offsetbasedgraph
-from .densepileup import DensePileup
 
-from .extender import Extender
-from .areas import ValuedAreas
+import offsetbasedgraph as obg
 from .sparsepvalues import PValuesFinder, PToQValuesMapper
 from .experiment_info import ExperimentInfo
-# from .directsamplepileup import main as samplemain
 from .sparsesampleandcontrolcreator import SparseControl
-from .sparsediffs import SparseDiffs
 from .sparsegraphpileup import SamplePileupGenerator
 
 
-IntervalCollection.interval_class = DirectedInterval
+obg.IntervalCollection.interval_class = obg.DirectedInterval
 
 
 def enable_filewrite(func):
     def wrapper(*args, **kwargs):
         intervals = args[1]
         if isinstance(intervals, str):
-            intervals = IntervalCollection.from_file(intervals)
+            intervals = obg.IntervalCollection.from_file(intervals)
 
         write_to_file = kwargs.pop("write_to_file", False)
         interval_list = func(args[0], intervals, **kwargs)
 
         if write_to_file:
-            interval_collection = IntervalCollection(interval_list)
+            interval_collection = obg.IntervalCollection(interval_list)
             interval_collection.to_file(write_to_file)
             return write_to_file
         else:
@@ -37,7 +30,7 @@ def enable_filewrite(func):
     return wrapper
 
 
-class SampleAndControlCreatorO(object):
+class SampleAndControlCreator:
     def __init__(self, graph, sample_intervals,
                  control_intervals=None, experiment_info=None,
                  verbose=False, out_file_base_name="", has_control=True,
@@ -54,11 +47,11 @@ class SampleAndControlCreatorO(object):
         assert linear_map is not None, "LinearMap cannot be None"
         assert isinstance(linear_map, str), "Must be file name"
 
-        assert isinstance(sample_intervals, IntervalCollection) \
+        assert isinstance(sample_intervals, obg.IntervalCollection) \
                or isinstance(sample_intervals, str), \
                 "Samples intervals must be either interval collection or a file name"
 
-        assert isinstance(control_intervals, IntervalCollection) \
+        assert isinstance(control_intervals, obg.IntervalCollection) \
                or isinstance(control_intervals, str), \
                 "control_intervals must be either interval collection or a file name"
 
@@ -151,7 +144,6 @@ class SampleAndControlCreatorO(object):
     def filter_duplicates_and_count_intervals(self, intervals, is_control=False):
         interval_hashes = {}
         n_duplicates = 0
-        n_reads_left = 0
         for interval in intervals:
             if not self.skip_filter_duplicates:
                 hash = interval.hash(ignore_end_pos=True)
@@ -241,7 +233,7 @@ class SampleAndControlCreatorO(object):
     def create_graph(self):
         logging.info("Creating graph")
         if isinstance(self.graph, str):
-            self.ob_graph = offsetbasedgraph.Graph.from_file(self.graph)
+            self.ob_graph = obg.Graph.from_file(self.graph)
         else:
             self.ob_graph = self.graph
             logging.info("Graph already created")
@@ -255,18 +247,8 @@ class SampleAndControlCreatorO(object):
         if self.use_global_min_value:
             sparse_control.set_min_value(self.use_global_min_value)
         control_pileup = sparse_control.create(self.control_intervals)
-        control_pileup.to_sparse_files(self.out_file_base_name + "control_track")
-        # control_pileup = SparseDiffs.from_dense_pileup(
-        #     control_pileup.data._values)
-        # control_pileup = linearsnarls.create_control(
-        #     self.linear_map,  self.control_intervals,
-        #     extensions, self.info.fragment_length,
-        #     ob_graph=self.graph,
-        #     touched_nodes=self.touched_nodes,
-        #     use_global_min_value=self.use_global_min_value
-        # )
-
-        # Delete linear map
+        control_pileup.to_sparse_files(
+            self.out_file_base_name + "control_track")
         self.linear_map = None
 
         # control_pileup.graph = self.ob_graph
@@ -284,7 +266,8 @@ class SampleAndControlCreatorO(object):
 
     def get_score(self):
         logging.info("Getting p valyes.")
-        p_values_finder = PValuesFinder(self._sample_pileup, self._control_pileup)
+        p_values_finder = PValuesFinder(
+            self._sample_pileup, self._control_pileup)
         self._p_values_pileup = p_values_finder.get_p_values_pileup()
 
         # Delete sample and control pileups
@@ -294,56 +277,9 @@ class SampleAndControlCreatorO(object):
     def get_p_to_q_values_mapping(self):
         return PToQValuesMapper.from_p_values_dense_pileup(self.p_values)
 
-    #@profile
-    def create_sample_pileup(self):
-        logging.debug("In sample pileup")
-        logging.info("Creating sample pileup")
-        alignments = self.sample_intervals
-        logging.info(self.sample_intervals)
-        extender = Extender(self.ob_graph, self.info.fragment_length)
-        valued_areas = ValuedAreas(self.ob_graph)
-        logging.info("Extending sample reads")
-        areas_list = (extender.extend_interval(interval)
-                      for interval in alignments)
-        i = 0
-        logging.info("Processing areas")
-
-        #touched_nodes = set()  # Speedup thing, keep track of nodes where areas are on
-        pileup = DensePileup.create_from_binary_continous_areas(
-                    self.ob_graph, areas_list)
-        # print(np.sum(pileup.data._values))
-        # print(len(pileup.data._touched_nodes))
-        for node_id in pileup.data._touched_nodes:
-            assert np.sum(pileup.data.values(node_id)) > 0
-
-        touched_nodes = pileup.data._touched_nodes
-        self.touched_nodes = touched_nodes
-
-        self._sample_track = self.out_file_base_name + "sample_track.bdg"
-        if self.save_tmp_results_to_file:
-            logging.info("Saving sample pileup to file")
-            pileup.to_bed_graph(self._sample_track)
-            logging.info("Saved sample pileup to " + self._sample_track)
-
-            logging.info("Writing touched nodes to file")
-            with open(self.out_file_base_name + "touched_nodes.pickle", "wb") as f:
-                pickle.dump(touched_nodes, f)
-
-            logging.info("N touched nodes: %d" % len(touched_nodes))
-        else:
-            logging.info("Not saving sample pileup to files.")
-
-        self._sample_pileup = pileup
-
-        # Delete sample intervals
-        self.sample_intervals = None
-
     def _write_vg_alignments_as_intervals_to_bed_file(self):
-
         pass
 
-
-class SampleAndControlCreator(SampleAndControlCreatorO):
     def create_sample_pileup(self):
         logging.debug("In sample pileup")
         logging.info("Creating sample pileup")
@@ -351,13 +287,8 @@ class SampleAndControlCreator(SampleAndControlCreatorO):
         logging.info("Processing areas")
         generator = SamplePileupGenerator(
             self.graph, self.info.fragment_length-self.info.read_length)
-        print("#######", self.out_file_base_name+"direct_pileup")
         pileup = generator.run(self.sample_intervals,
                                self.out_file_base_name+"direct_pileup")
-        # pileup = samplemain(self.sample_intervals, self.graph,
-        #                     self.info.fragment_length-self.info.read_length,
-        #                     self.out_file_base_name+"direct_pileup")
-        # assert np.all(pileup.data._values == pileup2.data._values)
         self.touched_nodes = pileup.touched_nodes
 
         self._sample_track = self.out_file_base_name + "sample_track"

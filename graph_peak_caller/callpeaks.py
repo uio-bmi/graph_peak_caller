@@ -5,9 +5,8 @@ from .densepileup import DensePileup
 from .peakcollection import PeakCollection, Peak
 from .sampleandcontrolcreator import SampleAndControlCreator
 from .sparsepvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
-from .postprocess.holecleaner import HolesCleaner
+from .postprocess import HolesCleaner, SparseMaxPaths
 from .sparsediffs import SparseValues
-from .postprocess.maxpaths import SparseMaxPaths
 IntervalCollection.interval_class = DirectedInterval
 
 
