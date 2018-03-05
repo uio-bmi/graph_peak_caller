@@ -3,16 +3,19 @@ import argparse
 import logging
 import sys
 import numpy as np
+
 import offsetbasedgraph as obg
 from pyvg.sequences import SequenceRetriever
-from pyvg.conversion import vg_json_file_to_interval_collection, json_file_to_obg_numpy_graph
+from pyvg.conversion import vg_json_file_to_interval_collection,\
+    json_file_to_obg_numpy_graph
 
 from graph_peak_caller import CallPeaks, ExperimentInfo,\
     CallPeaksFromQvalues, Configuration
 from graph_peak_caller.peakcollection import Peak
-from graph_peak_caller.util import create_linear_map, create_ob_graph_from_vg
+from graph_peak_caller.util import create_linear_map
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
-from graph_peak_caller.shift_estimation_multigraph import MultiGraphShiftEstimator
+from graph_peak_caller.shift_estimation_multigraph import \
+    MultiGraphShiftEstimator
 
 logging.basicConfig(
     stream=sys.stdout, level=logging.WARNING,
@@ -145,7 +148,6 @@ def intervals_to_fasta(args):
         intervals, args.out_file_name, retriever)
 
 
-# @profile
 def run_callpeaks_interface(args):
     logging.info("Read offset based graph")
 
@@ -164,6 +166,7 @@ def run_callpeaks_interface(args):
         linear_map_file_name=args.linear_map_base_name
     )
 
+
 def count_unique_reads_interface(args):
     chromosomes = args.chromosomes.split(",")
     graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
@@ -171,12 +174,13 @@ def count_unique_reads_interface(args):
                         for chrom in chromosomes]
 
     count_unique_reads(chromosomes, graph_file_names,
-                                  reads_file_names)
+                       reads_file_names)
 
 
 def count_unique_reads(chromosomes, graph_file_names, reads_file_names):
 
-    graphs = (obg.GraphWithReversals.from_numpy_file(f) for f in graph_file_names)
+    graphs = (obg.GraphWithReversals.from_numpy_file(f)
+              for f in graph_file_names)
     reads = (vg_json_file_to_interval_collection(f, graph)
              for f, graph in zip(reads_file_names, graphs))
 
@@ -263,6 +267,7 @@ def linear_peaks_to_fasta(args):
     collection.save_to_sorted_fasta(args.out_file_name)
     logging.info("Saved sequences to %s" % args.out_file_name)
 
+
 def create_ob_graph(args):
     logging.info("Creating obgraph")
     ob_graph = json_file_to_obg_numpy_graph(args.vg_json_file_name, 0)
@@ -335,7 +340,6 @@ def split_vg_json_reads_into_chromosomes(args):
         else:
             print("No groups fond")
 
-
     for file in out_files.values():
         file.close()
 
@@ -396,6 +400,7 @@ def plot_motif_enrichment(args):
         save_to_file=args.out_figure_file_name,
         run_fimo=args.run_fimo == "True"
     )
+
 
 def analyse_peaks(args):
     from graph_peak_caller.peakscomparer import PeaksComparerV2
