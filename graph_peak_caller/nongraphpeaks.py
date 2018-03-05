@@ -35,6 +35,9 @@ class NonGraphPeak:
 
         return True
 
+    def to_bed_line(self):
+        return "%s\t%d\t%d\n" % (self.chromosome, self.start, self.end)
+
     def to_file_line(self):
         object = {
                 "chromosome": self.chromosome,
@@ -78,7 +81,11 @@ class NonGraphPeakCollection(object):
         return cls(peaks)
 
     def to_bed_file(self, file_name):
-        pass
+        f = open(file_name, "w")
+        for peak in self.peaks:
+            f.writelines([peak.to_bed_line()])
+        f.close()
+        logging.info("Wrote to bed-file %s" % file_name)
 
     def get_graph_peak_collection(self, graph, linear_interval_through_graph, graph_region=None):
         from .peakcollection import PeakCollection
