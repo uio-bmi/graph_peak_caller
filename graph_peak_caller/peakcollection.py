@@ -261,7 +261,11 @@ class PeakCollection(obg.IntervalCollection):
 
     def to_approx_linear_peaks(self, linear_path, chromosome):
         linear_peaks = []
+        i = 0
         for peak in self.intervals:
+            if i % 500 == 0:
+                logging.info("Converting peak %d" % i)
+            i += 1
             linear_peaks.append(peak.to_approx_linear_peak(linear_path, chromosome))
 
         return NonGraphPeakCollection(linear_peaks)

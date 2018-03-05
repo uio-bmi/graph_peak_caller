@@ -505,7 +505,7 @@ def move_linear_reads_to_graph(args):
 def peaks_to_linear(args):
     # Get approximate linear position of peaks using a linear path
     linear_path = obg.NumpyIndexedInterval.from_file(args.linear_path_file_name)
-    peaks = PeakCollection.from_file(args.peaks_file_name)
+    peaks = PeakCollection.from_file(args.peaks_file_name, text_file=True)
     linear_peaks = peaks.to_approx_linear_peaks(linear_path, args.chromosome)
     linear_peaks.to_bed_file(args.out_file_name)
 
@@ -742,6 +742,18 @@ interface = \
                     ('graph_name', '')
                 ],
             'method': differential_expression
+        },
+    'peaks_to_linear':
+        {
+            'help': 'Converts graph peaks to linear peaks by using a linear path through the graph',
+            'arguments':
+                [
+                    ('peaks_file_name', "Shuold be a JSON intervalcollection, e.g. one created by callpeaks."),
+                    ('linear_path_file_name', "Name of linera path file"),
+                    ('chromosome', 'Name of chromosome that will be used when writing the bed file'),
+                    ('out_file_name', 'Out file name')
+                ],
+            'method': peaks_to_linear
         }
 }
 
