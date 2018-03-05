@@ -2,15 +2,15 @@
 [![codecov](https://codecov.io/gh/uio-bmi/graph_peak_caller/branch/master/graph/badge.svg)](https://codecov.io/gh/uio-bmi/graph_peak_caller)
 
 # Graph Peak Caller
-Graph Peak Caller is a tool for calling ChIP-seq peaks on graph-based reference genomes. Graph Peak Caller is easiest to use together with [vg](http://github.com/vgteam/vg) and can be used both as a command-line tool and as a Python module.
+Graph Peak Caller is a tool for calling transcriptin factor peaks on graph-based reference genomes using ChIP-seq data. Graph Peak Caller is easiest to use together with [vg](http://github.com/vgteam/vg) and can be used both as a command-line tool and as a Python module.
 
 ## Installation
-Graph Peak Caller is written in Python 3 and can be installed through Pip:
+Graph Peak Caller is written in Python 3 and can be installed usin *pip*:
 ```
 pip3 install graph_peak_caller
 ```
 
-Validate that the installation worked by writing `graph_peak_caller version` on your command line.
+Validate that the installation worked by running the comman `graph_peak_caller version` on your command line. If everything went fine, you will se the current version of graph_peak_caller.
 
 # User guide
 ## Using Graph Peak Caller through Galaxy
