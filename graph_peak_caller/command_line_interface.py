@@ -39,7 +39,17 @@ def differential_expression(args):
         np.load(subgraphs_file_name),
         np.load(node_ids_file_name),
         graph)
-    print(res)
+    retriever = SequenceRetriever.from_vg_json_graph(args.vg_graph_name)
+    out_f = open(test_name + "_diffexpr.fasta", "w")
+    for expr_diff in res:
+        main_seq = retriever.get_interval_sequence(expr_diff.main_path)
+        out_f.write("> %s %s\n" % (expr_diff.peak_id, expr_diff.main_count))
+        out_f.write(main_seq + "\n")
+        var_seq = retriever.get_interval_sequence(expr_diff.var_path)
+        out_f.write("> %sAlt %s\n" % (expr_diff.peak_id, expr_diff.var_count))
+        out_f.write(var_seq + "\n")
+    out_f.close()
+
 
 def shift_estimation(args):
 
@@ -741,7 +751,8 @@ interface = \
             'arguments':
                 [
                     ('test_name', ''),
-                    ('graph_name', '')
+                    ('graph_name', ''),
+                    ('vg_graph_name', '')
                 ],
             'method': differential_expression
         }
