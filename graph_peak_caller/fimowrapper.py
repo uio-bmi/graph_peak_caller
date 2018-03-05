@@ -19,6 +19,10 @@ class FimoEntry:
         score = float(parts[6])
         return cls(peak_id, start, stop, direction, score)
 
+    def __repr__(self):
+        return "FE(%s: %s-%s [%s])" % (
+            self.peak_id, self._start, self._end, self._direction)
+
 
 class FimoFile:
     def __init__(self, entry_dict):

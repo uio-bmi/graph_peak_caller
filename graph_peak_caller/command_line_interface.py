@@ -2,7 +2,7 @@
 import argparse
 import logging
 import sys
-
+import numpy as np
 import offsetbasedgraph as obg
 from pyvg.sequences import SequenceRetriever
 from pyvg.conversion import vg_json_file_to_interval_collection, json_file_to_obg_numpy_graph
@@ -24,15 +24,22 @@ def main():
 
 def differential_expression(args):
     from .differentialbinding import main
+    from .fimowrapper import FimoFile
+    from .peakcollection import PeakCollection
+
     test_name = args.test_name
     fimo_file_name = "fimo_%s_sequences/fimo.txt" % test_name
     peaks_file_name = "%s_max_paths.intervalcollection" % test_name
-    subgraphs_file_name = "%s_sub_graphs.nodeids.npz" % test_name
-    node_ids_file_name = "%s_sub_graphs.graphs.npz" % test_name
+    subgraphs_file_name = "%s_sub_graphs.graphs.npz" % test_name
+    node_ids_file_name = "%s_sub_graphs.nodeids.npz" % test_name
     graph = obg.GraphWithReversals.from_numpy_file(args.graph_name)
-    print(main(fimo_file_name, peaks_file_name, subgraphs_file_name,
-               node_ids_file_name, graph))
-
+    res = main(
+        FimoFile.from_file(fimo_file_name),
+        PeakCollection.from_file(peaks_file_name, True),
+        np.load(subgraphs_file_name),
+        np.load(node_ids_file_name),
+        graph)
+    print(res)
 
 def shift_estimation(args):
 

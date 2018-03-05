@@ -65,9 +65,14 @@ class SparseMaxPaths:
 
         paths, infos, subgraphs = linegraph.max_paths()
         converted = self._convert_paths(paths, infos)
-        for path, subgraph in zip(converted, subgraphs):
-            subgraph._node_ids += self._graph.min_node-1
-        small_subgraphs = [SubGraph(path.region_paths, csr_matrix(([], ([], [])), shape=(1, 1)))
+        # for path, subgraph in zip(converted, subgraphs):
+        #     # subgraph._node_ids += self._graph.min_node-1
+        #     print(subgraph._node_ids)
+        #     print(path.region_paths)
+        #     assert all(rp in subgraph._node_ids for rp in path.region_paths)
+
+        small_subgraphs = [
+            SubGraph(path.region_paths, csr_matrix(([], ([], [])), shape=(1, 1)))
                            for path in self.internal_paths]
         return converted+self.internal_paths, subgraphs+small_subgraphs
 
