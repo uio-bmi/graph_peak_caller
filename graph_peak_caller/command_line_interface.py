@@ -24,8 +24,8 @@ def main():
 
 
 def differential_expression(args):
-    from .differentialbinding import main
-    from .fimowrapper import FimoFile
+    from .analysis.differentialbinding import main
+    from .analysis.fimowrapper import FimoFile
     from .peakcollection import PeakCollection
 
     test_name = args.test_name
