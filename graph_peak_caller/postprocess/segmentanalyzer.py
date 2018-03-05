@@ -1,6 +1,5 @@
 import numpy as np
 from itertools import chain
-import logging
 
 
 class SegmentAnalyzer:

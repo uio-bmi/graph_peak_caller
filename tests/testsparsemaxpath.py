@@ -1,5 +1,5 @@
 import offsetbasedgraph as obg
-from graph_peak_caller.sparsemaxpaths import SparseMaxPaths
+from graph_peak_caller.postprocess.maxpaths import SparseMaxPaths
 from graph_peak_caller.sparsediffs import SparseValues
 from graph_peak_caller.peakcollection import Peak
 import numpy as np

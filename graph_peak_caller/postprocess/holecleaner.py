@@ -1,12 +1,12 @@
-from itertools import chain
-from collections import defaultdict
-import scipy.sparse.csgraph as csgraph
-from scipy.sparse import csr_matrix
-from .segmentanalyzer import SegmentAnalyzer
-from .sparsediffs import SparseValues
-from .subgraphanalyzer import SubGraphAnalyzer
 import logging
 import numpy as np
+import scipy.sparse.csgraph as csgraph
+from scipy.sparse import csr_matrix
+from itertools import chain
+
+from .segmentanalyzer import SegmentAnalyzer
+from ..sparsediffs import SparseValues
+from .subgraphanalyzer import SubGraphAnalyzer
 
 
 class DummyTouched:

@@ -1,9 +1,10 @@
 import numpy as np
 import logging
-from .segmentanalyzer import SegmentSplitter
-from .peakcollection import Peak
-from .sparseholecleaner import PosDividedLineGraph, SubGraph
 from scipy.sparse import csr_matrix
+
+from .segmentanalyzer import SegmentSplitter
+from ..peakcollection import Peak
+from .holecleaner import PosDividedLineGraph, SubGraph
 
 
 class SparseMaxPaths:

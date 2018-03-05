@@ -2,14 +2,12 @@ import logging
 import numpy as np
 from offsetbasedgraph import IntervalCollection, DirectedInterval
 from .densepileup import DensePileup
-from .areas import BCACollection
-from .peakcollection import PeakCollection
-from .peakcollection import Peak
+from .peakcollection import PeakCollection, Peak
 from .sampleandcontrolcreator import SampleAndControlCreator
 from .sparsepvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
-from .sparseholecleaner import HolesCleaner
+from .postprocess.holecleaner import HolesCleaner
 from .sparsediffs import SparseValues
-from .sparsemaxpaths import SparseMaxPaths
+from .postprocess.maxpaths import SparseMaxPaths
 IntervalCollection.interval_class = DirectedInterval
 
 
@@ -332,19 +330,6 @@ class CallPeaksFromQvalues(object):
         self.max_paths = [p[0] for p in pairs]
         assert max_paths is not None
         # self.max_paths = max_paths
-
-    def __get_subgraphs(self):
-        logging.info("Creating subgraphs from peak regions")
-        peaks_as_subgraphs = self.filtered_peaks.to_subgraphs()
-        logging.info("Writing subgraphs to file")
-        peaks_as_subgraphs.to_file(self.out_file_base_name + "peaks.subgraphs")
-
-        logging.info("Found %d subgraphs" % len(peaks_as_subgraphs.subgraphs))
-        binary_peaks = peaks_as_subgraphs
-        logging.info("Finding max path through subgraphs")
-        BCACollection(binary_peaks).to_file(
-            self.out_file_base_name + "bcapeaks.subgraphs")
-        self.binary_peaks = binary_peaks
 
     def callpeaks(self):
         logging.info("Calling peaks")
