@@ -1,12 +1,14 @@
 import unittest
+import pytest
 import numpy as np
-from graph_peak_caller.legacy.sparsepileup import SparsePileup, ValuedIndexes
-from graph_peak_caller.densepileup import DensePileup
-from graph_peak_caller.areas import BinaryContinousAreas
-from graph_peak_caller.peakscores import ScoredPeak
+# from graph_peak_caller.legacy.sparsepileup import SparsePileup, ValuedIndexes
+# from graph_peak_caller.densepileup import DensePileup
+# from graph_peak_caller.areas import BinaryContinousAreas
+# from graph_peak_caller.peakscores import ScoredPeak
 import offsetbasedgraph as obg
 
 
+@pytest.mark.skip("Legacy")
 class TestScoredPeak(unittest.TestCase):
     def setUp(self):
         nodes = {i+1: obg.Block(10) for i in range(5)}

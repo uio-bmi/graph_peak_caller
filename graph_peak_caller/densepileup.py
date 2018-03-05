@@ -1,14 +1,8 @@
 import logging
 import numpy as np
-from scipy.stats import poisson
-from collections import defaultdict
-from .pileup import Pileup
-from .pileupcleaner2 import PeaksCleaner, HolesCleaner
 from .subgraphcollection import SubgraphCollection
 from offsetbasedgraph import Interval, IntervalCollection, BlockArray
-import pickle
 from .legacy.sparsepileup import SparseAreasDict, intervals_to_start_and_ends
-# from memory_profiler import profile
 from .sparsepileupv2 import RpScore
 
 
@@ -299,7 +293,7 @@ class DensePileupData:
         return positions
 
 
-class DensePileup(Pileup):
+class DensePileup:
     def __init__(self, graph, ndim=1, base_value=0, dtype=None):
         logging.info("Initing dense pileup")
         self.graph = graph
