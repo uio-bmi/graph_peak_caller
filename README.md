@@ -12,8 +12,8 @@ pip3 install graph_peak_caller
 
 Validate that the installation worked by writing `graph_peak_caller version` on your command line.
 
-# Usage guide
-## Use Graph Peak Caller through Galaxy
+# User guide
+## Using Graph Peak Caller through Galaxy
 Graph Peak Caller can be used through a Galaxy installation at [hyperbrowser.uio.no/graph-peak-caller](hyperbrowser.uio.no/graph-peak-caller). A set of pre-compiled graphs are available to use (see the welcome page at the Galaxy server for an overview). If one of these graphs suites your needs, this is the best way to use Graph Peak Caller. PS: If you would like us to include graph-based reference genomes for a new species, please contact us, e.g by opening an issue, and we will do our best. 
 
 ## Using Graph Peak Caller on the command line with vg
