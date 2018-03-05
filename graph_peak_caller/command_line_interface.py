@@ -2,20 +2,26 @@
 import argparse
 import logging
 import sys
-import numpy as np
 
 import offsetbasedgraph as obg
 from pyvg.sequences import SequenceRetriever
 from pyvg.conversion import vg_json_file_to_interval_collection,\
     json_file_to_obg_numpy_graph
 
-from graph_peak_caller import CallPeaks, ExperimentInfo,\
-    CallPeaksFromQvalues, Configuration
+from graph_peak_caller import CallPeaksFromQvalues
 from graph_peak_caller.peakcollection import Peak
 from graph_peak_caller.util import create_linear_map
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 from graph_peak_caller.shift_estimation_multigraph import \
     MultiGraphShiftEstimator
+
+from graph_peak_caller.callpeaks_interface import \
+    run_callpeaks_interface, run_callpeaks_whole_genome,\
+    run_callpeaks_whole_genome_from_p_values
+
+from graph_peak_caller.analysis_interface import analyse_peaks_whole_genome,\
+    analyse_peaks,\
+    analyse_manually_classified_peaks, differential_expression
 
 logging.basicConfig(
     stream=sys.stdout, level=logging.WARNING,
@@ -24,35 +30,6 @@ logging.basicConfig(
 
 def main():
     create_argument_parser()
-
-
-def differential_expression(args):
-    from .analysis.differentialbinding import main
-    from .analysis.fimowrapper import FimoFile
-    from .peakcollection import PeakCollection
-
-    test_name = args.test_name
-    fimo_file_name = "fimo_%s_sequences/fimo.txt" % test_name
-    peaks_file_name = "%s_max_paths.intervalcollection" % test_name
-    subgraphs_file_name = "%s_sub_graphs.graphs.npz" % test_name
-    node_ids_file_name = "%s_sub_graphs.nodeids.npz" % test_name
-    graph = obg.GraphWithReversals.from_numpy_file(args.graph_name)
-    res = main(
-        FimoFile.from_file(fimo_file_name),
-        PeakCollection.from_file(peaks_file_name, True),
-        np.load(subgraphs_file_name),
-        np.load(node_ids_file_name),
-        graph)
-    retriever = SequenceRetriever.from_vg_json_graph(args.vg_graph_name)
-    out_f = open(test_name + "_diffexpr.fasta", "w")
-    for expr_diff in res:
-        main_seq = retriever.get_interval_sequence(expr_diff.main_path)
-        out_f.write("> %s %s\n" % (expr_diff.peak_id, expr_diff.main_count))
-        out_f.write(main_seq + "\n")
-        var_seq = retriever.get_interval_sequence(expr_diff.var_path)
-        out_f.write("> %sAlt %s\n" % (expr_diff.peak_id, expr_diff.var_count))
-        out_f.write(var_seq + "\n")
-    out_f.close()
 
 
 def shift_estimation(args):
@@ -83,60 +60,6 @@ def shift_estimation(args):
     print("Shift: %d" % d)
 
 
-def run_callpeaks(ob_graph,
-                  sample_file_name, control_file_name,
-                  vg_graph_file_name,
-                  out_name="real_data_",
-                  has_control=True,
-                  limit_to_chromosomes=False,
-                  fragment_length=135, read_length=36,
-                  linear_map_file_name=False):
-
-    logging.info("Running from gam files")
-
-    # Detect file format
-    if isinstance(sample_file_name, obg.IntervalCollection):
-        sample_intervals = sample_file_name
-        control_intervals = control_file_name
-    elif sample_file_name.endswith(".json"):
-        sample_intervals = vg_json_file_to_interval_collection(sample_file_name, ob_graph)
-        control_intervals = vg_json_file_to_interval_collection(control_file_name, ob_graph)
-    else:
-        try:
-            sample_intervals = obg.IntervalCollection.from_file(
-                sample_file_name, graph=ob_graph)
-            control_intervals = obg.IntervalCollection.from_file(
-                control_file_name, graph=ob_graph)
-        except OSError:
-            sample_intervals = obg.IntervalCollection.from_file(
-                sample_file_name, graph=ob_graph, text_file=True)
-            control_intervals = obg.IntervalCollection.from_file(
-                control_file_name, graph=ob_graph, text_file=True)
-
-    graph_size = ob_graph.number_of_basepairs()
-    logging.info("Number of base pairs in graph: %d" % graph_size)
-
-    experiment_info = ExperimentInfo(graph_size, fragment_length, read_length)
-    config = Configuration(
-        skip_read_validation=True, save_tmp_results_to_file=True,
-        skip_filter_duplicates=False, p_val_cutoff=0.05,
-        graph_is_partially_ordered=True)
-
-    caller = CallPeaks.run_from_intervals(
-        ob_graph, sample_intervals, control_intervals,
-        experiment_info=experiment_info,
-        out_file_base_name=out_name, has_control=has_control,
-        linear_map=linear_map_file_name,
-        configuration=config
-    )
-    try:
-        retriever = SequenceRetriever.from_vg_graph(vg_graph_file_name)
-    except OSError:
-        retriever = SequenceRetriever.from_vg_json_graph(vg_graph_file_name)
-
-    caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
-
-
 def intervals_to_fasta(args):
     logging.info("Getting sequence retriever")
     retriever = SequenceRetriever.from_vg_graph(args.vg_graph_file_name)
@@ -146,25 +69,6 @@ def intervals_to_fasta(args):
     logging.info("Writing to fasta")
     CallPeaksFromQvalues.intervals_to_fasta_file(
         intervals, args.out_file_name, retriever)
-
-
-def run_callpeaks_interface(args):
-    logging.info("Read offset based graph")
-
-    ob_graph = obg.GraphWithReversals.from_numpy_file(
-        args.graph_file_name)
-
-    run_callpeaks(
-        ob_graph,
-        args.sample_reads_file_name,
-        args.control_reads_file_name,
-        args.vg_graph_file_name,
-        args.out_base_name,
-        has_control=args.with_control == "True",
-        fragment_length=int(args.fragment_length),
-        read_length=int(args.read_length),
-        linear_map_file_name=args.linear_map_base_name
-    )
 
 
 def count_unique_reads_interface(args):
@@ -188,82 +92,12 @@ def count_unique_reads(chromosomes, graph_file_names, reads_file_names):
     print(unique_reads)
 
 
-def run_callpeaks_whole_genome(args):
-    logging.info("Running whole genome.")
-    chromosomes = args.chromosomes.split(",")
-    graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
-    linear_map_file_names = [args.linear_maps_location + chrom for chrom in chromosomes]
-    vg_graphs = [args.vg_graphs_location + chrom + ".vg" for chrom in chromosomes]
-    sequence_retrievers = \
-        (SequenceRetriever.from_vg_graph(fn) for fn in vg_graphs)
-
-    if args.sample_reads_base_name.endswith(".intervalcollection"):
-        sample_file_names = [args.sample_reads_base_name.replace("chrom", chrom)
-                            for chrom in chromosomes]
-        control_file_names = [args.control_reads_base_name.replace("chrom", chrom)
-                            for chrom in chromosomes]
-    else:
-        sample_base_name = args.sample_reads_base_name.replace(".json", "_")
-        control_base_name = args.control_reads_base_name.replace(".json", "_")
-        sample_file_names = [sample_base_name + chrom + ".json"
-                        for chrom in chromosomes]
-        control_file_names = [control_base_name + chrom + ".json"
-                        for chrom in chromosomes]
-
-
-    min_background = int(args.unique_reads) * int(args.fragment_length) / int(args.genome_size)
-    logging.info("Computed min background signal to be %.3f using fragment length %f, "
-                 " %d unique reads, and genome size %d" % (int(min_background),
-                                                           int(args.fragment_length),
-                                                           int(args.unique_reads),
-                                                           int(min_background)))
-
-    caller = MultipleGraphsCallpeaks(
-        chromosomes,
-        graph_file_names,
-        sample_file_names,
-        control_file_names,
-        linear_map_file_names,
-        int(args.fragment_length),
-        int(args.read_length),
-        has_control=args.with_control=="True",
-        sequence_retrievers=sequence_retrievers,
-        out_base_name=args.out_base_name,
-        stop_after_p_values=args.stop_after_p_values == "True",
-        min_background=min_background
-    )
-    caller.run()
-
-
-def run_callpeaks_whole_genome_from_p_values(args):
-    logging.info("Running whole genome from p-values.")
-    chromosome = args.chromosome
-    chromosomes = [chromosome]
-    graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
-    vg_graphs = [args.graphs_location + chrom + ".vg" for chrom in chromosomes]
-    sequence_retrievers = \
-        (SequenceRetriever.from_vg_graph(fn) for fn in vg_graphs)
-
-    caller = MultipleGraphsCallpeaks(
-        chromosomes,
-        graph_file_names,
-        None,
-        None,
-        None,
-        int(args.fragment_length),
-        int(args.read_length),
-        has_control=args.with_control=="True",
-        sequence_retrievers=sequence_retrievers,
-        out_base_name=args.out_base_name
-    )
-    caller.create_joined_q_value_mapping()
-    caller.run_from_p_values(only_chromosome=chromosome)
-
-
 def linear_peaks_to_fasta(args):
     from graph_peak_caller.nongraphpeaks import NonGraphPeakCollection
-    collection = NonGraphPeakCollection.from_bed_file(args.linear_reads_file_name)
-    collection.set_peak_sequences_using_fasta(fasta_file_location=args.fasta_file)
+    collection = NonGraphPeakCollection.from_bed_file(
+        args.linear_reads_file_name)
+    collection.set_peak_sequences_using_fasta(
+        fasta_file_location=args.fasta_file)
     collection.save_to_sorted_fasta(args.out_file_name)
     logging.info("Saved sequences to %s" % args.out_file_name)
 
@@ -283,8 +117,8 @@ def create_linear_map_interface(args):
                  "be changed by linear map process")
     ob_graph.convert_to_dict_backend()
     logging.info("Creating linear map")
-    create_linear_map(ob_graph, args.vg_snarls_file_name, args.out_file_base_name, copy_graph=False)
-
+    create_linear_map(ob_graph, args.vg_snarls_file_name,
+                      args.out_file_base_name, copy_graph=False)
 
 
 def split_vg_json_reads_into_chromosomes(args):
@@ -400,78 +234,6 @@ def plot_motif_enrichment(args):
         save_to_file=args.out_figure_file_name,
         run_fimo=args.run_fimo == "True"
     )
-
-
-def analyse_peaks(args):
-    from graph_peak_caller.peakscomparer import PeaksComparerV2
-    from graph_peak_caller.analyse_peaks import LinearRegion
-    graph = obg.GraphWithReversals.from_numpy_file(args.ob_graph_file_name)
-
-    end = int(args.graph_end)
-    if end == 0:
-        region = None
-    else:
-        region = LinearRegion(args.graph_chromosome, int(args.graph_start), end)
-    analyser = PeaksComparerV2(graph,
-                               args.vg_graph_file_name,
-                               args.linear_peaks_fasta_file_name,
-                               args.graph_peaks_fasta_file_name,
-                               args.linear_peaks_fimo_results_file,
-                               args.graph_peaks_fimo_results_file,
-                               linear_path_name=args.linear_path_name,
-                               region=region)
-
-
-def analyse_peaks_whole_genome(args):
-    from graph_peak_caller.peakscomparer import PeaksComparerV2, AnalysisResults
-    from offsetbasedgraph import NumpyIndexedInterval
-    chromosomes = args.chromosomes.split(",")
-    graph_file_names = (args.graphs_dir + chrom + ".nobg" for chrom in chromosomes)
-    graphs = (obg.GraphWithReversals.from_numpy_file(fn) for fn in graph_file_names)
-    vg_file_names = (args.graphs_dir + chrom + ".vg" for chrom in chromosomes)
-
-
-    results = AnalysisResults()
-
-    for chrom in chromosomes:
-        graph = obg.GraphWithReversals.from_numpy_file(
-            args.graphs_dir + chrom + ".nobg")
-        logging.info("Reading linear path")
-        linear_path = NumpyIndexedInterval.from_file(args.graphs_dir + chrom + "_linear_pathv2.interval")
-
-        analyser = PeaksComparerV2(
-            graph,
-            args.results_dir + "macs_sequences_chr%s.fasta" % chrom,
-            args.results_dir + "%s_sequences.fasta" % chrom,
-            args.results_dir + "/fimo_macs_chr%s/fimo.txt" % chrom,
-            args.results_dir + "/fimo_graph_chr%s/fimo.txt" % chrom,
-            linear_path
-        )
-        results = results + analyser.results
-
-    print(" === Final results for all chromosomes ===")
-    print(results)
-
-    results.to_file(args.out_file + ".pickle")
-    with open(args.out_file + ".txt", "w") as f:
-        f.write(str(results))
-    logging.info("Wrote results as pickle to %s and as text to %s" \
-                 % (args.out_file + ".pickle", args.out_file + ".txt"))
-
-
-def analyse_manually_classified_peaks(args):
-    for chromosome in args.chromosomes.split():
-        graph_file_name = args.graphs_location + "/" + chromosome + ".nobg"
-        graph = obg.GraphWithReversals.from_numpy_file(graph_file_name)
-
-        from .manually_classified_peaks import CheckOverlapWithManuallyClassifiedPeaks
-        CheckOverlapWithManuallyClassifiedPeaks.from_graph_peaks_in_fasta(
-                graph,
-                args.graphs_location + "/" + chromosome  + ".json",
-                chromosome,
-                args.reads_base_name + chromosome + "_sequences.fasta",
-                args.regions_file,
-                args.manually_classified_peaks_file)
 
 
 def find_linear_path(args):
