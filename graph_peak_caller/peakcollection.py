@@ -4,6 +4,7 @@ from pybedtools import BedTool
 import logging
 from collections import defaultdict
 import numpy as np
+from .nongraphpeaks import NonGraphPeakCollection, NonGraphPeak
 from offsetbasedgraph import DirectedInterval
 
 
@@ -59,6 +60,25 @@ class Peak(obg.DirectedInterval):
                   unique_id=unique_id)
         obj.info = (object["is_diff"], object["is_ambigous"])
         return obj
+
+    def to_approx_linear_peak(self, linear_path, chromosome):
+        # Assuming graph is partially ordered DAG
+        intersecting_nodes = set(self.region_paths).intersection(linear_path.nodes_in_interval())
+        intersecting_nodes = sorted(list(intersecting_nodes))
+
+        first_node = intersecting_nodes[0]
+        start_offset = 0
+        if first_node == self.region_paths[0]:
+            start_offset = self.start_position.offset
+
+        last_node = intersecting_nodes[-1]
+        end_offset = 0
+        if last_node == self.region_paths[-1]:
+            end_offset = self.end_position.offset
+
+        linear_start_pos = linear_path.get_offset_at_node(first_node) + start_offset
+        linear_end_pos = linear_path.get_offset_at_node(last_node) + end_offset
+        return NonGraphPeak(chromosome, linear_start_pos, linear_end_pos)
 
 
 class ReadCollection(obg.IntervalCollection):
@@ -238,6 +258,14 @@ class PeakCollection(obg.IntervalCollection):
             if i.overlaps(interval, minimum_overlap=minimum_overlap):
                 overlapping.append(i)
         return overlapping
+
+    def to_approx_linear_peaks(self, linear_path, chromosome):
+        linear_peaks = []
+        for peak in self.intervals:
+            linear_peaks.append(peak.to_approx_linear_peak(linear_path, chromosome))
+
+        return NonGraphPeakCollection(linear_peaks)
+
 
     @classmethod
     def from_fasta_file(cls, file_name, graph=None):

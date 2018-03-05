@@ -13,6 +13,7 @@ from graph_peak_caller.peakcollection import Peak
 from graph_peak_caller.util import create_linear_map, create_ob_graph_from_vg
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 from graph_peak_caller.shift_estimation_multigraph import MultiGraphShiftEstimator
+from graph_peak_caller.peakcollection import PeakCollection
 
 logging.basicConfig(
     stream=sys.stdout, level=logging.WARNING,
@@ -499,6 +500,14 @@ def move_linear_reads_to_graph(args):
 
     for chrom in chromosomes:
         out_files[chrom].close()
+
+
+def peaks_to_linear(args):
+    # Get approximate linear position of peaks using a linear path
+    linear_path = obg.NumpyIndexedInterval.from_file(args.linear_path_file_name)
+    peaks = PeakCollection.from_file(args.peaks_file_name)
+    linear_peaks = peaks.to_approx_linear_peaks(linear_path, args.chromosome)
+    linear_peaks.to_bed_file(args.out_file_name)
 
 
 interface = \
