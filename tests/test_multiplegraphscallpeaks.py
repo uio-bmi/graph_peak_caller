@@ -116,9 +116,9 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
             caller = MultipleGraphsCallpeaks(
                 self.chromosomes,
                 self.chromosomes,
-                self.sample_reads,
-                self.control_reads,
-                self.linear_maps,
+                None,
+                None,
+                None,
                 self.fragment_length,
                 self.read_length,
                 has_control=False,
