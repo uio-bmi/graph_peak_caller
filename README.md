@@ -24,7 +24,7 @@ If you have a single vg graph representing your reference genome, the following 
 ### Step 1: Preparing data
 Convert your vg graph to json and create an Offset Based Python Graph:
 ```
-vg view -Jv graph.vg > graph.json
+vg view -Vj graph.vg > graph.json
 graph_peak_caller create_ob_graph graph.json graph.nobg
 ```
 
