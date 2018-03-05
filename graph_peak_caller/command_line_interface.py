@@ -4,24 +4,23 @@ import logging
 import sys
 
 import offsetbasedgraph as obg
-from pyvg.sequences import SequenceRetriever
-from pyvg.conversion import vg_json_file_to_interval_collection,\
-    json_file_to_obg_numpy_graph
-
-from graph_peak_caller import CallPeaksFromQvalues
 from graph_peak_caller.peakcollection import Peak
-from graph_peak_caller.util import create_linear_map
-from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
-from graph_peak_caller.shift_estimation_multigraph import \
-    MultiGraphShiftEstimator
+
 
 from graph_peak_caller.callpeaks_interface import \
     run_callpeaks_interface, run_callpeaks_whole_genome,\
     run_callpeaks_whole_genome_from_p_values
 
 from graph_peak_caller.analysis_interface import analyse_peaks_whole_genome,\
-    analyse_peaks,\
-    analyse_manually_classified_peaks, differential_expression
+    analyse_peaks, intervals_to_fasta, linear_peaks_to_fasta,\
+    analyse_manually_classified_peaks, differential_expression,\
+    plot_motif_enrichment
+
+from graph_peak_caller.preprocess_interface import shift_estimation,\
+    count_unique_reads_interface, create_ob_graph,\
+    create_linear_map_interface,\
+    split_vg_json_reads_into_chromosomes
+
 
 logging.basicConfig(
     stream=sys.stdout, level=logging.WARNING,
@@ -30,154 +29,6 @@ logging.basicConfig(
 
 def main():
     create_argument_parser()
-
-
-def shift_estimation(args):
-
-    """
-    from graph_peak_caller.shiftestimation import Treatment, Opt, PeakModel
-    treatment = Treatment.from_bed_file("linear_bed.bed")
-    opt = Opt()
-    opt.gsize = 48172484
-    model = PeakModel(opt, treatment)
-    print(model.d)
-    return
-    """
-
-    chromosomes = args.chromosomes.split(",")
-    graphs = [args.ob_graphs_location + chrom for chrom in chromosomes]
-    logging.info("Will try to use graphs %s" % graphs)
-    sample_file_names = [args.sample_reads_base_name + chrom + ".json"
-                         for chrom in chromosomes]
-    logging.info("Will use reads from %s" % sample_file_names)
-
-    estimator = MultiGraphShiftEstimator.from_files(
-        chromosomes, graphs, sample_file_names)
-
-    estimator.to_linear_bed_file("linear_bed.bed", read_length=36)
-
-    d = estimator.get_estimates()
-    print("Shift: %d" % d)
-
-
-def intervals_to_fasta(args):
-    logging.info("Getting sequence retriever")
-    retriever = SequenceRetriever.from_vg_graph(args.vg_graph_file_name)
-    logging.info("Getting intervals")
-    intervals = obg.IntervalCollection.create_generator_from_file(
-        args.intervals_file_name)
-    logging.info("Writing to fasta")
-    CallPeaksFromQvalues.intervals_to_fasta_file(
-        intervals, args.out_file_name, retriever)
-
-
-def count_unique_reads_interface(args):
-    chromosomes = args.chromosomes.split(",")
-    graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
-    reads_file_names = [args.reads_base_name + chrom + ".json"
-                        for chrom in chromosomes]
-
-    count_unique_reads(chromosomes, graph_file_names,
-                       reads_file_names)
-
-
-def count_unique_reads(chromosomes, graph_file_names, reads_file_names):
-
-    graphs = (obg.GraphWithReversals.from_numpy_file(f)
-              for f in graph_file_names)
-    reads = (vg_json_file_to_interval_collection(f, graph)
-             for f, graph in zip(reads_file_names, graphs))
-
-    unique_reads = MultipleGraphsCallpeaks.count_number_of_unique_reads(reads)
-    print(unique_reads)
-
-
-def linear_peaks_to_fasta(args):
-    from graph_peak_caller.nongraphpeaks import NonGraphPeakCollection
-    collection = NonGraphPeakCollection.from_bed_file(
-        args.linear_reads_file_name)
-    collection.set_peak_sequences_using_fasta(
-        fasta_file_location=args.fasta_file)
-    collection.save_to_sorted_fasta(args.out_file_name)
-    logging.info("Saved sequences to %s" % args.out_file_name)
-
-
-def create_ob_graph(args):
-    logging.info("Creating obgraph")
-    ob_graph = json_file_to_obg_numpy_graph(args.vg_json_file_name, 0)
-
-    logging.info("Writing ob graph to file")
-    ob_graph.to_numpy_file(args.out_file_name)
-
-
-def create_linear_map_interface(args):
-    logging.info("Reading ob graph from file")
-    ob_graph = obg.GraphWithReversals.from_numpy_file(args.obg_file_name)
-    logging.info("Converting to dict format, allowing graph to "
-                 "be changed by linear map process")
-    ob_graph.convert_to_dict_backend()
-    logging.info("Creating linear map")
-    create_linear_map(ob_graph, args.vg_snarls_file_name,
-                      args.out_file_base_name, copy_graph=False)
-
-
-def split_vg_json_reads_into_chromosomes(args):
-    reads_base_name = args.vg_json_reads_file_name.split(".")[0]
-    logging.info("Will write reads to files %s_[chromosome].json" % reads_base_name)
-
-    chromosomes = args.chromosomes.split(",")
-    chromosome_limits = {}
-    logging.info("Found the following chromosome ranges:")
-    for chrom in chromosomes:
-        start_end = open(args.range_files_base_name + "node_range_" + chrom + ".txt")
-        start_end= start_end.read().split(":")
-        start = int(start_end[0])
-        end = int(start_end[1])
-        chromosome_limits[chrom] = (start, end)
-        logging.info("   Chr%s: %d-%d" % (chrom, start, end))
-
-    out_files = {chrom: open(reads_base_name + "_" + chrom + ".json", "w")
-                 for chrom in chromosomes}
-
-    reads_file = open(args.vg_json_reads_file_name)
-    i = 0
-    import re
-    regex = re.compile(r"node_id\": ([0-9]+)")
-
-    def get_mapped_chrom(node):
-        mapped_chrom = None
-        for chrom in chromosomes:
-            if node >= chromosome_limits[chrom][0] and node <= chromosome_limits[chrom][1]:
-                mapped_chrom = chrom
-                break
-        #assert mapped_chrom is not None, "Found no match for node id %d" % node
-        return mapped_chrom
-
-    n_without_node_id = 0
-    for line in reads_file:
-        if i % 100000 == 0:
-            logging.info("Line #%d" % i)
-        i += 1
-
-        groups = regex.search(line)
-        if groups is None:
-            n_without_node_id += 1
-            continue
-        groups = groups.groups()
-        if len(groups) > 0:
-            node = int(groups[0])
-            mapped_chrom = get_mapped_chrom(node)
-            if mapped_chrom is None:
-                n_without_node_id += 1
-                continue
-            out_files[mapped_chrom].writelines([line])
-        else:
-            print("No groups fond")
-
-    for file in out_files.values():
-        file.close()
-
-    logging.info("Done. Found %d lines without node id or not matching into the given list of chromosomes" % n_without_node_id)
 
 
 def concatenate_sequence_files(args):
@@ -194,7 +45,6 @@ def concatenate_sequence_files(args):
             else:
                 # This is sequence, add to prev entry
                 all_fasta_entries[-1][1] = line
-        #fasta_file.close()
 
     peaks = []
     for fasta_entry in all_fasta_entries:
@@ -216,24 +66,6 @@ def concatenate_sequence_files(args):
     out_fasta.close()
 
     logging.info("Wrote all peaks in sorted order to %s" % out_file_name)
-
-
-def plot_motif_enrichment(args):
-    from graph_peak_caller.motifenrichment import plot_true_positives
-    fasta1 = args.fasta1
-    fasta2 = args.fasta2
-    meme = args.meme_motif_file
-
-    plot_true_positives(
-        [
-            ("Graph Peak Caller", fasta1),
-            ("MACS2", fasta2)
-        ],
-        meme,
-        plot_title=args.plot_title,
-        save_to_file=args.out_figure_file_name,
-        run_fimo=args.run_fimo == "True"
-    )
 
 
 def find_linear_path(args):
@@ -533,8 +365,9 @@ def create_argument_parser():
         if "example_run" in interface[command]:
             example = "\nExample: " + interface[command]["example_run"]
 
-        subparser = subparsers.add_parser(command,
-                                help=interface[command]["help"] + example)
+        subparser = subparsers.add_parser(
+            command,
+            help=interface[command]["help"] + example)
         for argument, help in interface[command]["arguments"]:
             subparser.add_argument(argument, help=help)
         subparser.set_defaults(func=interface[command]["method"])
