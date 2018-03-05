@@ -1,13 +1,13 @@
-import numpy as np
-import pybedtools
-from pybedtools import BedTool
-from offsetbasedgraph import IntervalCollection
-from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
-import offsetbasedgraph as obg
-from .linearsnarls import LinearSnarlMap
-from .snarls import SnarlGraphBuilder, SnarlGraph
-import pyvg
 import logging
+import numpy as np
+from pybedtools import BedTool
+import pyvg
+import offsetbasedgraph as obg
+from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
+
+from .control.linearsnarls import LinearSnarlMap
+from .control.snarls import SnarlGraphBuilder
+
 
 class LinearRegion(object):
     def __init__(self, chromosome, start, end):

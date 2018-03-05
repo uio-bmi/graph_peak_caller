@@ -4,7 +4,7 @@ import pickle
 import offsetbasedgraph as obg
 from .sparsepvalues import PValuesFinder, PToQValuesMapper
 from .experiment_info import ExperimentInfo
-from .sparsesampleandcontrolcreator import SparseControl
+from .control import SparseControl
 from .sample import SamplePileupGenerator
 
 

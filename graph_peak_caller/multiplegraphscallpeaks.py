@@ -2,8 +2,7 @@ import numpy as np
 import logging
 import offsetbasedgraph as obg
 from pyvg.conversion import vg_json_file_to_interval_collection
-from .experiment_info import ExperimentInfo
-from .callpeaks import CallPeaks, Configuration
+from . import ExperimentInfo, CallPeaks, Configuration
 from .sparsepvalues import PToQValuesMapper
 from .sparsediffs import SparseValues
 

@@ -1,10 +1,10 @@
-import json
 import pickle
-from .densepileup import DensePileup
-from .sparsediffs import SparseDiffs
-from .linearintervals import LinearIntervalCollection
 import logging
 import numpy as np
+
+from ..densepileup import DensePileup
+from ..sparsediffs import SparseDiffs
+from .linearintervals import LinearIntervalCollection
 
 
 class LinearSnarlMapNP:

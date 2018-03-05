@@ -1,6 +1,6 @@
 import unittest
-from graph_peak_caller.linearsnarls import *
-from graph_peak_caller.linearintervals import LinearIntervalCollection
+from graph_peak_caller.control.linearsnarls import *
+from graph_peak_caller.control.linearintervals import LinearIntervalCollection
 
 
 class TestLinearPileup(unittest.TestCase):
