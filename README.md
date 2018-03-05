@@ -55,3 +55,11 @@ If you do not have a control track, use your sample reads as control and change 
 If you want to do Peak Calling on a whole-genome reference, vg will typically produce one graph for each chromosome, and it is best to divide the peak calling into one process for each chromosome. Check out [this guide](https://github.com/uio-bmi/graph_peak_caller/wiki/Graph-based-ChIP-seq-tutorial) for a detailed explanation on how that can be done.
 
 # Development
+Graph Peak Caller is an open source project, and we warmly welcome contributions. Simply clone this repository to get started. We have a policy (for now) that Graph Peak Caller should use the same principles that Macs2 use and produce results similar to Macs2. This helps us validate the corectness of our graph-based approach and lets us focus on how "linear" principles of peak-calling can be generalized to graphs rather than spending time on inventing new peak calling principles.
+
+### Validation and testing
+Benchmarking is run every night on Jenkins for several transcription factors using a Human 1000 genomes graph and a SNP+Indels graph for Drosophila Melanogaster. The latest test report should be available at [this page](http://ivarg.ddns.net:8080/job/graph_peak_caller_benchmarks/HTML_Report/).
+
+When developing locally, run `pytest` from the project root directory of the project. Also, run `./run_mhc_benchmarking.sh` from the `tests/mhc_test_data/` directory (requires Fimo to be available in your path) and `./run.sh` from the `tests/chr22_integration_test` directory to ensure that the Peak Caller is giving good results. The first is also run automatically on Travis at every push.
+
+
