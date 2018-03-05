@@ -17,9 +17,9 @@ Validate that the installation worked by writing `graph_peak_caller version` on 
 Graph Peak Caller can be used through a Galaxy installation at [http://hyperbrowser.uio.no/graph-peak-caller](http://hyperbrowser.uio.no/graph-peak-caller). A set of pre-compiled graphs are available to use (see the welcome page at the Galaxy server for an overview). If one of these graphs suites your needs, this is the best way to use Graph Peak Caller. PS: If you would like us to include graph-based reference genomes for a new species, please contact us, e.g by opening an issue, and we will do our best. 
 
 ## Using Graph Peak Caller on the command line with vg
-Graph Peak Caller made to be used together with [vg](http://github.com/vgteam/vg) and take as input alignments produces by vg. Graph Peak Caller uses the Python module [pyvg](https://github.com/uio-bmi/pyvg) (installed together with Graph Peak Caller) to convert output from vg to formats compatible with Python.
+Graph Peak Caller is made to be used together with [vg](http://github.com/vgteam/vg) and take as input alignments produces by vg. Graph Peak Caller uses the Python module [pyvg](https://github.com/uio-bmi/pyvg) (installed together with Graph Peak Caller) to convert output from vg to formats compatible with Python.
 
-If you have a single vg graph representing your reference genome, the following explains you how to use Graph Peak Caller with that graph. If you have multiple vg graphs, see *Advanced usage* below.
+If you have a single vg graph representing your reference genome, the following explains how to use Graph Peak Caller with that graph. If you have multiple vg graphs, see *Advanced usage* below.
 
 ### Step 1: Preparing data
 Convert your vg graph to json and create an Offset Based Python Graph:
@@ -47,9 +47,9 @@ Finally, we can call peaks by using the *callpeaks* command:
 graph_peak_caller callpeaks graph.nobg graph.json linear_map alignments.json control_alignments.json True test FRAGMENT_LENGTH READ_LENGTH
 ```
 
-Make sure to change *FRAGMENT_LENGTH* and *READ_LENGTH* with numbers matching your data. If you do not know the fragment length of your ChIP-seq experiment, you can use Macs' predictd command to find estimate it: `macs predict -t alignments.bam`.
+Make sure to change *FRAGMENT_LENGTH* and *READ_LENGTH* with numbers matching your data. If you do not know the fragment length of your ChIP-seq experiment, you can use Macs' predictd command to estimate it: `macs predict -t alignments.bam`.
 
-If you do not have a control track, use your sample reads as control and change True to False in the above command. Chaning True to False is important as Graph Peak Caller will generate the background signal in a different way when the sample is used as control. 
+If you do not have a control track, use your sample reads as control and change True to False in the above command. Changing True to False is important as Graph Peak Caller will generate the background signal in a different way when the sample is used as control. 
 
 ## Advanced usage
 If you want to do Peak Calling on a whole-genome reference, vg will typically produce one graph for each chromosome, and it is best to divide the peak calling into one process for each chromosome. Check out [this guide](https://github.com/uio-bmi/graph_peak_caller/wiki/Graph-based-ChIP-seq-tutorial) for a detailed explanation on how that can be done.
