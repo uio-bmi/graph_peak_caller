@@ -2,20 +2,15 @@ import logging
 import numpy as np
 from offsetbasedgraph import IntervalCollection, DirectedInterval
 from .densepileup import DensePileup
-from .areas import BinaryContinousAreas, BCACollection
-from .peakscores import ScoredPeak
+from .areas import BCACollection
 from .peakcollection import PeakCollection
-IntervalCollection.interval_class = DirectedInterval
-from .experiment_info import ExperimentInfo
-from .subgraphcollection import SubgraphCollectionPartiallyOrderedGraph
 from .peakcollection import Peak
-# from memory_profiler import profile
 from .sampleandcontrolcreator import SampleAndControlCreator
-from .directsamplepileup import DirectPileup
 from .sparsepvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
 from .sparseholecleaner import HolesCleaner
 from .sparsediffs import SparseValues
 from .sparsemaxpaths import SparseMaxPaths
+IntervalCollection.interval_class = DirectedInterval
 
 
 class Configuration:

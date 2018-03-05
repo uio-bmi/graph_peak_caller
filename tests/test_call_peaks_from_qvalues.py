@@ -1,6 +1,6 @@
 import unittest
 from offsetbasedgraph import Block, Interval, DirectedInterval, GraphWithReversals
-from graph_peak_caller.callpeaks import CallPeaksFromQvalues, CallPeaks, ExperimentInfo
+from graph_peak_caller import CallPeaksFromQvalues, CallPeaks, ExperimentInfo
 from graph_peak_caller.sparsepileup import SparsePileup, ValuedIndexes
 from graph_peak_caller.densepileup import DensePileup, DensePileupData
 import logging

@@ -7,7 +7,7 @@ import offsetbasedgraph as obg
 from pyvg.sequences import SequenceRetriever
 from pyvg.conversion import vg_json_file_to_interval_collection, json_file_to_obg_numpy_graph
 
-from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo,\
+from graph_peak_caller import CallPeaks, ExperimentInfo,\
     CallPeaksFromQvalues, Configuration
 from graph_peak_caller.peakcollection import Peak
 from graph_peak_caller.util import create_linear_map, create_ob_graph_from_vg
