@@ -4,7 +4,7 @@ from offsetbasedgraph import GraphWithReversals, Block, \
 from graph_peak_caller.control.snarls import SnarlGraph
 from graph_peak_caller.control.linearsnarls import\
     LinearSnarlMap, create_control
-from graph_peak_caller.sparsepileup import \
+from graph_peak_caller.legacy.sparsepileup import \
     SparsePileup as OldSparsePileup, ValuedIndexes
 import numpy as np
 

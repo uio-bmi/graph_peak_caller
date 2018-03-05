@@ -2,7 +2,7 @@ import unittest
 import logging
 from offsetbasedgraph import Block, Interval, GraphWithReversals
 from graph_peak_caller import CallPeaksFromQvalues, ExperimentInfo
-from graph_peak_caller.sparsepileup import SparsePileup, ValuedIndexes
+from graph_peak_caller.legacy.sparsepileup import SparsePileup, ValuedIndexes
 from graph_peak_caller.densepileup import DensePileup
 
 logging.basicConfig(level=logging.ERROR)

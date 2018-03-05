@@ -4,12 +4,7 @@ from itertools import chain
 import numpy as np
 from scipy.stats import poisson
 from collections import defaultdict
-# from .pileupcleaner2 import PeaksCleaner, HolesCleaner
-# from .subgraphcollection import SubgraphCollection
-# from .eventsorter import DiscreteEventSorter
 from offsetbasedgraph import Interval, IntervalCollection
-
-from .pileup import Pileup
 
 
 class ValuedIndexes(object):
@@ -405,7 +400,7 @@ class SparseAreasDict(dict):
         return ((key, self.__getitem__(key)) for key in self.graph.blocks)
 
 
-class SparsePileup(Pileup):
+class SparsePileup:
     def __init__(self, graph):
         logging.info("Initing sparsepileup")
         self.graph = graph

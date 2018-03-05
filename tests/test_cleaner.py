@@ -1,12 +1,13 @@
 import unittest
 import pytest
-from graph_peak_caller.sparsepileup import SparsePileup
+# from graph_peak_caller.sparsepileup import SparsePileup
 from graph_peak_caller.extender import Areas
 from graph_peak_caller.pileupcleaner2 import PeaksCleaner, HolesCleaner
 from cyclic_graph import get_small_cyclic_graph, get_large_cyclic_graph,\
     get_padded_cyclic_graph
 import offsetbasedgraph as obg
 from random import randrange, seed
+
 
 @pytest.mark.skip("Legacy")
 class CleanupTester(unittest.TestCase):

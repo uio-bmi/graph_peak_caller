@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from .peakcollection import Peak
 from .sparsepileupv2 import RpScore
-from .sparsepileup import ValuedIndexes
+from .legacy.sparsepileup import ValuedIndexes
 
 
 class ScoredPeak(object):

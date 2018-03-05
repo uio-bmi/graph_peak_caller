@@ -4,7 +4,7 @@ from offsetbasedgraph import IntervalCollection
 import offsetbasedgraph as obg
 from pyvg.util import vg_gam_file_to_interval_collection
 from pyvg.sequences import SequenceRetriever
-from graph_peak_caller.sparsepileup import SparsePileup
+from graph_peak_caller.legacy.sparsepileup import SparsePileup
 from graph_peak_caller.util import create_linear_map, create_ob_graph_from_vg
 import traceback
 import warnings

@@ -7,7 +7,7 @@ from .pileupcleaner2 import PeaksCleaner, HolesCleaner
 from .subgraphcollection import SubgraphCollection
 from offsetbasedgraph import Interval, IntervalCollection, BlockArray
 import pickle
-from .sparsepileup import SparseAreasDict, intervals_to_start_and_ends
+from .legacy.sparsepileup import SparseAreasDict, intervals_to_start_and_ends
 # from memory_profiler import profile
 from .sparsepileupv2 import RpScore
 

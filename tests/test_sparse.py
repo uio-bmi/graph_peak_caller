@@ -1,7 +1,7 @@
 import unittest
 import pytest
 import numpy as np
-from graph_peak_caller.sparsepileup import \
+from graph_peak_caller.legacy.sparsepileup import \
         ValuedIndexes, \
         SparsePileup, \
         intervals_to_start_and_ends, \
