@@ -41,13 +41,17 @@ vg view -aj control_alignments.gam > control_alignments.json
 ```
 If you don't have any vg alignments, and do not know how to produce them, check out [this vg guide](https://github.com/vgteam/vg/wiki/Basic-Operations).
 
+### Step 2: Call peaks
 Finally, we can call peaks by using the *callpeaks* command:
 ```
 graph_peak_caller callpeaks graph.nobg graph.json linear_map alignments.json control_alignments.json True test FRAGMENT_LENGTH READ_LENGTH
 ```
+
 Make sure to change *FRAGMENT_LENGTH* and *READ_LENGTH* with numbers matching your data. If you do not know the fragment length of your ChIP-seq experiment, you can use Macs' predictd command to find estimate it: `macs predict -t alignments.bam`.
 
 If you do not have a control track, use your sample reads as control and change True to False in the above command. Chaning True to False is important as Graph Peak Caller will generate the background signal in a different way when the sample is used as control. 
 
 ## Advanced usage
+If you want to do Peak Calling on a whole-genome reference, vg will typically produce one graph for each chromosome, and it is best to divide the peak calling into one process for each chromosome. Check out [this guide](https://github.com/uio-bmi/graph_peak_caller/wiki/Graph-based-ChIP-seq-tutorial) for a detailed explanation on how that can be done.
 
+# Development
