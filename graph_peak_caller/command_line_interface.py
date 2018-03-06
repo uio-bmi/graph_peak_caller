@@ -2,6 +2,8 @@
 import argparse
 import logging
 import sys
+import matplotlib as mpl
+mpl.use('Agg')
 
 import offsetbasedgraph as obg
 from graph_peak_caller.peakcollection import Peak, PeakCollection
