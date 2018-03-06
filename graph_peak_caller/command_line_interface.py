@@ -132,7 +132,7 @@ def run_callpeaks(ob_graph,
         configuration=config
     )
 
-    if vg_graph_file_name is not None:
+    if vg_graph_file_name != "None":
         try:
             retriever = SequenceRetriever.from_vg_graph(vg_graph_file_name)
         except OSError:
