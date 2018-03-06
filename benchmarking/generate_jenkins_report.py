@@ -17,9 +17,11 @@ class HtmlReportGenerator:
             <td>%d (%d)</td>
             <td>%d (%d)</td>
             <td>%d</td>
+            <td>%d (%d)</td>
+            <td>%d (%d)</td>
             <td>%d</td>
-            <td>%d (%d)</td>
-            <td>%d (%d)</td>
+            <td>%d</td>
+            <td>%d</td>
             <td>%d</td>
         </tr>
         """ % (tf,
@@ -28,13 +30,15 @@ class HtmlReportGenerator:
                analysis_result.peaks1_in_peaks2_matching_motif,
                analysis_result.peaks1_not_in_peaks2,
                analysis_result.peaks1_not_in_peaks2_matching_motif,
-               -1,
                analysis_result.tot_peaks2,
                analysis_result.peaks2_in_peaks1,
                analysis_result.peaks2_in_peaks1_matching_motif,
                analysis_result.peaks2_not_in_peaks1,
                analysis_result.peaks2_not_in_peaks1_matching_motif,
-               -1
+               analysis_result.motif_ambiguous,
+               analysis_result.motif_not_ambiguous,
+               analysis_result.not_motif_ambiguous,
+               analysis_result.not_motif_not_ambiguous
                )
 
     def _create_report_table(self):
@@ -44,8 +48,9 @@ class HtmlReportGenerator:
             <thead>
                 <tr>
                     <th></th>
-                    <th colspan='4'>Graph Peak Caller</th>
-                    <th colspan='4'>Macs2</th>
+                    <th colspan='3'>Graph Peak Caller</th>
+                    <th colspan='3'>Macs2</th>
+                    <th colspan='4'>Motif enrichment</th>
                 </tr>
             </theads>
             <tr>
@@ -53,11 +58,13 @@ class HtmlReportGenerator:
                 <th># Peaks found</th>
                 <th># Peaks also found by Macs2</th>
                 <th># Peaks NOT found by Macs2</th>
-                <th># Peaks also found by Macs2, but not matching motif due to ambigous path</th>
                 <th># Peaks found</th>
                 <th># Peaks also found by Macs2</th>
                 <th># Peaks NOT found by Macs2</th>
-                <th># Peaks also found by Macs2, but not matching motif due to ambigous path</th>
+                <th># Ambiguous peaks hitting motif</th>
+                <th># Not ambiguous peaks hitting motif</th>
+                <th># Ambiguous peaks not hitting motif</th>
+                <th># Not ambiguous peaks not hitting motif</th>
             </tr>
         """
 
