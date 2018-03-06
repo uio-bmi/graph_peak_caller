@@ -50,7 +50,7 @@ class HtmlReportGenerator:
                     <th></th>
                     <th colspan='3'>Graph Peak Caller</th>
                     <th colspan='3'>Macs2</th>
-                    <th colspan='4'>Motif enrichment</th>
+                    <th colspan='4'>Graph Peak Caller motif enrichment</th>
                 </tr>
             </theads>
             <tr>
@@ -59,8 +59,8 @@ class HtmlReportGenerator:
                 <th># Peaks also found by Macs2</th>
                 <th># Peaks NOT found by Macs2</th>
                 <th># Peaks found</th>
-                <th># Peaks also found by Macs2</th>
-                <th># Peaks NOT found by Macs2</th>
+                <th># Peaks also found by Graph Peak Caller</th>
+                <th># Peaks NOT found by Graph Peak Caller</th>
                 <th># Ambiguous peaks hitting motif</th>
                 <th># Not ambiguous peaks hitting motif</th>
                 <th># Ambiguous peaks not hitting motif</th>
