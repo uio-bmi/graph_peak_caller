@@ -4,8 +4,7 @@ import logging
 import sys
 
 import offsetbasedgraph as obg
-from graph_peak_caller.peakcollection import Peak
-
+from graph_peak_caller.peakcollection import Peak, PeakCollection
 
 from graph_peak_caller.callpeaks_interface import \
     run_callpeaks_interface, run_callpeaks_whole_genome,\
@@ -30,6 +29,8 @@ logging.basicConfig(
 def main():
     create_argument_parser()
 
+def version(args):
+    print("Graph Peak Caller v1.0.0")
 
 def concatenate_sequence_files(args):
     chromosomes = args.chromosomes.split(",")
@@ -134,14 +135,15 @@ interface = \
             'arguments':
                 [
                     ('graph_file_name', ""),
-                    ('vg_graph_file_name', "Graph file name (.vg)"),
-                    ('linear_map_base_name', "Set to desired base name. Will be used if exists, created if not."),
-                    ('sample_reads_file_name', ' '),
-                    ('control_reads_file_name', ' '),
-                    ('with_control', 'True/False'),
-                    ('out_base_name', 'eg experiment1_'),
-                    ('fragment_length', ''),
-                    ('read_length', '')
+                    ('vg_graph_file_name', "Graph file name (.vg). Used for fetching sequences. Can be set to 'None'."),
+                    ('linear_map_base_name', "Set to base name of linear map."),
+                    ('sample_reads_file_name', 'File name to a vg JSON file or intervalcollection file.'),
+                    ('control_reads_file_name', 'File name to a vg JSON file or intervalcollection file. Set to the same as sample if no control.'),
+                    ('with_control', 'True/False. Set to False if control is the same as sample.'),
+                    ('out_base_name', 'eg experiment1_. Will be preprended to all output files.'),
+                    ('fragment_length', 'The fragment length used in this ChIP-seq experiment. If unknown, set to an '
+                                        'arbitrary number, e.g. 200. However, for good results, this number should be accurate.'),
+                    ('read_length', 'The read length.')
                 ],
             'method': run_callpeaks_interface
         },
@@ -154,8 +156,8 @@ interface = \
                     ('graphs_location', 'Will use the graphs *_[chromosome]'),
                     ('vg_graphs_location', ''),
                     ('linear_maps_location', ''),
-                    ('sample_reads_base_name', 'Will use files *_[chromosome].json'),
-                    ('control_reads_base_name', 'Will use files *_[chromosome].json'),
+                    ('sample_reads_base_name', 'Will use files *_[chromosome].json where * is the base name'),
+                    ('control_reads_base_name', 'Will use files *_[chromosome].json where * is the base name'),
                     ('out_base_name', 'eg experiment1_'),
                     ('with_control', 'True/False'),
                     ('fragment_length', ''),
@@ -371,6 +373,12 @@ interface = \
                     ('out_file_name', 'Out file name')
                 ],
             'method': peaks_to_linear
+        },
+    'version':
+        {
+            'help': 'Prints the current version',
+            'arguments': [],
+            'method': version
         }
 }
 

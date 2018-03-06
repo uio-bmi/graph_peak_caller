@@ -56,12 +56,15 @@ def run_callpeaks(ob_graph,
         linear_map=linear_map_file_name,
         configuration=config
     )
-    try:
-        retriever = SequenceRetriever.from_vg_graph(vg_graph_file_name)
-    except OSError:
-        retriever = SequenceRetriever.from_vg_json_graph(vg_graph_file_name)
+    if vg_graph_file_name != "None":
+        try:
+            retriever = SequenceRetriever.from_vg_graph(vg_graph_file_name)
+        except OSError:
+            retriever = SequenceRetriever.from_vg_json_graph(vg_graph_file_name)
 
-    caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
+        caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
+    else:
+        logging.info("Not saving max path sequences, since a vg graph/sequence retriever was not sent in")
 
 
 def run_callpeaks_interface(args):

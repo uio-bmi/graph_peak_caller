@@ -154,7 +154,7 @@ class TestDensePileup(unittest.TestCase):
         self.assertEqual(valued_areas[2], [])
 
     @pytest.mark.skip("Legacy")
-    def test_fill_small_holes_non_dag_simple(self):
+    def __test_fill_small_holes_non_dag_simple(self):
         pileup= DensePileup.from_intervals(graph,
                                            [
                                                Interval(1, 8, [1]),
