@@ -52,24 +52,24 @@ Make sure to change *FRAGMENT_LENGTH* and *READ_LENGTH* with numbers matching yo
 If you do not have a control track, use your sample reads as control and change True to False in the above command. Changing True to False is important as Graph Peak Caller will generate the background signal in a different way when the sample is used as control. 
 
 ### Output
-The peak caller will create various outputfiles, some of which are less relevant and only useful for debugging. The two files containing peak information are:
-* **(base_name)max_paths.intervalcollection**: This file contains the peaks in a JSON format. This file can be read by graph peak caller again in a Python script, e.g. by doing:
+The peak caller will create various output files, some of which are less relevant and only useful for debugging. The two files containing peak information are:
+* **(base_name)max_paths.intervalcollection**: This file contains the peaks in a JSON format. This file can be read by graph peak caller in a Python script, e.g. by doing:
 ```
 from graph_peak_caller.peakcollection import PeakCollection
-peaks = PeakCollection.from_file('max_paths.intervalcollection', text_file=True)
+peaks = PeakCollection.from_file('max_paths.intervalcollection', text_file=True)  # text_file=True since this file is not compressed
 intervals = peaks.intervals  # This is now a list of all your peaks, represented as intervals in the graph
 ```
 * **(base_name)sequences.fasta**: This is a fasta file containing the sequences of all your peaks (requires a vg graph to be sent to the peak caller).
 
-Often, it is useful to know the approximate position of the peaks on a linear reference genome. Graph Peak Caller has a subcommand for doing that, which requires as input a "Linear Path" through the graph which it will project the peaks down to. Luckily *vg* contains path information in (most) graphs, so it it fairly easy to extract the path:
+Often, it is useful to know the approximate position of the peaks on a linear reference genome. Graph Peak Caller has a subcommand for doing that, which requires as input a "linear path" through the graph which it will project the peaks down to. Luckily *vg* contains path information in (most) graphs, so it it fairly easy to extract the path:
 ```
-graph_peak_caller vg_graph.json graph.nobg ref path.interval
+graph_peak_caller find_linear_path vg_graph.json graph.nobg ref path.interval
 ```
-Here *ref* should be the name of the path. Usually, this is 'ref', but it can also be the name of the chromosome that the graph is representing. This depends on how you created the vg graphs. A linear path will be written to path.interval, and we can use that to project the peaks:
+Here *ref* should be the name of the path in the vg graph. Usually, this is 'ref', but it can also be the name of the chromosome that the graph is representing (which it will be if you have whole genome graphs). A linear path will be written to path.interval, and we can use that to project the peaks:
 ```
 graph_peak_caller peaks_to_linear max_paths.intervalcollection path.interval chromosome linear_peaks.bed
 ```
-Change *chromosome* to get chromosome that you want to be used when writing the bed file. Note that the position in the bed files will be the offset on the linear path. If you graph is only representing a part of a chromosome, e.g. the MHC region, they will be the offset from the beginning of MHC, and you might want to correct for that if using the bed file in further analysis.
+Change *chromosome* to the chromosome that you want to be used when writing the bed file. Note that the position in the bed files will be the offset on the linear path. If you graph is only representing a part of a chromosome, e.g. the MHC region, they will be the offset from the beginning of MHC, and you might want to correct for that if using the bed file in further analysis.
 
 
 ## Advanced usage
