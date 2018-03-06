@@ -64,15 +64,16 @@ def analyse_peaks(args):
     else:
         region = LinearRegion(args.graph_chromosome,
                               int(args.graph_start), end)
-        PeaksComparerV2(
-            graph,
-            args.vg_graph_file_name,
-            args.linear_peaks_fasta_file_name,
-            args.graph_peaks_fasta_file_name,
-            args.linear_peaks_fimo_results_file,
-            args.graph_peaks_fimo_results_file,
-            linear_path_name=args.linear_path_name,
-            region=region)
+    linear_path = obg.NumpyIndexedInterval.from_file(
+        args.linear_path_name)
+    PeaksComparerV2(
+        graph,
+        args.linear_peaks_fasta_file_name,
+        args.graph_peaks_fasta_file_name,
+        args.linear_peaks_fimo_results_file,
+        args.graph_peaks_fimo_results_file,
+        linear_path,
+        region=region)
 
 
 def differential_expression(args):

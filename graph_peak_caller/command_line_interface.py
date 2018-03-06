@@ -74,7 +74,8 @@ def find_linear_path(args):
     graph = obg.GraphWithReversals.from_numpy_file(args.ob_graph_file_name)
     vg_graph = pyvg.Graph.from_file(args.vg_json_graph_file_name)
     linear_path = create_linear_path(graph, vg_graph,
-                                     path_name=args.linear_path_name, write_to_file=None)
+                                     path_name=args.linear_path_name,
+                                     write_to_file=None)
     linear_path.to_file(args.out_file_name)
     logging.info("Wrote to file %s" % args.out_file_name)
 
