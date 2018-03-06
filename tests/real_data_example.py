@@ -1,24 +1,15 @@
 import logging
-logging.basicConfig(level=logging.INFO)
 from graph_peak_caller import callpeaks
 from offsetbasedgraph import IntervalCollection
 import offsetbasedgraph as obg
-import cProfile
-import pyvg
 from pyvg.util import vg_gam_file_to_interval_collection
 from pyvg.sequences import SequenceRetriever
-from graph_peak_caller.sparsepileup import SparsePileup
-from graph_peak_caller.subgraphcollection import SubgraphCollection
-from graph_peak_caller.areas import BinaryContinousAreas
-from graph_peak_caller.peakscores import ScoredPeak
-import offsetbasedgraph as obg
-from graph_peak_caller.snarls import SnarlGraph, SnarlGraphBuilder
-from graph_peak_caller.snarlmaps import LinearSnarlMap
-from graph_peak_caller.peakcollection import PeakCollection
+from graph_peak_caller.legacy.sparsepileup import SparsePileup
 from graph_peak_caller.util import create_linear_map, create_ob_graph_from_vg
 import traceback
 import warnings
 import sys
+logging.basicConfig(level=logging.INFO)
 
 
 def warn_with_traceback(message, category, filename, lineno, file=None, line=None):

@@ -1,10 +1,12 @@
-from .sparsediffs import SparseDiffs
-from .densepileup import DensePileup
-from itertools import chain
-import offsetbasedgraph as obg
-from collections import defaultdict
 import numpy as np
 import logging
+from itertools import chain
+from collections import defaultdict
+
+import offsetbasedgraph as obg
+
+from ..sparsediffs import SparseDiffs
+from ..densepileup import DensePileup
 
 
 class NodeInfo:

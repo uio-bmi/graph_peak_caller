@@ -3,7 +3,7 @@ from graph_peak_caller.subgraphcollection import SubgraphCollection, ConnectedAr
 from graph_peak_caller.extender import Areas
 from offsetbasedgraph import Graph, Block, Interval, Position
 import numpy as np
-from graph_peak_caller.sparsepileup import SparsePileup
+from graph_peak_caller.legacy.sparsepileup import SparsePileup
 
 class TestAreas(unittest.TestCase):
 

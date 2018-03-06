@@ -1,8 +1,6 @@
-import numpy as np
 import json
 import offsetbasedgraph
 from pyvg import *
-from graph_peak_caller.pileup import Pileup
 
 position_jsons = [json.loads(pos_str) for pos_str in
                   ('{"offset": 10, "node_id": 0}',

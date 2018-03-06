@@ -1,6 +1,7 @@
 import unittest
 
-from graph_peak_caller.snarls import SnarlGraph, SimpleSnarl, SnarlGraphBuilder
+from graph_peak_caller.control.snarls import \
+    SnarlGraph, SimpleSnarl, SnarlGraphBuilder
 from offsetbasedgraph import Block, Graph
 
 """

@@ -1,17 +1,15 @@
 import unittest
-from graph_peak_caller.subgraphcollection import SubgraphCollection, ConnectedAreas
-from graph_peak_caller.extender import Areas
+import pytest
 from offsetbasedgraph import GraphWithReversals as Graph, Block, \
-    Interval, Position, GraphWithReversals
-import numpy as np
-#from graph_peak_caller.sparsepileupv2 import SparsePileup, SparsePileupData
-from graph_peak_caller.densepileup import DensePileup
-from graph_peak_caller.subgraphcollection import \
-    SubgraphCollectionPartiallyOrderedGraphBuilder, SubgraphCollectionPartiallyOrderedGraph
-from graph_peak_caller.peakscores import ScoredPeak
-from graph_peak_caller.areas import BinaryContinousAreas
+    Interval
+# from graph_peak_caller.densepileup import DensePileup
+# from graph_peak_caller.subgraphcollection import \
+#     SubgraphCollectionPartiallyOrderedGraph
+# from graph_peak_caller.peakscores import ScoredPeak
+# from graph_peak_caller.areas import BinaryContinousAreas
 
 
+@pytest.mark.skip("Legacy")
 class SubgraphsAndMaxPathsOnPartiallyOrderedGraphs(unittest.TestCase):
 
     def setUp(self):
@@ -56,7 +54,6 @@ class SubgraphsAndMaxPathsOnPartiallyOrderedGraphs(unittest.TestCase):
             self.linear_graph, pileup)
         print(subgraphs)
 
-
         correct1 = BinaryContinousAreas(self.linear_graph)
         correct1.add_start(-1, 3)
         correct2 = BinaryContinousAreas(self.linear_graph)
@@ -64,7 +61,6 @@ class SubgraphsAndMaxPathsOnPartiallyOrderedGraphs(unittest.TestCase):
 
         self.assertTrue(correct1 in subgraphs)
         self.assertTrue(correct2 in subgraphs)
-
 
     def test_split_graph(self):
 
