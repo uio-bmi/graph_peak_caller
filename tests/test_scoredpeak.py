@@ -6,6 +6,7 @@ import numpy as np
 # from graph_peak_caller.areas import BinaryContinousAreas
 # from graph_peak_caller.peakscores import ScoredPeak
 import offsetbasedgraph as obg
+pytest.skip()
 
 
 @pytest.mark.skip("Legacy")

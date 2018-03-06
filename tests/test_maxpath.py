@@ -6,6 +6,7 @@ from offsetbasedgraph import GraphWithReversals as Graph, Block, Interval
 from graph_peak_caller.areas import BinaryContinousAreas, Areas
 from graph_peak_caller.densepileup import DensePileup
 # from graph_peak_caller.peakscores import ScoredPeak
+pytest.skip()
 
 
 @pytest.mark.skip("Legacy")

@@ -29,6 +29,8 @@ logging.basicConfig(
 def main():
     create_argument_parser()
 
+def version(args):
+    print("Graph Peak Caller v1.0.0")
 
 def concatenate_sequence_files(args):
     chromosomes = args.chromosomes.split(",")
