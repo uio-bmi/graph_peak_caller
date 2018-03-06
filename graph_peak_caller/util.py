@@ -1,6 +1,5 @@
 import logging
 import numpy as np
-from pybedtools import BedTool
 import pyvg
 import offsetbasedgraph as obg
 from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
