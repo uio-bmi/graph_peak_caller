@@ -24,4 +24,4 @@ wait
 wait
 
 wget -O figures_tables/bootstrap.min.css https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css
-python3 generate_jenkins_report.py DM_JRA,DM_SQZ,DM_JIM,DM_ANTP figures_tables/index.html
+python3 generate_jenkins_report.py DM_JRA,DM_SQZ,DM_JIM,DM_ANTP,HUMAN_CTCF,HUMAN_SRF figures_tables/index.html
