@@ -32,7 +32,7 @@ def main():
     create_argument_parser()
 
 def version(args):
-    print("Graph Peak Caller v1.0.1")
+    print("Graph Peak Caller v1.0.2")
 
 def concatenate_sequence_files(args):
     chromosomes = args.chromosomes.split(",")
