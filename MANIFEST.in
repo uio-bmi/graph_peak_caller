@@ -1,0 +1,6 @@
+include graph_peak_caller/analysis/*
+include graph_peak_caller/control/*
+include graph_peak_caller/idrtestsimulation/*
+include graph_peak_caller/legacy/*
+include graph_peak_caller/postprocess/*
+include graph_peak_caller/sample/*

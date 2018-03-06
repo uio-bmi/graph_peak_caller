@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='graph_peak_caller',
-      version='1.0.0',
+      version='1.0.5',
       description='Graph peak caller',
       url='http://github.com/uio-bmi/graph_peak_caller',
       author='Ivar Grytten and Knut Rand',
@@ -10,7 +10,7 @@ setup(name='graph_peak_caller',
       packages=['graph_peak_caller', 'graph_peak_caller.legacy', 'graph_peak_caller.control',
                 'graph_peak_caller.sample', 'graph_peak_caller.postprocess'],
       zip_safe=False,
-      install_requires=['pymysql', 'numpy', 'filecache', 'scipy', 'pybedtools',
+      install_requires=['pymysql', 'numpy', 'filecache', 'scipy',
                         'memory_profiler', 'python-coveralls', 'matplotlib',
                         'biopython', 'pyfaidx', 'pyvg', 'offsetbasedgraph',
                         "wget"],
@@ -22,3 +22,12 @@ setup(name='graph_peak_caller',
       }
 
       )
+
+"""
+To update package:
+#Update version number manually in this file
+
+sudo python3 setup.py sdist
+sudo python3 setup.py bdist_wheel
+twine upload dist/graph_peak_caller-1.0.5.tar.gz
+"""

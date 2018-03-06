@@ -20,6 +20,10 @@ class AnalysisResults:
         self.peaks1_not_in_peaks2_matching_motif = 0
         self.peaks1_in_peaks2_matching_motif = 0
         self.peaks2_in_peaks1_matching_motif = 0
+        self.motif_ambiguous = 0
+        self.motif_not_ambiguous = 0
+        self.not_motif_ambiguous = 0
+        self.not_motif_not_ambiguous = 0
 
     def __repr__(self):
         out = ""
@@ -52,6 +56,10 @@ class AnalysisResults:
         self.peaks1_not_in_peaks2_matching_motif += other.peaks1_not_in_peaks2_matching_motif
         self.peaks2_in_peaks1_matching_motif += other.peaks2_in_peaks1_matching_motif
         self.peaks1_in_peaks2_matching_motif += other.peaks1_in_peaks2_matching_motif
+        self.motif_ambiguous += other.motif_ambiguous
+        self.motif_not_ambiguous += other.motif_not_ambiguous
+        self.not_motif_ambiguous += other.not_motif_ambiguous
+        self.not_motif_not_ambiguous += other.not_motif_not_ambiguous
         return self
 
     def to_file(self, file_name):

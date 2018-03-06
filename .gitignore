@@ -99,3 +99,6 @@ tests/obg
 tests/vgdata
 tests/not_matching*
 tests/matching*
+build
+dist
+benchmarking/figures_tables/index.html

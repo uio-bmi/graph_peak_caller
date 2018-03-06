@@ -2,6 +2,8 @@
 import argparse
 import logging
 import sys
+import matplotlib as mpl
+mpl.use('Agg')
 
 import offsetbasedgraph as obg
 from graph_peak_caller.peakcollection import Peak, PeakCollection
@@ -30,7 +32,7 @@ def main():
     create_argument_parser()
 
 def version(args):
-    print("Graph Peak Caller v1.0.0")
+    print("Graph Peak Caller v1.0.4")
 
 def concatenate_sequence_files(args):
     chromosomes = args.chromosomes.split(",")

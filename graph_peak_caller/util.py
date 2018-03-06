@@ -21,11 +21,15 @@ MHC_REGION = LinearRegion("chr6", 28510119, 33480577)
 
 def bed_intervals_to_graph(obg_graph, linear_path_interval,
                            bed_file_name, graph_start_offset):
-    peaks = BedTool(bed_file_name)
+    f = open(bed_file_name)
     intervals_on_graph = []
-    for peak in peaks:
-        start = peak.start - graph_start_offset
-        end = peak.end - graph_start_offset
+    for line in f:
+        l = line.split()
+        start = int(l[1])
+        end = int(l[2])
+
+        start = start - graph_start_offset
+        end = end - graph_start_offset
         intervals_on_graph.append(linear_path_interval.get_subinterval(start, end))
 
     return intervals_on_graph

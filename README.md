@@ -2,19 +2,19 @@
 [![codecov](https://codecov.io/gh/uio-bmi/graph_peak_caller/branch/master/graph/badge.svg)](https://codecov.io/gh/uio-bmi/graph_peak_caller)
 
 # Graph Peak Caller
-Graph Peak Caller is a tool for calling transcriptin factor peaks on graph-based reference genomes using ChIP-seq data. Graph Peak Caller is easiest to use together with [vg](http://github.com/vgteam/vg) and can be used both as a command-line tool and as a Python module.
+Graph Peak Caller is a tool for calling transcription factor peaks on graph-based reference genomes using ChIP-seq data. Graph Peak Caller is easiest to use together with [vg](http://github.com/vgteam/vg) and can be used both as a command-line tool and as a Python module.
 
 ## Installation
-Graph Peak Caller is written in Python 3 and can be installed usin *pip*:
+Graph Peak Caller is written in Python 3 and can be installed using *pip*:
 ```
 pip3 install graph_peak_caller
 ```
 
-Validate that the installation worked by running the comman `graph_peak_caller version` on your command line. If everything went fine, you will se the current version of graph_peak_caller. The command `graph_peak_caller -h` will give you an overview of all the available subcommands.
+Validate that the installation worked by running the command `graph_peak_caller version` on your command line. If everything went fine, you will see the current version of graph_peak_caller. The command `graph_peak_caller -h` will give you an overview of all the available subcommands.
 
 # User guide
 ## Using Graph Peak Caller through Galaxy
-Graph Peak Caller can be used through a Galaxy installation at [http://hyperbrowser.uio.no/graph-peak-caller](http://hyperbrowser.uio.no/graph-peak-caller). A set of pre-compiled graphs are available to use (see the welcome page at the Galaxy server for an overview). If one of these graphs suites your needs, this is the best way to use Graph Peak Caller. PS: If you would like us to include graph-based reference genomes for a new species, please contact us, e.g by opening an issue, and we will do our best. 
+Graph Peak Caller can be used through a Galaxy installation at [http://hyperbrowser.uio.no/graph-peak-caller](http://hyperbrowser.uio.no/graph-peak-caller). A set of pre-generated graphs are available to use (see the welcome page at the Galaxy server for an overview). If one of these graphs suites your needs, this is the best way to use Graph Peak Caller. PS: If you would like us to include graph-based reference genomes for a new species, please contact us, e.g by opening an issue, and we will do our best. 
 
 ## Using Graph Peak Caller on the command line with vg
 Graph Peak Caller is made to be used together with [vg](http://github.com/vgteam/vg) and take as input alignments produces by vg. Graph Peak Caller uses the Python module [pyvg](https://github.com/uio-bmi/pyvg) (installed together with Graph Peak Caller) to convert output from vg to formats compatible with Python.
