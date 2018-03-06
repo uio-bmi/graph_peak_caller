@@ -8,7 +8,8 @@ from offsetbasedgraph import GraphWithReversals as Graph, Block, \
 # from graph_peak_caller.peakscores import ScoredPeak
 # from graph_peak_caller.areas import BinaryContinousAreas
 
-pytest.skip()
+if pytest.__version__ < "3.0.0":
+    pytest.skip()
 
 @pytest.mark.skip("Legacy")
 class SubgraphsAndMaxPathsOnPartiallyOrderedGraphs(unittest.TestCase):

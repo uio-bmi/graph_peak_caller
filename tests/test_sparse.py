@@ -11,7 +11,8 @@ from examples import *
 from scipy.stats import poisson
 import offsetbasedgraph as obg
 
-pytest.skip()
+if pytest.__version__ < "3.0.0":
+    pytest.skip()
 
 def valued_indexes():
     return ValuedIndexes(np.array([10, 15], dtype="int"),

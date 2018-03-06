@@ -6,7 +6,8 @@ from cyclic_graph import get_small_cyclic_graph, get_large_cyclic_graph,\
     get_padded_cyclic_graph
 import offsetbasedgraph as obg
 from random import randrange, seed
-pytest.skip()
+if pytest.__version__ < "3.0.0":
+    pytest.skip()
 
 
 @pytest.mark.skip("Legacy")
