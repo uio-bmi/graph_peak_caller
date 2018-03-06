@@ -5,7 +5,7 @@
 Graph Peak Caller is a tool for calling transcription factor peaks on graph-based reference genomes using ChIP-seq data. Graph Peak Caller is easiest to use together with [vg](http://github.com/vgteam/vg) and can be used both as a command-line tool and as a Python module.
 
 ## Installation
-Graph Peak Caller is written in Python 3 and can be installed usin *pip*:
+Graph Peak Caller is written in Python 3 and can be installed using *pip*:
 ```
 pip3 install graph_peak_caller
 ```
