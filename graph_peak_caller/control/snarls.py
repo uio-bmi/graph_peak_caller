@@ -1,8 +1,10 @@
-from collections import deque
 import logging
 import pickle
+from collections import deque
+
 from offsetbasedgraph.graphtraverser import GraphTravserserBetweenNodes
 import offsetbasedgraph as obg
+
 from pyvg import Snarls
 
 

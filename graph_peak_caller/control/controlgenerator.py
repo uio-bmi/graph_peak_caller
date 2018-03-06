@@ -1,8 +1,10 @@
 import numpy as np
-from .sparsediffs import SparseDiffs
+import logging
+
+from ..sparsediffs import SparseDiffs
 from .linearsnarls import LinearPileup
 from .snarlmaps import LinearSnarlMap
-import logging
+
 
 class SparseControl:
     def __init__(self, linear_map, graph, extension_sizes, fragment_length, touched_nodes):
@@ -33,7 +35,6 @@ class SparseControl:
                 max_pileup = sparse_diffs
             else:
                 max_pileup = max_pileup.maximum(sparse_diffs)
-            # max_pileup = max_pileup.maximum(sparse_diffs)
         max_pileup._sanitize()
         lin_pileup = LinearPileup(
             max_pileup._indices,

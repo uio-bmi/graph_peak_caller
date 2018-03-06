@@ -1,14 +1,10 @@
+import pickle
 import logging
 from itertools import chain
 import numpy as np
 from scipy.stats import poisson
 from collections import defaultdict
-from .pileup import Pileup
-from .pileupcleaner2 import PeaksCleaner, HolesCleaner
-from .subgraphcollection import SubgraphCollection
-from .eventsorter import DiscreteEventSorter
 from offsetbasedgraph import Interval, IntervalCollection
-import pickle
 
 
 class ValuedIndexes(object):
@@ -19,7 +15,6 @@ class ValuedIndexes(object):
 
         if isinstance(values, list):
             values = np.array(values)
-
 
         assert type(indexes) == np.ndarray
         assert type(values) == np.ndarray
@@ -405,7 +400,7 @@ class SparseAreasDict(dict):
         return ((key, self.__getitem__(key)) for key in self.graph.blocks)
 
 
-class SparsePileup(Pileup):
+class SparsePileup:
     def __init__(self, graph):
         logging.info("Initing sparsepileup")
         self.graph = graph
@@ -589,11 +584,6 @@ class SparsePileup(Pileup):
     def from_intervals(cls, graph, intervals):
         starts, ends = intervals_to_start_and_ends(graph, intervals)
         return cls.from_starts_and_ends(graph, starts, ends)
-
-    def to_subgraphs(self):
-        # Returns a list of areas which each is a subgraph
-        collection = SubgraphCollection.from_pileup(self.graph, self)
-        return collection
 
     def __str__(self):
         return "\n".join(
@@ -922,10 +912,3 @@ def filter_pileup_duplicated_position(positions, values):
     true_array = np.ones(len(positions))
     true_array[np.where(equal_to_previous)] = False
     return positions[np.where(true_array)], values[np.where(true_array)]
-
-
-def starts_and_ends_to_sparse_pileup(starts, ends):
-    indices, values = filter_pileup_duplicated_position(
-        *DiscreteEventSorter([ends, starts]).pileup())
-    return indices, values
-

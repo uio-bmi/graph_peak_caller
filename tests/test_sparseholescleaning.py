@@ -1,6 +1,6 @@
 import numpy as np
 import offsetbasedgraph as obg
-from graph_peak_caller.sparseholecleaner import HolesCleaner
+from graph_peak_caller.postprocess.holecleaner import HolesCleaner
 from graph_peak_caller.sparsediffs import SparseValues
 import pytest
 

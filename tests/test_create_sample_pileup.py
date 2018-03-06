@@ -1,10 +1,9 @@
 import unittest
 import numpy as np
 from offsetbasedgraph import GraphWithReversals as Graph, Block, DirectedInterval as Interval, IntervalCollection
-from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo, Configuration
+from graph_peak_caller import ExperimentInfo, Configuration
 from graph_peak_caller.sampleandcontrolcreator import SampleAndControlCreator
 from graph_peak_caller.densepileup import DensePileup as Pileup
-from graph_peak_caller.sparsediffs import SparseDiffs
 
 
 class Tester(unittest.TestCase):

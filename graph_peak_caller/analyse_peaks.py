@@ -8,7 +8,7 @@ from graph_peak_caller.peakcollection import PeakCollection
 from offsetbasedgraph import IntervalCollection, DirectedInterval
 from graph_peak_caller.subgraphcollection import SubgraphCollection
 from graph_peak_caller.util import LinearRegion, get_linear_paths_in_graph
-from graph_peak_caller.sparsepileup import SparsePileup
+from graph_peak_caller.legacy.sparsepileup import SparsePileup
 import numpy as np
 
 MHC_REGION = LinearRegion("chr6", 28510119, 33480577)

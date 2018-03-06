@@ -1,16 +1,14 @@
 import numpy as np
-from collections import defaultdict
-from .eventsorter import EventSorter, EventSort
-from .snarlmaps import LinearSnarlMap
 import logging
-from memory_profiler import profile
+from collections import defaultdict
+
+from ..eventsorter import EventSorter, EventSort
+from .snarlmaps import LinearSnarlMap
 
 
 def create_control(linear_map_name, *args, **kwargs):
     logging.info("Reading linear map from file")
     linear_map = LinearSnarlMap.from_json_files(linear_map_name, kwargs["ob_graph"])
-    # linear_map = LinearSnarlMap.from_file(linear_map_name)
-    # logging.info("Linear map read from file")
     return create_control_from_objs(linear_map, *args, **kwargs)
 
 

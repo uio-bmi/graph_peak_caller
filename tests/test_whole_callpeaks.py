@@ -1,12 +1,13 @@
 import unittest
 import logging
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s, %(levelname)s: %(message)s")
 from offsetbasedgraph import GraphWithReversals, Block, \
     DirectedInterval, IntervalCollection
-from graph_peak_caller.callpeaks import ExperimentInfo, CallPeaks, Configuration
-from graph_peak_caller.snarls import SnarlGraph, SnarlGraphBuilder, SimpleSnarl
-from graph_peak_caller.linearsnarls import LinearSnarlMap
+from graph_peak_caller import ExperimentInfo, CallPeaks, Configuration
+from graph_peak_caller.control.snarls import \
+    SnarlGraph, SnarlGraphBuilder, SimpleSnarl
+from graph_peak_caller.control.linearsnarls import LinearSnarlMap
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s, %(levelname)s: %(message)s")
 
 
 class TestWholeCallPeaks(unittest.TestCase):
@@ -16,8 +17,9 @@ class TestWholeCallPeaks(unittest.TestCase):
             for i in range(0, 10):
                 left_sub = peak.get_subinterval(0, self.read_length)
                 self.sample_reads.append(left_sub)
-                right_sub = peak.get_subinterval(self.fragment_length - self.read_length,
-                                                 self.fragment_length)
+                right_sub = peak.get_subinterval(
+                    self.fragment_length - self.read_length,
+                    self.fragment_length)
                 right_sub_reverse = right_sub.get_reverse()
                 self.sample_reads.append(right_sub_reverse)
 
@@ -26,7 +28,8 @@ class TestWholeCallPeaks(unittest.TestCase):
             "test_max_paths.intervalcollection")
         for peak in self.peaks:
             self.assertTrue(peak in final_peaks.intervals,
-                            "Peak %s not in final peaks. Final peaks: \n%s" % (peak, final_peaks.intervals))
+                            "Peak %s not in final peaks. Final peaks: \n%s"
+                            % (peak, final_peaks.intervals))
         self.assertEqual(len(self.peaks), len(final_peaks.intervals))
 
     def setUp(self):
@@ -36,19 +39,19 @@ class TestWholeCallPeaks(unittest.TestCase):
         self._create_reads()
         control_reads = self.sample_reads.copy()
 
-        self.graph_size = sum(block.length() for block in self.graph.blocks.values())
-        experiment_info = ExperimentInfo(self.graph_size,
-                                         self.fragment_length, self.read_length)
+        self.graph_size = sum(block.length()
+                              for block in self.graph.blocks.values())
+        experiment_info = ExperimentInfo(
+            self.graph_size, self.fragment_length, self.read_length)
         config = Configuration(skip_filter_duplicates=True)
         CallPeaks.run_from_intervals(self.graph,
-                                       IntervalCollection(self.sample_reads),
-                                       IntervalCollection(control_reads),
-                                       out_file_base_name="test_",
-                                       experiment_info=experiment_info,
-                                       has_control=False,
-                                       configuration=config,
-                                       linear_map="test_linear_map.tmp"
-                                       )
+                                     IntervalCollection(self.sample_reads),
+                                     IntervalCollection(control_reads),
+                                     out_file_base_name="test_",
+                                     experiment_info=experiment_info,
+                                     has_control=False,
+                                     configuration=config,
+                                     linear_map="test_linear_map.tmp")
 
     def do_asserts(self):
         for peak in self.peaks:
@@ -77,7 +80,8 @@ class TestWholeCallpeaksSplitGraph(TestWholeCallPeaks):
         }
         self.snarlgraph = SnarlGraphBuilder(self.graph.copy(), self.snarls,
                                             id_counter=6).build_snarl_graphs()
-        LinearSnarlMap.from_snarl_graph(self.snarlgraph, self.graph).to_json_files("test_linear_map.tmp")
+        LinearSnarlMap.from_snarl_graph(
+            self.snarlgraph, self.graph).to_json_files("test_linear_map.tmp")
 
     def test_single_peak(self):
         self.peaks = [
@@ -189,7 +193,8 @@ class TestWholeCallPeaksHierarchical(TestWholeCallPeaks):
             end_node=14
         )
 
-        LinearSnarlMap.from_snarl_graph(self.snarlgraph, self.graph).to_json_files("test_linear_map.tmp")
+        LinearSnarlMap.from_snarl_graph(
+            self.snarlgraph, self.graph).to_json_files("test_linear_map.tmp")
 
     def test_single_peak(self):
         self.peaks = [

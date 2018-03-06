@@ -1,7 +1,7 @@
 from scipy.sparse import csr_matrix
 from itertools import chain
 from .fimowrapper import *
-from .peakcollection import *
+from ..peakcollection import *
 import numpy as np
 from scipy.sparse.csgraph import shortest_path
 

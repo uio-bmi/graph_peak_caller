@@ -1,14 +1,14 @@
 import unittest
-from graph_peak_caller.sparsepileup import SparsePileup
+import pytest
 from graph_peak_caller.extender import Areas
-# from graph_peak_caller.pileupcleaner import PileupCleaner,  IntervalWithinBlock
-from graph_peak_caller.pileupcleaner2 import PeaksCleaner, HolesCleaner
+# from graph_peak_caller.pileupcleaner2 import PeaksCleaner, HolesCleaner
 from cyclic_graph import get_small_cyclic_graph, get_large_cyclic_graph,\
     get_padded_cyclic_graph
 import offsetbasedgraph as obg
 from random import randrange, seed
 
 
+@pytest.mark.skip("Legacy")
 class CleanupTester(unittest.TestCase):
     def assertIntervalsGiveSamePileup(self, areas, true_intervals):
         if not areas.areas:
@@ -25,7 +25,7 @@ class CleanupTester(unittest.TestCase):
         true_pileup.threshold(1)
         self.assertEqual(pileup, true_pileup)
 
-
+@pytest.mark.skip("Legacy")
 class TestCyclicCleanup(CleanupTester):
     def setUp(self):
         self.small_graph = get_small_cyclic_graph()
@@ -69,7 +69,7 @@ class TestCyclicCleanup(CleanupTester):
         areas = cleaner.run()
         self.assertEqual(areas.areas, {})
 
-
+@pytest.mark.skip("Legacy")
 class CyclicHolesClean(TestCyclicCleanup):
     def setUp(self):
         super().setUp()
@@ -139,7 +139,7 @@ class CyclicHolesClean(TestCyclicCleanup):
         true_areas = Areas(self.padded_graph, {})
         self.assertEqual(areas, true_areas)
 
-
+@pytest.mark.skip("Legacy")
 class TestNonCyclicPeakCleaner(CleanupTester):
 
     def setUp(self):
@@ -227,6 +227,7 @@ class TestNonCyclicPeakCleaner(CleanupTester):
         self.do_asserts()
 
 
+@pytest.mark.skip("Legacy")
 class TestNonCyclicHolesCleaner(CleanupTester):
 
     def setUp(self):
@@ -280,6 +281,7 @@ class TestNonCyclicHolesCleaner(CleanupTester):
         self.do_asserts()
 
 
+@pytest.mark.skip("Legacy")
 class TestExhaustiveCleaner(unittest.TestCase):
     def setUp(self):
         nodes = {i: obg.Block(10) for i in range(1, 11)}
@@ -287,6 +289,7 @@ class TestExhaustiveCleaner(unittest.TestCase):
         self.graph = obg.GraphWithReversals(nodes, edges)
 
 
+@pytest.mark.skip("Legacy")
 class TestCleanerOnRandomGraphs(CleanupTester):
     def setUp(self):
         from collections import defaultdict

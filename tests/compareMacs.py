@@ -1,5 +1,3 @@
-import cProfile
-import pstats
 import subprocess
 import random
 import re
@@ -9,11 +7,10 @@ import logging
 from offsetbasedgraph import Block, Position,\
     DirectedInterval, GraphWithReversals
 from offsetbasedgraph.interval import IntervalCollection
-from graph_peak_caller.callpeaks import CallPeaks, ExperimentInfo, Configuration
-from graph_peak_caller.pileup import Pileup
-from graph_peak_caller.sparsepileup import SparsePileup
-from graph_peak_caller.snarls import SnarlGraphBuilder, SimpleSnarl
-from graph_peak_caller.linearsnarls import LinearSnarlMap
+from graph_peak_caller import CallPeaks, ExperimentInfo, Configuration
+from graph_peak_caller.legacy.sparsepileup import SparsePileup
+from graph_peak_caller.control.snarls import SnarlGraphBuilder, SimpleSnarl
+from graph_peak_caller.control.linearsnarls import LinearSnarlMap
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 from graph_peak_caller.peakscomparer import PeaksComparer
 logging.basicConfig(level=logging.WARNING)

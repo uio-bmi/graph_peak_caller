@@ -1,23 +1,8 @@
-from graph_peak_caller.snarls import SnarlGraphBuilder
-from offsetbasedgraph import Graph
-from offsetbasedgraph.graphtraverser import GraphTravserserBetweenNodes
-import pyvg
-import sys
-from graph_peak_caller.snarls import SnarlGraph
+from graph_peak_caller.control.snarls import SnarlGraphBuilder, SnarlGraph
+from offsetbasedgraph import Graph, Block
 
-#vg_graph = pyvg.Graph.create_from_file("haplo1kg50-mhc.json")
-#ob_graph = vg_graph.get_offset_based_graph()
-#ob_graph.to_file("haplo1kg50-mhc.obg")
 graph = Graph.from_file("haplo1kg50-mhc.obg")
 
-#traverser = GraphTravserserBetweenNodes(graph)
-#subgraph = traverser.get_snarl_subgraph(153, 485900, include_start_and_end=True, print_debug=True)
-#sys.exit()
-
-
-#snarlgraph = SnarlGraph.from_file("haplo1kg50-mhc.snarlgraph")
-#print(snarlgraph.blocks.keys())
-#sys.exit()
 
 print("N blocks: %d" % len(graph.blocks))
 """
@@ -51,8 +36,7 @@ snarlgraph = builder.build_snarl_graphs()
 
 print("N blocks: %d" % len(snarlgraph.blocks))
 
-from graph_peak_caller.snarls import SnarlGraph
-from offsetbasedgraph import Block
+
 
 counter = 0
 counter_blocks = 0
@@ -81,5 +65,3 @@ print("N blocks in snarlgraph: %d" % counter_blocks)
 
 snarlgraph.to_file("haplo1kg50-mhc.snarlgraph")
 
-#for snarl in builder.snarls:
-#    print(snarl)

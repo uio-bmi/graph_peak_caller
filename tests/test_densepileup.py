@@ -1,14 +1,16 @@
-from graph_peak_caller.densepileup import DensePileupData, DensePileup
-from offsetbasedgraph import GraphWithReversals as Graph, Block, DirectedInterval as Interval
+import pytest
 import unittest
 import numpy as np
 
+from graph_peak_caller.densepileup import DensePileup
+from offsetbasedgraph import GraphWithReversals as Graph,\
+    Block, DirectedInterval as Interval
+
 graph = Graph({i: Block(10) for i in range(1, 4)},
-                                   {1: [2],
-                                    2: [3]})
+              {1: [2],
+               2: [3]})
 
 class TestDensePileup(unittest.TestCase):
-
 
     def test_init(self):
         pileup = DensePileup(graph)
@@ -151,6 +153,7 @@ class TestDensePileup(unittest.TestCase):
         self.assertEqual(valued_areas[3], [0, 10])
         self.assertEqual(valued_areas[2], [])
 
+    @pytest.mark.skip("Legacy")
     def test_fill_small_holes_non_dag_simple(self):
         pileup= DensePileup.from_intervals(graph,
                                            [

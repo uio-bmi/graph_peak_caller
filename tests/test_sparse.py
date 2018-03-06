@@ -1,10 +1,9 @@
 import unittest
+import pytest
 import numpy as np
-from graph_peak_caller.sparsepileup import \
+from graph_peak_caller.legacy.sparsepileup import \
         ValuedIndexes, \
         SparsePileup, \
-        SparseControlSample, \
-        starts_and_ends_to_sparse_pileup, \
         intervals_to_start_and_ends, \
         filter_pileup_duplicated_position
 
@@ -27,6 +26,7 @@ def valued_indexes2():
                          20)
 
 
+@pytest.mark.skip("Legacy")
 class TestValuedIndexes(unittest.TestCase):
 
     def test_combine(self):
@@ -88,14 +88,16 @@ class TestValuedIndexes(unittest.TestCase):
         self.assertEqual(vi, true_vi)
 
 
+@pytest.mark.skip("Legacy")
 class TestSparsePileup(unittest.TestCase):
     pass
 
 
+@pytest.mark.skip("Legacy")
 class TestSparseControlSample(unittest.TestCase):
 
 
-    def test_starts_and_values_to_sparse_pileup(self):
+    def _test_starts_and_values_to_sparse_pileup(self):
         starts = np.array([1, 3])
         ends = np.array([5, 10])
 
@@ -185,6 +187,7 @@ class TestSparseControlSample(unittest.TestCase):
         self.assertTrue(np.all(filtered_vals == np.array([2, 2, 1])))
 
 
+@pytest.mark.skip("Legacy")
 class TestSparsePileupSetIntervals(unittest.TestCase):
 
     def setUp(self):
