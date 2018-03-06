@@ -1,6 +1,5 @@
 #from gendatafetcher.sequences import get_sequence_ucsc
 from Bio import Seq, SeqIO, SeqRecord
-from pybedtools import BedTool, Interval
 import logging
 from pyfaidx import Fasta
 import json
@@ -70,14 +69,20 @@ class NonGraphPeakCollection(object):
     @classmethod
     def from_bed_file(cls, file_name):
         peaks = []
-        bedpeaks = BedTool(file_name)
-        for peak in bedpeaks:
+        f = open(file_name)
+        for line in f:
+            peak = line.split()
+            chrom = peak[0]
+            start = int(peak[1])
+            end = int(peak[2])
+
             score = float(peak[8])  # q value
 
-            peaks.append(NonGraphPeak(peak.chrom,
-                                      peak.start,
-                                      peak.end,
+            peaks.append(NonGraphPeak(chrom,
+                                      start,
+                                      end,
                                       score))
+        f.close()
         return cls(peaks)
 
     def to_bed_file(self, file_name):
