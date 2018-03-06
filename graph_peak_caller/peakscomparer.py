@@ -20,6 +20,10 @@ class AnalysisResults:
         self.peaks1_not_in_peaks2_matching_motif = 0
         self.peaks1_in_peaks2_matching_motif = 0
         self.peaks2_in_peaks1_matching_motif = 0
+        self.motif_ambiguous = 0
+        self.motif_not_ambiguous = 0
+        self.not_motif_ambiguous = 0
+        self.not_motif_not_ambiguous = 0
 
     def __repr__(self):
         out = ""
