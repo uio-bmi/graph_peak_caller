@@ -2,11 +2,11 @@ import logging
 import numpy as np
 from offsetbasedgraph import IntervalCollection, DirectedInterval
 from .densepileup import DensePileup
-from .peakcollection import PeakCollection, Peak
 from .sampleandcontrolcreator import SampleAndControlCreator
 from .sparsepvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
 from .postprocess import HolesCleaner, SparseMaxPaths
 from .sparsediffs import SparseValues
+from .reporter import Reporter
 IntervalCollection.interval_class = DirectedInterval
 
 
@@ -45,6 +45,7 @@ class CallPeaks(object):
         self.peaks_as_subgraphs = None
         self.touched_nodes = None
         self.max_path_peaks = None
+        self._reporter = Reporter(self.out_file_base_name)
 
     def run_pre_callpeaks(self, has_control, experiment_info,
                           linear_map, configuration=None):
@@ -88,14 +89,7 @@ class CallPeaks(object):
                                self.p_to_q_values_mapping)
         self.q_values_pileup = finder.get_q_values()
         self.q_values_pileup.track_size = self.p_values_pileup.track_size
-        self.q_values_pileup.to_sparse_files(
-            self.out_file_base_name + "qvalues")
-        logging.info("Wrote q values to sparse files with base name %s " % \
-                     (self.out_file_base_name + "qvalues"))
-        # q_values = DensePileup(self.graph)
-        #q_values.data._values = self.q_values_pileup.to_dense_pileup(
-            # self.graph.node_indexes[-1])
-        # self.q_values_pileup = q_values
+        self._reporter.add("qvalues", self.q_values_pileup)
 
     def call_peaks_from_q_values(self, experiment_info, config=None):
         assert self.q_values_pileup is not None
@@ -148,7 +142,7 @@ class CallPeaks(object):
         return caller
 
 
-class CallPeaksFromQvalues(object):
+class CallPeaksFromQvalues:
     def __init__(self, graph, q_values_pileup,
                  experiment_info,
                  out_file_base_name="",
@@ -160,7 +154,6 @@ class CallPeaksFromQvalues(object):
         self.out_file_base_name = out_file_base_name
         self.cutoff = cutoff
         self.raw_pileup = raw_pileup
-        # self.graph.assert_correct_edge_dicts()
         self.touched_nodes = touched_nodes
         self.save_tmp_results_to_file = False
         self.graph_is_partially_ordered = False
@@ -170,6 +163,7 @@ class CallPeaksFromQvalues(object):
             self.cutoff = config.p_val_cutoff
             self.graph_is_partially_ordered = config.graph_is_partially_ordered
             self.save_tmp_results_to_file = config.save_tmp_results_to_file
+        self._reporter = Reporter(self.out_file_base_name)
 
         self.info.to_file(self.out_file_base_name + "experiment_info.pickle")
         logging.info("Using p value cutoff %.4f" % self.cutoff)
@@ -178,11 +172,7 @@ class CallPeaksFromQvalues(object):
         threshold = -np.log10(self.cutoff)
         logging.info("Thresholding peaks on q value %.4f" % threshold)
         self.pre_processed_peaks = self.q_values.threshold_copy(threshold)
-
-        if self.save_tmp_results_to_file:
-            self.pre_processed_peaks.to_sparse_files(
-                self.out_file_base_name + "peak_areas_pre_postprocess")
-            logging.info("Wrote peak pileup before post processing to file.")
+        self._reporter.add("thresholded", self.pre_processed_peaks)
 
     def __postprocess(self):
         logging.info("Filling small Holes")
@@ -195,93 +185,10 @@ class CallPeaksFromQvalues(object):
             self.info.read_length,
             self.touched_nodes
         ).run()
-        if self.save_tmp_results_to_file:
-            self.pre_processed_peaks.to_sparse_files(
-                self.out_file_base_name + "peaks_after_hole_cleaning")
-            logging.info("Wrote results after holes cleaning to file")
-        else:
-            logging.info("Not writing results after hole cleaning")
+        self._reporter.add("hole_cleaned", self.pre_processed_peaks)
 
-        logging.info("Removing small peaks")
-
-        if isinstance(self.pre_processed_peaks, DensePileup) or isinstance(self.pre_processed_peaks, SparseValues):
-            # If dense pileup, we are filtering small peaks while trimming later
-            self.filtered_peaks = self.pre_processed_peaks
-            logging.info("Not removing small peaks.")
-        else:
-            self.filtered_peaks = self.pre_processed_peaks.remove_small_peaks(
-                self.info.fragment_length)
-            logging.info("Small peaks removed")
-
-    def trim_max_path_intervals(self, intervals, end_to_trim=-1, trim_raw=False):
-        # Right trim max path intervals, remove right end where q values are 0
-        # If last base pair in interval has 0 in p-value, remove hole size
-        logging.info("Trimming max path intervals. End: %d" % end_to_trim)
-        new_intervals = []
-        n_intervals_trimmed = 0
-        intervals_too_short = []
-        intervals_too_short_untrimmed = []
-        for interval in intervals:
-            if np.all([rp < 0 for rp in interval.region_paths]):
-                use_interval = interval.get_reverse()
-                use_interval.score = interval.score
-            else:
-                use_interval = interval
-                assert np.all([rp > 0 for rp in interval.region_paths]), \
-                "This method only supports intervals with single rp direction"
-
-            if not trim_raw:
-                pileup_values = self.q_values.data.get_interval_values(use_interval)
-                pileup_values = 1 * (pileup_values >= -np.log10(self.cutoff))
-            else:
-                pileup_values = self.raw_pileup.data.get_interval_values(use_interval)
-            assert len(pileup_values) == use_interval.length()
-
-            if end_to_trim == 1:
-                pileup_values = pileup_values[::-1]
-
-            cumsum = np.cumsum(pileup_values)
-            n_zeros_beginning = np.sum(cumsum == 0)
-
-            if n_zeros_beginning == use_interval.length():
-                logging.warning("Trimming interval of length %d with %d bp"
-                                % (use_interval.length(), n_zeros_beginning))
-                continue
-
-            if end_to_trim == -1:
-                new_interval = use_interval.get_subinterval(n_zeros_beginning, use_interval.length())
-            else:
-                new_interval = use_interval.get_subinterval(0, use_interval.length() - n_zeros_beginning)
-
-
-            if new_interval.length() != use_interval.length():
-                n_intervals_trimmed += 1
-
-            new_interval.score = use_interval.score
-
-            if new_interval.length() < self.info.fragment_length:
-                intervals_too_short.append(new_interval)
-                intervals_too_short_untrimmed.append(use_interval)
-                continue
-            new_interval = Peak(new_interval.start_position,
-                                new_interval.end_position,
-                                new_interval.region_paths,
-                                new_interval.graph,
-                                score=use_interval.score)
-
-            new_intervals.append(new_interval)
-
-        logging.info("N peaks removed because too short after trimming: %d. Written to file." % len(intervals_too_short))
-        intervals_too_short = PeakCollection(intervals_too_short)
-        intervals_too_short_untrimmed = PeakCollection(intervals_too_short_untrimmed)
-        intervals_too_short.to_file(self.out_file_base_name + "too_short_peaks.intervals", text_file=True)
-        intervals_too_short_untrimmed.to_file(self.out_file_base_name + "too_short_peaks_untrimmed.intervals",
-                                              text_file=True)
-
-        logging.info("Trimmed in total %d intervals" % n_intervals_trimmed)
-        logging.info("N intervals left: %d" % len(new_intervals))
-
-        return new_intervals
+        logging.info("Not removing small peaks")
+        self.filtered_peaks = self.pre_processed_peaks
 
     def __get_max_paths(self):
         logging.info("Getting maxpaths")
@@ -295,9 +202,8 @@ class CallPeaksFromQvalues(object):
         logging.info("Running Sparse Max Paths")
         max_paths, sub_graphs = SparseMaxPaths(
             self.filtered_peaks, self.graph, _pileup).run()
-        PeakCollection(max_paths).to_file(
-            self.out_file_base_name + "max_paths_before_length_filtering.intervalcollection",
-            text_file=True)
+
+        self._reporter.add("all_max_paths", max_paths)
         logging.info("All max paths found")
 
         # Create dense q
@@ -316,27 +222,14 @@ class CallPeaksFromQvalues(object):
         pairs = [p for p in pairs if
                  p[0].length() >= self.info.fragment_length]
         logging.info("N filtered peaks: %s", len(pairs))
-        file_name = self.out_file_base_name + "max_paths.intervalcollection"
-        PeakCollection([p[0] for p in pairs]).to_file(
-            file_name,
-            text_file=True)
-        logging.info("Wrote max paths to %s" % file_name)
-
-        np.savez(self.out_file_base_name + "sub_graphs.graphs",
-                 **{"peak%s" % i: p[1]._graph for i, p in enumerate(pairs)})
-        np.savez(self.out_file_base_name + "sub_graphs.nodeids",
-                 **{"peak%s" % i: p[1]._node_ids for i, p in enumerate(pairs)})
+        self._reporter.add("sub_graphs", [pair[1] for pair in pairs])
         self.max_paths = [p[0] for p in pairs]
-        assert max_paths is not None
-        # self.max_paths = max_paths
+        self._reporter.add("max_paths", self.max_paths)
 
     def callpeaks(self):
         logging.info("Calling peaks")
         self.__threshold()
         self.__postprocess()
-        # self.__get_subgraphs()
-        self.filtered_peaks.to_sparse_files(
-            self.out_file_base_name + "peaks_after_postprocessing")
         self.__get_max_paths()
 
     def save_max_path_sequences_to_fasta_file(self, file_name, sequence_retriever):

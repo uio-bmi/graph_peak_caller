@@ -5,6 +5,7 @@ from offsetbasedgraph import GraphWithReversals, Block, IntervalCollection, Dire
 from graph_peak_caller.peakcollection import Peak
 import os
 
+
 class Arguments(object):
     def __init__(self, dict):
         self.__dict__ = dict
@@ -30,7 +31,6 @@ class TestCommandLineInterface(unittest.TestCase):
         self.assertEqual(graph, GraphWithReversals(
             {1: Block(7), 2: Block(4), 3: Block(7), 4: Block(4)},
             {1: [2, 3], 2: [4], 3: [4]}))
-
 
     def test_all_steps(self):
         create_ob_graph(Arguments(

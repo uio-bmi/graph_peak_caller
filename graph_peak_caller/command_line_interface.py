@@ -119,7 +119,6 @@ def move_linear_reads_to_graph(args):
 
 interface = \
 {
-
     'callpeaks':
         {
             'help': 'Callpeaks',
