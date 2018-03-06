@@ -25,12 +25,12 @@ def main():
 
 
 def differential_expression(args):
-    from .differentialbinding import main
-    from .fimowrapper import FimoFile
-    from .peakcollection import PeakCollection
+    from graph_peak_caller.differentialbinding import main
+    from graph_peak_caller.fimowrapper import FimoFile
+    from graph_peak_caller.peakcollection import PeakCollection
 
     test_name = args.test_name
-    fimo_file_name = "fimo_%s_sequences/fimo.txt" % test_name
+    fimo_file_name = args.fimo_file_name
     peaks_file_name = "%s_max_paths.intervalcollection" % test_name
     subgraphs_file_name = "%s_sub_graphs.graphs.npz" % test_name
     node_ids_file_name = "%s_sub_graphs.nodeids.npz" % test_name
@@ -757,6 +757,7 @@ interface = \
                 [
                     ('test_name', ''),
                     ('graph_name', ''),
+                    ('fimo_file_name', ''),
                     ('vg_graph_name', '')
                 ],
             'method': differential_expression
