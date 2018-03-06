@@ -24,6 +24,10 @@ def main():
     create_argument_parser()
 
 
+def version(args):
+    print("Graph Peak Caller version 1.0.0")
+
+
 def differential_expression(args):
     from graph_peak_caller.differentialbinding import main
     from graph_peak_caller.fimowrapper import FimoFile
@@ -127,12 +131,16 @@ def run_callpeaks(ob_graph,
         linear_map=linear_map_file_name,
         configuration=config
     )
-    try:
-        retriever = SequenceRetriever.from_vg_graph(vg_graph_file_name)
-    except OSError:
-        retriever = SequenceRetriever.from_vg_json_graph(vg_graph_file_name)
 
-    caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
+    if vg_graph_file_name is not None:
+        try:
+            retriever = SequenceRetriever.from_vg_graph(vg_graph_file_name)
+        except OSError:
+            retriever = SequenceRetriever.from_vg_json_graph(vg_graph_file_name)
+
+        caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
+    else:
+        logging.info("Not saving max path sequences, since a vg graph/sequence retriever was not sent in")
 
 
 def intervals_to_fasta(args):
@@ -536,14 +544,15 @@ interface = \
             'arguments':
                 [
                     ('graph_file_name', ""),
-                    ('vg_graph_file_name', "Graph file name (.vg)"),
-                    ('linear_map_base_name', "Set to desired base name. Will be used if exists, created if not."),
-                    ('sample_reads_file_name', ' '),
-                    ('control_reads_file_name', ' '),
-                    ('with_control', 'True/False'),
-                    ('out_base_name', 'eg experiment1_'),
-                    ('fragment_length', ''),
-                    ('read_length', '')
+                    ('vg_graph_file_name', "Graph file name (.vg). Used for fetching sequences. Can be set to 'None'."),
+                    ('linear_map_base_name', "Set to base name of linear map."),
+                    ('sample_reads_file_name', 'File name to a vg JSON file or intervalcollection file.'),
+                    ('control_reads_file_name', 'File name to a vg JSON file or intervalcollection file. Set to the same as sample if no control.'),
+                    ('with_control', 'True/False. Set to False if control is the same as sample.'),
+                    ('out_base_name', 'eg experiment1_. Will be preprended to all output files.'),
+                    ('fragment_length', 'The fragment length used in this ChIP-seq experiment. If unknown, set to an '
+                                        'arbitrary number, e.g. 200. However, for good results, this number should be accurate.'),
+                    ('read_length', 'The read length.')
                 ],
             'method': run_callpeaks_interface
         },
@@ -556,8 +565,8 @@ interface = \
                     ('graphs_location', 'Will use the graphs *_[chromosome]'),
                     ('vg_graphs_location', ''),
                     ('linear_maps_location', ''),
-                    ('sample_reads_base_name', 'Will use files *_[chromosome].json'),
-                    ('control_reads_base_name', 'Will use files *_[chromosome].json'),
+                    ('sample_reads_base_name', 'Will use files *_[chromosome].json where * is the base name'),
+                    ('control_reads_base_name', 'Will use files *_[chromosome].json where * is the base name'),
                     ('out_base_name', 'eg experiment1_'),
                     ('with_control', 'True/False'),
                     ('fragment_length', ''),
@@ -773,6 +782,12 @@ interface = \
                     ('out_file_name', 'Out file name')
                 ],
             'method': peaks_to_linear
+        },
+    'version':
+        {
+            'help': 'Prints the current version',
+            'arguments': [],
+            'method': version
         }
 }
 
