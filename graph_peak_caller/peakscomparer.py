@@ -149,7 +149,10 @@ class PeaksComparerV2(object):
             print("Found n peaks that matches motif: %d" % n)
 
             if i == 1:
-                print("MA: ", a, "MNA:", b, "NMA:", c, "NMNA:", d)
+                self.results.motif_ambiguous = a
+                self.results.motif_not_ambiguous = b
+                self.results.not_motif_ambiguous = c
+                self.results.not_motif_not_ambiguous = d
                 self.results.peaks1_in_peaks2_matching_motif = n
             else:
                 print("MA: ", a, "MNA:", b, "NMA:", c, "NMNA:", d)
