@@ -102,3 +102,4 @@ tests/matching*
 build
 dist
 benchmarking/figures_tables/index.html
+*.fq
