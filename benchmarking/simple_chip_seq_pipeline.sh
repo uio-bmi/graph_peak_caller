@@ -54,8 +54,6 @@ else
     echo "Raw fastq already exists. Not dowloading"
 fi
 
-exit
-
 # Step 2: Filter reads
 # fastqc, trim_galore
 if [ ! -f raw_trimmed.fq ]; then
