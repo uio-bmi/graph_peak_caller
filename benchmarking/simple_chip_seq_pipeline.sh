@@ -37,15 +37,24 @@ echo "Made working directory $work_dir"
 
 # Step 1: Download data
 if [ ! -f raw.fastq.gz ]; then
-    echo "Download fastq"
-    encode_url=$(python3 $base_dir/download_encode_fastq.py $experiment_id $replicate_number)
-    echo "Encode url: $encode_url"
-    wget -O raw.fastq.gz -nv $encode_url
-    echo "Unzipping"
-    gunzip -c raw.fastq.gz > raw.fastq
+    echo "Will downlaod fastq"
+    if [[ $experiment_id = *"ENC"* ]]; then
+        echo "Experiment id is from ENCODE. Will download from ENCODE."
+        encode_url=$(python3 $base_dir/download_encode_fastq.py $experiment_id $replicate_number)
+        echo "Encode url: $encode_url"
+        wget -O raw.fastq.gz -nv $encode_url
+        echo "Unzipping"
+        gunzip -c raw.fastq.gz > raw.fastq
+    else
+        echo "Experiment id is not from encode. Will try NCBI."
+        fastq-dump $experiment_id
+        mv $experiment_id.fastq > raw.fastq
+    fi
 else
     echo "Raw fastq already exists. Not dowloading"
 fi
+
+exit
 
 # Step 2: Filter reads
 # fastqc, trim_galore

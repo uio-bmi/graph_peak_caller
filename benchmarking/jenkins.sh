@@ -4,6 +4,7 @@ dm_graph_dir="/media/storage1/dm6/"
 human_graph_dir="/home/ivar/data/whole_genome/"
 
 # This script runs on jenkins
+./simple_chip_seq_pipeline.sh ERR718799 1 YEAST_ABF1 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 12100000 /media/storage1/yeast/reference.fa /media/storage1/yeast/wg.xg /media/storage1/yeast/wg.gcsa /media/storage1/yeast/
 
 #./simple_chip_seq_pipeline.sh ENCSR471GSA 1 DM_JRA chr3R,chr3L,chr2R,chr2L,chrX,chr4 97958719 $dm_graph_dir/dm3_main_chromosomes.fasta $dm_graph_dir/wg.xg $dm_graph_dir/wg.gcsa $dm_graph_dir/ &
 #./simple_chip_seq_pipeline.sh ENCSR923VWW 1 DM_SQZ chr3R,chr3L,chr2R,chr2L,chrX,chr4 97958719 $dm_graph_dir/dm3_main_chromosomes.fasta $dm_graph_dir/wg.xg $dm_graph_dir/wg.gcsa $dm_graph_dir/ > dm_sqz_output.txt 2 >&1 &
