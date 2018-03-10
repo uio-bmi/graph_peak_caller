@@ -36,7 +36,7 @@ cd $work_dir
 echo "Made working directory $work_dir"
 
 # Step 1: Download data
-if [ ! -f raw.fastq.gz ]; then
+if [ ! -f raw.fastq ]; then
     echo "Will downlaod fastq"
     if [[ $experiment_id = *"ENC"* ]]; then
         echo "Experiment id is from ENCODE. Will download from ENCODE."
@@ -48,7 +48,7 @@ if [ ! -f raw.fastq.gz ]; then
     else
         echo "Experiment id is not from encode. Will try NCBI."
         fastq-dump $experiment_id
-        mv $experiment_id.fastq > raw.fastq
+        mv $experiment_id.fastq raw.fastq
     fi
 else
     echo "Raw fastq already exists. Not dowloading"
