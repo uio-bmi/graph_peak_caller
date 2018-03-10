@@ -58,7 +58,7 @@ class MultipleGraphsCallpeaks:
                 if i % 20000 == 0:
                     logging.info("%d reads processed" % i)
                 i += 1
-                hash = interval.hash()
+                hash = interval.hash(ignore_end_pos=True)
                 if hash in interval_hashes:
                     n_duplicates += 1
                 else:
