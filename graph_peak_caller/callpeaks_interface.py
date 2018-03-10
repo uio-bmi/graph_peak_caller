@@ -70,8 +70,7 @@ def run_callpeaks(ob_graph,
 def run_callpeaks_interface(args):
     logging.info("Read offset based graph")
 
-    ob_graph = obg.GraphWithReversals.from_numpy_file(
-        args.graph_file_name)
+    ob_graph = args.graph
 
     run_callpeaks(
         ob_graph,

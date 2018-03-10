@@ -41,7 +41,7 @@ class TestCommandLineInterface(unittest.TestCase):
         )
         create_linear_map_interface(Arguments(
             {
-                "obg_file_name": "tests/testgraph.obg",
+                'graph': GraphWithReversals.from_file("tests/testgraph.obg"),
                 "vg_snarls_file_name": "tests/vg_test_graph.snarls",
                 "out_file_base_name": "tests/test_linear_map"
             }
@@ -52,7 +52,7 @@ class TestCommandLineInterface(unittest.TestCase):
 
         run_callpeaks_interface(Arguments(
             {
-                'graph_file_name': "tests/testgraph.obg",
+                'graph': GraphWithReversals.from_file("tests/testgraph.obg"),
                 'vg_graph_file_name': "tests/vg_test_graph.vg",
                 'linear_map_base_name': "tests/test_linear_map",
                 'sample_reads_file_name': sample_reads,

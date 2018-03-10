@@ -134,9 +134,9 @@ interface = \
     'callpeaks':
         {
             'help': 'Callpeaks',
-            'requires_graph': True,
             'arguments':
                 [
+                    ('graph_file_name', ""),
                     ('vg_graph_file_name', "Graph file name (.vg). Used for fetching sequences. Can be set to 'None'."),
                     ('linear_map_base_name', "Set to base name of linear map."),
                     ('sample_reads_file_name', 'File name to a vg JSON file or intervalcollection file.'),
@@ -230,9 +230,9 @@ interface = \
     'create_linear_map':
         {
             'help': 'Creates a linear map using a vg snarls file and an ob graph',
-            'requires_graph': True,
             'arguments':
                 [
+                    ('obg_file_name', ''),
                     ('vg_snarls_file_name', ''),
                     ('out_file_base_name', ''),
                 ],
@@ -277,9 +277,9 @@ interface = \
     'analyse_peaks':
         {
             'help': 'Analyse linear peaks and graph peaks.',
-            'requires_graph': True,
             'arguments':
                 [
+                    ('ob_graph_file_name', ''),
                     ('vg_graph_file_name', ''),
                     ('linear_peaks_fasta_file_name', ''),
                     ('graph_peaks_fasta_file_name', ''),
@@ -331,10 +331,10 @@ interface = \
     'find_linear_path':
         {
             'help': 'Finds lineat path through graph. Saves as indexed interval to file.',
-            'requires_graph': True,
             'arguments':
                 [
                     ('vg_json_graph_file_name', ''),
+                    ('ob_graph_file_name', ''),
                     ('linear_path_name', 'Name of path in the vg graph (typically ref or chromosome name'),
                     ('out_file_name', ''),
                 ],
@@ -355,10 +355,10 @@ interface = \
     'diffexpr':
         {
             'help': 'Find differentially expressed motif matches',
-            'requires_graph': True,
             'arguments':
                 [
                     ('test_name', ''),
+                    ('graph_name', ''),
                     ('fimo_file_name', ''),
                     ('vg_graph_name', '')
                 ],
@@ -385,12 +385,6 @@ interface = \
 }
 
 
-class GraphAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        values = obg.Graph.from_numpy_file(values)
-        setattr(namespace, self.dest, values)
-
-
 def create_argument_parser():
     # Create parser
     parser = argparse.ArgumentParser(
@@ -405,10 +399,6 @@ def create_argument_parser():
         subparser = subparsers.add_parser(
             command,
             help=interface[command]["help"] + example)
-
-        if 'requires_graph' in interface[command]:
-            subparser.add_argument('-g', '--graph', action=GraphAction, help='Graph file name', dest='graph')
-
         for argument, help in interface[command]["arguments"]:
             subparser.add_argument(argument, help=help)
         subparser.set_defaults(func=interface[command]["method"])
