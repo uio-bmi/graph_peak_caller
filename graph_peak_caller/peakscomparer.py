@@ -152,7 +152,8 @@ class PeaksComparerV2(object):
                 print("Checking linear peaks, in total %d in other set" % len(matching))
                 matching_motif = self.linear_matching_motif
 
-            a, b, c, d = self.count_matching_motif(matching_motif, matching, with_info=True)
+            a, b, c, d = self.count_matching_motif(
+                matching_motif, matching, with_info=True)
             n = a + b
             print("Found n peaks that matches motif: %d" % n)
 

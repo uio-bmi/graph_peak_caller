@@ -1,13 +1,15 @@
 from setuptools import setup
 
 setup(name='graph_peak_caller',
-      version='1.0.5',
+      version='1.0.9',
       description='Graph peak caller',
       url='http://github.com/uio-bmi/graph_peak_caller',
       author='Ivar Grytten and Knut Rand',
       author_email='',
       license='MIT',
-      packages=['graph_peak_caller'],
+      packages=['graph_peak_caller', 'graph_peak_caller.legacy', 'graph_peak_caller.control',
+                'graph_peak_caller.sample', 'graph_peak_caller.postprocess',
+                'graph_peak_caller.analysis'],
       zip_safe=False,
       install_requires=['pymysql', 'numpy', 'filecache', 'scipy',
                         'memory_profiler', 'python-coveralls', 'matplotlib',
