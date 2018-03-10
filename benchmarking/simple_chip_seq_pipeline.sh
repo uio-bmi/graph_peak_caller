@@ -108,7 +108,7 @@ fi
 # Step 4: Filter mapped reads
 echo "Filtering"
 if [ ! -f filtered_low_qual_reads_removed.json ]; then
-	vg filter -q 37 -r 0.90 -s 2.0 -fu -t 20 mapped.gam > filtered.gam
+	vg filter -q 37 -t 20 mapped.gam > filtered.gam
 	vg view -aj filtered.gam > filtered_low_qual_reads_removed.json
 else
 	echo "Filtered exists. Not filtering"
