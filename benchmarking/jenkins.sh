@@ -9,7 +9,7 @@ arabidopsis_graph_dir="/media/storage1/tair/"
 # Yeast
 ./simple_chip_seq_pipeline.sh ERR718799 1 YEAST_ABF1 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 12100000 $yeast_graph_dir/reference.fa $yeast_graph_dir/wg.xg $yeast_graph_dir/wg.gcsa $yeast_graph_dir/
 
-# Arabidopsis
+# Arabidopsis (available at NCBI: svp, ataf1, erf115, WRKY33)
 ./simple_chip_seq_pipeline.sh SRR354190 1 ARABIDOPSIS_SVP 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/
 
 
