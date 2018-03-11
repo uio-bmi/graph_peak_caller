@@ -26,7 +26,7 @@ arabidopsis_graph_dir="/media/storage1/tair/"
 wait
 
 ./analyse_peak_calling_results.sh  ERR718799 1 YEAST_ABF1 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/YEAST_ABF1.meme $yeast_graph_dir/ $yeast_graph_dir/reference.fa 12100000 &
-./analyse_peak_calling_results.sh  SRR354190 1 ARABIDOPSIS_SVP 1,2,3,4,5 https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/ARABIDOPSIS_SVP.meme $yeast_graph_dir/ $yeast_graph_dir/reference.fa 12100000 &
+./analyse_peak_calling_results.sh  SRR354190 1 ARABIDOPSIS_SVP 1,2,3,4,5 https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/ARABIDOPSIS_SVP.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference.fa 135000000 &
 #./analyse_peak_calling_results.sh  ENCSR471GSA 1 DM_JRA chr3R,chr3L,chr2R,chr2L,chrX,chr4 https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/DM_JRA.meme $dm_graph_dir/ $dm_graph_dir/dm3_main_chromosomes.fasta 97958719 &
 #./analyse_peak_calling_results.sh  ENCSR923VWW 1 DM_SQZ chr3R,chr3L,chr2R,chr2L,chrX,chr4  https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/DM_SQZ.meme $dm_graph_dir/ $dm_graph_dir/dm3_main_chromosomes.fasta 97958719 &
 #./analyse_peak_calling_results.sh  ENCSR082RBU 1 DM_ANTP chr3R,chr3L,chr2R,chr2L,chrX,chr4  https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/DM_ANTP.meme $dm_graph_dir/ $dm_graph_dir/dm3_main_chromosomes.fasta 97958719 &
