@@ -6,11 +6,12 @@ from pyvg.sequences import SequenceRetriever
 
 from . import ExperimentInfo, Configuration, CallPeaks
 from .multiplegraphscallpeaks import MultipleGraphsCallpeaks
+import os
 
 
 def run_callpeaks(ob_graph,
                   sample_file_name, control_file_name,
-                  vg_graph_file_name,
+                  sequence_graph,
                   out_name="real_data_",
                   has_control=True,
                   limit_to_chromosomes=False,
@@ -56,32 +57,32 @@ def run_callpeaks(ob_graph,
         linear_map=linear_map_file_name,
         configuration=config
     )
-    if vg_graph_file_name != "None":
-        try:
-            retriever = SequenceRetriever.from_vg_graph(vg_graph_file_name)
-        except OSError:
-            retriever = SequenceRetriever.from_vg_json_graph(vg_graph_file_name)
-
-        caller.save_max_path_sequences_to_fasta_file("sequences.fasta", retriever)
+    if sequence_graph != None:
+        caller.save_max_path_sequences_to_fasta_file("sequences.fasta", sequence_graph)
     else:
-        logging.info("Not saving max path sequences, since a vg graph/sequence retriever was not sent in")
+        logging.info("Not saving max path sequences, since a sequence graph was not found.")
 
 
 def run_callpeaks_interface(args):
     logging.info("Read offset based graph")
 
     ob_graph = args.graph
+    control = args.sample
+    has_control = False
+    if args.control is not None:
+        control = args.control
+        has_control = True
 
     run_callpeaks(
         ob_graph,
-        args.sample_reads_file_name,
-        args.control_reads_file_name,
-        args.vg_graph_file_name,
-        args.out_base_name,
-        has_control=args.with_control == "True",
+        args.sample,
+        control,
+        args.sequence_graph,
+        args.out_name,
+        has_control=has_control,
         fragment_length=int(args.fragment_length),
         read_length=int(args.read_length),
-        linear_map_file_name=args.linear_map_base_name
+        linear_map_file_name=args.linear_map
     )
 
 

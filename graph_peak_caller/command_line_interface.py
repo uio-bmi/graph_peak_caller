@@ -137,15 +137,14 @@ interface = \
             'requires_graph': True,
             'arguments':
                 [
-                    ('vg_graph_file_name', "Graph file name (.vg). Used for fetching sequences. Can be set to 'None'."),
-                    ('linear_map_base_name', "Set to base name of linear map."),
-                    ('sample_reads_file_name', 'File name to a vg JSON file or intervalcollection file.'),
-                    ('control_reads_file_name', 'File name to a vg JSON file or intervalcollection file. Set to the same as sample if no control.'),
-                    ('with_control', 'True/False. Set to False if control is the same as sample.'),
-                    ('out_base_name', 'eg experiment1_. Will be preprended to all output files.'),
-                    ('fragment_length', 'The fragment length used in this ChIP-seq experiment. If unknown, set to an '
+                    ('-m/--linear_map', "Linear map file name."),
+                    ('-s/--sample', 'File name to a vg JSON file or intervalcollection file.'),
+                    ('-c/--control', '(Optional) File name to a vg JSON file or intervalcollection file. '
+                                     'Only include if a separate control is used.'),
+                    ('-n/--out_name', 'Will be prepended to all output files. Default is nothing.'),
+                    ('-f/--fragment_length', 'The fragment length used in this ChIP-seq experiment. If unknown, set to an '
                                         'arbitrary number, e.g. 200. However, for good results, this number should be accurate.'),
-                    ('read_length', 'The read length.')
+                    ('-r/--read_length', 'The read length.')
                 ],
             'method': run_callpeaks_interface
         },
@@ -387,8 +386,15 @@ interface = \
 
 class GraphAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        values = obg.Graph.from_numpy_file(values)
-        setattr(namespace, self.dest, values)
+        new_values = obg.Graph.from_numpy_file(values)
+
+        setattr(namespace, self.dest, new_values)
+        try:
+            sequencegraph = obg.SequenceGraph.from_file(values + ".sequences")
+            setattr(namespace, "sequence_graph", sequencegraph)
+            logging.info("Using sequencegraph %s" % (values + ".sequences"))
+        except FileNotFoundError:
+            logging.info("No sequencegraph found. Will not use sequencegraph.")
 
 
 def create_argument_parser():
@@ -398,6 +404,7 @@ def create_argument_parser():
     subparsers = parser.add_subparsers(help='Subcommands')
 
     for command in interface:
+
         example = ""
         if "example_run" in interface[command]:
             example = "\nExample: " + interface[command]["example_run"]
@@ -407,10 +414,28 @@ def create_argument_parser():
             help=interface[command]["help"] + example)
 
         if 'requires_graph' in interface[command]:
-            subparser.add_argument('-g', '--graph', action=GraphAction, help='Graph file name', dest='graph')
+            subparser.add_argument('-g', '--graph', action=GraphAction,
+                                   help='Graph file name', dest='graph',
+                                   required=True)
 
         for argument, help in interface[command]["arguments"]:
-            subparser.add_argument(argument, help=help)
+
+            if "/" in argument:
+                c = argument.split("/")
+                short_command = c[0]
+                long_command = c[1]
+                assert long_command.startswith("--"), "Long command for %s must start with --" % argument
+                assert short_command.startswith("-"), "Short command for %s must start with -" % argument
+
+                required = True
+                if "Optional" in help or "optional" in help:
+                    required = False
+
+                subparser.add_argument(short_command, long_command,
+                                       dest=long_command.replace("--", ""), help=help,
+                                       required=required)
+            else:
+                subparser.add_argument(argument, help=help)
         subparser.set_defaults(func=interface[command]["method"])
 
     if len(sys.argv) == 1:
