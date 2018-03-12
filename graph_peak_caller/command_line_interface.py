@@ -382,6 +382,7 @@ class GraphAction(argparse.Action):
         new_values = obg.Graph.from_numpy_file(values)
 
         setattr(namespace, self.dest, new_values)
+        setattr(namespace, "graph_file_name", values)
         try:
             sequencegraph = obg.SequenceGraph.from_file(values + ".sequences")
             setattr(namespace, "sequence_graph", sequencegraph)
