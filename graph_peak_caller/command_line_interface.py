@@ -171,7 +171,7 @@ interface = \
                                           'Found by calling count_unique_reads'),
                     ('-g/--genome_size', 'Number of base pairs covered by '
                                          'graphs in total (on a linear genome)'),
-                    ('-n/--out_name', 'Out base name. Prepended to output files.')
+                    ('-n/--out_name', 'Optional. Out base name. Prepended to output files.')
                 ],
             'method': run_callpeaks_whole_genome
         },
