@@ -74,7 +74,7 @@ def concatenate_sequence_files(args):
 def find_linear_path(args):
     from graph_peak_caller.util import create_linear_path
     import pyvg
-    graph = obg.GraphWithReversals.from_numpy_file(args.ob_graph_file_name)
+    graph = args.graph
     vg_graph = pyvg.Graph.from_file(args.vg_json_graph_file_name)
     linear_path = create_linear_path(graph, vg_graph,
                                      path_name=args.linear_path_name,
