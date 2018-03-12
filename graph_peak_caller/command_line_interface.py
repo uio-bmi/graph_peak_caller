@@ -144,7 +144,8 @@ interface = \
                     ('-n/--out_name', 'Optional. Will be prepended to all output files. Default is nothing.'),
                     ('-f/--fragment_length', 'The fragment length used in this ChIP-seq experiment. If unknown, set to an '
                                         'arbitrary number, e.g. 200. However, for good results, this number should be accurate.'),
-                    ('-r/--read_length', 'The read length.')
+                    ('-r/--read_length', 'The read length.'),
+                    ('-q/--q_value_threshold', 'Optional. Q value threshold. Default 0.05.')
                 ],
             'method': run_callpeaks_interface
         },

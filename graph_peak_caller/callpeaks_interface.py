@@ -16,7 +16,8 @@ def run_callpeaks(ob_graph,
                   has_control=True,
                   limit_to_chromosomes=False,
                   fragment_length=135, read_length=36,
-                  linear_map_file_name=False):
+                  linear_map_file_name=False,
+                  qval_threshold=0.05):
 
     logging.info("Running from gam files")
 
@@ -47,7 +48,7 @@ def run_callpeaks(ob_graph,
     experiment_info = ExperimentInfo(graph_size, fragment_length, read_length)
     config = Configuration(
         skip_read_validation=True, save_tmp_results_to_file=True,
-        skip_filter_duplicates=False, p_val_cutoff=0.05,
+        skip_filter_duplicates=False, p_val_cutoff=qval_threshold,
         graph_is_partially_ordered=True)
 
     caller = CallPeaks.run_from_intervals(
@@ -74,7 +75,7 @@ def run_callpeaks_interface(args):
         has_control = True
 
     out_name = args.out_name if args.out_name is not None else ""
-
+    qval = 0.05 if args.q_value_threshold is None else float(args.q_value_thresholds)
     run_callpeaks(
         ob_graph,
         args.sample,
@@ -84,7 +85,8 @@ def run_callpeaks_interface(args):
         has_control=has_control,
         fragment_length=int(args.fragment_length),
         read_length=int(args.read_length),
-        linear_map_file_name=args.linear_map
+        linear_map_file_name=args.linear_map,
+        qval_threshold=qval
     )
 
 
