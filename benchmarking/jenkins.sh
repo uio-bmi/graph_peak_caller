@@ -3,11 +3,11 @@
 dm_graph_dir="/media/storage1/dm6/"
 yeast_graph_dir="/media/storage1/yeast/"
 human_graph_dir="/home/ivar/data/whole_genome/"
-arabidopsis_graph_dir="/media/storage1/tair/"
+arabidopsis_graph_dir="/media/storage1/tair2/"
 
 # This script runs on jenkins
 # Yeast
-./simple_chip_seq_pipeline.sh ERR718799 1 YEAST_ABF1 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 12100000 $yeast_graph_dir/reference.fa $yeast_graph_dir/wg.xg $yeast_graph_dir/wg.gcsa $yeast_graph_dir/
+#./simple_chip_seq_pipeline.sh ERR718799 1 YEAST_ABF1 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 12100000 $yeast_graph_dir/reference.fa $yeast_graph_dir/wg.xg $yeast_graph_dir/wg.gcsa $yeast_graph_dir/
 
 # Arabidopsis (available at NCBI: svp, ataf1, erf115, WRKY33)
 ./simple_chip_seq_pipeline.sh SRR354190 1 ARABIDOPSIS_SVP 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/
