@@ -3,13 +3,14 @@ import logging
 import offsetbasedgraph as obg
 from pyvg.sequences import SequenceRetriever
 from . import CallPeaksFromQvalues
-from .peakscomparer import PeaksComparerV2, AnalysisResults
-from .manually_classified_peaks import CheckOverlapWithManuallyClassifiedPeaks
+from .analysis.peakscomparer import PeaksComparerV2, AnalysisResults
+from .analysis.manually_classified_peaks import \
+    CheckOverlapWithManuallyClassifiedPeaks
 from .analyse_peaks import LinearRegion
 from .analysis.differentialbinding import main
 from .analysis.fimowrapper import FimoFile
 from .peakcollection import PeakCollection
-from .nongraphpeaks import NonGraphPeakCollection
+from .analysis.nongraphpeaks import NonGraphPeakCollection
 
 
 def analyse_peaks_whole_genome(args):

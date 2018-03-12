@@ -1,10 +1,8 @@
-from graph_peak_caller.peakcollection import PeakCollection
-from graph_peak_caller.nongraphpeaks import NonGraphPeakCollection
+from ..peakcollection import PeakCollection
+from .nongraphpeaks import NonGraphPeakCollection
 from offsetbasedgraph import IntervalCollection
-from offsetbasedgraph import IndexedInterval, NumpyIndexedInterval
-from graph_peak_caller.util import create_linear_path
+from offsetbasedgraph import NumpyIndexedInterval
 import pickle
-import pyvg
 import logging
 
 

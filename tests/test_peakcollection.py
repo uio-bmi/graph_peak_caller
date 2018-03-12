@@ -1,8 +1,9 @@
 import unittest
-import pytest
 from graph_peak_caller.peakcollection import Peak, PeakCollection
-from graph_peak_caller.nongraphpeaks import NonGraphPeak, NonGraphPeakCollection
-from offsetbasedgraph import GraphWithReversals as Graph, Block, DirectedInterval as Interval
+from graph_peak_caller.analysis.nongraphpeaks import NonGraphPeak,\
+    NonGraphPeakCollection
+from offsetbasedgraph import GraphWithReversals as Graph, \
+    Block, DirectedInterval as Interval
 from graph_peak_caller.analyse_peaks import LinearRegion
 
 
