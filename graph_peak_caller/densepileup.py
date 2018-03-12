@@ -1,6 +1,6 @@
 import logging
 import numpy as np
-from .subgraphcollection import SubgraphCollection
+# from .subgraphcollection import SubgraphCollection
 from offsetbasedgraph import Interval, IntervalCollection, BlockArray
 from .legacy.sparsepileup import SparseAreasDict, intervals_to_start_and_ends
 from .postprocess.holecleaner import HolesCleaner

@@ -1,12 +1,9 @@
-from .extender import Areas
 import numpy as np
 import pickle
 import logging
-from collections import OrderedDict
 from .areas import BinaryContinousAreas
-from .extender import Areas
-import itertools
 from collections import defaultdict
+
 
 class ConnectedAreas(Areas):
     def __init__(self, graph, areas=None):
