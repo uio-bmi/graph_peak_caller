@@ -25,13 +25,13 @@ If you have a single vg graph representing your reference genome, the following 
 Convert your vg graph to json and create an Offset Based Python Graph:
 ```
 vg view -Vj graph.vg > graph.json
-graph_peak_caller create_ob_graph graph.json graph.nobg
+graph_peak_caller create_ob_graph graph.json
 ```
 
 Graph Peak Caller uses a "linear map" for projecting the graph structure to a linear structure when creating the background signal. This can be created from a vg snarl graph:
 ```
 vg snarls graph.vg > snarls.pb
-graph_peak_caller create_linear_map graph.nobg snarls.pb linear_map
+graph_peak_caller create_linear_map -g graph.nobg -o linear_map snarls.pb
 ```
 
 Also, convert your vg alignments to json:
@@ -44,7 +44,7 @@ If you don't have any vg alignments, and do not know how to produce them, check 
 ### Step 2: Call peaks
 Finally, we can call peaks by using the *callpeaks* command:
 ```
-graph_peak_caller callpeaks graph.nobg graph.json linear_map alignments.json control_alignments.json True test FRAGMENT_LENGTH READ_LENGTH
+graph_peak_caller callpeaks -g graph.nobg -m linear_map -s alignments.json -f FRAGMENT_LENGTH -r READ_LENGTH
 ```
 
 Make sure to change *FRAGMENT_LENGTH* and *READ_LENGTH* with numbers matching your data. If you do not know the fragment length of your ChIP-seq experiment, you can use Macs' predictd command to estimate it: `macs predict -t alignments.bam`.

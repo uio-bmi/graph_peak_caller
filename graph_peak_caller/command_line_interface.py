@@ -410,7 +410,7 @@ def run_argument_parser(args):
         if 'requires_graph' in interface[command]:
             subparser.add_argument('-g', '--graph', action=GraphAction,
                                    help='Graph file name', dest='graph',
-                                   required=True, metavar='')
+                                   required=True, metavar='GRAPH')
 
         for argument, help in interface[command]["arguments"]:
 
