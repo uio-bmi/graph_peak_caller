@@ -164,15 +164,18 @@ RESULT=0
 for chromosome in $(echo $chromosomes | tr "," "\n")
 do
     if [ ! -f ${chromosome}_pvalues_values.npy ]; then
-	graph_peak_caller callpeaks_whole_genome $chromosome \
-		$graph_dir/ \
-		$graph_dir/ \
-		$graph_dir/linear_map_ \
-		filtered_low_qual_reads_removed_ filtered_low_qual_reads_removed_ "" False $fragment_length $read_length \
-		True $unique_reads $genome_size \
-		> log_before_p_values_$chromosome.txt 2>&1 &
-        pids="$pids $!"
-	    echo "Peak calling (until p-values) for chr $chromosome started as process. Log will be written to $work_dir/log_before_p_values_$chromosome.txt"
+        graph_peak_caller callpeaks_whole_genome $chromosome \
+            -d $graph_dir \
+            -s filtered_low_qual_reads_removed_ \
+            -n "" \
+            -f $fragment_length \
+            -r $read_length \
+            -p True \
+            -u $unique_reads
+            -g $genome_size \
+            > log_before_p_values_$chromosome.txt 2>&1 &
+            pids="$pids $!"
+        echo "Peak calling (until p-values) for chr $chromosome started as process. Log will be written to $work_dir/log_before_p_values_$chromosome.txt"
     else
         echo "P values already computed for chromosome $chromosome."
     fi
@@ -196,10 +199,8 @@ do
     if [ -f ${chromosome}_max_paths.intervalcollection ]; then
     	echo "Peaks already called for $chromosome. Not calling"
     elif [ -f ${chromosome}_pvalues_values.npy ]; then
-	graph_peak_caller callpeaks_whole_genome_from_p_values $chromosome \
-		$graph_dir/ \
-		"" False $fragment_length $read_length \
-		 > log_after_p_values_$chromosome.txt 2>&1 &
+        graph_peak_caller callpeaks_whole_genome_from_p_values $chromosome \
+            -d $graph_dir -f $fragment_length -r $read_length > log_after_p_values_$chromosome.txt 2>&1 &
 	echo "Peak calling from p-values for chr $chromosome started as process. Log will be written to $work_dir/log_after_p_values_$chromosome.txt"
     else
         echo "P values not computed for $chromosome. Will not call peaks now."
