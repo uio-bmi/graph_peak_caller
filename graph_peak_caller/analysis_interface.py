@@ -6,7 +6,7 @@ from . import CallPeaksFromQvalues
 from .analysis.peakscomparer import PeaksComparerV2, AnalysisResults
 from .analysis.manually_classified_peaks import \
     CheckOverlapWithManuallyClassifiedPeaks
-from .analyse_peaks import LinearRegion
+from .analysis.analyse_peaks import LinearRegion
 from .analysis.differentialbinding import main
 from .analysis.fimowrapper import FimoFile
 from .peakcollection import PeakCollection
