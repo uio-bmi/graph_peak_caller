@@ -58,20 +58,29 @@ def count_unique_reads(chromosomes, graph_file_names, reads_file_names):
 def create_ob_graph(args):
     logging.info("Creating obgraph")
     ob_graph = json_file_to_obg_numpy_graph(args.vg_json_file_name, 0)
-
     logging.info("Writing ob graph to file")
-    ob_graph.to_numpy_file(args.out_file_name)
+    out_name = args.out_file_name if args.out_file_name is not None \
+                else args.vg_json_file_name.split(".")[0] + ".nobg"
+    ob_graph.to_numpy_file(out_name)
+
+    logging.info("Creating sequence graph")
+    from offsetbasedgraph import SequenceGraph
+    sequence_graph = SequenceGraph.create_empty_from_ob_graph(ob_graph)
+    sequence_graph.set_sequences_using_vg_json_graph(args.vg_json_file_name)
+    out_file_name = out_name + ".sequences"
+    sequence_graph.to_file(out_file_name)
+    logging.info("Wrote sequence graph to %s" % out_file_name)
 
 
 def create_linear_map_interface(args):
-    logging.info("Reading ob graph from file")
-    ob_graph = obg.GraphWithReversals.from_numpy_file(args.obg_file_name)
-    logging.info("Converting to dict format, allowing graph to "
-                 "be changed by linear map process")
-    ob_graph.convert_to_dict_backend()
-    logging.info("Creating linear map")
-    create_linear_map(ob_graph, args.vg_snarls_file_name,
-                      args.out_file_base_name, copy_graph=False)
+    graph = args.graph
+    graph.convert_to_dict_backend()
+
+    out_name = args.out_file_base_name if args.out_file_base_name is not None \
+        else args.obg_file_name.split(".")[0] + "_linear_map"
+    create_linear_map(graph, args.vg_snarls_file_name,
+                      out_name, copy_graph=False)
+    logging.info("Wrote linear map to file %s" % out_name)
 
 
 def split_vg_json_reads_into_chromosomes(args):

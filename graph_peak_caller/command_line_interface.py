@@ -29,7 +29,7 @@ logging.basicConfig(
 
 
 def main():
-    create_argument_parser()
+    run_argument_parser(sys.argv[1:])
 
 def version(args):
     print("Graph Peak Caller v1.0.4")
@@ -133,54 +133,57 @@ interface = \
 {
     'callpeaks':
         {
-            'help': 'Callpeaks',
+            'help': 'Call peaks on a single graph.',
+            'requires_graph': True,
             'arguments':
                 [
-                    ('graph_file_name', ""),
-                    ('vg_graph_file_name', "Graph file name (.vg). Used for fetching sequences. Can be set to 'None'."),
-                    ('linear_map_base_name', "Set to base name of linear map."),
-                    ('sample_reads_file_name', 'File name to a vg JSON file or intervalcollection file.'),
-                    ('control_reads_file_name', 'File name to a vg JSON file or intervalcollection file. Set to the same as sample if no control.'),
-                    ('with_control', 'True/False. Set to False if control is the same as sample.'),
-                    ('out_base_name', 'eg experiment1_. Will be preprended to all output files.'),
-                    ('fragment_length', 'The fragment length used in this ChIP-seq experiment. If unknown, set to an '
+                    ('-m/--linear_map', "Linear map file name."),
+                    ('-s/--sample', 'File name to a vg JSON file or intervalcollection file.'),
+                    ('-c/--control', '(Optional) File name to a vg JSON file or intervalcollection file. '
+                                     'Only include if a separate control is used.'),
+                    ('-n/--out_name', 'Optional. Will be prepended to all output files. Default is nothing.'),
+                    ('-f/--fragment_length', 'The fragment length used in this ChIP-seq experiment. If unknown, set to an '
                                         'arbitrary number, e.g. 200. However, for good results, this number should be accurate.'),
-                    ('read_length', 'The read length.')
+                    ('-r/--read_length', 'The read length.')
                 ],
             'method': run_callpeaks_interface
         },
     'callpeaks_whole_genome':
         {
-            'help': 'Callpeaks on whole genome, using one graph for each chromosome',
+            'help': 'Callpeaks on whole genome, using one graph for each chromosome.',
             'arguments':
                 [
                     ('chromosomes', 'Comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
-                    ('graphs_location', 'Will use the graphs *_[chromosome]'),
-                    ('vg_graphs_location', ''),
-                    ('linear_maps_location', ''),
-                    ('sample_reads_base_name', 'Will use files *_[chromosome].json where * is the base name'),
-                    ('control_reads_base_name', 'Will use files *_[chromosome].json where * is the base name'),
-                    ('out_base_name', 'eg experiment1_'),
-                    ('with_control', 'True/False'),
-                    ('fragment_length', ''),
-                    ('read_length', ''),
-                    ('stop_after_p_values', 'True/False - whether to only run until p-value track is computed (before peak calling)'),
-                    ('unique_reads', 'Number of unique reads. Found by calling count_unique_reads'),
-                    ('genome_size', 'Number of base pairs covered by graphs in total (on a linear genome)')
+                    ('-d/--data_dir', 'Path to data directory containing '
+                                      'ob graphs and linear maps.'),
+                    ('-s/--sample', 'Sample reads base name. Will use '
+                                    'files *_[chromosome].json where * is the base name'),
+                    ('-c/--control', 'Optional. Control reads base ame. Will use '
+                                     'files *_[chromosome].json where * is the base name'),
+
+                    ('-f/--fragment_length', 'Fragment length.'),
+                    ('-r/--read_length', 'Read length'),
+                    ('-p/--stop_after_p_values', 'Optional. True or False (default). Whether to '
+                                                 'only run until p-value track is '
+                                                 'computed (before peak calling)'),
+                    ('-u/--unique_reads', 'Number of unique reads. '
+                                          'Found by calling count_unique_reads'),
+                    ('-g/--genome_size', 'Number of base pairs covered by '
+                                         'graphs in total (on a linear genome)'),
+                    ('-n/--out_name', 'Out base name. Prepended to output files.')
                 ],
             'method': run_callpeaks_whole_genome
         },
     'callpeaks_whole_genome_from_p_values':
         {
-            'help': 'Callpeaks on whole genome from pvalues. Assumes pvalue files are already computed.',
+            'help': 'Callpeaks on whole genome from pvalues.',
             'arguments':
                 [
                     ('chromosome', 'Specific chromosome to find peaks for.'),
-                    ('graphs_location', 'Directory containing graphs.'),
-                    ('out_base_name', 'eg experiment1_'),
-                    ('with_control', 'True/False'),
-                    ('fragment_length', ''),
-                    ('read_length', '')
+                    ('-d/--data-dir', 'Directory containing graphs.'),
+                    ('-n/--name', 'eg experiment1_'),
+                    ('-f/--fragment_length', ''),
+                    ('-r/--read_length', '')
                 ],
             'method': run_callpeaks_whole_genome_from_p_values
         },
@@ -197,7 +200,7 @@ interface = \
         },
     'intervals_to_fasta':
         {
-            'help': 'Get sequences for intervals in interval file. Write to fasta',
+            'help': 'Get sequences for intervals in interval file.',
             'arguments':
                 [
                     ('vg_graph_file_name', ''),
@@ -208,7 +211,7 @@ interface = \
         },
     'linear_peaks_to_fasta':
         {
-            'help': 'Converts a linear peaks file (eg. from macs) to fasta',
+            'help': 'Converts bed file of peaks to fasta',
             'arguments':
                 [
                     ('linear_reads_file_name', ''),
@@ -219,29 +222,29 @@ interface = \
         },
     'create_ob_graph':
         {
-            'help': 'Creates Offset Based Graph from a vg json graph file. Stores the resulting graph to a file.',
+            'help': 'Create OffsetBased Graph from vg.',
             'arguments':
                 [
-                    ('vg_json_file_name', 'Vg json file name (created by running vg view -Vj graph.vg > graph.json'),
-                    ('out_file_name', 'E.g. graph.obg')
+                    ('vg_json_file_name', 'Vg json file name '
+                                          '(created by running vg view -Vj graph.vg > graph.json'),
+                    ('-o/--out_file_name', 'Optional. Will use input file base name if unset.')
                 ],
             'method': create_ob_graph
         },
     'create_linear_map':
         {
-            'help': 'Creates a linear map using a vg snarls file and an ob graph',
+            'help': 'Create linear map from vg snarls.',
+            'requires_graph': True,
             'arguments':
                 [
-                    ('obg_file_name', ''),
                     ('vg_snarls_file_name', ''),
-                    ('out_file_base_name', ''),
+                    ('-o/--out_file_base_name', ''),
                 ],
             'method': create_linear_map_interface
         },
     'split_vg_json_reads_into_chromosomes':
         {
-            'help': "Splits intervals from interval collection into one file for each chromsome."
-                    "Requires node_range_[chrom ID].txt to exist for each chromosome.",
+            'help': "Split vg json reads by chromosome.",
             'arguments':
                 [
                     ('chromosomes', 'Comma-separated list of chromosomes to split reads into'),
@@ -252,7 +255,7 @@ interface = \
         },
     'concatenate_sequence_files':
         {
-            'help': "Merge multiple *_sequence.fasta files from the peak caller into one single sorted file.",
+            'help': "Merge multiple *_sequence.fasta files.",
             'arguments':
                 [
                     ('chromosomes', 'comma delimted, e.g 1,2,3, used to fetch files of type chr1_sequences.fasta, ...'),
@@ -262,7 +265,7 @@ interface = \
         },
     'plot_motif_enrichment':
         {
-            'help': "Plots motif enrichments using fimo. Requires fimo to be installed and in path.",
+            'help': "Plots motif enrichments using fimo.",
             'arguments':
                 [
                     ('fasta1', ''),
@@ -277,9 +280,9 @@ interface = \
     'analyse_peaks':
         {
             'help': 'Analyse linear peaks and graph peaks.',
+            'requires_graph': True,
             'arguments':
                 [
-                    ('ob_graph_file_name', ''),
                     ('vg_graph_file_name', ''),
                     ('linear_peaks_fasta_file_name', ''),
                     ('graph_peaks_fasta_file_name', ''),
@@ -306,7 +309,7 @@ interface = \
         },
     'count_unique_reads':
         {
-            'help': 'Count unique reads for whole genome set of read files.',
+            'help': 'Count unique reads in vg json alignments.',
             'arguments':
                 [
                     ('chromosomes', 'Comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
@@ -315,26 +318,13 @@ interface = \
                 ],
             'method': count_unique_reads_interface
         },
-    'analyse_manually_classified_peaks':
-        {
-            'help': '',
-            'arguments':
-                [
-                    ('chromosomes', 'Comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
-                    ('graphs_location', 'Will use the graphs *_[chromosome]'),
-                    ('reads_base_name', 'Will use files *_[chromosome].json'),
-                    ('regions_file', ''),
-                    ('manually_classified_peaks_file', '')
-                ],
-            'method': analyse_manually_classified_peaks
-        },
     'find_linear_path':
         {
-            'help': 'Finds lineat path through graph. Saves as indexed interval to file.',
+            'help': 'Find linear path through graph.',
+            'requires_graph': True,
             'arguments':
                 [
                     ('vg_json_graph_file_name', ''),
-                    ('ob_graph_file_name', ''),
                     ('linear_path_name', 'Name of path in the vg graph (typically ref or chromosome name'),
                     ('out_file_name', ''),
                 ],
@@ -342,7 +332,7 @@ interface = \
         },
     'move_linear_reads_to_graph':
         {
-            'help': 'Translate reads in sam file to reads on a graph. Writes to interval collection files.',
+            'help': 'Convert SAM to Intervals on graph.',
             'arguments':
                 [
                     ('bed_file_name', ''),
@@ -355,10 +345,10 @@ interface = \
     'diffexpr':
         {
             'help': 'Find differentially expressed motif matches',
+            'requires_graph': True,
             'arguments':
                 [
                     ('test_name', ''),
-                    ('graph_name', ''),
                     ('fimo_file_name', ''),
                     ('vg_graph_name', '')
                 ],
@@ -366,7 +356,7 @@ interface = \
         },
     'peaks_to_linear':
         {
-            'help': 'Converts graph peaks to linear peaks by using a linear path through the graph',
+            'help': 'Converts graph peaks to linear peaks.',
             'arguments':
                 [
                     ('peaks_file_name', "Shuold be a JSON intervalcollection, e.g. one created by callpeaks."),
@@ -385,13 +375,30 @@ interface = \
 }
 
 
-def create_argument_parser():
+class GraphAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        new_values = obg.Graph.from_numpy_file(values)
+
+        setattr(namespace, self.dest, new_values)
+        try:
+            sequencegraph = obg.SequenceGraph.from_file(values + ".sequences")
+            setattr(namespace, "sequence_graph", sequencegraph)
+            logging.info("Using sequencegraph %s" % (values + ".sequences"))
+        except FileNotFoundError:
+            logging.info("No sequencegraph found. Will not use sequencegraph.")
+
+
+def run_argument_parser(args):
     # Create parser
     parser = argparse.ArgumentParser(
-        description='Graph peak caller')
+        description='Graph peak caller',
+        prog='graph_peak_caller',
+        formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=100))
+
     subparsers = parser.add_subparsers(help='Subcommands')
 
     for command in interface:
+
         example = ""
         if "example_run" in interface[command]:
             example = "\nExample: " + interface[command]["example_run"]
@@ -399,19 +406,41 @@ def create_argument_parser():
         subparser = subparsers.add_parser(
             command,
             help=interface[command]["help"] + example)
+
+        if 'requires_graph' in interface[command]:
+            subparser.add_argument('-g', '--graph', action=GraphAction,
+                                   help='Graph file name', dest='graph',
+                                   required=True, metavar='')
+
         for argument, help in interface[command]["arguments"]:
-            subparser.add_argument(argument, help=help)
+
+            if "/" in argument:
+                c = argument.split("/")
+                short_command = c[0].strip()
+                long_command = c[1].strip()
+                assert long_command.startswith("--"), "Long command for %s must start with --" % argument
+                assert short_command.startswith("-"), "Short command for %s must start with -" % argument
+
+                required = True
+                if "Optional" in help or "optional" in help:
+                    required = False
+
+                subparser.add_argument(short_command, long_command,
+                                       dest=long_command.replace("--", ""), help=help,
+                                       required=required)
+            else:
+                subparser.add_argument(argument, help=help)
         subparser.set_defaults(func=interface[command]["method"])
 
-    if len(sys.argv) == 1:
+    if len(args) == 0:
         parser.print_help()
         sys.exit(1)
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     if hasattr(args, 'func'):
         args.func(args)
     else:
         parser.help()
 
 if __name__ == "__main__":
-    create_argument_parser()
+    run_argument_parser(sys.argv[1:])
