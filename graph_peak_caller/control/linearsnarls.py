@@ -8,12 +8,14 @@ from .snarlmaps import LinearSnarlMap
 
 def create_control(linear_map_name, *args, **kwargs):
     logging.info("Reading linear map from file")
-    linear_map = LinearSnarlMap.from_json_files(linear_map_name, kwargs["ob_graph"])
+    linear_map = LinearSnarlMap.from_json_files(
+        linear_map_name, kwargs["ob_graph"])
     return create_control_from_objs(linear_map, *args, **kwargs)
 
 
 def create_control_from_objs(linear_map, reads, extension_sizes,
-                             fragment_length, ob_graph=None, touched_nodes=None,
+                             fragment_length, ob_graph=None,
+                             touched_nodes=None,
                              use_global_min_value=None):
     """
     :param snarl_graph: Hierarchical snarl graph
@@ -46,7 +48,8 @@ def create_control_from_objs(linear_map, reads, extension_sizes,
     logging.info("All extensions done. Grating valued indexes from pileup")
 
     logging.info("Making sparsepilup from valued indexes")
-    graph_pileup = max_pileup.to_dense_pileup(linear_map, touched_nodes=touched_nodes)
+    graph_pileup = max_pileup.to_dense_pileup(
+        linear_map, touched_nodes=touched_nodes)
     logging.info("Control pileup created")
 
     return graph_pileup
@@ -106,7 +109,6 @@ class LinearPileup(object):
         logging.info("Getting unmapped indices")
         unmapped_indices = self.from_event_sorter(event_sorter)
         logging.info("Mapping linear map to graph pileup")
-        #return linear_map.to_numpy_sparse_pileup(unmapped_indices)
         return linear_map.to_sparse_pileup(unmapped_indices, min_value)
 
     def to_dense_pileup(self, linear_map, touched_nodes=None):
@@ -116,7 +118,6 @@ class LinearPileup(object):
         unmapped_indices = self.from_event_sorter(event_sorter)
         logging.info("Mapping linear map to graph pileup")
         return linear_map.to_dense_pileup(unmapped_indices)
-
 
     def to_valued_indexes(self, linear_map, touched_nodes=None):
         logging.info("Getting event sorter")
@@ -128,14 +129,16 @@ class LinearPileup(object):
         return vi_dict
 
     def get_event_sorter(self, linear_map, touched_nodes=None):
-        node_start_values = [node_id for node_id in (linear_map._graph.blocks if touched_nodes is None else touched_nodes)]
+        node_start_values = [node_id for node_id in
+                             (linear_map._graph.blocks
+                              if touched_nodes is None else touched_nodes)]
         node_end_values = node_start_values[:]
         node_starts_idxs = [linear_map.get_node_start(node_id)
                             for node_id in node_start_values]
         node_end_idxs = [linear_map.get_node_end(node_id)
                          for node_id in node_end_values]
         for start_idx, end_idx in zip(node_starts_idxs, node_end_idxs):
-            assert start_idx < end_idx
+            assert start_idx < end_idx, "%s, %s" % (start_idx, end_idx)
         idxs = [node_end_idxs, self.indices, node_starts_idxs]
         values = [node_end_values, self.values, node_start_values]
         event_sorter = EventSorter(idxs, values, names=["NODE_END",

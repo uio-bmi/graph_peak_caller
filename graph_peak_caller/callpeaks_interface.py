@@ -75,6 +75,9 @@ def run_callpeaks_interface(args):
         has_control = True
 
     out_name = args.out_name if args.out_name is not None else ""
+    linear_map_name = args.linear_map
+    if args.linear_map is None:
+        linear_map_name = args.graph_file_name.split(".")[0] + "_linear_map.npz"
     qval = 0.05 if args.q_value_threshold is None else float(args.q_value_thresholds)
     run_callpeaks(
         ob_graph,
@@ -85,7 +88,7 @@ def run_callpeaks_interface(args):
         has_control=has_control,
         fragment_length=int(args.fragment_length),
         read_length=int(args.read_length),
-        linear_map_file_name=args.linear_map,
+        linear_map_file_name=linear_map_name,
         qval_threshold=qval
     )
 
@@ -157,6 +160,7 @@ def run_callpeaks_whole_genome_from_p_values(args):
     sequence_retrievers = \
         (obg.SequenceGraph.from_file(chrom + ".nobg.sequences" for chrom in chromosomes))
     out_name = args.out_name if args.out_name is not None else ""
+
     caller = MultipleGraphsCallpeaks(
         chromosomes,
         graph_file_names,

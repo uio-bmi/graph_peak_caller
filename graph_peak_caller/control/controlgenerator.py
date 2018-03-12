@@ -3,12 +3,12 @@ import logging
 
 from ..sparsediffs import SparseDiffs
 from .linearsnarls import LinearPileup
-from .snarlmaps import LinearSnarlMap
+from .linearmap import LinearMap
 
 
 class SparseControl:
     def __init__(self, linear_map, graph, extension_sizes, fragment_length, touched_nodes):
-        self._linear_map = LinearSnarlMap.from_json_files(linear_map, graph)
+        self._linear_map = LinearMap.from_file(linear_map, graph)
         self._extension_sizes = extension_sizes
         self._fragment_length = fragment_length
         self._graph = graph
@@ -24,7 +24,6 @@ class SparseControl:
             self._min_value = mapped_reads.n_intervals*self._fragment_length / self._linear_map._length
         logging.info("Using min value %s", self._min_value)
         max_pileup = None
-        # SparseDiffs([0], [self._min_value])
         for tmp_extension in self._extension_sizes:
             extension = tmp_extension // 2
             sparse_diffs = SparseDiffs.from_starts_and_ends(

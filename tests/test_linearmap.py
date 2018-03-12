@@ -1,5 +1,4 @@
 import pytest
-import numpy as np
 import offsetbasedgraph as obg
 
 from graph_peak_caller.control.linearmap import LinearMap
@@ -19,9 +18,27 @@ def hierarchical_graph():
 
 
 @pytest.fixture
+def snp_graph():
+    nodes = {i: obg.Block((i % 2)+1) for i in range(100, 106)}
+    edges = {100: [101, 102],
+             101: [105],
+             102: [103, 104],
+             103: [105],
+             104: [105]}
+    return obg.Graph(nodes, edges)
+
+
+@pytest.fixture
 def hierarchical_map():
     true_starts = [0, 10, 10, 22, 22, 36]
     true_ends = [10, 36, 22, 36, 36, 51]
+    return LinearMap(true_starts, true_ends, hierarchical_graph())
+
+
+@pytest.fixture
+def snp_map():
+    true_starts = [0, 1, 1, 2, 2, 4]
+    true_ends = [1, 4, 2, 4, 4, 6]
     return LinearMap(true_starts, true_ends, hierarchical_graph())
 
 
@@ -29,6 +46,10 @@ def test_from_graph(hierarchical_graph, hierarchical_map):
     linear_map = LinearMap.from_graph(hierarchical_graph)
     assert linear_map == hierarchical_map
 
+
+def test_from_snp_graph(snp_graph, snp_map):
+    linear_map = LinearMap.from_graph(snp_graph)
+    assert linear_map == snp_map
 
 def test_get_scale_and_offset(hierarchical_map):
     node_ids = [100, 101, 102, 103, 104, 105]

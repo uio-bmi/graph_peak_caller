@@ -139,7 +139,7 @@ interface = \
             'requires_graph': True,
             'arguments':
                 [
-                    ('-m/--linear_map', "Linear map file name."),
+                    ('-m/--linear_map', "Optional Linear map file name."),
                     ('-s/--sample', 'File name to a vg JSON file or intervalcollection file.'),
                     ('-c/--control', '(Optional) File name to a vg JSON file or intervalcollection file. '
                                      'Only include if a separate control is used.'),
@@ -389,6 +389,7 @@ class GraphAction(argparse.Action):
             logging.info("Using sequencegraph %s" % (values + ".sequences"))
         except FileNotFoundError:
             logging.info("No sequencegraph found. Will not use sequencegraph.")
+            setattr(namespace, "sequence_graph", None)
 
 
 def run_argument_parser(args):

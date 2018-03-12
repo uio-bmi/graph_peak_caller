@@ -8,6 +8,9 @@ class LinearMap:
     def __init__(self, node_starts, node_ends, graph):
         self._node_starts = np.asanyarray(node_starts)
         self._node_ends = np.asanyarray(node_ends)
+        assert np.all(self._node_starts < self._node_ends),\
+            np.where(self._node_starts >= self._node_ends)
+        self._length = self._node_ends[-1]+graph.node_size(graph.min_node)
         self._graph = graph
 
     def __eq__(self, other):
@@ -101,12 +104,22 @@ class LinearMap:
     def find_starts(graph):
         node_ids = list(graph.get_sorted_node_ids())
         max_dists = np.zeros(len(node_ids))
-        # node_sizes = graph.blocks._array
+        counter = 0
         for i, node_id in enumerate(node_ids):
+            assert graph.node_size(node_id) > 0
             cur_dist = max_dists[i] + graph.node_size(node_id)
+            if (i) and max_dists[i] == 0:
+                # print(i, node_id, graph.reverse_adj_list[-node_id])
+                # raise
+                pass
             for next_node in graph.adj_list[node_id]:
+                if next_node < node_id:
+                    counter += 1
                 j = next_node-graph.min_node
                 max_dists[j] = max(cur_dist, max_dists[j])
+        print("### Counts", counter)
+        print("###", max_dists[-1]+graph.node_size(node_ids[-1]))
+        print(np.max(max_dists))
         return max_dists
 
     @staticmethod
@@ -117,10 +130,13 @@ class LinearMap:
         N = len(node_ids)
         for i, node_id in enumerate(node_ids):
             cur_dist = max_dists[N-i-1] + graph.node_size(node_id)
+            assert (not i) or max_dists[N-i-1] > 0, i
             for next_node in adj_list[-node_id]:
                 j = abs(next_node)-graph.min_node
                 max_dists[j] = max(cur_dist, max_dists[j])
-        linear_length = max_dists[0]+graph.node_size(graph.min_node)
+        assert np.argmax(max_dists) == 0
+        linear_length = max_dists[0] + graph.node_size(graph.min_node)
+        print("###", linear_length)
         return linear_length - max_dists
 
 if __name__ == "__main__":

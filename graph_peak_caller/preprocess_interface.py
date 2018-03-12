@@ -77,7 +77,7 @@ def create_linear_map_interface(args):
     # graph.convert_to_dict_backend()
 
     out_name = args.out_file_base_name if args.out_file_base_name is not None \
-        else args.obg_file_name.split(".")[0] + "_linear_map.npz"
+        else args.graph_file_name.split(".")[0] + "_linear_map.npz"
     create_linear_map(graph, out_name)
     logging.info("Wrote linear map to file %s" % out_name)
 

@@ -28,7 +28,7 @@ class DiscreteEventSorter(object):
         return self.indices, values
 
 
-class EventSorter(object):
+class EventSorter:
 
     def np_init(self, index_lists, values_lists):
         all_indices = np.concatenate(index_lists)
