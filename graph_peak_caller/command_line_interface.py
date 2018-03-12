@@ -181,7 +181,7 @@ interface = \
             'arguments':
                 [
                     ('chromosome', 'Specific chromosome to find peaks for.'),
-                    ('-d/--data-dir', 'Directory containing graphs.'),
+                    ('-d/--data_dir', 'Directory containing graphs.'),
                     ('-n/--name', 'Optional. eg experiment1_'),
                     ('-f/--fragment_length', ''),
                     ('-r/--read_length', '')
