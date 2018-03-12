@@ -73,12 +73,14 @@ def run_callpeaks_interface(args):
         control = args.control
         has_control = True
 
+    out_name = args.out_name if args.out_name is not None else ""
+
     run_callpeaks(
         ob_graph,
         args.sample,
         control,
         args.sequence_graph,
-        args.out_name,
+        out_name,
         has_control=has_control,
         fragment_length=int(args.fragment_length),
         read_length=int(args.read_length),
@@ -89,28 +91,32 @@ def run_callpeaks_interface(args):
 def run_callpeaks_whole_genome(args):
     logging.info("Running whole genome.")
     chromosomes = args.chromosomes.split(",")
-    graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
-    linear_map_file_names = [args.linear_maps_location + chrom
+    graph_file_names = [args.data_dir + "/" + chrom for chrom in chromosomes]
+    linear_map_file_names = [args.data_dir + "/linear_map_" + chrom
                              for chrom in chromosomes]
-    vg_graphs = [args.vg_graphs_location + chrom + ".vg"
-                 for chrom in chromosomes]
-    sequence_retrievers = \
-        (SequenceRetriever.from_vg_graph(fn) for fn in vg_graphs)
 
-    if args.sample_reads_base_name.endswith(".intervalcollection"):
-        sample_file_names = [
-            args.sample_reads_base_name.replace("chrom", chrom)
-            for chrom in chromosomes]
-        control_file_names = [
-            args.control_reads_base_name.replace("chrom", chrom)
-            for chrom in chromosomes]
+    sequence_retrievers = \
+        (obg.SequenceGraph.from_file(args.data_dir + "/" + chrom + ".nobg.sequences")
+         for chrom in chromosomes)
+
+    if args.sample.endswith(".intervalcollection"):
+        sample_file_names = [args.sample.replace("chrom", chrom) for chrom in chromosomes]
+
     else:
-        sample_base_name = args.sample_reads_base_name.replace(".json", "_")
-        control_base_name = args.control_reads_base_name.replace(".json", "_")
-        sample_file_names = [sample_base_name + chrom + ".json"
-                             for chrom in chromosomes]
-        control_file_names = [control_base_name + chrom + ".json"
-                              for chrom in chromosomes]
+        sample_base_name = args.sample.replace(".json", "_")
+        sample_file_names = [sample_base_name + chrom + ".json" for chrom in chromosomes]
+
+    if args.control is not None:
+        if args.control.endswith(".intervalcollection"):
+            control_file_names = [
+                args.control_reads_base_name.replace("chrom", chrom)
+                for chrom in chromosomes]
+        else:
+            control_base_name = args.control.replace(".json", "_")
+            control_file_names = [control_base_name + chrom + ".json"
+                                  for chrom in chromosomes]
+    else:
+        control_file_names = sample_file_names.copy()
 
     fragment_length = int(args.fragment_length)
     genome_size = int(args.genome_size)
@@ -122,6 +128,8 @@ def run_callpeaks_whole_genome(args):
                                                   int(args.unique_reads),
                                                   int(min_background)))
 
+    out_name = args.out_name if args.out_name is not None else ""
+
     caller = MultipleGraphsCallpeaks(
         chromosomes,
         graph_file_names,
@@ -130,9 +138,9 @@ def run_callpeaks_whole_genome(args):
         linear_map_file_names,
         int(args.fragment_length),
         int(args.read_length),
-        has_control=args.with_control == "True",
+        has_control=args.control is not None,
         sequence_retrievers=sequence_retrievers,
-        out_base_name=args.out_base_name,
+        out_base_name=out_name,
         stop_after_p_values=args.stop_after_p_values == "True",
         min_background=min_background
     )
@@ -143,10 +151,9 @@ def run_callpeaks_whole_genome_from_p_values(args):
     logging.info("Running whole genome from p-values.")
     chromosome = args.chromosome
     chromosomes = [chromosome]
-    graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
-    vg_graphs = [args.graphs_location + chrom + ".vg" for chrom in chromosomes]
+    graph_file_names = [args.data_dir + chrom for chrom in chromosomes]
     sequence_retrievers = \
-        (SequenceRetriever.from_vg_graph(fn) for fn in vg_graphs)
+        (obg.SequenceGraph.from_file(chrom + ".nobg.sequences" for chrom in chromosomes))
 
     caller = MultipleGraphsCallpeaks(
         chromosomes,
@@ -156,9 +163,9 @@ def run_callpeaks_whole_genome_from_p_values(args):
         None,
         int(args.fragment_length),
         int(args.read_length),
-        has_control=args.with_control == "True",
+        has_control=None,
         sequence_retrievers=sequence_retrievers,
-        out_base_name=args.out_base_name
+        out_base_name=args.out_name
     )
     caller.create_joined_q_value_mapping()
     caller.run_from_p_values(only_chromosome=chromosome)
