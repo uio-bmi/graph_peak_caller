@@ -5,7 +5,7 @@ import offsetbasedgraph as obg
 
 from graph_peak_caller.util import create_linear_map
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
-from graph_peak_caller.shift_estimation_multigraph import \
+from graph_peak_caller.shiftestimation import \
     MultiGraphShiftEstimator
 
 
