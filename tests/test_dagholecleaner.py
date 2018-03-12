@@ -2,11 +2,11 @@ from graph_peak_caller.densepileup import DensePileupData, DensePileup
 from offsetbasedgraph import GraphWithReversals as Graph, Block, DirectedInterval as Interval
 import unittest
 import numpy as np
-from graph_peak_caller.dagholecleaner import DagHoleCleaner
+# from graph_peak_caller.dagholecleaner import DagHoleCleaner
 
 graph = Graph({i: Block(10) for i in range(1, 4)},
-                                   {1: [2],
-                                    2: [3]})
+              {1: [2],
+               2: [3]})
 
 split_graph = Graph(
     {

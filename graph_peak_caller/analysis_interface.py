@@ -3,13 +3,15 @@ import logging
 import offsetbasedgraph as obg
 from pyvg.sequences import SequenceRetriever
 from . import CallPeaksFromQvalues
-from .peakscomparer import PeaksComparerV2, AnalysisResults
-from .manually_classified_peaks import CheckOverlapWithManuallyClassifiedPeaks
-from .analyse_peaks import LinearRegion
+from .analysis.peakscomparer import PeaksComparerV2, AnalysisResults
+from .analysis.manually_classified_peaks import \
+    CheckOverlapWithManuallyClassifiedPeaks
+from .analysis.analyse_peaks import LinearRegion
 from .analysis.differentialbinding import main
 from .analysis.fimowrapper import FimoFile
 from .peakcollection import PeakCollection
-from .nongraphpeaks import NonGraphPeakCollection
+from .analysis.nongraphpeaks import NonGraphPeakCollection
+from .analysis.motifenrichment import plot_true_positives
 
 
 def analyse_peaks_whole_genome(args):
@@ -101,8 +103,8 @@ def differential_expression(args):
         out_f.write(var_seq + "\n")
     out_f.close()
 
+
 def plot_motif_enrichment(args):
-    from graph_peak_caller.motifenrichment import plot_true_positives
     fasta1 = args.fasta1
     fasta2 = args.fasta2
     meme = args.meme_motif_file

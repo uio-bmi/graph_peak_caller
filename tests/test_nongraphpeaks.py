@@ -1,11 +1,10 @@
 import unittest
-import math
 import numpy as np
-from graph_peak_caller.nongraphpeaks import NonGraphPeak, NonGraphPeakCollection
+from graph_peak_caller.analysis.nongraphpeaks import\
+    NonGraphPeakCollection
 
 
 class TestNonGraphPeakCollection(unittest.TestCase):
-
 
     def setUp(self):
         # Create sample test bed file
