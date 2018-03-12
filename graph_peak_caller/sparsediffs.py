@@ -42,7 +42,7 @@ class SparseValues:
         if not np.all(self.indices == other.indices):
             return False
 
-        if not np.all(self.values == other.values):
+        if not np.allclose(self.values, other.values):
             return False
 
         if self.track_size != other.track_size:
