@@ -31,8 +31,10 @@ logging.basicConfig(
 def main():
     run_argument_parser(sys.argv[1:])
 
+
 def version(args):
     print("Graph Peak Caller v1.0.4")
+
 
 def concatenate_sequence_files(args):
     chromosomes = args.chromosomes.split(",")
@@ -238,8 +240,7 @@ interface = \
             'requires_graph': True,
             'arguments':
                 [
-                    ('vg_snarls_file_name', ''),
-                    ('-o/--out_file_base_name', ''),
+                    ('-o/--out_file_base_name', 'Optional out file name'),
                 ],
             'method': create_linear_map_interface
         },

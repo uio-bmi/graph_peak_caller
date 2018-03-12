@@ -74,12 +74,11 @@ def create_ob_graph(args):
 
 def create_linear_map_interface(args):
     graph = args.graph
-    graph.convert_to_dict_backend()
+    # graph.convert_to_dict_backend()
 
     out_name = args.out_file_base_name if args.out_file_base_name is not None \
-        else args.obg_file_name.split(".")[0] + "_linear_map"
-    create_linear_map(graph, args.vg_snarls_file_name,
-                      out_name, copy_graph=False)
+        else args.obg_file_name.split(".")[0] + "_linear_map.npz"
+    create_linear_map(graph, out_name)
     logging.info("Wrote linear map to file %s" % out_name)
 
 

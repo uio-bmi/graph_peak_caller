@@ -4,7 +4,7 @@ import pyvg
 import offsetbasedgraph as obg
 from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
 
-from .control.linearsnarls import LinearSnarlMap
+from .control.linearmap import LinearMap
 from .control.snarls import SnarlGraphBuilder
 
 
@@ -144,16 +144,10 @@ def sanitize_indices_and_values(indices, values):
     return new_indices, new_values
 
 
-def create_linear_map(ob_graph, snarl_file_name = "haplo1kg50-mhc.snarls", out_file_name="linear_map", copy_graph=True):
-    if copy_graph:
-        ob_graph = ob_graph.copy()
-    builder = SnarlGraphBuilder.from_vg_snarls(
-        ob_graph,
-        snarl_file_name)
-    snarlgraph = builder.build_snarl_graphs()
-    linear_map = LinearSnarlMap.from_snarl_graph(snarlgraph, ob_graph)
-    linear_map.to_json_files(out_file_name)
-    logging.info("Created linear snarl map, wrote to file %s" % out_file_name)
+def create_linear_map(ob_graph, out_file_name="linear_map.npz"):
+    linear_map = LinearMap.from_graph(ob_graph)
+    linear_map.to_file(out_file_name)
+    logging.info("Created linear map, wrote to file %s" % out_file_name)
 
 def create_ob_graph_from_vg(vg_json_graph_file_name, ob_graph_file_name="graph.obg"):
     vg_graph = pyvg.Graph.create_from_file(vg_json_graph_file_name)
