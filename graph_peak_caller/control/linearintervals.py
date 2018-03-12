@@ -8,8 +8,17 @@ class LinearIntervalCollection(object):
         self.ends = np.asanyarray(ends)
         self.n_intervals = self.starts.size
 
-    def __str__(self):
-        return str(self.starts) + "\n" + str(self.ends)
+    def __eq__(self, other):
+        if not np.allclose(self.starts, other.starts):
+            return False
+        print(self.ends)
+        print(other.ends)
+        return np.allclose(self.ends, other.ends)
+
+    def __repr__(self):
+        s = " ".join(str(i) for i in self.starts)
+        e = " ".join(str(i) for i in self.ends)
+        return "(%s:%s)" % (s, e)
 
     def extend_mid(self, extension_size):
         extended_starts = (self.starts + self.ends)/2 - extension_size
