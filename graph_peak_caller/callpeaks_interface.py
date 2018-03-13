@@ -155,7 +155,7 @@ def run_callpeaks_whole_genome_from_p_values(args):
     chromosomes = [chromosome]
     graph_file_names = [args.data_dir + chrom for chrom in chromosomes]
     sequence_retrievers = \
-        (obg.SequenceGraph.from_file(chrom + ".nobg.sequences") for chrom in chromosomes)
+        (obg.SequenceGraph.from_file(args.data_dir + "/" + chrom + ".nobg.sequences") for chrom in chromosomes)
     out_name = args.out_name if args.out_name is not None else ""
     caller = MultipleGraphsCallpeaks(
         chromosomes,
