@@ -17,7 +17,7 @@ from graph_peak_caller.analysis_interface import analyse_peaks_whole_genome,\
     analyse_manually_classified_peaks, differential_expression,\
     plot_motif_enrichment
 
-from graph_peak_caller.preprocess_interface import shift_estimation,\
+from graph_peak_caller.preprocess_interface import \
     count_unique_reads_interface, create_ob_graph,\
     create_linear_map_interface,\
     split_vg_json_reads_into_chromosomes
@@ -187,17 +187,6 @@ interface = \
                     ('-r/--read_length', '')
                 ],
             'method': run_callpeaks_whole_genome_from_p_values
-        },
-    'estimate_shift':
-        {
-            'help': 'Estimate shift on whole genome',
-            'arguments':
-                [
-                    ('chromosomes', 'Comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
-                    ('ob_graphs_location', 'Location of graph files'),
-                    ('sample_reads_base_name', 'Will use files [base_name][chromosome].json'),
-                ],
-            'method': shift_estimation
         },
     'intervals_to_fasta':
         {
