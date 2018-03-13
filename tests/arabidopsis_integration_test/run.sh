@@ -19,3 +19,15 @@ do
 done
 
 wait
+
+# Run fimo for each chromosome
+for chromosome in $(seq 1 2)
+do
+    fimo -oc fimo_$chromosome $motif ${chromosome}_sequences.fasta > fimo_log.txt 2>&1
+done
+
+for chromosome in $(echo $chromosomes | tr "," "\n")
+do
+    graph_peak_caller diffexpr -g $graph_dir/$chromosome.nobg $chromosome fimo_$chromosome/fimo.txt $graph_dir/$chromosome.json
+    cat ${chromosome}_diffexpr.fasta >> diff_expr.fasta
+done

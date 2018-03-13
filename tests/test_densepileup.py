@@ -6,6 +6,10 @@ from graph_peak_caller.densepileup import DensePileup
 from offsetbasedgraph import GraphWithReversals as Graph,\
     Block, DirectedInterval as Interval
 
+
+if pytest.__version__ < "3.0.0":
+    pytest.skip()
+
 graph = Graph({i: Block(10) for i in range(1, 4)},
               {1: [2],
                2: [3]})

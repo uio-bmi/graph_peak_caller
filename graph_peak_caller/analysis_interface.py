@@ -92,7 +92,7 @@ def differential_expression(args):
         np.load(subgraphs_file_name),
         np.load(node_ids_file_name),
         graph)
-    retriever = SequenceRetriever.from_vg_json_graph(args.vg_graph_name)
+    retriever = obg.SequenceGraph(args.graph_file_name + ".sequences")
     out_f = open(test_name + "_diffexpr.fasta", "w")
     for expr_diff in res:
         main_seq = retriever.get_interval_sequence(expr_diff.main_path)
