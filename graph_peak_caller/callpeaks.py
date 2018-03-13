@@ -197,8 +197,12 @@ class CallPeaksFromQvalues:
                 self.out_file_base_name+"direct_pileup")
             self.raw_pileup = _pileup
         else:
-            _pileup = SparseValues.from_dense_pileup(
-                self.q_values.data._values)
+            if isinstance(self.q_values, DensePileup):
+                _pileup = SparseValues.from_dense_pileup(
+                    self.q_values.data._values)
+            else:
+                _pileup = self.q_values
+
         logging.info("Running Sparse Max Paths")
         max_paths, sub_graphs = SparseMaxPaths(
             self.filtered_peaks, self.graph, _pileup).run()

@@ -4,7 +4,7 @@ from offsetbasedgraph import Block, Interval, GraphWithReversals
 from graph_peak_caller import CallPeaksFromQvalues, ExperimentInfo
 from graph_peak_caller.legacy.sparsepileup import SparsePileup, ValuedIndexes
 from graph_peak_caller.densepileup import DensePileup
-
+from graph_peak_caller.sparsediffs import SparseValues
 logging.basicConfig(level=logging.ERROR)
 
 
@@ -85,10 +85,11 @@ class TestCallPeaksFromQValues(unittest.TestCase):
 
     def _run_caller(self, graph, pileup):
         pileup = DensePileup.create_from_old_sparsepileup(pileup)
+        new_sparse = SparseValues.from_dense_pileup(pileup.data._values)
         graph_size = sum(block.length() for block in graph.blocks.values())
         experiment_info = ExperimentInfo(graph_size, self.fragment_length,
                                          self.read_length)
-        caller = CallPeaksFromQvalues(graph, pileup, experiment_info,
+        caller = CallPeaksFromQvalues(graph, new_sparse, experiment_info,
                                       out_file_base_name="test_",
                                       cutoff=0.1, q_values_max_path=True)
         caller.callpeaks()

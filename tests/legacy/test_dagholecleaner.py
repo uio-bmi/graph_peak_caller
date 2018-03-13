@@ -1,8 +1,12 @@
-from graph_peak_caller.densepileup import DensePileupData, DensePileup
-from offsetbasedgraph import GraphWithReversals as Graph, Block, DirectedInterval as Interval
+import pytest
+# from graph_peak_caller.densepileup import DensePileupData, DensePileup
+from offsetbasedgraph import GraphWithReversals as Graph, Block,\
+    DirectedInterval as Interval
 import unittest
 import numpy as np
 # from graph_peak_caller.dagholecleaner import DagHoleCleaner
+if pytest.__version__ < "3.0.0":
+    pytest.skip()
 
 graph = Graph({i: Block(10) for i in range(1, 4)},
               {1: [2],
@@ -22,7 +26,7 @@ split_graph = Graph(
     }
 )
 
-"""
+@pytest.mark.skip("Legacy")
 class TestDagHoleCleanerGetLeftSideOfHoles(unittest.TestCase):
 
     def test_simple(self):
@@ -63,7 +67,7 @@ class TestDagHoleCleanerGetLeftSideOfHoles(unittest.TestCase):
         left_holes = cleaner.get_left_side_of_holes()
         self.assertEqual(left_holes, [(1, 3), (3, 0)])
 
-
+@pytest.mark.skip("Legacy")
 class TestDagHoleCleaner(unittest.TestCase):
     def test_single_peak(self):
         pileup = DensePileup.from_intervals(graph,
@@ -160,7 +164,6 @@ class TestDagHoleCleaner(unittest.TestCase):
         print(pileup)
 
         self.assertEqual(pileup, correct_pileup)
-"""
 
 
 if __name__ == "__main__":
