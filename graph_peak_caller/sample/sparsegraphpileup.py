@@ -229,20 +229,20 @@ class SamplePileupGenerator:
         self._neg_extender = ReverseSparseExtender(
             graph, self._pileup, extension)
 
-    def __to_dense(self):
-        diffs = SparseDiffs.from_pileup(self._pileup,
-                                        self._graph.node_indexes)
-        sparse_values = diffs.get_sparse_values()
-        densepileup = DensePileup(self._graph)
-        for start, end, value in zip(
-                sparse_values.indices,
-                chain(sparse_values.indices[1:], [densepileup.data._values.size]),
-                sparse_values.values):
-            densepileup.data._values[start:end] = value
-        densepileup.data._touched_nodes = {
-            node_id for node_id in self._graph.blocks if
-            np.count_nonzero(densepileup.data.values(node_id))}
-        return densepileup
+    # def __to_dense(self):
+    #     diffs = SparseDiffs.from_pileup(self._pileup,
+    #                                     self._graph.node_indexes)
+    #     sparse_values = diffs.get_sparse_values()
+    #     densepileup = DensePileup(self._graph)
+    #     for start, end, value in zip(
+    #             sparse_values.indices,
+    #             chain(sparse_values.indices[1:], [densepileup.data._values.size]),
+    #             sparse_values.values):
+    #         densepileup.data._values[start:end] = value
+    #     densepileup.data._touched_nodes = {
+    #         node_id for node_id in self._graph.blocks if
+    #         np.count_nonzero(densepileup.data.values(node_id))}
+    #     return densepileup
 
     def save_direct(self, base_name):
         new_pileup = SparseGraphPileup(self._graph)
