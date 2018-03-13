@@ -171,7 +171,7 @@ do
             -f $fragment_length \
             -r $read_length \
             -p True \
-            -u $unique_reads
+            -u $unique_reads \
             -g $genome_size \
             > log_before_p_values_$chromosome.txt 2>&1 &
             pids="$pids $!"
