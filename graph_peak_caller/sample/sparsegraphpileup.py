@@ -6,7 +6,6 @@ from collections import defaultdict
 import offsetbasedgraph as obg
 
 from ..sparsediffs import SparseDiffs
-from ..densepileup import DensePileup
 
 
 class NodeInfo:
@@ -33,7 +32,8 @@ class SparseGraphPileup:
         self.touched_nodes = np.zeros(self.node_starts.size, dtype="bool")
 
     def __str__(self):
-        return("\n".join([str(self.starts), str(self.ends), str(self.node_starts)]))
+        return("\n".join([str(self.starts), str(self.ends),
+                          str(self.node_starts)]))
 
 
 class ReadsAdder:
@@ -229,21 +229,6 @@ class SamplePileupGenerator:
         self._neg_extender = ReverseSparseExtender(
             graph, self._pileup, extension)
 
-    # def __to_dense(self):
-    #     diffs = SparseDiffs.from_pileup(self._pileup,
-    #                                     self._graph.node_indexes)
-    #     sparse_values = diffs.get_sparse_values()
-    #     densepileup = DensePileup(self._graph)
-    #     for start, end, value in zip(
-    #             sparse_values.indices,
-    #             chain(sparse_values.indices[1:], [densepileup.data._values.size]),
-    #             sparse_values.values):
-    #         densepileup.data._values[start:end] = value
-    #     densepileup.data._touched_nodes = {
-    #         node_id for node_id in self._graph.blocks if
-    #         np.count_nonzero(densepileup.data.values(node_id))}
-    #     return densepileup
-
     def save_direct(self, base_name):
         new_pileup = SparseGraphPileup(self._graph)
         new_pileup.ends = self._pileup.ends + self._reads_adder.pos_read_ends
@@ -255,8 +240,6 @@ class SamplePileupGenerator:
         sparse_values = sparsediff.get_sparse_values()
         sparse_values.track_size = self._graph.node_indexes[-1]
         sparse_values.to_sparse_files(base_name)
-        # np.save(base_name + "_diffindices.npy", sparsediff._indices)
-        # np.save(base_name + "_diffvalues.npy", sparsediff._diffs)
 
     def run(self, reads, save_name=None):
         self._reads_adder.add_reads(reads)
@@ -270,4 +253,3 @@ class SamplePileupGenerator:
             np.flatnonzero(
                 self._pileup.touched_nodes[:-2]) + self._graph.min_node)
         return sdiffs
-    # return self.__to_dense()
