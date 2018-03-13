@@ -123,8 +123,7 @@ class SparseExtender:
         self._adj_list = self._graph.adj_list
 
     def get_node_ids(self):
-        return range(self._graph.min_node, self._graph._id+1)
-    # return self._graph.get_sorted_node_ids()
+        return self._graph.get_topological_sorted_node_ids()
 
     def _add_node_end(self, node_id, value):
         self._pileup.node_starts[node_id+1-self._graph.min_node] -= value
@@ -135,6 +134,9 @@ class SparseExtender:
     def _add_end(self, index):
         self._pileup.ends.append(index)
 
+    def _get_array_idx(self, node_id):
+        return self._graph.node_indexes[node_id-self._graph.min_node]
+
     def run_linear(self, starts_dict):
         node_ids = self.get_node_ids()
         node_infos = defaultdict(NodeInfo)
@@ -142,9 +144,10 @@ class SparseExtender:
         empty = NodeInfo()
         cur_array_idx = 0
         n_nodes = len(node_ids)
-        for i, node_id in enumerate(node_ids):
-            if i % 1000000 == 0:
-                logging.info("Handling node %s of %s", i, n_nodes)
+        for counter, node_id in enumerate(node_ids):
+            cur_array_idx = self._get_array_idx(node_id)
+            if counter % 1000000 == 0:
+                logging.info("Handling node %s of %s", counter, n_nodes)
             info = node_infos.pop(node_id, empty)
             if info._dist_dict:
                 self._pileup.touched_nodes[
@@ -152,7 +155,6 @@ class SparseExtender:
             node_size = self._graph.node_size(node_id)
             starts = starts_dict[node_id]
             n_starts = len(starts)
-            # n_ends = n_starts + len(info._dist_dict)
             endsidxs = chain(enumerate(
                 (start+self._fragment_length for start in starts),
                 start=cur_id),
@@ -164,7 +166,7 @@ class SparseExtender:
                     self._add_end(cur_array_idx+end)
                 else:
                     d[idx] = end-node_size
-            cur_array_idx += node_size
+            # cur_array_idx += node_size
             cur_id = cur_id + n_starts
             self._add_node_end(node_id, len(d))
             for next_node in self._adj_list[node_id]:
@@ -175,6 +177,9 @@ class SparseExtender:
 
 
 class ReverseSparseExtender(SparseExtender):
+    def _get_array_idx(self, node_id):
+        return self._graph.node_indexes[-1] - self._graph.node_indexes[abs(node_id)-self._graph.min_node+1]
+
     def get_pileup(self):
         return np.cumsum(self._pileup[:-1])[::-1]
 
@@ -182,9 +187,8 @@ class ReverseSparseExtender(SparseExtender):
         self._adj_list = self._graph.reverse_adj_list
 
     def get_node_ids(self):
-        return range(-self._graph._id, -self._graph.min_node+1)
-    # return (-node_id for node_id in
-    #             self._graph.get_sorted_node_ids(reverse=True))
+        return [-node_id for node_id in
+                self._graph.get_topological_sorted_node_ids()[::-1]]
 
     def _add_node_end(self, node_id, value):
         self._pileup.node_starts[-node_id-self._graph.min_node] += value
