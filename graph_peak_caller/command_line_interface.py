@@ -184,7 +184,8 @@ interface = \
                     ('-d/--data_dir', 'Directory containing graphs.'),
                     ('-n/--name', 'Optional. eg experiment1_'),
                     ('-f/--fragment_length', ''),
-                    ('-r/--read_length', '')
+                    ('-r/--read_length', ''),
+                    ('-n/--out_name', 'Optional. Out base name. Prepended to output files.')
                 ],
             'method': run_callpeaks_whole_genome_from_p_values
         },
