@@ -1,5 +1,5 @@
 import sys
-from graph_peak_caller.peakscomparer import AnalysisResults
+from graph_peak_caller.analysis.peakscomparer import AnalysisResults
 import logging
 
 class HtmlReportGenerator:
