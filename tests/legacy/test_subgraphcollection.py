@@ -1,10 +1,16 @@
 import unittest
-from graph_peak_caller.subgraphcollection import SubgraphCollection, ConnectedAreas
-from graph_peak_caller.extender import Areas
-from offsetbasedgraph import GraphWithReversals as Graph, Block, Interval, Position, GraphWithReversals
+import pytest
+# from graph_peak_caller.subgraphcollection import SubgraphCollection, ConnectedAreas
+# from graph_peak_caller.extender import Areas
+# from offsetbasedgraph import GraphWithReversals as Graph, Block, Interval, Position, GraphWithReversals
 import numpy as np
-from graph_peak_caller.densepileup import DensePileup as SparsePileup
+from offsetbasedgraph import GraphWithReversals, Block
+# from graph_peak_caller.densepileup import DensePileup as SparsePileup
 
+if pytest.__version__ < "3.0.0":
+    pytest.skip()
+
+@pytest.mark.skip("Legacy")
 class Tester(unittest.TestCase):
     def setUp(self):
         self.simple_graph = GraphWithReversals({

@@ -3,8 +3,7 @@ import offsetbasedgraph as obg
 import logging
 from collections import defaultdict
 import numpy as np
-from .nongraphpeaks import NonGraphPeakCollection, NonGraphPeak
-from offsetbasedgraph import DirectedInterval
+from .analysis.nongraphpeaks import NonGraphPeakCollection, NonGraphPeak
 
 
 class Peak(obg.DirectedInterval):

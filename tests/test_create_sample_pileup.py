@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
-from offsetbasedgraph import GraphWithReversals as Graph, Block, DirectedInterval as Interval, IntervalCollection
+from offsetbasedgraph import GraphWithReversals as Graph, Block, \
+    DirectedInterval as Interval, IntervalCollection
 from graph_peak_caller import ExperimentInfo, Configuration
 from graph_peak_caller.sampleandcontrolcreator import SampleAndControlCreator
 from graph_peak_caller.densepileup import DensePileup as Pileup
@@ -70,7 +71,6 @@ class TestCase(Tester):
 
     def get_correct_extended_pileup(self):
         raise NotImplementedError()
-
 
     def fragment_length(self):
         raise NotImplementedError()

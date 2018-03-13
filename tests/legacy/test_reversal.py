@@ -1,7 +1,10 @@
 import unittest
 import logging
+import pytest
+if pytest.__version__ < "3.0.0":
+    pytest.skip()
 
-from graph_peak_caller.extender import Extender, Areas
+# from graph_peak_caller.extender import Extender, Areas
 from graph_peak_caller.areas import BinaryContinousAreas
 from offsetbasedgraph import Block, GraphWithReversals,\
     DirectedInterval, Position
@@ -23,7 +26,7 @@ neg_interval = DirectedInterval(2, 12, [-2])
 neg_spanning_interval = DirectedInterval(12, 2, [-3, -2])
 pos_spanning_interval = DirectedInterval(18, 8, [2, 3])
 
-
+@pytest.mark.skip("Legacy")
 class TestExtender(unittest.TestCase):
 
     def setUp(self):
@@ -85,6 +88,7 @@ class TestExtender(unittest.TestCase):
         self.assertEqual(areas, true_areas)
 
 
+@pytest.mark.skip("Legacy")
 class TestAreas(unittest.TestCase):
     def test_from_pos_interval(self):
         areas = Areas.from_interval(pos_interval, graph)

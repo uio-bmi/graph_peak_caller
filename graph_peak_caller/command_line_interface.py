@@ -17,7 +17,7 @@ from graph_peak_caller.analysis_interface import analyse_peaks_whole_genome,\
     analyse_manually_classified_peaks, differential_expression,\
     plot_motif_enrichment
 
-from graph_peak_caller.preprocess_interface import shift_estimation,\
+from graph_peak_caller.preprocess_interface import \
     count_unique_reads_interface, create_ob_graph,\
     create_linear_map_interface,\
     split_vg_json_reads_into_chromosomes
@@ -76,7 +76,7 @@ def concatenate_sequence_files(args):
 def find_linear_path(args):
     from graph_peak_caller.util import create_linear_path
     import pyvg
-    graph = obg.GraphWithReversals.from_numpy_file(args.ob_graph_file_name)
+    graph = args.graph
     vg_graph = pyvg.Graph.from_file(args.vg_json_graph_file_name)
     linear_path = create_linear_path(graph, vg_graph,
                                      path_name=args.linear_path_name,
@@ -183,23 +183,12 @@ interface = \
             'arguments':
                 [
                     ('chromosome', 'Specific chromosome to find peaks for.'),
-                    ('-d/--data-dir', 'Directory containing graphs.'),
-                    ('-n/--name', 'Optional. eg experiment1_'),
+                    ('-d/--data_dir', 'Directory containing graphs.'),
+                    ('-n/--out_name', 'Optional. eg experiment1_'),
                     ('-f/--fragment_length', ''),
                     ('-r/--read_length', '')
                 ],
             'method': run_callpeaks_whole_genome_from_p_values
-        },
-    'estimate_shift':
-        {
-            'help': 'Estimate shift on whole genome',
-            'arguments':
-                [
-                    ('chromosomes', 'Comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
-                    ('ob_graphs_location', 'Location of graph files'),
-                    ('sample_reads_base_name', 'Will use files [base_name][chromosome].json'),
-                ],
-            'method': shift_estimation
         },
     'intervals_to_fasta':
         {

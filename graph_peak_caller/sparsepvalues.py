@@ -3,7 +3,6 @@ import numpy as np
 import os
 from scipy.stats import poisson
 import logging
-import math
 from .sparsediffs import SparseValues
 
 
@@ -25,15 +24,18 @@ class PValuesFinder:
         p_values = self.sample.apply_binary_func(
             clean_p_values, self.control,
             return_values=True)
-
+        print("---------------")
+        print(self.sample)
+        print(self.control)
+        print(p_values)
         return p_values
 
 
 class PToQValuesMapper:
 
     def __init__(self, p_values, cum_counts):
-        self.p_values = p_values
-        self.cum_counts = cum_counts
+        self.p_values = np.asanyarray(p_values)
+        self.cum_counts = np.asanyarray(cum_counts)
 
     @classmethod
     def __read_file(cls, file_name):

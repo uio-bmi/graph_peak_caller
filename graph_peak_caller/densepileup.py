@@ -1,10 +1,7 @@
 import logging
 import numpy as np
-from .subgraphcollection import SubgraphCollection
+from collections import defaultdict
 from offsetbasedgraph import Interval, IntervalCollection, BlockArray
-from .legacy.sparsepileup import SparseAreasDict, intervals_to_start_and_ends
-from .postprocess.holecleaner import HolesCleaner
-from .sparsepileupv2 import RpScore
 
 
 class DensePileupData:
@@ -22,10 +19,6 @@ class DensePileupData:
 
     def _create_empty(self, ndim=1, base_value=0):
         logging.info("Sorting nodes")
-        #if isinstance(self._graph.blocks, BlockArray):
-        #    self._nodes = self._graph.blocks.get_sorted_node_ids()
-        #    logging.info("Used direct method to get sorted nodes")
-        #else:
         self._nodes = sorted(self._graph.blocks.keys())
 
         sorted_nodes = self._nodes
@@ -237,16 +230,10 @@ class DensePileupData:
 
         values = np.zeros(interval.length())
         offset = 0
-        # find_reversed = False
-        # use_interval = interval
-
         if all([rp < 0 for rp in interval.region_paths]):
             # Reverse before finding
             # find_reversed = True
             interval = interval.get_reverse()
-        # else:
-            # assert all([rp > 0 for rp in interval.region_paths]), \
-            #     "This method only supports intervals with single rp direction"
 
         for i, rp in enumerate(interval.region_paths):
             assert rp > 0, "Currently only implemented for forward directed intervals"
@@ -301,22 +288,6 @@ class DensePileup:
         self.data = DensePileupData(
             graph, ndim=ndim, base_value=base_value, dtype=dtype)
 
-    def add_interval(self, interval):
-        for i, rp in enumerate(interval.region_paths):
-            start = 0
-            end = self.data._graph.node_size(rp)
-            if i == 0:
-                start = interval.start_position.offset
-            if i == len(interval.region_paths) - 1:
-                end = interval.end_position.offset
-            self.data.values(rp)[start:end] += 1
-            self.data._touched_nodes.add(abs(rp))
-
-    def add_areas(self, areas):
-        for area, intervals in areas.items():
-            self.data.values(area)[intervals[0]:intervals[1]] += 1
-        self.data._touched_nodes.add(area)
-
     @classmethod
     def from_base_value(cls, graph, base_value):
         pileup = cls(graph, base_value=base_value)
@@ -325,8 +296,9 @@ class DensePileup:
     def __str__(self):
         out = "Densepileup \n"
         for node in self.data._touched_nodes:
-            #out += "  Node %d: %s, %s\n" % (node, self.data.values(node), self.data.get_sparse_indexes_and_values(node))
-            out += "  Node %d: %s\n" % (node, self.data.get_sparse_indexes_and_values(node))
+            out += "  Node %d: %s\n" % (
+                node, 
+                self.data.get_sparse_indexes_and_values(node))
 
         return out
 
@@ -335,85 +307,6 @@ class DensePileup:
 
     def __eq__(self, other):
         return self.data == other.data
-
-    def sum(self):
-        return self.data.sum()
-
-    def mean(self):
-        graph_size = sum([self.graph.node_size(b) for b in self.graph.blocks])
-        mean = self.sum() / graph_size
-        return mean
-
-    def scale(self, factor):
-        self.data.scale(factor)
-
-    def fill_small_wholes_on_dag(self, max_size):
-        from .dagholecleaner import DagHoleCleaner
-        logging.info("Cleaning holes using Dag Hole Cleaner")
-        cleaner = DagHoleCleaner(self, max_size)
-        cleaner.run()
-        logging.info("Done cleaning holes")
-
-    def set_new_values(self, values):
-        self.data.set_new_values(values)
-
-    def fill_small_wholes(self, max_size, write_holes_to_file=None, touched_nodes=None):
-        cleaner = HolesCleaner(self, max_size, touched_nodes=touched_nodes)
-        areas = cleaner.run()
-        n_filled = 0
-
-        hole_intervals = []
-        for node_id in areas.areas:
-            if touched_nodes is not None:
-                if node_id not in touched_nodes:
-                    continue
-
-            starts = areas.get_starts(node_id)
-            ends = areas.get_ends(node_id)
-            for start, end in zip(starts, ends):
-                logging.debug("Filling hole %s, %d, %d. Node size: %d" % (
-                    node_id, start, end, self.graph.node_size(node_id)))
-
-                if start == end:
-                    logging.warning("Trying to fill hole of 0 length")
-                    continue
-
-                self.data.fill_existing_hole(node_id, start, end, True)
-
-                n_filled += 1
-                assert end - start <= max_size
-                hole_intervals.append(Interval(start, end, [node_id]))
-
-        logging.info(
-            "Filled %d small holes (splitted into holes per node)" % n_filled)
-
-        if write_holes_to_file is not None:
-            intervals = IntervalCollection(hole_intervals)
-            intervals.to_file(write_holes_to_file, text_file=True)
-
-        self.sanitize()
-
-    def sanitize(self):
-        logging.info("Sanitizing sparse pileup")
-        logging.info("Sanitize done")
-
-    def find_valued_areas(self, value):
-        logging.info("Finding valued areas equal to %d" % value)
-        changes = np.diff(self.data._values == value)
-        # start_values = self.data._values[
-        #     self.data._node_indexes[:-1]]
-        # end_values = self.data._values[
-        #     self.data._node_indexes[1:]-1]
-        if value:
-            return SparseAreasDict({
-                node_id: self.data.find_valued_areas(node_id, value, changes)
-                for node_id in self.data._graph.blocks
-            }, graph=self.graph)
-        else:
-            return SparseAreasDict(
-                {node_id: self.data.find_valued_areas(node_id, value, changes)
-                 for node_id in self.data._touched_nodes},
-                graph=self.graph)
 
     @classmethod
     def from_intervals(cls, graph, intervals):
@@ -428,43 +321,6 @@ class DensePileup:
                 end = ends[node][i]
                 pileup.data.add_value(node, start, end, 1)
 
-        return pileup
-
-    def to_subgraphs(self):
-        # Returns a list of areas which each is a subgraph
-        collection = SubgraphCollection.from_pileup(self.graph, self)
-        return collection
-
-    def threshold_copy(self, cutoff):
-        new_pileup = self.__class__(self.graph)
-        new_pileup.data = self.data.threshold_copy(cutoff)
-        return new_pileup
-
-    def threshold(self, cutoff):
-        self.data.threshold(cutoff)
-
-    @classmethod
-    def from_bed_graph(cls, graph, filename):
-        raise NotImplementedError()
-
-    @classmethod
-    def from_bed_file(cls, graph, filename):
-        raise NotImplementedError()
-
-    def to_bed_file(self, filename):
-        raise NotImplementedError()
-
-    def remove_small_peaks(self, min_size):
-        logging.info("Initing cleaner")
-        cleaner = PeaksCleaner(self, min_size)
-        logging.info("Running cleaner")
-        areas = cleaner.run()
-        logging.info("Removing emty areas")
-
-        logging.info("Creating pileup using results from cleaner")
-        pileup = self.from_areas_collection(self.graph, [areas])
-        logging.info("Tresholding")
-        pileup.threshold(0.5)
         return pileup
 
     def to_bed_graph(self, filename):
@@ -488,20 +344,6 @@ class DensePileup:
         f.close()
         return filename
 
-    def equals_old_sparse_pileup(self, old_pileup):
-        # For tests to pass temporarily
-        for node in self.data.nodes():
-            indexes, values = self.data.get_sparse_indexes_and_values(node)
-            other_indexes = old_pileup.data[node].all_idxs()
-            if not np.all(indexes == other_indexes):
-                return False
-
-            other_values = old_pileup.data[node].all_values()
-            if not np.allclose(values, other_values):
-                return False
-
-        return True
-
     @classmethod
     def create_from_old_sparsepileup(cls, old_pileup):
         # TMP method for tests to pass
@@ -521,67 +363,19 @@ class DensePileup:
 
         return pileup
 
-    def set_area_to_value(self, areas, value):
-        for node_id in areas.full_areas:
-            self.data.set_full_node_value(node_id, value)
+    def equals_old_sparse_pileup(self, old_pileup):
+        # For tests to pass temporarily
+        for node in self.data.nodes():
+            indexes, values = self.data.get_sparse_indexes_and_values(node)
+            other_indexes = old_pileup.data[node].all_idxs()
+            if not np.all(indexes == other_indexes):
+                return False
 
-        for node_id, internal_intervals in areas.internal_intervals.items():
-            assert node_id > 0
-            self.data.set_values(node_id, internal_intervals[0], internal_intervals[1], value)
+            other_values = old_pileup.data[node].all_values()
+            if not np.allclose(values, other_values):
+                return False
 
-        for node_id, start in areas.starts.items():
-            node_size = self.graph.node_size(node_id)
-            pileup_end = start
-            pileup_start = 0
-            if node_id < 0:
-                pileup_end = node_size
-                pileup_start = node_size - start
-                node_id = -node_id
-
-            #print("   Processing start %d for node %d, adding start-end %d-%d" % (start, node_id, pileup_start, pileup_end))
-            self.data.set_values(node_id, pileup_start, pileup_end, value)
-
-    def area_is_not_empty(self, areas):
-        # Returns true if area is covered by anything anywhere.
-        # Areas is Binary cont areas dict
-        for node_id in areas.full_areas:
-            self.data.add_value_to_full_node(node_id, 1)
-
-        for node_id, internal_intervals in areas.internal_intervals.items():
-            assert node_id > 0
-            self.data.add_value(node_id, internal_intervals[0], internal_intervals[1], 1)
-
-        for node_id, start in areas.starts.items():
-            node_size = self.graph.node_size(node_id)
-            pileup_end = start
-            pileup_start = 0
-            if node_id < 0:
-                pileup_end = node_size
-                pileup_start = node_size - start
-                node_id = -node_id
-
-            #print("   Processing start %d for node %d, adding start-end %d-%d" % (start, node_id, pileup_start, pileup_end))
-            self.data.add_value(node_id, pileup_start, pileup_end, 1)
-
-    def add_area(self, areas):
-        for node_id in areas.full_areas:
-            self.data.add_value_to_full_node(node_id, 1)
-
-        for node_id, internal_intervals in areas.internal_intervals.items():
-            assert node_id > 0
-            self.data.add_value(node_id, internal_intervals[0], internal_intervals[1], 1)
-
-        for node_id, start in areas.starts.items():
-            node_size = self.graph.node_size(node_id)
-            pileup_end = start
-            pileup_start = 0
-            if node_id < 0:
-                pileup_end = node_size
-                pileup_start = node_size - start
-                node_id = -node_id
-
-            #print("   Processing start %d for node %d, adding start-end %d-%d" % (start, node_id, pileup_start, pileup_end))
-            self.data.add_value(node_id, pileup_start, pileup_end, 1)
+        return True
 
     @classmethod
     def create_from_binary_continous_areas(cls, graph, areas_list):
@@ -612,7 +406,6 @@ class DensePileup:
         pileup_vals[indexes] = diffs
         pileup_vals = np.cumsum(pileup_vals)
         pileup.data._values = pileup_vals
-	
         try:
             touched_nodes = np.load(
                 base_file_name + "_touched_nodes.npy")
@@ -624,19 +417,50 @@ class DensePileup:
 
     def to_sparse_files(self, file_base_name):
         vals = self.data._values
-        assert np.all(vals >= 0)
-        #vals[np.where(vals < truncate_below)] = 0
         diffs = np.ediff1d(vals, to_begin=[1])
         indexes = np.nonzero(diffs)[0]
-        #indexes = np.insert(indexes, 0, 0)
         values = vals[indexes]
 
         # Add length to end and 0 to start
         indexes = np.append(indexes, len(self.data._values))
 
         np.save(file_base_name + "_touched_nodes.npy",
-                   np.array(list(self.data._touched_nodes)))
+                np.array(list(self.data._touched_nodes)))
         np.save(file_base_name + "_indexes.npy", indexes)
         np.save(file_base_name + "_values.npy", values)
 
         logging.info("Saved p values indexes/values to files")
+
+
+def intervals_to_start_and_ends(graph, intervals):
+    # Returns two dict on rp => positions (start/ends)
+    starts = defaultdict(list)
+    ends = defaultdict(list)
+
+    for interval in intervals:
+        for i, region_path in enumerate(interval.region_paths):
+            start = 0
+            end = graph.node_size(region_path)
+            if i == 0:
+                start = interval.start_position.offset
+            if i == len(interval.region_paths)-1:
+                end = interval.end_position.offset
+
+            if region_path < 0:
+                new_start = graph.node_size(region_path) - end
+                new_end = graph.node_size(region_path) - start
+                start = new_start
+                end = new_end
+
+                region_path = -region_path
+
+            starts[region_path].append(start)
+            ends[region_path].append(end)
+
+    for rp in starts:
+        starts[rp] = np.array(starts[rp])
+
+    for rp in ends:
+        ends[rp] = np.array(ends[rp])
+
+    return starts, ends

@@ -5,34 +5,6 @@ import offsetbasedgraph as obg
 
 from graph_peak_caller.util import create_linear_map
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
-from graph_peak_caller.shift_estimation_multigraph import \
-    MultiGraphShiftEstimator
-
-
-def shift_estimation(args):
-    """
-    from graph_peak_caller.shiftestimation import Treatment, Opt, PeakModel
-    treatment = Treatment.from_bed_file("linear_bed.bed")
-    opt = Opt()
-    opt.gsize = 48172484
-    model = PeakModel(opt, treatment)
-    print(model.d)
-    return
-    """
-    chromosomes = args.chromosomes.split(",")
-    graphs = [args.ob_graphs_location + chrom for chrom in chromosomes]
-    logging.info("Will try to use graphs %s" % graphs)
-    sample_file_names = [args.sample_reads_base_name + chrom + ".json"
-                         for chrom in chromosomes]
-    logging.info("Will use reads from %s" % sample_file_names)
-
-    estimator = MultiGraphShiftEstimator.from_files(
-        chromosomes, graphs, sample_file_names)
-
-    estimator.to_linear_bed_file("linear_bed.bed", read_length=36)
-
-    d = estimator.get_estimates()
-    print("Shift: %d" % d)
 
 
 def count_unique_reads_interface(args):

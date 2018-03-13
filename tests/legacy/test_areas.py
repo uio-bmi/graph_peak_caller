@@ -1,10 +1,16 @@
 import unittest
-from graph_peak_caller.subgraphcollection import SubgraphCollection, ConnectedAreas
-from graph_peak_caller.extender import Areas
-from offsetbasedgraph import Graph, Block, Interval, Position
-import numpy as np
-from graph_peak_caller.legacy.sparsepileup import SparsePileup
+import pytest
+if pytest.__version__ < "3.0.0":
+    pytest.skip()
 
+# from graph_peak_caller.subgraphcollection import SubgraphCollection, ConnectedAreas
+# from graph_peak_caller.extender import Areas
+# from offsetbasedgraph import Graph, Block, Interval, Position
+# import numpy as np
+# from graph_peak_caller.legacy.sparsepileup import SparsePileup
+
+
+@pytest.mark.skip("Legacy")
 class TestAreas(unittest.TestCase):
 
     def setUp(self):
