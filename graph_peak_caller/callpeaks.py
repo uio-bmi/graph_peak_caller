@@ -1,7 +1,8 @@
 import logging
 import numpy as np
 from offsetbasedgraph import IntervalCollection, DirectedInterval
-from .densepileup import DensePileup
+#from .densepileup import DensePileup
+from .mindense import DensePileup
 from .sampleandcontrolcreator import SampleAndControlCreator
 from .sparsepvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
 from .postprocess import HolesCleaner, SparseMaxPaths
@@ -176,9 +177,6 @@ class CallPeaksFromQvalues:
 
     def __postprocess(self):
         logging.info("Filling small Holes")
-        if isinstance(self.pre_processed_peaks, DensePileup):
-            self.pre_processed_peaks = SparseValues.from_dense_pileup(
-                self.pre_processed_peaks.data._values)
         self.pre_processed_peaks = HolesCleaner(
             self.graph,
             self.pre_processed_peaks,
@@ -197,11 +195,7 @@ class CallPeaksFromQvalues:
                 self.out_file_base_name+"direct_pileup")
             self.raw_pileup = _pileup
         else:
-            if isinstance(self.q_values, DensePileup):
-                _pileup = SparseValues.from_dense_pileup(
-                    self.q_values.data._values)
-            else:
-                _pileup = self.q_values
+            _pileup = self.q_values
 
         logging.info("Running Sparse Max Paths")
         max_paths, sub_graphs = SparseMaxPaths(
@@ -209,17 +203,13 @@ class CallPeaksFromQvalues:
 
         self._reporter.add("all_max_paths", max_paths)
         logging.info("All max paths found")
-
-        # Create dense q
-        if not isinstance(self.q_values, DensePileup):
-            q_values = DensePileup(self.graph)
-            q_values.data._values = self.q_values.to_dense_pileup(
-                self.graph.node_indexes[-1])
-            self.q_values = q_values
+        self.q_values = DensePileup(
+            self.graph, self.q_values.to_dense_pileup(
+                self.graph.node_indexes[-1]))
 
         for max_path in max_paths:
             max_path.set_score(np.max(
-                self.q_values.data.get_interval_values(max_path)))
+                self.q_values.get_interval_values(max_path)))
         pairs = list(zip(max_paths, sub_graphs))
         pairs.sort(key=lambda p: p[0].score, reverse=True)
         logging.info("N unfiltered peaks: %s", len(max_paths))
