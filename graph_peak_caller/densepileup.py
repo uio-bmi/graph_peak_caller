@@ -230,16 +230,10 @@ class DensePileupData:
 
         values = np.zeros(interval.length())
         offset = 0
-        # find_reversed = False
-        # use_interval = interval
-
         if all([rp < 0 for rp in interval.region_paths]):
             # Reverse before finding
             # find_reversed = True
             interval = interval.get_reverse()
-        # else:
-            # assert all([rp > 0 for rp in interval.region_paths]), \
-            #     "This method only supports intervals with single rp direction"
 
         for i, rp in enumerate(interval.region_paths):
             assert rp > 0, "Currently only implemented for forward directed intervals"
