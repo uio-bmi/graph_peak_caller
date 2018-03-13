@@ -27,7 +27,7 @@ arabidopsis_graph_dir="/media/storage1/tair2/"
 
 wait
 
-./analyse_peak_calling_results.sh  ERR718799 1 YEAST_ABF1 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/YEAST_ABF1.meme $yeast_graph_dir/ $yeast_graph_dir/reference.fa 12100000 &
+#./analyse_peak_calling_results.sh  ERR718799 1 YEAST_ABF1 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/YEAST_ABF1.meme $yeast_graph_dir/ $yeast_graph_dir/reference.fa 12100000 &
 ./analyse_peak_calling_results.sh  SRR354190 1 ARABIDOPSIS_SVP 1,2,3,4,5 https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/ARABIDOPSIS_SVP.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 &
 #./analyse_peak_calling_results.sh  SRX218796 1 ARABIDOPSIS_ATAF1 1,2,3,4,5 https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/ARABIDOPSIS_ATAF1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 &
 ./analyse_peak_calling_results.sh  SRR931836 1 ARABIDOPSIS_ERF115 1,2,3,4,5 https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/ARABIDOPSIS_ATAF1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 &
