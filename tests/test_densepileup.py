@@ -10,6 +10,7 @@ graph = Graph({i: Block(10) for i in range(1, 4)},
               {1: [2],
                2: [3]})
 
+
 class TestDensePileup(unittest.TestCase):
 
     def test_init(self):
@@ -49,7 +50,6 @@ class TestDensePileup(unittest.TestCase):
         indexes, values = pileup.data.get_sparse_indexes_and_values(2)
         self.assertTrue(np.all(values == [1]))
         self.assertTrue(np.all(indexes == [0, 10]))
-
 
     def test_indexes_to_positions(self):
         starts = {1: [3, 5]}
@@ -142,6 +142,7 @@ class TestDensePileup(unittest.TestCase):
         sparse = SparsePileup.from_bed_graph(graph, "test_bdg.tmp")
         self.assertTrue(pileup.equals_old_sparse_pileup(sparse))
 
+    @pytest.mark.skip("Legacy")
     def test_find_valued_areas(self):
         pileup = DensePileup.from_intervals(graph,
                                             [
@@ -155,7 +156,7 @@ class TestDensePileup(unittest.TestCase):
 
     @pytest.mark.skip("Legacy")
     def __test_fill_small_holes_non_dag_simple(self):
-        pileup= DensePileup.from_intervals(graph,
+        pileup = DensePileup.from_intervals(graph,
                                            [
                                                Interval(1, 8, [1]),
                                                Interval(2, 3, [2]),
