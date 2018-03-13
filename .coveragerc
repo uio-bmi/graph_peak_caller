@@ -1,2 +1,8 @@
 [run]
 source=graph_peak_caller
+
+
+omit =
+    tests/*
+    graph_peak_caller/legacy/*
+    benchmarking/*

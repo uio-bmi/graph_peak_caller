@@ -1,3 +1,6 @@
 coverage:
     ignore:
         - *command_line_interface.py*
+        - tests/*
+        - legacy/*
+        - graph_peak_caller/legacy/*
