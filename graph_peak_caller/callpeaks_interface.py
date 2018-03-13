@@ -89,7 +89,7 @@ def run_callpeaks_interface(args):
     linear_map_name = args.linear_map
     if linear_map_name is None:
         linear_map_name = args.graph_file_name.split(".")[0] + "_linear_map.npz"
-        find_or_create_linear_map(linear_map_name)
+        find_or_create_linear_map(ob_graph, linear_map_name)
 
     qval = 0.05 if args.q_value_threshold is None else float(args.q_value_thresholds)
     run_callpeaks(
