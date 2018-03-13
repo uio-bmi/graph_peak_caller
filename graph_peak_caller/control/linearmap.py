@@ -87,7 +87,9 @@ class LinearMap:
 
     @classmethod
     def from_graph(cls, graph):
+        logging.info("Getting topologically sorted nodes")
         node_ids = list(graph.get_topological_sorted_node_ids())
+        logging.info("Finding starts and ends")
         starts = cls.find_starts(graph, node_ids)
         ends = cls.find_ends(graph, node_ids[::-1])
         return cls(starts, ends, graph)
@@ -106,7 +108,11 @@ class LinearMap:
         if node_ids is None:
             node_ids = list(graph.get_topological_sorted_node_ids())
         max_dists = np.zeros(len(node_ids))
+        n_processed = 0
         for node_id in node_ids:
+            if n_processed % 500000 == 0:
+                logging.info("%d nodes processed" % n_processed)
+            n_processed += 1
             assert graph.node_size(node_id) > 0
             i = node_id - graph.min_node
             cur_dist = max_dists[i] + graph.node_size(node_id)
@@ -121,7 +127,11 @@ class LinearMap:
         if node_ids is None:
             node_ids = list(graph.get_sorted_node_ids(reverse=True))
         max_dists = np.zeros(len(node_ids))
+        n_processed = 0
         for node_id in node_ids:
+            if n_processed % 500000 == 0:
+                logging.info("%d nodes processed" % n_processed)
+            n_processed += 1
             i = node_id - graph.min_node
             cur_dist = max_dists[i] + graph.node_size(node_id)
             for next_node in adj_list[-node_id]:

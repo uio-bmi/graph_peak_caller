@@ -7,7 +7,7 @@ from pyvg.sequences import SequenceRetriever
 from . import ExperimentInfo, Configuration, CallPeaks
 from .multiplegraphscallpeaks import MultipleGraphsCallpeaks
 import os
-
+from graph_peak_caller.util import create_linear_map
 
 def run_callpeaks(ob_graph,
                   sample_file_name, control_file_name,
@@ -64,6 +64,17 @@ def run_callpeaks(ob_graph,
         logging.info("Not saving max path sequences, since a sequence graph was not found.")
 
 
+def find_or_create_linear_map(graph, linear_map_name):
+
+    if os.path.isfile(linear_map_name):
+        logging.info("Found linear map %s. "
+                     "Will be used in peak calling." % linear_map_name)
+    else:
+        logging.info("No linear map provided, and none found. Will create now.")
+        create_linear_map(graph, linear_map_name)
+        logging.info("Done creating linear map")
+
+
 def run_callpeaks_interface(args):
     logging.info("Read offset based graph")
 
@@ -76,8 +87,10 @@ def run_callpeaks_interface(args):
 
     out_name = args.out_name if args.out_name is not None else ""
     linear_map_name = args.linear_map
-    if args.linear_map is None:
+    if linear_map_name is None:
         linear_map_name = args.graph_file_name.split(".")[0] + "_linear_map.npz"
+        find_or_create_linear_map(linear_map_name)
+
     qval = 0.05 if args.q_value_threshold is None else float(args.q_value_thresholds)
     run_callpeaks(
         ob_graph,
@@ -97,8 +110,17 @@ def run_callpeaks_whole_genome(args):
     logging.info("Running whole genome.")
     chromosomes = args.chromosomes.split(",")
     graph_file_names = [args.data_dir + "/" + chrom for chrom in chromosomes]
-    linear_map_file_names = [args.data_dir + "/linear_map_" + chrom
-                             for chrom in chromosomes]
+
+    linear_map_file_names = []
+    for i, chrom in enumerate(chromosomes):
+        linear_map_name = args.data_dir + "/" + chrom + "_linear_map.npz"
+        if not os.path.isfile(linear_map_name):
+            logging.warning("Did not find linear map for "
+                            "chromosome %s. Will create." % chrom)
+            create_linear_map(obg.Graph.from_numpy_file(graph_file_names[i]), linear_map_name)
+        else:
+            logging.info("Found linear map %s that will be used." % linear_map_name)
+        linear_map_file_names.append(linear_map_name)
 
     sequence_retrievers = \
         (obg.SequenceGraph.from_file(args.data_dir + "/" + chrom + ".nobg.sequences")

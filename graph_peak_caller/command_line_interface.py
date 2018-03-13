@@ -139,7 +139,9 @@ interface = \
             'requires_graph': True,
             'arguments':
                 [
-                    ('-m/--linear_map', "Optional Linear map file name."),
+                    ('-m/--linear_map', "Optional. Linear map file name. Will look for '"
+                                        " files matching graph name if not set or create if"
+                                        " no file is found."),
                     ('-s/--sample', 'File name to a vg JSON file or intervalcollection file.'),
                     ('-c/--control', '(Optional) File name to a vg JSON file or intervalcollection file. '
                                      'Only include if a separate control is used.'),
