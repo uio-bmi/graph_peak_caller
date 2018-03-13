@@ -318,8 +318,9 @@ class DensePileup:
     def __str__(self):
         out = "Densepileup \n"
         for node in self.data._touched_nodes:
-            #out += "  Node %d: %s, %s\n" % (node, self.data.values(node), self.data.get_sparse_indexes_and_values(node))
-            out += "  Node %d: %s\n" % (node, self.data.get_sparse_indexes_and_values(node))
+            out += "  Node %d: %s\n" % (
+                node, 
+                self.data.get_sparse_indexes_and_values(node))
 
         return out
 
@@ -329,66 +330,8 @@ class DensePileup:
     def __eq__(self, other):
         return self.data == other.data
 
-    def sum(self):
-        return self.data.sum()
-
-    def mean(self):
-        graph_size = sum([self.graph.node_size(b) for b in self.graph.blocks])
-        mean = self.sum() / graph_size
-        return mean
-
-    def scale(self, factor):
-        self.data.scale(factor)
-
-    def fill_small_wholes_on_dag(self, max_size):
-        from .dagholecleaner import DagHoleCleaner
-        logging.info("Cleaning holes using Dag Hole Cleaner")
-        cleaner = DagHoleCleaner(self, max_size)
-        cleaner.run()
-        logging.info("Done cleaning holes")
-
     def set_new_values(self, values):
         self.data.set_new_values(values)
-
-    def fill_small_wholes(self, max_size, write_holes_to_file=None, touched_nodes=None):
-        cleaner = HolesCleaner(self, max_size, touched_nodes=touched_nodes)
-        areas = cleaner.run()
-        n_filled = 0
-
-        hole_intervals = []
-        for node_id in areas.areas:
-            if touched_nodes is not None:
-                if node_id not in touched_nodes:
-                    continue
-
-            starts = areas.get_starts(node_id)
-            ends = areas.get_ends(node_id)
-            for start, end in zip(starts, ends):
-                logging.debug("Filling hole %s, %d, %d. Node size: %d" % (
-                    node_id, start, end, self.graph.node_size(node_id)))
-
-                if start == end:
-                    logging.warning("Trying to fill hole of 0 length")
-                    continue
-
-                self.data.fill_existing_hole(node_id, start, end, True)
-
-                n_filled += 1
-                assert end - start <= max_size
-                hole_intervals.append(Interval(start, end, [node_id]))
-
-        logging.info(
-            "Filled %d small holes (splitted into holes per node)" % n_filled)
-
-        if write_holes_to_file is not None:
-            intervals = IntervalCollection(hole_intervals)
-            intervals.to_file(write_holes_to_file, text_file=True)
-
-        self.sanitize()
-
-    def sanitize(self):
-        logging.info("Sanitizing sparse pileup")
-        logging.info("Sanitize done")
 
     def find_valued_areas(self, value):
         logging.info("Finding valued areas equal to %d" % value)

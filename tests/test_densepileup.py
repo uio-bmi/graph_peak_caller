@@ -14,7 +14,7 @@ graph = Graph({i: Block(10) for i in range(1, 4)},
 class TestDensePileup(unittest.TestCase):
 
     def test_init(self):
-        pileup = DensePileup(graph)
+        DensePileup(graph)
 
     def test_from_starts_and_ends(self):
 
