@@ -5,7 +5,7 @@ from offsetbasedgraph import GraphWithReversals, Block, \
 from graph_peak_caller import ExperimentInfo, CallPeaks, Configuration
 from graph_peak_caller.control.snarls import \
     SnarlGraph, SnarlGraphBuilder, SimpleSnarl
-from graph_peak_caller.control.linearsnarls import LinearSnarlMap
+from graph_peak_caller.control.linearmap import LinearMap
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s, %(levelname)s: %(message)s")
 
@@ -51,7 +51,7 @@ class TestWholeCallPeaks(unittest.TestCase):
                                      experiment_info=experiment_info,
                                      has_control=False,
                                      configuration=config,
-                                     linear_map="test_linear_map.tmp")
+                                     linear_map="test_linear_map.npz")
 
     def do_asserts(self):
         for peak in self.peaks:
@@ -75,13 +75,7 @@ class TestWholeCallpeaksSplitGraph(TestWholeCallPeaks):
                 3: [4]
             }
         )
-        self.snarls = {
-            5: SimpleSnarl(1, 4, 5)
-        }
-        self.snarlgraph = SnarlGraphBuilder(self.graph.copy(), self.snarls,
-                                            id_counter=6).build_snarl_graphs()
-        LinearSnarlMap.from_snarl_graph(
-            self.snarlgraph, self.graph).to_json_files("test_linear_map.tmp")
+        LinearMap.from_graph(self.graph).to_file("test_linear_map.npz")
 
     def test_single_peak(self):
         self.peaks = [
@@ -109,11 +103,11 @@ class TestWholeCallPeaksHierarchical(TestWholeCallPeaks):
     def set_graph(self):
         self.fragment_length = 6
         self.read_length = 2
-
+        blocks = {i: Block(3) for i in range(1, 11)}
+        blocks[11] = Block(1000)
         self.graph = GraphWithReversals(
-            {i: Block(3) for i in range(1, 13)},
+            blocks,
             {
-                # 11: [1],
                 1: [2, 3],
                 2: [7, 8],
                 3: [4, 5],
@@ -123,78 +117,10 @@ class TestWholeCallPeaksHierarchical(TestWholeCallPeaks):
                 7: [9],
                 8: [9],
                 9: [10],
-                10: [12]
+                10: [11]
              })
 
-        self.graph.blocks[11] = Block(500)
-        self.graph.blocks[12] = Block(500)
-
-        self.snarlgraph = SnarlGraph(
-            {
-                11: Block(500),
-                12: Block(500),
-                1: Block(3),
-                10: Block(3),
-                20: SnarlGraph(
-                    {
-                        3: Block(3),
-                        21: SnarlGraph(
-                            {
-                                4: Block(3),
-                                5: Block(3)
-                            },
-                            {
-                                3: [4, 5],
-                                4: [6],
-                                5: [6]
-                            },
-                            start_node=3,
-                            end_node=6
-                        ),
-                        22: SnarlGraph(
-                            {
-                                7: Block(3),
-                                8: Block(3)
-                            },
-                            {
-                                2: [7, 8],
-                                7: [9],
-                                8: [9]
-                            },
-                            start_node=2,
-                            end_node=9
-                        ),
-                        2: Block(3),
-                        6: Block(3),
-                        9: Block(3),
-                    },
-                    {
-                        3: [21],
-                        2: [22],
-                        21: [6],
-                        22: [9],
-                        1: [2, 3],
-                        6: [10],
-                        9: [10]
-                    },
-                    start_node=1,
-                    end_node=10
-                )
-            },
-            {
-                11: [1],
-                1: [20],
-                20: [10],
-                10: [12],
-                13: [11],  # Dummy
-                12: [14],   # Dummy
-            },
-            start_node=13,
-            end_node=14
-        )
-
-        LinearSnarlMap.from_snarl_graph(
-            self.snarlgraph, self.graph).to_json_files("test_linear_map.tmp")
+        LinearMap.from_graph(self.graph).to_file("test_linear_map.npz")
 
     def test_single_peak(self):
         self.peaks = [
@@ -205,7 +131,7 @@ class TestWholeCallPeaksHierarchical(TestWholeCallPeaks):
     def test_multiple_peaks(self):
         self.peaks = [
             DirectedInterval(2, 2, [1, 3, 4], self.graph),
-            DirectedInterval(2, 2, [6, 10, 12], self.graph),
+            DirectedInterval(2, 2, [6, 10, 11], self.graph),
         ]
         self.do_asserts()
 
@@ -213,7 +139,7 @@ class TestWholeCallPeaksHierarchical(TestWholeCallPeaks):
 
         self.peaks = [
             DirectedInterval(2, 2, [1, 3, 4], self.graph),
-            DirectedInterval(2, 2, [6, 10, 12], self.graph),
+            DirectedInterval(2, 2, [6, 10, 11], self.graph),
         ]
         self.do_asserts()
 

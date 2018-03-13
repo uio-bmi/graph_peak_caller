@@ -87,8 +87,9 @@ class LinearMap:
 
     @classmethod
     def from_graph(cls, graph):
-        starts = cls.find_starts(graph)
-        ends = cls.find_ends(graph)
+        node_ids = list(graph.get_topological_sorted_node_ids())
+        starts = cls.find_starts(graph, node_ids)
+        ends = cls.find_ends(graph, node_ids[::-1])
         return cls(starts, ends, graph)
 
     @classmethod
@@ -101,42 +102,32 @@ class LinearMap:
                  ends=self._node_ends)
 
     @staticmethod
-    def find_starts(graph):
-        node_ids = list(graph.get_sorted_node_ids())
+    def find_starts(graph, node_ids=None):
+        if node_ids is None:
+            node_ids = list(graph.get_topological_sorted_node_ids())
         max_dists = np.zeros(len(node_ids))
-        counter = 0
-        for i, node_id in enumerate(node_ids):
+        for node_id in node_ids:
             assert graph.node_size(node_id) > 0
+            i = node_id - graph.min_node
             cur_dist = max_dists[i] + graph.node_size(node_id)
-            if (i) and max_dists[i] == 0:
-                # print(i, node_id, graph.reverse_adj_list[-node_id])
-                # raise
-                pass
             for next_node in graph.adj_list[node_id]:
-                if next_node < node_id:
-                    counter += 1
                 j = next_node-graph.min_node
                 max_dists[j] = max(cur_dist, max_dists[j])
-        print("### Counts", counter)
-        print("###", max_dists[-1]+graph.node_size(node_ids[-1]))
-        print(np.max(max_dists))
         return max_dists
 
     @staticmethod
-    def find_ends(graph):
+    def find_ends(graph, node_ids=None):
         adj_list = graph.reverse_adj_list
-        node_ids = list(graph.get_sorted_node_ids(reverse=True))
+        if node_ids is None:
+            node_ids = list(graph.get_sorted_node_ids(reverse=True))
         max_dists = np.zeros(len(node_ids))
-        N = len(node_ids)
-        for i, node_id in enumerate(node_ids):
-            cur_dist = max_dists[N-i-1] + graph.node_size(node_id)
-            assert (not i) or max_dists[N-i-1] > 0, i
+        for node_id in node_ids:
+            i = node_id - graph.min_node
+            cur_dist = max_dists[i] + graph.node_size(node_id)
             for next_node in adj_list[-node_id]:
                 j = abs(next_node)-graph.min_node
                 max_dists[j] = max(cur_dist, max_dists[j])
-        assert np.argmax(max_dists) == 0
         linear_length = max_dists[0] + graph.node_size(graph.min_node)
-        print("###", linear_length)
         return linear_length - max_dists
 
 if __name__ == "__main__":

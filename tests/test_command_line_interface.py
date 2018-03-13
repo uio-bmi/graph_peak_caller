@@ -1,16 +1,15 @@
 import unittest
-from graph_peak_caller.command_line_interface import create_ob_graph, \
-    create_linear_map_interface, run_callpeaks_interface, concatenate_sequence_files
-from offsetbasedgraph import GraphWithReversals, Block, IntervalCollection, DirectedInterval as Interval
+from offsetbasedgraph import GraphWithReversals, Block, \
+    IntervalCollection, DirectedInterval as Interval
 from graph_peak_caller.peakcollection import Peak
 import os
-import sys
-from unittest.mock import patch
 from graph_peak_caller.command_line_interface import run_argument_parser
+
 
 class Arguments(object):
     def __init__(self, dict):
         self.__dict__ = dict
+
 
 class TestWrapper(unittest.TestCase):
 
@@ -26,6 +25,7 @@ class TestWrapper(unittest.TestCase):
             if os.path.isfile(file):
                 os.remove(file)
 
+
 class TestCommandLineInterface(TestWrapper):
     def test_create_ob_graph(self):
         run_argument_parser(["create_ob_graph" , "-o", "tests/testgraph.obg",
@@ -39,17 +39,17 @@ class TestCommandLineInterface(TestWrapper):
         self.assertEqual(graph, self.correct_ob_graph)
 
     def test_all_steps(self):
-        run_argument_parser(["create_ob_graph" , "-o", "tests/testgraph.obg",
+        run_argument_parser(["create_ob_graph", "-o",
+                             "tests/testgraph.obg",
                              "tests/vg_test_graph.json"])
-        run_argument_parser(['create_linear_map', "--graph", "tests/testgraph.obg",
-                             '-o', 'tests/test_linear_map',
-                             'tests/vg_test_graph.snarls'])
+        run_argument_parser(['create_linear_map', "--graph",
+                             "tests/testgraph.obg"])
 
-        IntervalCollection([Interval(1, 1, [1, 2])]).to_file("tests/sample.intervalcollection")
+        IntervalCollection([Interval(1, 1, [1, 2])]).to_file(
+            "tests/sample.intervalcollection")
 
         run_argument_parser(["callpeaks",
                              "--graph", "tests/testgraph.obg",
-                             "-m", "tests/test_linear_map",
                              "-s", "tests/sample.intervalcollection",
                              "-n", "tests/test_experiment_",
                              "-f", "10",

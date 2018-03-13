@@ -3,7 +3,7 @@ from offsetbasedgraph import GraphWithReversals as Graph, \
     DirectedInterval, IntervalCollection, Block
 import unittest
 from graph_peak_caller.control.snarls import SnarlGraphBuilder, SimpleSnarl
-from graph_peak_caller.control.linearsnarls import LinearSnarlMap
+from graph_peak_caller.control.linearmap import LinearMap
 from pyvg.sequences import SequenceRetriever
 import logging
 import os
@@ -31,28 +31,22 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
             if os.path.isfile("multigraphs_%s_max_paths.intervalcollection" % chrom):
                 os.remove("multigraphs_%s_max_paths.intervalcollection" % chrom)
 
-
         self._create_data()
 
     def _create_data(self):
         node_offset = 1
-        graphs = []
         for chrom_number, chromosome in enumerate(self.chromosomes):
             graph = Graph(
                 {i + node_offset: Block(10) for i in range(0, 3)},
                 {i+node_offset: [i+1+node_offset] for i in range(0, 2)})
 
-            snarls = {
-                4+node_offset: SimpleSnarl(node_offset, node_offset+2, 4+node_offset)
-            }
-            snarlgraph = SnarlGraphBuilder(graph.copy(), snarls,
-                                                id_counter=5+node_offset).build_snarl_graphs()
-            linear_map = LinearSnarlMap.from_snarl_graph(snarlgraph, graph)
-            linear_map_file_name = "test_linear_map_%s.tmp" % chromosome
-            linear_map.to_json_files(linear_map_file_name)
+            linear_map = LinearMap.from_graph(graph)
+            linear_map_file_name = "test_linear_map_%s.npz" % chromosome
+            linear_map.to_file(linear_map_file_name)
             self.linear_maps.append(linear_map_file_name)
             self.sequence_retrievers.append(
-                SequenceRetriever({i+node_offset: "A" * 10 for i in range(0, 3)})
+                SequenceRetriever({i+node_offset: "A" * 10
+                                   for i in range(0, 3)})
             )
             self._create_reads(chrom_number, chromosome, graph)
             node_offset += 3
