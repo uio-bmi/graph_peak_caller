@@ -294,22 +294,6 @@ class DensePileup:
         self.data = DensePileupData(
             graph, ndim=ndim, base_value=base_value, dtype=dtype)
 
-    def add_interval(self, interval):
-        for i, rp in enumerate(interval.region_paths):
-            start = 0
-            end = self.data._graph.node_size(rp)
-            if i == 0:
-                start = interval.start_position.offset
-            if i == len(interval.region_paths) - 1:
-                end = interval.end_position.offset
-            self.data.values(rp)[start:end] += 1
-            self.data._touched_nodes.add(abs(rp))
-
-    def add_areas(self, areas):
-        for area, intervals in areas.items():
-            self.data.values(area)[intervals[0]:intervals[1]] += 1
-        self.data._touched_nodes.add(area)
-
     @classmethod
     def from_base_value(cls, graph, base_value):
         pileup = cls(graph, base_value=base_value)
@@ -329,27 +313,6 @@ class DensePileup:
 
     def __eq__(self, other):
         return self.data == other.data
-
-    def set_new_values(self, values):
-        self.data.set_new_values(values)
-
-    def find_valued_areas(self, value):
-        logging.info("Finding valued areas equal to %d" % value)
-        changes = np.diff(self.data._values == value)
-        # start_values = self.data._values[
-        #     self.data._node_indexes[:-1]]
-        # end_values = self.data._values[
-        #     self.data._node_indexes[1:]-1]
-        if value:
-            return SparseAreasDict({
-                node_id: self.data.find_valued_areas(node_id, value, changes)
-                for node_id in self.data._graph.blocks
-            }, graph=self.graph)
-        else:
-            return SparseAreasDict(
-                {node_id: self.data.find_valued_areas(node_id, value, changes)
-                 for node_id in self.data._touched_nodes},
-                graph=self.graph)
 
     @classmethod
     def from_intervals(cls, graph, intervals):
@@ -420,68 +383,6 @@ class DensePileup:
 
         return True
 
-    def set_area_to_value(self, areas, value):
-        for node_id in areas.full_areas:
-            self.data.set_full_node_value(node_id, value)
-
-        for node_id, internal_intervals in areas.internal_intervals.items():
-            assert node_id > 0
-            self.data.set_values(node_id, internal_intervals[0], internal_intervals[1], value)
-
-        for node_id, start in areas.starts.items():
-            node_size = self.graph.node_size(node_id)
-            pileup_end = start
-            pileup_start = 0
-            if node_id < 0:
-                pileup_end = node_size
-                pileup_start = node_size - start
-                node_id = -node_id
-
-            #print("   Processing start %d for node %d, adding start-end %d-%d" % (start, node_id, pileup_start, pileup_end))
-            self.data.set_values(node_id, pileup_start, pileup_end, value)
-
-    def area_is_not_empty(self, areas):
-        # Returns true if area is covered by anything anywhere.
-        # Areas is Binary cont areas dict
-        for node_id in areas.full_areas:
-            self.data.add_value_to_full_node(node_id, 1)
-
-        for node_id, internal_intervals in areas.internal_intervals.items():
-            assert node_id > 0
-            self.data.add_value(node_id, internal_intervals[0], internal_intervals[1], 1)
-
-        for node_id, start in areas.starts.items():
-            node_size = self.graph.node_size(node_id)
-            pileup_end = start
-            pileup_start = 0
-            if node_id < 0:
-                pileup_end = node_size
-                pileup_start = node_size - start
-                node_id = -node_id
-
-            #print("   Processing start %d for node %d, adding start-end %d-%d" % (start, node_id, pileup_start, pileup_end))
-            self.data.add_value(node_id, pileup_start, pileup_end, 1)
-
-    def add_area(self, areas):
-        for node_id in areas.full_areas:
-            self.data.add_value_to_full_node(node_id, 1)
-
-        for node_id, internal_intervals in areas.internal_intervals.items():
-            assert node_id > 0
-            self.data.add_value(node_id, internal_intervals[0], internal_intervals[1], 1)
-
-        for node_id, start in areas.starts.items():
-            node_size = self.graph.node_size(node_id)
-            pileup_end = start
-            pileup_start = 0
-            if node_id < 0:
-                pileup_end = node_size
-                pileup_start = node_size - start
-                node_id = -node_id
-
-            #print("   Processing start %d for node %d, adding start-end %d-%d" % (start, node_id, pileup_start, pileup_end))
-            self.data.add_value(node_id, pileup_start, pileup_end, 1)
-
     @classmethod
     def create_from_binary_continous_areas(cls, graph, areas_list):
         pileup = cls(graph, dtype=np.uint8)
@@ -511,7 +412,6 @@ class DensePileup:
         pileup_vals[indexes] = diffs
         pileup_vals = np.cumsum(pileup_vals)
         pileup.data._values = pileup_vals
-	
         try:
             touched_nodes = np.load(
                 base_file_name + "_touched_nodes.npy")
