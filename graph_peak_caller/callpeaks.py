@@ -1,7 +1,6 @@
 import logging
 import numpy as np
 from offsetbasedgraph import IntervalCollection, DirectedInterval
-#from .densepileup import DensePileup
 from .mindense import DensePileup
 from .sampleandcontrolcreator import SampleAndControlCreator
 from .sparsepvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
