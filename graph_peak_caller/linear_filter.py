@@ -37,6 +37,7 @@ class LinearFilter:
 
             offset = self._indexed_interval.get_offset_at_position(
                 pos, direction)
+            #   offset = self._indexed_interval.get_offset_at_node(node) + pos.offset
             assert isinstance(offset, int), "Offset is of type %s" % type(offset)
             start_positions[direction].append(offset)
 
@@ -46,16 +47,16 @@ class LinearFilter:
     @classmethod
     def from_vg_json_reads_and_graph(cls, json_file_name, graph_file_name):
         logging.info("Reading graph %s" % graph_file_name)
-        graph = obg.GraphWithReversals.from_unknown_file_format(graph_file_name)
+        graph = obg.GraphWithReversals.from_numpy_file(graph_file_name)
 
         logging.info("Getting indexed interval through graph")
-        intervals =  vg_json_file_to_intervals(None, json_file_name, graph)
+        intervals =  vg_json_file_to_intervals(json_file_name, graph)
         haplotyper = HaploTyper(graph, obg.IntervalCollection(intervals))
         haplotyper.build()
         indexed_interval = haplotyper.get_maximum_interval_through_graph()
         #indexed_interval = graph.get_indexed_interval_through_graph()
 
-        intervals =  vg_json_file_to_intervals(None, json_file_name, graph)
+        intervals =  vg_json_file_to_intervals(json_file_name, graph)
         positions = (interval.start_position for interval in intervals)
 
         return cls(positions, indexed_interval)

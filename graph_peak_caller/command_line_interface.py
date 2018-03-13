@@ -20,7 +20,7 @@ from graph_peak_caller.analysis_interface import analyse_peaks_whole_genome,\
 from graph_peak_caller.preprocess_interface import \
     count_unique_reads_interface, create_ob_graph,\
     create_linear_map_interface,\
-    split_vg_json_reads_into_chromosomes
+    split_vg_json_reads_into_chromosomes, shift_estimation
 
 
 logging.basicConfig(
@@ -364,7 +364,18 @@ interface = \
             'help': 'Prints the current version',
             'arguments': [],
             'method': version
-        }
+        },
+    'estimate_shift':
+        {
+            'help': 'Estimate shift using one or multiple graphs.',
+            'arguments':
+                [
+                    ('chromosomes', 'Graph base names. Set to empty string if only single  graph is being used. If whole-genome, use comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
+                    ('ob_graphs_location', 'Location of graph files'),
+                    ('sample_reads_base_name', 'Will use files [base_name][chromosome].json'),
+                ],
+            'method': shift_estimation
+        },
 }
 
 
