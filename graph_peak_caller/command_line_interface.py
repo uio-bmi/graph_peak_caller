@@ -182,10 +182,9 @@ interface = \
                 [
                     ('chromosome', 'Specific chromosome to find peaks for.'),
                     ('-d/--data_dir', 'Directory containing graphs.'),
-                    ('-n/--name', 'Optional. eg experiment1_'),
+                    ('-n/--out_name', 'Optional. eg experiment1_'),
                     ('-f/--fragment_length', ''),
-                    ('-r/--read_length', ''),
-                    ('-n/--out_name', 'Optional. Out base name. Prepended to output files.')
+                    ('-r/--read_length', '')
                 ],
             'method': run_callpeaks_whole_genome_from_p_values
         },
