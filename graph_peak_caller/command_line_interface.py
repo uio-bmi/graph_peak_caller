@@ -3,6 +3,7 @@ import argparse
 import logging
 import sys
 import matplotlib as mpl
+from graph_peak_caller.densepileup import DensePileup
 mpl.use('Agg')
 
 import offsetbasedgraph as obg
@@ -40,10 +41,15 @@ def concatenate_sequence_files(args):
     chromosomes = args.chromosomes.split(",")
     out_file_name = args.out_file_name
 
+    if args.is_summits == "True":
+        file_endings = "_sequences_summits.fasta"
+    else:
+        file_endings = "_sequences.fasta"
+
     all_fasta_entries = []
     for chromosome in chromosomes:
         print("Processing chromosome %s" % chromosome)
-        fasta_file = open(chromosome + "_sequences.fasta")
+        fasta_file = open(chromosome + file_endings)
         for line in fasta_file:
             if line.startswith(">"):
                 all_fasta_entries.append([line, None])
@@ -129,6 +135,17 @@ def peaks_to_linear(args):
     peaks = PeakCollection.from_file(args.peaks_file_name, text_file=True)
     linear_peaks = peaks.to_approx_linear_peaks(linear_path, args.chromosome)
     linear_peaks.to_bed_file(args.out_file_name)
+
+
+def get_summits(args):
+    graph = args.graph
+    qvalues = DensePileup.from_sparse_files(graph, args.q_values_base_name)
+    logging.info("Q values fetched")
+    peaks = PeakCollection.from_fasta_file(args.peaks_fasta_file, graph)
+    peaks.cut_around_summit(qvalues)
+    peaks.to_fasta_file(args.peaks_fasta_file.split(".")[0] + "_summits.fasta", args.sequence_graph)
+
+
 
 
 interface = \
@@ -252,7 +269,9 @@ interface = \
             'arguments':
                 [
                     ('chromosomes', 'comma delimted, e.g 1,2,3, used to fetch files of type chr1_sequences.fasta, ...'),
-                    ('out_file_name', '')
+                    ('out_file_name', ''),
+                    ('-s/--is_summits', 'Optional. Set to True if input files are *_sequences_summits.fasta.'
+                                        'If False or not set, will search for *_sequences.fasta')
                 ],
             'method': concatenate_sequence_files
         },
@@ -376,7 +395,19 @@ interface = \
                 ],
             'method': shift_estimation
         },
+    'get_summits':
+        {
+            'help': 'Get summit around peaks.',
+            'requires_graph': True,
+            'arguments':
+                [
+                    ('peaks_fasta_file', 'Fasta file containing graph peaks.'),
+                    ('q_values_base_name', 'Base file name of q values')
+                ],
+            'method': get_summits
+        }
 }
+
 
 
 class GraphAction(argparse.Action):

@@ -67,7 +67,7 @@ class NonGraphPeakCollection(object):
         self.peaks = peaks
 
     @classmethod
-    def from_bed_file(cls, file_name):
+    def from_bed_file(cls, file_name, cut_around_summit=None):
         peaks = []
         f = open(file_name)
         for line in f:
@@ -75,8 +75,16 @@ class NonGraphPeakCollection(object):
             chrom = peak[0]
             start = int(peak[1])
             end = int(peak[2])
-
             score = float(peak[8])  # q value
+
+
+            if cut_around_summit is not None:
+                summit = int(peak[9])
+                old_start = start
+                start = max(start, start + summit - cut_around_summit)
+                end = min(end, old_start + summit + cut_around_summit)
+                assert start + cut_around_summit * 2 >= end, "End %d is > start + 2x summit" % (end)
+                assert end > start
 
             peaks.append(NonGraphPeak(chrom,
                                       start,

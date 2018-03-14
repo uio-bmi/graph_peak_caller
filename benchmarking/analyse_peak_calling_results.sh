@@ -43,9 +43,15 @@ graph_peak_caller linear_peaks_to_fasta macs_selected_chromosomes.bed $linear_ge
 # Merge all graph peak caller result files into one single sorted sequence file
 graph_peak_caller concatenate_sequence_files $chromosomes sequence_all_chromosomes.fasta
 
+# Find summits of peaks
+for chromosome in $(echo $chromosomes | tr "," "\n")
+do
+    graph_peak_caller get_summits -g graphs/$chromosome.nobg ${chromosome}_sequences.fasta ${chromosome}_qvalues
+done
+graph_peak_caller concatenate_sequence_files -s True $chromosomes sequence_all_chromosomes_summits.fasta
 
 # Run motif enrichment analysis
-$base_dir/plot_motif_enrichments.sh sequence_all_chromosomes.fasta macs_sequences.fasta $motif_url motif_enrichment.png $tf
+$base_dir/plot_motif_enrichments.sh sequence_all_chromosomes_summits.fasta macs_sequences_summits.fasta $motif_url motif_enrichment.png $tf
 cp motif_enrichment.png ../../../figures_tables/$tf.png
 
 # Also run fimo for each chromosome
@@ -53,8 +59,8 @@ for chromosome in $(echo $chromosomes | tr "," "\n")
 do
     echo ""
     echo "----- Running fimo separately for chr $chromosome --- "
-    fimo -oc fimo_macs_chr$chromosome motif.meme macs_sequences_chr${chromosome}.fasta
-    fimo -oc fimo_graph_chr$chromosome motif.meme ${chromosome}_sequences.fasta
+    fimo -oc fimo_macs_chr$chromosome motif.meme macs_sequences_chr${chromosome}_summits.fasta
+    fimo -oc fimo_graph_chr$chromosome motif.meme ${chromosome}_sequences_summits.fasta
 done
 
 # Analyse peak results
