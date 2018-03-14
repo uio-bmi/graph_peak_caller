@@ -67,10 +67,13 @@ class HtmlReportGenerator:
                 <th># Not ambiguous peaks not hitting motif</th>
             </tr>
         """
-
+        summed_results = AnalysisResults()
         for tf in self.tfs:
             results = AnalysisResults.from_file("figures_tables/" + tf + ".pickle")
             self._write_table_row(tf, results)
+            summed_results += results
+
+        self._write_table_row("SUM", summed_results)
 
         self.html += "</table>"
 
