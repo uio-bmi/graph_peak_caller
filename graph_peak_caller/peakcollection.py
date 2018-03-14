@@ -90,7 +90,7 @@ class Peak(obg.DirectedInterval):
 class PeakCollection(obg.IntervalCollection):
     interval_class = Peak
 
-    def cut_around_summit(self, q_values, n_base_pairs_around=40):
+    def cut_around_summit(self, q_values, n_base_pairs_around=60):
         for i, peak in enumerate(self.intervals):
             assert np.all(np.array(peak.region_paths) > 0), "Assuming forward peaks."
 
