@@ -46,7 +46,7 @@ graph_peak_caller concatenate_sequence_files $chromosomes sequence_all_chromosom
 # Find summits of peaks
 for chromosome in $(echo $chromosomes | tr "," "\n")
 do
-    graph_peak_caller get_summits -g graphs/$chromosome.nobg ${chromosome}_sequences.fasta ${chromosome}_qvalues
+    graph_peak_caller get_summits -g $data_dir/$chromosome.nobg ${chromosome}_sequences.fasta ${chromosome}_qvalues
 done
 graph_peak_caller concatenate_sequence_files -s True $chromosomes sequence_all_chromosomes_summits.fasta
 
