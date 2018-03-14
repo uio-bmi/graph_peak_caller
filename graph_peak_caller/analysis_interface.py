@@ -141,7 +141,7 @@ def linear_peaks_to_fasta(args):
     logging.info("Saved sequences to %s" % args.out_file_name)
 
     summits = NonGraphPeakCollection.from_bed_file(
-        args.linear_reads_file_name, cut_around_summit=400)
+        args.linear_reads_file_name, cut_around_summit=40)
     summits.set_peak_sequences_using_fasta(
         fasta_file_location=args.fasta_file)
     out_name = args.out_file_name.split(".")[0] + "_summits.fasta"
