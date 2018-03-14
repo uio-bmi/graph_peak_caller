@@ -394,9 +394,17 @@ class DensePileup:
         # TODO: Use np.save(...)
         pileup = cls(graph)
         indexes = np.load(base_file_name + "_indexes.npy")
+        last = indexes[-1]
         indexes = indexes[:-1]  # Remove length added to end
-        assert np.all(indexes >= 0)
         values = np.load(base_file_name + "_values.npy")
+
+        # Hack. Sometimes densepileup comes from sparsevalues and
+        # have two sizes at end.
+        if last == indexes[-1]:
+            indexes = indexes[:-1]
+            values = values[:-1]
+
+        assert np.all(indexes >= 0)
         if isinstance(values[0], np.bool_):
             logging.warning("Converting from bool to uint8 to allow reading.")
             values = values.astype(np.int8)
