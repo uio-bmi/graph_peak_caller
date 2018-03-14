@@ -17,7 +17,7 @@ arabidopsis_graph_dir="/media/storage1/tair2/"
 ./simple_chip_seq_pipeline.sh SRX387187 1 ARABIDOPSIS_AP1 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 ./simple_chip_seq_pipeline.sh SRR822350	 1 ARABIDOPSIS_SOC1 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 ./simple_chip_seq_pipeline.sh SRX159033	 1 ARABIDOPSIS_PIF3 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
-./simple_chip_seq_pipeline.sh SRX310193	 1 ARABIDOPSIS_KAN1 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
+#slow, run later: ./simple_chip_seq_pipeline.sh SRX310193	 1 ARABIDOPSIS_KAN1 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 ./simple_chip_seq_pipeline.sh SRR1044950 1 ARABIDOPSIS_HBI1 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 
 
@@ -41,7 +41,7 @@ wait
 ./analyse_peak_calling_results.sh  SRX387187 1 ARABIDOPSIS_AP1 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0940.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 &
 ./analyse_peak_calling_results.sh  SRR822350 1 ARABIDOPSIS_SOC1 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0554.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 &
 ./analyse_peak_calling_results.sh  SRX159033 1 ARABIDOPSIS_PIF3 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0560.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 &
-./analyse_peak_calling_results.sh  SRX310193 1 ARABIDOPSIS_KAN1 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA1027.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 &
+# slow, run later: ./analyse_peak_calling_results.sh  SRX310193 1 ARABIDOPSIS_KAN1 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA1027.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 &
 ./analyse_peak_calling_results.sh  SRR1044950 1 ARABIDOPSIS_HBI1 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA1025.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 &
 
 
@@ -56,4 +56,4 @@ wait
 
 wget -O figures_tables/bootstrap.min.css https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css
 #python3 generate_jenkins_report.py DM_JRA,DM_SQZ,DM_JIM,DM_ANTP,HUMAN_CTCF,HUMAN_SRF,YEAST_ABF1,ARABIDOPSIS_SVP,ARABIDOPSIS_ERF115 figures_tables/index.html
-python3 generate_jenkins_report.py ARABIDOPSIS_ERF115,ARABIDOPSIS_SEP3,ARABIDOPSIS_AP1,ARABIDOPSIS_SOC1,ARABIDOPSIS_PIF3,ARABIDOPSIS_KAN1,ARABIDOPSIS_HBI1,DM_JRA,DM_SQZ,DM_JIM,DM_ANTP,HUMAN_CTCF,HUMAN_SRF figures_tables/index.html
+python3 generate_jenkins_report.py ARABIDOPSIS_ERF115,ARABIDOPSIS_SEP3,ARABIDOPSIS_AP1,ARABIDOPSIS_SOC1,ARABIDOPSIS_PIF3,ARABIDOPSIS_HBI1,DM_JRA,DM_SQZ,DM_JIM,DM_ANTP,HUMAN_CTCF,HUMAN_SRF figures_tables/index.html
