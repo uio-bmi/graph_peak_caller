@@ -3,6 +3,7 @@ import argparse
 import logging
 import sys
 import matplotlib as mpl
+from graph_peak_caller.densepileup import DensePileup
 mpl.use('Agg')
 
 import offsetbasedgraph as obg
@@ -20,7 +21,7 @@ from graph_peak_caller.analysis_interface import analyse_peaks_whole_genome,\
 from graph_peak_caller.preprocess_interface import \
     count_unique_reads_interface, create_ob_graph,\
     create_linear_map_interface,\
-    split_vg_json_reads_into_chromosomes
+    split_vg_json_reads_into_chromosomes, shift_estimation
 
 
 logging.basicConfig(
@@ -40,10 +41,15 @@ def concatenate_sequence_files(args):
     chromosomes = args.chromosomes.split(",")
     out_file_name = args.out_file_name
 
+    if args.is_summits == "True":
+        file_endings = "_sequences_summits.fasta"
+    else:
+        file_endings = "_sequences.fasta"
+
     all_fasta_entries = []
     for chromosome in chromosomes:
         print("Processing chromosome %s" % chromosome)
-        fasta_file = open(chromosome + "_sequences.fasta")
+        fasta_file = open(chromosome + file_endings)
         for line in fasta_file:
             if line.startswith(">"):
                 all_fasta_entries.append([line, None])
@@ -131,6 +137,17 @@ def peaks_to_linear(args):
     linear_peaks.to_bed_file(args.out_file_name)
 
 
+def get_summits(args):
+    graph = args.graph
+    qvalues = DensePileup.from_sparse_files(graph, args.q_values_base_name)
+    logging.info("Q values fetched")
+    peaks = PeakCollection.from_fasta_file(args.peaks_fasta_file, graph)
+    peaks.cut_around_summit(qvalues)
+    peaks.to_fasta_file(args.peaks_fasta_file.split(".")[0] + "_summits.fasta", args.sequence_graph)
+
+
+
+
 interface = \
 {
     'callpeaks':
@@ -139,7 +156,9 @@ interface = \
             'requires_graph': True,
             'arguments':
                 [
-                    ('-m/--linear_map', "Optional Linear map file name."),
+                    ('-m/--linear_map', "Optional. Linear map file name. Will look for '"
+                                        " files matching graph name if not set or create if"
+                                        " no file is found."),
                     ('-s/--sample', 'File name to a vg JSON file or intervalcollection file.'),
                     ('-c/--control', '(Optional) File name to a vg JSON file or intervalcollection file. '
                                      'Only include if a separate control is used.'),
@@ -250,7 +269,9 @@ interface = \
             'arguments':
                 [
                     ('chromosomes', 'comma delimted, e.g 1,2,3, used to fetch files of type chr1_sequences.fasta, ...'),
-                    ('out_file_name', '')
+                    ('out_file_name', ''),
+                    ('-s/--is_summits', 'Optional. Set to True if input files are *_sequences_summits.fasta.'
+                                        'If False or not set, will search for *_sequences.fasta')
                 ],
             'method': concatenate_sequence_files
         },
@@ -362,8 +383,31 @@ interface = \
             'help': 'Prints the current version',
             'arguments': [],
             'method': version
+        },
+    'estimate_shift':
+        {
+            'help': 'Estimate shift using one or multiple graphs.',
+            'arguments':
+                [
+                    ('chromosomes', 'Graph base names. Set to empty string if only single  graph is being used. If whole-genome, use comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
+                    ('ob_graphs_location', 'Location of graph files'),
+                    ('sample_reads_base_name', 'Will use files [base_name][chromosome].json'),
+                ],
+            'method': shift_estimation
+        },
+    'get_summits':
+        {
+            'help': 'Get summit around peaks.',
+            'requires_graph': True,
+            'arguments':
+                [
+                    ('peaks_fasta_file', 'Fasta file containing graph peaks.'),
+                    ('q_values_base_name', 'Base file name of q values')
+                ],
+            'method': get_summits
         }
 }
+
 
 
 class GraphAction(argparse.Action):

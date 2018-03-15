@@ -1,5 +1,5 @@
 import sys
-from graph_peak_caller.peakscomparer import AnalysisResults
+from graph_peak_caller.analysis.peakscomparer import AnalysisResults
 import logging
 
 class HtmlReportGenerator:
@@ -19,10 +19,8 @@ class HtmlReportGenerator:
             <td>%d</td>
             <td>%d (%d)</td>
             <td>%d (%d)</td>
-            <td>%d</td>
-            <td>%d</td>
-            <td>%d</td>
-            <td>%d</td>
+            <td>%.2f</td>
+            <td>%.2f</td>
         </tr>
         """ % (tf,
                analysis_result.tot_peaks1,
@@ -35,10 +33,10 @@ class HtmlReportGenerator:
                analysis_result.peaks2_in_peaks1_matching_motif,
                analysis_result.peaks2_not_in_peaks1,
                analysis_result.peaks2_not_in_peaks1_matching_motif,
-               analysis_result.motif_ambiguous,
-               analysis_result.motif_not_ambiguous,
-               analysis_result.not_motif_ambiguous,
-               analysis_result.not_motif_not_ambiguous
+               100 * (analysis_result.peaks1_in_peaks2_proportion_on_linear /
+                      analysis_result.peaks1_in_peaks2),
+               100 * (analysis_result.peaks1_not_in_peaks2_proportion_on_linear /
+                      analysis_result.peaks1_not_in_peaks2),
                )
 
     def _create_report_table(self):
@@ -56,21 +54,22 @@ class HtmlReportGenerator:
             <tr>
                 <th>TF</th>
                 <th># Peaks found</th>
-                <th># Peaks also found by Macs2</th>
-                <th># Peaks NOT found by Macs2</th>
+                <th># Peaks also found by MACS2</th>
+                <th># Peaks NOT found by MACS2</th>
                 <th># Peaks found</th>
                 <th># Peaks also found by Graph Peak Caller</th>
                 <th># Peaks NOT found by Graph Peak Caller</th>
-                <th># Ambiguous peaks hitting motif</th>
-                <th># Not ambiguous peaks hitting motif</th>
-                <th># Ambiguous peaks not hitting motif</th>
-                <th># Not ambiguous peaks not hitting motif</th>
+                <th>Average proportion of GPC peaks also found by MACS2 that are part of linear reference genome</th>
+                <th>Average proportion of GPC peaks NOT found by MACS2 that are part of linear reference genome</th>
             </tr>
         """
-
+        summed_results = AnalysisResults()
         for tf in self.tfs:
             results = AnalysisResults.from_file("figures_tables/" + tf + ".pickle")
             self._write_table_row(tf, results)
+            summed_results += results
+
+        #self._write_table_row("SUM", summed_results)
 
         self.html += "</table>"
 

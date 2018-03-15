@@ -1,4 +1,4 @@
-from offsetbasedgraph import IntervalCollection
+from offsetbasedgraph import IntervalCollection, Interval, NumpyIndexedInterval
 from collections import defaultdict
 from offsetbasedgraph import IndexedInterval
 import logging
@@ -41,6 +41,9 @@ class HaploTyper:
             nodes.append(current_block)
             next_blocks = graph.adj_list[current_block]
             if len(next_blocks) < 1:
+                print("Stopping at %d" % current_block)
+                print(nodes)
+
                 break
 
             next = None

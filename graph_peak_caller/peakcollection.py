@@ -78,9 +78,35 @@ class Peak(obg.DirectedInterval):
         linear_end_pos = linear_path.get_offset_at_node(last_node) + end_offset
         return NonGraphPeak(chromosome, linear_start_pos, linear_end_pos)
 
+    def get_subinterval(self, start_offset, end_offset):
+        subinterval = obg.Interval.get_subinterval(self, start_offset, end_offset)
+        peak = Peak(subinterval.start_position, subinterval.end_position,
+                    subinterval.region_paths, graph=self.graph, score=self.score,
+                    unique_id=self.unique_id)
+        peak.info = self.info
+        return peak
+
 
 class PeakCollection(obg.IntervalCollection):
     interval_class = Peak
+
+    def cut_around_summit(self, q_values, n_base_pairs_around=60):
+        for i, peak in enumerate(self.intervals):
+            assert np.all(np.array(peak.region_paths) > 0), "Assuming forward peaks."
+
+            peak_qvalues = q_values.data.get_interval_values(peak)
+            # Finding summit position of average summit from both sides (to get middle
+            # if many equal q values)
+            summit_position = int((np.argmax(peak_qvalues) + \
+                                  (len(peak_qvalues) - np.argmax(peak_qvalues[::-1])))/2)
+
+            summit = peak.get_subinterval(max(0, summit_position - n_base_pairs_around),
+                min(summit_position + n_base_pairs_around, peak.length()))
+            self.intervals[i] = summit
+            assert summit.length() <= n_base_pairs_around * 2
+
+        for peak in self.intervals:
+            assert peak.length() <= n_base_pairs_around * 2
 
     @classmethod
     def _is_in_graph(cls, peak, chrom, start_offset, end_offset):
@@ -198,6 +224,11 @@ class PeakCollection(obg.IntervalCollection):
             linear_peaks.append(peak.to_approx_linear_peak(linear_path, chromosome))
 
         return NonGraphPeakCollection(linear_peaks)
+
+    def to_fasta_file(self, file_name, sequence_graph):
+        from .callpeaks import CallPeaksFromQvalues
+        CallPeaksFromQvalues.intervals_to_fasta_file(
+        self, file_name, sequence_graph)
 
 
     @classmethod

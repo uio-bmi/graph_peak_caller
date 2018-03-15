@@ -8,7 +8,6 @@ class TestHaplotyper(unittest.TestCase):
         self.complex_graph = Graph(
             {i: Block(3) for i in range(1, 13)},
             {
-                11: [1],
                 1: [2, 3],
                 2: [7, 8],
                 3: [4, 5],
@@ -20,6 +19,7 @@ class TestHaplotyper(unittest.TestCase):
                 9: [10],
                 10: [12]
              })
+        self.complex_graph.convert_to_numpy_backend()
 
     def test_simple(self):
         graph = Graph(
@@ -30,6 +30,7 @@ class TestHaplotyper(unittest.TestCase):
                 3: [4]
             }
         )
+        graph.convert_to_numpy_backend()
 
         intervals = IntervalCollection([
             Interval(0, 3, [1, 3])
@@ -57,7 +58,7 @@ class TestHaplotyper(unittest.TestCase):
 
         self.assertEqual(
             max_interval,
-            Interval(0, 3, [11, 1, 2, 7, 9, 10, 12])
+            Interval(0, 3, [1, 2, 7, 9, 10, 12])
         )
 
 if __name__ == "__main__":
