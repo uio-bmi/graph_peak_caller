@@ -31,6 +31,12 @@ class Reporter:
     def hole_cleaned(self, data):
         data.to_sparse_files(self._base_name+"hole_cleaned")
 
+    def fragment_pileup(self, data):
+        data.to_sparse_files(self._base_name+"fragment_pileup")
+
+    def background_track(self, data):
+        data.to_sparse_files(self._base_name+"background_track")
+
     def thersholded(self, data):
         data.to_sparse_files(self._base_name+"thresholded")
 
