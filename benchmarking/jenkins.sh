@@ -11,7 +11,7 @@ arabidopsis_graph_dir=$1
 ./simple_chip_seq_pipeline.sh SRR1042995 1 ARABIDOPSIS_SEP3 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 ./simple_chip_seq_pipeline.sh SRX387187 1 ARABIDOPSIS_AP1 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 ./simple_chip_seq_pipeline.sh SRR822350	 1 ARABIDOPSIS_SOC1 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
-./simple_chip_seq_pipeline.sh SRX159033	 1 ARABIDOPSIS_PIF3 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
+#./simple_chip_seq_pipeline.sh SRX159033	 1 ARABIDOPSIS_PIF3 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 # add later: ./simple_chip_seq_pipeline.sh SRX310193	 1 ARABIDOPSIS_KAN1 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 ./simple_chip_seq_pipeline.sh SRR1044950 1 ARABIDOPSIS_HBI1 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 ./simple_chip_seq_pipeline.sh SRR502859 1 ARABIDOPSIS_PI 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &

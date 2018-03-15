@@ -6,3 +6,5 @@ do
 done
 
 graph_peak_caller concatenate_sequence_files -s True 1,2 summits.fasta
+
+graph_peak_caller
