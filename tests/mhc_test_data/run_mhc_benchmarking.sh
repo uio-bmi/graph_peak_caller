@@ -2,11 +2,8 @@
 
 graph_peak_caller create_ob_graph -o graph.nobg haplo1kg50-mhc.json
 
-# Create snarls
-graph_peak_caller create_linear_map -g graph.nobg -o linear_map haplo1kg50-mhc.snarls
-
 # Call peaks
-graph_peak_caller callpeaks -g graph.nobg -m linear_map --sample reads.json -n test_ -f 135 -r 36
+graph_peak_caller callpeaks -g graph.nobg --sample reads.json -n test_ -f 135 -r 36
 
 # Run fimo
 fimo -oc fimo_test_sequences MA0139.1.meme test_sequences.fasta
