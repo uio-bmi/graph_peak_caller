@@ -1,6 +1,7 @@
 import sys
 from graph_peak_caller.analysis.peakscomparer import AnalysisResults
 import logging
+import numpy as np
 
 class HtmlReportGenerator:
     def __init__(self, transcription_factors):
@@ -33,10 +34,10 @@ class HtmlReportGenerator:
                analysis_result.peaks2_in_peaks1_matching_motif,
                analysis_result.peaks2_not_in_peaks1,
                analysis_result.peaks2_not_in_peaks1_matching_motif,
-               100 * (analysis_result.peaks1_in_peaks2_proportion_on_linear /
-                      analysis_result.peaks1_in_peaks2),
-               100 * (analysis_result.peaks1_not_in_peaks2_proportion_on_linear /
-                      analysis_result.peaks1_not_in_peaks2),
+               np.mean(analysis_result.peaks1_in_peaks2_bp_not_on_linear),
+               np.std(analysis_result.peaks1_in_peaks2_bp_not_on_linear),
+               np.mean(analysis_result.peaks1_not_in_peaks2_bp_not_on_linear),
+               np.std(analysis_result.peaks1_not_in_peaks2_bp_not_on_linear)
                )
 
     def _create_report_table(self):
@@ -59,8 +60,8 @@ class HtmlReportGenerator:
                 <th># Peaks found</th>
                 <th># Peaks also found by Graph Peak Caller</th>
                 <th># Peaks NOT found by Graph Peak Caller</th>
-                <th>Average proportion of GPC peaks also found by MACS2 that are part of linear reference genome</th>
-                <th>Average proportion of GPC peaks NOT found by MACS2 that are part of linear reference genome</th>
+                <th>Average number of base pairs of GPC peaks also found by MACS2 that are part of linear reference genome</th>
+                <th>Average number of base pairs of GPC peaks NOT found by MACS2 that are part of linear reference genome</th>
             </tr>
         """
         summed_results = AnalysisResults()
