@@ -12,8 +12,13 @@ class DensePileup:
         array_end = self._graph.node_indexes[index] + end
         return self._values[array_start:array_end]
 
-    def get_interval_values(self, interval):
+    def values(self, node_id):
+        index = node_id - self._graph.min_node
+        array_start = self._graph.node_indexes[index]
+        array_end = self._graph.node_indexes[index+1]
+        return self._values[array_start:array_end]
 
+    def get_interval_values(self, interval):
         values = np.zeros(interval.length())
         offset = 0
         if all([rp < 0 for rp in interval.region_paths]):
