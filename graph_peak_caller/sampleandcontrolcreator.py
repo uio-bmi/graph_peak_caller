@@ -212,17 +212,9 @@ class SampleAndControlCreator:
             logging.warning("More reads in sample than in control")
             self._sample_pileup *= ratio
             self._sample_pileup.scale(1/ratio)
-            self._sample_pileup.to_bed_graph(
-                self.out_file_base_name + "scaled_treat.bdg")
-            if update_saved_files:
-                self._sample_pileup.to_bed_graph(self._sample_track)
         else:
-            logging.info("Scaling control pileup down using ration %.3f" % ratio)
-            self._control_pileup *= ratio  # .scale(ratio)
-            self._control_pileup.to_bed_graph(
-                self.out_file_base_name + "scaled_control.bdg")
-            if update_saved_files:
-                self._control_pileup.to_bed_graph(self._control_track)
+            logging.info("Scaling control pileup down with ratio %.3f" % ratio)
+            self._control_pileup *= ratio
 
     def find_info(self):
         sizes = (block.length() for block in self.ob_graph.blocks.values())
@@ -247,25 +239,17 @@ class SampleAndControlCreator:
         if self.use_global_min_value:
             sparse_control.set_min_value(self.use_global_min_value)
         control_pileup = sparse_control.create(self.control_intervals)
-        control_pileup.to_sparse_files(
-            self.out_file_base_name + "control_track")
         self.linear_map = None
 
         # control_pileup.graph = self.ob_graph
         logging.info("Number of control reads: %d" % self.info.n_control_reads)
-
-        if self.save_tmp_results_to_file and False:
-            self._control_track = self.out_file_base_name + "control_track.bdg"
-            control_pileup.to_bed_graph(self._control_track)
-            logging.info("Saved control pileup to " + self._control_track)
-
         self._control_pileup = control_pileup
 
         # Delete control pileup
         self.control_intervals = None
 
     def get_score(self):
-        logging.info("Getting p valyes.")
+        logging.info("Getting p values.")
         p_values_finder = PValuesFinder(
             self._sample_pileup, self._control_pileup)
         self._p_values_pileup = p_values_finder.get_p_values_pileup()
@@ -281,10 +265,8 @@ class SampleAndControlCreator:
         pass
 
     def create_sample_pileup(self):
-        logging.debug("In sample pileup")
         logging.info("Creating sample pileup")
         logging.info(self.sample_intervals)
-        logging.info("Processing areas")
         generator = SamplePileupGenerator(
             self.graph, self.info.fragment_length-self.info.read_length)
         pileup = generator.run(self.sample_intervals,
@@ -292,21 +274,9 @@ class SampleAndControlCreator:
         self.touched_nodes = pileup.touched_nodes
 
         self._sample_track = self.out_file_base_name + "sample_track"
-        if self.save_tmp_results_to_file or True:
-            logging.info("Saving sample pileup to file")
-            pileup.to_sparse_files(self._sample_track)
-            logging.info("Saved sample pileup to " + self._sample_track)
-
-            logging.info("Writing touched nodes to file")
-            with open(self.out_file_base_name + "touched_nodes.pickle", "wb") as f:
-                pickle.dump(self.touched_nodes, f)
-
-            logging.info("N touched nodes: %d" % len(self.touched_nodes))
-        else:
-            logging.info("Not saving sample pileup to files.")
-
         self._sample_pileup = pileup
-        logging.info("Found in total %d duplicate reads that were removed" % self.n_duplicates_found_sample)
+        logging.info("Found in total %d duplicate reads that were removed"
+                     % self.n_duplicates_found_sample)
 
         # Delete sample intervals
         self.sample_intervals = None
