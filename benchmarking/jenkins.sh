@@ -58,5 +58,5 @@ wait
 
 wget -O figures_tables/bootstrap.min.css https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css
 #python3 generate_jenkins_report.py DM_JRA,DM_SQZ,DM_JIM,DM_ANTP,HUMAN_CTCF,HUMAN_SRF,YEAST_ABF1,ARABIDOPSIS_SVP,ARABIDOPSIS_ERF115 figures_tables/index.html
-python3 generate_jenkins_report.py ARABIDOPSIS_ERF115,ARABIDOPSIS_SEP3,ARABIDOPSIS_AP1,ARABIDOPSIS_SOC1,ARABIDOPSIS_KAN1,DM_JRA,DM_SQZ,DM_JIM,DM_ANTP figures_tables/index.html
-#python3 generate_jenkins_report.py ARABIDOPSIS_ERF115,ARABIDOPSIS_SEP3,ARABIDOPSIS_AP1,ARABIDOPSIS_SOC1 figures_tables/index.html
+#python3 generate_jenkins_report.py ARABIDOPSIS_ERF115,ARABIDOPSIS_SEP3,ARABIDOPSIS_AP1,ARABIDOPSIS_SOC1,ARABIDOPSIS_KAN1,DM_JRA,DM_SQZ,DM_JIM,DM_ANTP figures_tables/index.html
+python3 generate_jenkins_report.py ARABIDOPSIS_ERF115,ARABIDOPSIS_SEP3,ARABIDOPSIS_AP1,ARABIDOPSIS_SOC1,ARABIDOPSIS_PI figures_tables/index.html
