@@ -23,8 +23,8 @@ class AnalysisResults:
         self.motif_not_ambiguous = 0
         self.not_motif_ambiguous = 0
         self.not_motif_not_ambiguous = 0
-        self.peaks1_in_peaks2_proportion_on_linear = 0
-        self.peaks1_not_in_peaks2_proportion_on_linear = 0
+        self.peaks1_in_peaks2_bp_not_on_linear = []
+        self.peaks1_not_in_peaks2_bp_not_on_linear = []
 
 
     def __repr__(self):
@@ -43,10 +43,10 @@ class AnalysisResults:
                (self.peaks2_not_in_peaks1, self.peaks2_not_in_peaks1_matching_motif)
 
         out += "\n"
-        out += "Average proportion of peaks 1 in peaks 2 on linear path: %.5f \n" % \
-               (self.peaks1_in_peaks2_proportion_on_linear / self.peaks1_in_peaks2)
-        out += "Average proportion of peaks 1 NOT in peaks 2 on linear path:  %.5f \n" % \
-               (self.peaks1_not_in_peaks2_proportion_on_linear / self.peaks1_not_in_peaks2)
+        out += "Average bp of peaks 1 in peaks 2 on linear path: %.5f \n" % \
+               (np.mean(self.peaks1_in_peaks2_bp_not_on_linear))
+        out += "Average bp of peaks 1 NOT in peaks 2 on linear path:  %.5f \n" % \
+               (np.mean(self.peaks1_not_in_peaks2_bp_not_on_linear))
         out += "\n \n"
         return out
 
@@ -68,8 +68,8 @@ class AnalysisResults:
         self.motif_not_ambiguous += other.motif_not_ambiguous
         self.not_motif_ambiguous += other.not_motif_ambiguous
         self.not_motif_not_ambiguous += other.not_motif_not_ambiguous
-        self.peaks1_in_peaks2_proportion_on_linear += other.peaks1_in_peaks2_proportion_on_linear
-        self.peaks1_not_in_peaks2_proportion_on_linear += other.peaks1_not_in_peaks2_proportion_on_linear
+        self.peaks1_in_peaks2_bp_not_on_linear.extend(other.peaks1_in_peaks2_bp_not_on_linear)
+        self.peaks1_not_in_peaks2_bp_not_on_linear.extend(other.peaks1_not_in_peaks2_bp_not_on_linear)
         return self
 
     def to_file(self, file_name):
@@ -144,7 +144,7 @@ class PeaksComparerV2(object):
         self.run_all_analysis()
 
 
-    def proportion_of_peak_overlapping_indexed_interval(self, peak, indexed_interval):
+    def bp_in_peak_overlapping_indexed_interval(self, peak, indexed_interval):
         nodes = indexed_interval.nodes_in_interval()
         n_overlap = 0
         for i, rp in enumerate(peak.region_paths):
@@ -160,21 +160,20 @@ class PeaksComparerV2(object):
 
             n_overlap += covered_in_node
 
-        return n_overlap / peak.length()
+        return n_overlap
 
     def run_all_analysis(self):
         self.check_similarity()
         self.check_non_matching_for_motif_hits()
         self.check_matching_for_motif_hits()
 
+        self.results.peaks1_in_peaks2_bp_not_on_linear = \
+            [peak.length() - self.bp_in_peak_overlapping_indexed_interval(peak, self.linear_path)
+                     for peak in self.peaks1_in_peaks2]
 
-        self.results.peaks1_in_peaks2_proportion_on_linear = \
-            np.sum([self.proportion_of_peak_overlapping_indexed_interval(peak, self.linear_path)
-                     for peak in self.peaks1_in_peaks2])
-
-        self.results.peaks1_not_in_peaks2_proportion_on_linear = \
-            np.sum([self.proportion_of_peak_overlapping_indexed_interval(peak, self.linear_path)
-                     for peak in self.peaks1_not_in_peaks2])
+        self.results.peaks1_not_in_peaks2_bp_not_on_linear = \
+            [peak.length() - self.bp_in_peak_overlapping_indexed_interval(peak, self.linear_path)
+                     for peak in self.peaks1_not_in_peaks2]
 
         print(self.results)
 
