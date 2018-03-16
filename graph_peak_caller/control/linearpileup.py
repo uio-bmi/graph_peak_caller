@@ -3,56 +3,6 @@ import logging
 from collections import defaultdict
 
 from ..eventsorter import EventSorter, EventSort
-from .snarlmaps import LinearSnarlMap
-
-
-def create_control(linear_map_name, *args, **kwargs):
-    logging.info("Reading linear map from file")
-    linear_map = LinearSnarlMap.from_json_files(
-        linear_map_name, kwargs["ob_graph"])
-    return create_control_from_objs(linear_map, *args, **kwargs)
-
-
-def create_control_from_objs(linear_map, reads, extension_sizes,
-                             fragment_length, ob_graph=None,
-                             touched_nodes=None,
-                             use_global_min_value=None):
-    """
-    :param snarl_graph: Hierarchical snarl graph
-    """
-    linear_size = linear_map._length
-    mapped_reads = linear_map.map_interval_collection(reads)
-    average_value = mapped_reads.n_intervals*fragment_length / linear_size
-    logging.info(
-        "Average control value: %.4f (sum of pileup: %d, linear size: %d)" % (
-            average_value, mapped_reads.n_basepairs_covered(), linear_size))
-
-    if use_global_min_value is not None:
-        average_value = use_global_min_value
-        logging.warning("Using global min value %.5f" % use_global_min_value)
-
-    max_pileup = LinearPileup([0], [average_value])
-    logging.info("Extending control reads with extension sizes: %s" %
-                 extension_sizes)
-    for tmp_extension in extension_sizes:
-        logging.info("Extension size: %d" % tmp_extension)
-        extension = tmp_extension // 2
-        extended_reads = mapped_reads.extend(extension)
-        linear_pileup = LinearPileup.create_from_starts_and_ends(
-                extended_reads.starts, extended_reads.ends)
-        assert isinstance(linear_pileup, LinearPileup)
-        linear_pileup /= (extension*2/fragment_length)
-        logging.info("Linear pileup created. Doing maximum")
-        max_pileup.maximum(linear_pileup)
-
-    logging.info("All extensions done. Grating valued indexes from pileup")
-
-    logging.info("Making sparsepilup from valued indexes")
-    graph_pileup = max_pileup.to_dense_pileup(
-        linear_map, touched_nodes=touched_nodes)
-    logging.info("Control pileup created")
-
-    return graph_pileup
 
 
 class UnmappedIndices(object):
@@ -110,23 +60,6 @@ class LinearPileup(object):
         unmapped_indices = self.from_event_sorter(event_sorter)
         logging.info("Mapping linear map to graph pileup")
         return linear_map.to_sparse_pileup(unmapped_indices, min_value)
-
-    def to_dense_pileup(self, linear_map, touched_nodes=None):
-        logging.info("Getting event sorter")
-        event_sorter = self.get_event_sorter(linear_map, touched_nodes)
-        logging.info("Getting unmapped indices")
-        unmapped_indices = self.from_event_sorter(event_sorter)
-        logging.info("Mapping linear map to graph pileup")
-        return linear_map.to_dense_pileup(unmapped_indices)
-
-    def to_valued_indexes(self, linear_map, touched_nodes=None):
-        logging.info("Getting event sorter")
-        event_sorter = self.get_event_sorter(linear_map, touched_nodes)
-        logging.info("Getting unmapped indices")
-        unmapped_indices = self.from_event_sorter(event_sorter)
-        logging.info("Mapping linear map to graph pileup")
-        vi_dict = linear_map.to_graph_pileup(unmapped_indices)
-        return vi_dict
 
     def get_event_sorter(self, linear_map, touched_nodes=None):
         node_start_values = [node_id for node_id in
@@ -193,15 +126,6 @@ class LinearPileup(object):
         self.values = values
         self.sanitize_indices()
         self.sanitize_values()
-        # 
-        # 
-        # empty_ends = np.nonzero(np.diff(sorted_indices) == 0)[0]
-        # max_values = np.maximum(values[empty_ends], values[empty_ends+1])
-        # values[empty_ends+1] = max_values
-        # values[empty_ends] = max_values
-        # indices, values = sanitize_indices_and_values(sorted_indices, values)
-        # self.indices = indices
-        # self.values = values
 
     def sanitize_indices(self, choose_last=True):
         assert choose_last
