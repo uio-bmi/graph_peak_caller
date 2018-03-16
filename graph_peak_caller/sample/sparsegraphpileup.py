@@ -200,32 +200,8 @@ class ReverseSparseExtender(SparseExtender):
         self._pileup.starts.append(self._graph_size-index)
 
 
-def _get_node_indexes(graph):
-    if isinstance(graph.blocks, obg.BlockArray):
-        # Quicker way to make node_indexes array
-        logging.info("(using cumsum on np block array)")
-        node_indexes = np.cumsum(graph.blocks._array, dtype=np.uint32)
-        logging.info("Node indexes created...")
-        graph.min_node = (graph.blocks.node_id_offset+1)
-        return node_indexes
-    sorted_nodes = sorted(graph.blocks.keys())
-    min_node = sorted_nodes[0]
-    graph.min_node = min_node
-    max_node = sorted_nodes[-1]
-    span = max_node-min_node+1
-    node_indexes = np.zeros(span+1, dtype=np.uint32)
-    offset = 0
-    for i, node in enumerate(sorted_nodes):
-        index = node - min_node
-        node_indexes[index] = offset
-        offset += graph.node_size(node)
-        node_indexes[-1] = offset
-    return node_indexes
-
-
 class SamplePileupGenerator:
     def __init__(self, graph, extension):
-        graph.node_indexes = _get_node_indexes(graph)
         self._pileup = SparseGraphPileup(graph)
         self._graph = graph
         self._reads_adder = ReadsAdderWDirect(graph, self._pileup)
