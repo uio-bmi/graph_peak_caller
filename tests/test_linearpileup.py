@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from graph_peak_caller.control.linearsnarls import LinearPileup
+from graph_peak_caller.control.linearpileup import LinearPileup
 
 
 class TestLinearPileup(unittest.TestCase):
