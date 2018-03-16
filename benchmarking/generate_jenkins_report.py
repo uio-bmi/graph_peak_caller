@@ -35,9 +35,7 @@ class HtmlReportGenerator:
                analysis_result.peaks2_not_in_peaks1,
                analysis_result.peaks2_not_in_peaks1_matching_motif,
                np.mean(analysis_result.peaks1_in_peaks2_bp_not_on_linear),
-               np.std(analysis_result.peaks1_in_peaks2_bp_not_on_linear),
-               np.mean(analysis_result.peaks1_not_in_peaks2_bp_not_on_linear),
-               np.std(analysis_result.peaks1_not_in_peaks2_bp_not_on_linear)
+               np.mean(analysis_result.peaks1_not_in_peaks2_bp_not_on_linear)
                )
 
     def _create_report_table(self):

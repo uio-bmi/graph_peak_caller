@@ -361,8 +361,7 @@ interface = \
             'arguments':
                 [
                     ('test_name', ''),
-                    ('fimo_file_name', ''),
-                    ('vg_graph_name', '')
+                    ('fimo_file_name', '')
                 ],
             'method': differential_expression
         },

@@ -36,7 +36,7 @@ cd $work_dir
 echo "Made working directory $work_dir"
 
 # Step 1: Download data
-if [ ! -f raw.fastq ]; then
+if [ ! -f raw_trimmed.fq ]; then
     echo "Will downlaod fastq"
     if [[ $experiment_id = *"ENC"* ]]; then
         echo "Experiment id is from ENCODE. Will download from ENCODE."
@@ -60,6 +60,7 @@ if [ ! -f raw_trimmed.fq ]; then
     echo "Trimming fastq using trim galore"
    #mv raw.fastq filtered.fastq
    trim_galore raw.fastq
+   rm raw.fastq
 else
     echo "Fastq already trimmed"
 fi

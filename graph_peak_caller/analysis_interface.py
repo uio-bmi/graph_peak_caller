@@ -81,11 +81,11 @@ def analyse_peaks(args):
 def differential_expression(args):
 
     test_name = args.test_name
-    fimo_file_name = "fimo_%s_sequences/fimo.txt" % test_name
+    fimo_file_name = "fimo_%s/fimo.txt" % test_name
     peaks_file_name = "%s_max_paths.intervalcollection" % test_name
     subgraphs_file_name = "%s_sub_graphs.graphs.npz" % test_name
     node_ids_file_name = "%s_sub_graphs.nodeids.npz" % test_name
-    graph = obg.GraphWithReversals.from_numpy_file(args.graph_name)
+    graph = args.graph
     res = main(
         FimoFile.from_file(fimo_file_name),
         PeakCollection.from_file(peaks_file_name, True),
