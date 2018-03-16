@@ -111,23 +111,6 @@ class LinearPileup(object):
         logging.info("Mapping linear map to graph pileup")
         return linear_map.to_sparse_pileup(unmapped_indices, min_value)
 
-    def to_dense_pileup(self, linear_map, touched_nodes=None):
-        logging.info("Getting event sorter")
-        event_sorter = self.get_event_sorter(linear_map, touched_nodes)
-        logging.info("Getting unmapped indices")
-        unmapped_indices = self.from_event_sorter(event_sorter)
-        logging.info("Mapping linear map to graph pileup")
-        return linear_map.to_dense_pileup(unmapped_indices)
-
-    def to_valued_indexes(self, linear_map, touched_nodes=None):
-        logging.info("Getting event sorter")
-        event_sorter = self.get_event_sorter(linear_map, touched_nodes)
-        logging.info("Getting unmapped indices")
-        unmapped_indices = self.from_event_sorter(event_sorter)
-        logging.info("Mapping linear map to graph pileup")
-        vi_dict = linear_map.to_graph_pileup(unmapped_indices)
-        return vi_dict
-
     def get_event_sorter(self, linear_map, touched_nodes=None):
         node_start_values = [node_id for node_id in
                              (linear_map._graph.blocks

@@ -10,7 +10,7 @@ class LinearMap:
         self._node_ends = np.asanyarray(node_ends)
         assert np.all(self._node_starts < self._node_ends),\
             np.where(self._node_starts >= self._node_ends)
-        self._length = self._node_ends[-1]+graph.node_size(graph.min_node)
+        self._length = self._node_ends[-1]
         self._graph = graph
 
     def __eq__(self, other):
