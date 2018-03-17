@@ -5,13 +5,10 @@ if pytest.__version__ < "3.0.0":
 import numpy as np
 import unittest
 import offsetbasedgraph as obg
-from test_snarls import snarl_graph2
-from graph_peak_caller.control.linearsnarls import \
-    UnmappedIndices, LinearPileup
-from graph_peak_caller.control.snarlmaps import LinearSnarlMap
-from graph_peak_caller.legacy.sparsepileup import ValuedIndexes,\
-    SparsePileup as OldSparsePileup, SparsePileupData as OldSparsePileupData
-from graph_peak_caller.densepileup import DensePileup
+# from test_snarls import snarl_graph2
+# from graph_peak_caller.control.linearsnarls import \
+#     UnmappedIndices, LinearPileup
+# from graph_peak_caller.control.snarlmaps import LinearSnarlMap
 
 graph = obg.GraphWithReversals(
     {3: obg.Block(20), 5: obg.Block(10),

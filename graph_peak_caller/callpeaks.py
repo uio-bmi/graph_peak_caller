@@ -64,7 +64,9 @@ class CallPeaks(object):
             )
         creator.run()
         self.sample_pileup = creator._sample_pileup
+        self._reporter.add("fragment_pileup", self.sample_pileup)
         self.control_pileup = creator._control_pileup
+        self._reporter.add("background_track", self.control_pileup)
         self.touched_nodes = creator.touched_nodes
 
     def get_p_values(self):

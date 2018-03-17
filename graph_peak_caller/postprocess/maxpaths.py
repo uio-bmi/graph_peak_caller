@@ -4,7 +4,7 @@ from scipy.sparse import csr_matrix
 
 from .segmentanalyzer import SegmentSplitter
 from ..peakcollection import Peak
-from .holecleaner import PosDividedLineGraph, SubGraph
+from .graphs import PosDividedLineGraph, SubGraph
 
 
 class SparseMaxPaths:
@@ -66,15 +66,10 @@ class SparseMaxPaths:
 
         paths, infos, subgraphs = linegraph.max_paths()
         converted = self._convert_paths(paths, infos)
-        # for path, subgraph in zip(converted, subgraphs):
-        #     # subgraph._node_ids += self._graph.min_node-1
-        #     print(subgraph._node_ids)
-        #     print(path.region_paths)
-        #     assert all(rp in subgraph._node_ids for rp in path.region_paths)
-
         small_subgraphs = [
-            SubGraph(path.region_paths, csr_matrix(([], ([], [])), shape=(1, 1)))
-                           for path in self.internal_paths]
+            SubGraph(path.region_paths,
+                     csr_matrix(([], ([], [])), shape=(1, 1)))
+            for path in self.internal_paths]
         return converted+self.internal_paths, subgraphs+small_subgraphs
 
     def _convert_paths(self, paths, infos):
@@ -110,12 +105,8 @@ class SparseMaxPaths:
         pileup_cumsum = np.r_[0, np.cumsum(weighted_values)]
         base_scores = pileup_cumsum[pileup_idxs[:, 1]-1]-pileup_cumsum[
             pileup_idxs[:, 0]-1]
-        # assert np.all(base_scores >= 0)
         diffs = self._segments-self._score_pileup.indices[pileup_idxs-1]
-        # assert np.all(diffs >= 0)
         values = self._score_pileup.values[pileup_idxs-1]
-        # assert np.all(values[:, 1] >= values[:, 0])
         val_diffs = diffs*values
         offsets = val_diffs[:, 1] - val_diffs[:, 0]
         self.scores = base_scores + offsets
-        # assert np.all(self.scores >= 0)

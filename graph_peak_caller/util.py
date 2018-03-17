@@ -5,7 +5,6 @@ import offsetbasedgraph as obg
 from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
 
 from .control.linearmap import LinearMap
-from .control.snarls import SnarlGraphBuilder
 
 
 class LinearRegion(object):

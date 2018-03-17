@@ -1,9 +1,14 @@
+import pytest
 import unittest
-from graph_peak_caller.densepileupindex import DensePileupExtender, GraphIndex, GraphExtender
+
+# from graph_peak_caller.densepileupindex import DensePileupExtender, GraphIndex, GraphExtender
 from offsetbasedgraph import GraphWithReversals as Graph, Block, DirectedInterval as Interval
-from graph_peak_caller.densepileup import DensePileup
+# from graph_peak_caller.densepileup import DensePileup
+if pytest.__version__ < "3.0.0":
+    pytest.skip()
 
 
+@pytest.mark.skip("Legacy")
 class TestGraphExtenderLinearGraph(unittest.TestCase):
 
     def setUp(self):
@@ -45,7 +50,7 @@ class TestGraphExtenderLinearGraph(unittest.TestCase):
         extensions = self.extender.extend_from_position(-3, 2, extension_length=20)
         self.assertEqual(list(extensions),  [(-3, -2), (-2, 8), (-1, 18)])
 
-
+@pytest.mark.skip("Legacy")
 class TestGraphExtenderSplitGraph(unittest.TestCase):
 
     def setUp(self):
@@ -77,7 +82,7 @@ class TestGraphExtenderSplitGraph(unittest.TestCase):
         extensions = self.extender.extend_from_position(1, 5, extension_length=20)
         self.assertEqual(list(extensions),  [(1, -5), (2, 5), (3, 5), (4, 15)])
 
-
+@pytest.mark.skip("Legacy")
 class TestPileupExtender(unittest.TestCase):
 
     def setUp(self):

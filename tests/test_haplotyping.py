@@ -1,6 +1,8 @@
 import unittest
 from graph_peak_caller.haplotyping import HaploTyper
-from offsetbasedgraph import DirectedInterval as Interval, GraphWithReversals as Graph, Block, IntervalCollection
+from offsetbasedgraph import DirectedInterval as Interval, \
+    GraphWithReversals as Graph, Block, IntervalCollection
+
 
 class TestHaplotyper(unittest.TestCase):
 

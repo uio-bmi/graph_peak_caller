@@ -2,7 +2,7 @@ import numpy as np
 import logging
 
 from ..sparsediffs import SparseDiffs
-from .linearsnarls import LinearPileup
+from .linearpileup import LinearPileup
 from .linearmap import LinearMap
 
 

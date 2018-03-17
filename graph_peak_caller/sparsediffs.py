@@ -16,7 +16,6 @@ class SparseValues:
         self.values = self.values[unique_mask]
 
         values_mask = np.r_[True, self.values[1:] != self.values[:-1]]
-        # values_mask = np.ediff1d(self.values, to_begin=1) != 0
         self.indices = self.indices[values_mask]
         self.values = self.values[values_mask]
 

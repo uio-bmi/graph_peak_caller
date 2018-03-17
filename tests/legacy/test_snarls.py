@@ -1,7 +1,11 @@
+import pytest
+if pytest.__version__ < "3.0.0":
+    pytest.skip()
+
 import unittest
 
-from graph_peak_caller.control.snarls import \
-    SnarlGraph, SimpleSnarl, SnarlGraphBuilder
+from graph_peak_caller.legacy.snarls import \
+     SnarlGraph, SimpleSnarl, SnarlGraphBuilder
 from offsetbasedgraph import Block, Graph
 
 """
@@ -25,6 +29,7 @@ snarl_graph2 = SnarlGraph(
     start_node=1, end_node=4)
 
 
+@pytest.mark.skip("Legacy")
 class SnarlsTests(unittest.TestCase):
     def setUp(self):
         self.simple_graph = Graph(
@@ -48,6 +53,8 @@ class SnarlsTests(unittest.TestCase):
                 22: SimpleSnarl(4, 5, 22)
             }
 
+
+@pytest.mark.skip("Legacy")
 class TestSnarlGraph(unittest.TestCase):
     def test_simple_length(self):
         length = snarl_graph1.length()
@@ -68,7 +75,7 @@ class TestSnarlGraph(unittest.TestCase):
         self.assertEqual(ends_dict, true_ends)
 
 
-
+@pytest.mark.skip("Legacy")
 class TestSnarlGraphBuilder(SnarlsTests):
 
     def test_build_non_nested(self):

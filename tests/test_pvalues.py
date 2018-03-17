@@ -1,20 +1,10 @@
 from graph_peak_caller.sparsepvalues import PToQValuesMapper, PValuesFinder
-from graph_peak_caller.sparsediffs import SparseValues, SparseDiffs
-from graph_peak_caller.sample.sparsegraphpileup import ReadsAdderWDirect,\
-    SparseGraphPileup
+from graph_peak_caller.sparsediffs import SparseValues
 from offsetbasedgraph import GraphWithReversals as Graph,\
     DirectedInterval as Interval, Block
 import unittest
 import numpy as np
-
-
-def from_intervals(graph, intervals):
-    pileup = SparseGraphPileup(graph)
-    reads_adder = ReadsAdderWDirect(graph, pileup)
-    reads_adder.add_reads(intervals)
-    pileup.ends += reads_adder.pos_read_ends
-    pileup.starts += reads_adder.neg_read_ends
-    return SparseDiffs.from_pileup(pileup, graph.node_indexes)
+from util import from_intervals
 
 
 class TestPToQValuesMapper(unittest.TestCase):

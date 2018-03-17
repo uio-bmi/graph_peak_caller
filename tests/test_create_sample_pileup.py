@@ -1,10 +1,9 @@
 import unittest
-import numpy as np
 from offsetbasedgraph import GraphWithReversals as Graph, Block, \
     DirectedInterval as Interval, IntervalCollection
 from graph_peak_caller import ExperimentInfo, Configuration
 from graph_peak_caller.sampleandcontrolcreator import SampleAndControlCreator
-from graph_peak_caller.densepileup import DensePileup as Pileup
+from util import from_intervals
 
 
 class Tester(unittest.TestCase):
@@ -22,14 +21,13 @@ class Tester(unittest.TestCase):
             self.sample_reads.append(right_sub_reverse)
 
     def assert_final_pileup_equals_correct_pileup(self):
-        found_pileup = self.creator._sample_pileup.to_dense_pileup(
-            self.graph_size)
-        correct_pileup = self.correct_pileup.data._values
+        found_pileup = self.creator._sample_pileup.get_sparse_values()
+        correct_pileup = self.correct_pileup.get_sparse_values()
         print("Found pileup")
         print(found_pileup)
         print("Correct pileup")
         print(correct_pileup)
-        self.assertTrue(np.all(found_pileup == correct_pileup))
+        self.assertTrue(found_pileup == correct_pileup)
 
     def setUp(self):
         self.set_graph()
@@ -41,9 +39,11 @@ class Tester(unittest.TestCase):
 
         control_reads = self.sample_reads.copy()
 
-        self.graph_size = sum(block.length() for block in self.graph.blocks.values())
-        experiment_info = ExperimentInfo(self.graph_size,
-                                         self.fragment_length(), self.read_length())
+        self.graph_size = sum(block.length() for block in
+                              self.graph.blocks.values())
+        experiment_info = ExperimentInfo(
+            self.graph_size,
+            self.fragment_length(), self.read_length())
 
         config = Configuration(skip_filter_duplicates=True)
 
@@ -90,7 +90,7 @@ class TestLinearGraph(TestCase):
         self.graph = Graph({1: Block(5), 2: Block(5)}, {1: [2]})
 
     def test_single_fragment(self):
-        self.correct_pileup = Pileup.from_intervals(self.graph,
+        self.correct_pileup = from_intervals(self.graph,
             [
                 Interval(3, 3, [1, 2]),
                 Interval(3, 3, [1, 2])
@@ -100,7 +100,7 @@ class TestLinearGraph(TestCase):
         self.do_asserts()
 
     def test_two_fragments(self):
-        self.correct_pileup = Pileup.from_intervals(self.graph,
+        self.correct_pileup = from_intervals(self.graph,
             [
                 Interval(3, 3, [1, 2]),
                 Interval(3, 3, [1, 2]),
@@ -127,7 +127,7 @@ class TestLinearGraphFullNodeCovered(TestCase):
 
     def test_single_fragment(self):
 
-        self.correct_pileup = Pileup.from_intervals(self.graph,
+        self.correct_pileup = from_intervals(self.graph,
             [
                 Interval(0, 5, [1, 2, 3]),
                 Interval(0, 5, [1, 2, 3])
@@ -149,7 +149,7 @@ class TestSplitGraph(TestCase):
                            {1: [2, 3], 2: [4], 3: [4]})
 
     def test_single_fragment(self):
-        self.correct_pileup = Pileup.from_intervals(self.graph,
+        self.correct_pileup = from_intervals(self.graph,
             [
                 Interval(0, 5, [1, 2, 4]),
                 Interval(0, 5, [1, 2, 4]),
@@ -175,7 +175,7 @@ class TestSplitGraph2(TestCase):
 
     def test_single_fragment(self):
 
-        self.correct_pileup = Pileup.from_intervals(self.graph,
+        self.correct_pileup = from_intervals(self.graph,
             [
                 Interval(0, 5, [1, 2, 4]),
                 Interval(0, 5, [1, 2, 4]),

@@ -2,7 +2,6 @@ from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 from offsetbasedgraph import GraphWithReversals as Graph, \
     DirectedInterval, IntervalCollection, Block
 import unittest
-from graph_peak_caller.control.snarls import SnarlGraphBuilder, SimpleSnarl
 from graph_peak_caller.control.linearmap import LinearMap
 from pyvg.sequences import SequenceRetriever
 import logging

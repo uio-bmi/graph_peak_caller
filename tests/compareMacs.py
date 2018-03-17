@@ -10,7 +10,7 @@ from offsetbasedgraph.interval import IntervalCollection
 from graph_peak_caller import CallPeaks, ExperimentInfo, Configuration
 from graph_peak_caller.legacy.sparsepileup import SparsePileup
 from graph_peak_caller.control.snarls import SnarlGraphBuilder, SimpleSnarl
-from graph_peak_caller.control.linearsnarls import LinearSnarlMap
+from graph_peak_caller.control.linearpileup import LinearPileup
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 from graph_peak_caller.peakscomparer import PeaksComparer
 logging.basicConfig(level=logging.WARNING)
