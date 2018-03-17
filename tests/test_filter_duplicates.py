@@ -33,19 +33,13 @@ class TestFilterDulicates(unittest.TestCase):
         experiment_info = ExperimentInfo(100, 10, 2)
 
         interval_collection = IntervalCollection(intervals)
-        interval_collection.to_file("test_intervals.tmp")
-
-        caller = SampleAndControlCreator("test_graph.tmp", "test_intervals.tmp",
-                                     "test_intervals.tmp",
-                                     experiment_info=experiment_info,
-                                     linear_map="dummy_linear_map")
-        filtered_intervals_file_name = caller.filter_duplicates_and_count_intervals(
-                        caller.sample_intervals,
-                        write_to_file = "filtered_intervals_test.tmp")
-
-        intervals_filtered = []
-        for interval in IntervalCollection.from_file(filtered_intervals_file_name, text_file=False):
-            intervals_filtered.append(interval)
+        caller = SampleAndControlCreator(graph,
+                                         interval_collection,
+                                         interval_collection,
+                                         experiment_info=experiment_info,
+                                         linear_map="dummy_linear_map")
+        intervals_filtered = list(caller.filter_duplicates_and_count_intervals(
+            caller.sample_intervals))
 
         self.assertEqual(len(intervals_filtered), len(intervals)-1)
         self.assertEqual(intervals_filtered[0], intervals[0])

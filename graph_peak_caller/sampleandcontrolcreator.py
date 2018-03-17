@@ -1,33 +1,9 @@
 import logging
-import pickle
-
 import offsetbasedgraph as obg
-from .sparsepvalues import PValuesFinder, PToQValuesMapper
+
 from .experiment_info import ExperimentInfo
 from .control import SparseControl
 from .sample import SamplePileupGenerator
-
-
-obg.IntervalCollection.interval_class = obg.DirectedInterval
-
-
-def enable_filewrite(func):
-    def wrapper(*args, **kwargs):
-        intervals = args[1]
-        if isinstance(intervals, str):
-            intervals = obg.IntervalCollection.from_file(intervals)
-
-        write_to_file = kwargs.pop("write_to_file", False)
-        interval_list = func(args[0], intervals, **kwargs)
-
-        if write_to_file:
-            interval_collection = obg.IntervalCollection(interval_list)
-            interval_collection.to_file(write_to_file)
-            return write_to_file
-        else:
-            return interval_list
-
-    return wrapper
 
 
 class SampleAndControlCreator:
@@ -84,7 +60,6 @@ class SampleAndControlCreator:
         self.max_paths = None
         self.peaks_as_subgraphs = None
 
-        self.create_graph()
         self.touched_nodes = None  # Nodes touched by sample pileup
         self.graph_is_partially_ordered = graph_is_partially_ordered
 
@@ -109,7 +84,7 @@ class SampleAndControlCreator:
         self.preprocess()
         if self.info is None:
             self.info = ExperimentInfo.find_info(
-                self.ob_graph, self.sample_intervals, self.control_intervals)
+                self.graph, self.sample_intervals, self.control_intervals)
         self.create_sample_pileup()
         self.create_control()
         self.scale_tracks()
@@ -134,13 +109,11 @@ class SampleAndControlCreator:
         self.control_intervals = self.filter_duplicates_and_count_intervals(
                                     self.control_intervals, is_control=True)
 
-    @enable_filewrite
     def remove_alignments_not_in_graph(self, intervals, is_control=False):
-        for interval in self._get_intervals_in_ob_graph(intervals):
+        for interval in self._get_intervals_in_graph(intervals):
             if interval is not False:
                 yield interval
 
-    @enable_filewrite
     def filter_duplicates_and_count_intervals(self, intervals, is_control=False):
         interval_hashes = {}
         n_duplicates = 0
@@ -167,9 +140,9 @@ class SampleAndControlCreator:
         direction = None
         for i, rp in enumerate(interval.region_paths[:-1]):
             next_rp = interval.region_paths[i+1]
-            if next_rp in self.ob_graph.adj_list[rp]:
+            if next_rp in self.graph.adj_list[rp]:
                 new_dir = 1
-            elif next_rp in self.ob_graph.reverse_adj_list[rp]:
+            elif next_rp in self.graph.reverse_adj_list[rp]:
                 new_dir = -1
             else:
                 logging.error("Invalid interval: Rp %d of interval %s is not "
@@ -186,11 +159,11 @@ class SampleAndControlCreator:
 
         return True
 
-    def _get_intervals_in_ob_graph(self, intervals):
+    def _get_intervals_in_graph(self, intervals):
         # Returns only those intervals that exist in graph
         for interval in intervals:
             self._assert_interval_is_valid(interval)
-            if interval.region_paths[0] in self.ob_graph.blocks:
+            if interval.region_paths[0] in self.graph.blocks:
                 yield interval
             else:
                 logging.warning("Interval: %s" % interval)
@@ -217,18 +190,10 @@ class SampleAndControlCreator:
             self._control_pileup *= ratio
 
     def find_info(self):
-        sizes = (block.length() for block in self.ob_graph.blocks.values())
+        sizes = (block.length() for block in self.graph.blocks.values())
 
         self.genome_size = sum(sizes)
         self.n_reads = sum(1 for line in open(self.control_file_name))
-
-    def create_graph(self):
-        logging.info("Creating graph")
-        if isinstance(self.graph, str):
-            self.ob_graph = obg.Graph.from_file(self.graph)
-        else:
-            self.ob_graph = self.graph
-            logging.info("Graph already created")
 
     def create_control(self):
         logging.info("Creating control track using linear map %s" % self.linear_map)
@@ -247,12 +212,6 @@ class SampleAndControlCreator:
 
         # Delete control pileup
         self.control_intervals = None
-
-    def get_p_to_q_values_mapping(self):
-        return PToQValuesMapper.from_p_values_dense_pileup(self.p_values)
-
-    def _write_vg_alignments_as_intervals_to_bed_file(self):
-        pass
 
     def create_sample_pileup(self):
         logging.info("Creating sample pileup")
