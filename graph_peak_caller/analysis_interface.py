@@ -92,15 +92,19 @@ def differential_expression(args):
         np.load(subgraphs_file_name),
         np.load(node_ids_file_name),
         graph)
-    retriever = obg.SequenceGraph(args.graph_file_name + ".sequences")
-    out_f = open(test_name + "_diffexpr.fasta", "w")
+    retriever = obg.SequenceGraph.from_file(args.graph_file_name + ".sequences")
+    out_file_name = test_name + "_diffexpr.fasta"
+    out_f = open(out_file_name, "w")
+    n = 0
     for expr_diff in res:
+        n += 1
         main_seq = retriever.get_interval_sequence(expr_diff.main_path)
         out_f.write("> %s %s\n" % (expr_diff.peak_id, expr_diff.main_count))
         out_f.write(main_seq + "\n")
         var_seq = retriever.get_interval_sequence(expr_diff.var_path)
         out_f.write("> %sAlt %s\n" % (expr_diff.peak_id, expr_diff.var_count))
         out_f.write(var_seq + "\n")
+    logging.info("Wrote %d lines to %s" % (n, out_file_name))
     out_f.close()
 
 
