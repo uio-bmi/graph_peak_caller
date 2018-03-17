@@ -4,3 +4,5 @@ coverage:
         - tests/*
         - legacy/*
         - graph_peak_caller/legacy/*
+	- graph_peak_caller/analysis/*
+	- analysis/*

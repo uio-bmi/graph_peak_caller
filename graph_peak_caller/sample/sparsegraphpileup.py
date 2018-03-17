@@ -2,9 +2,6 @@ import numpy as np
 import logging
 from itertools import chain
 from collections import defaultdict
-
-import offsetbasedgraph as obg
-
 from ..sparsediffs import SparseDiffs
 
 

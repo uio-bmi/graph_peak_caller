@@ -3,8 +3,8 @@ import logging
 from offsetbasedgraph import Block, Interval, GraphWithReversals
 from graph_peak_caller import CallPeaksFromQvalues, ExperimentInfo
 from graph_peak_caller.legacy.sparsepileup import SparsePileup, ValuedIndexes
-from graph_peak_caller.densepileup import DensePileup
-from graph_peak_caller.sparsediffs import SparseValues
+from util import convert_old_sparse
+
 logging.basicConfig(level=logging.ERROR)
 
 
@@ -71,7 +71,7 @@ class TestCallPeaksFromQValues(unittest.TestCase):
                            })
 
         self.junction_graph = GraphWithReversals({i: Block(5) for i in range(10, 20)},
-                                     {
+                                    {
                                         10: [15],
                                         11: [15],
                                         12: [15],
@@ -84,8 +84,9 @@ class TestCallPeaksFromQValues(unittest.TestCase):
         self.read_length = 2
 
     def _run_caller(self, graph, pileup):
-        pileup = DensePileup.create_from_old_sparsepileup(pileup)
-        new_sparse = SparseValues.from_dense_pileup(pileup.data._values)
+        print(pileup)
+        new_sparse = convert_old_sparse(pileup)
+        print(new_sparse)
         graph_size = sum(block.length() for block in graph.blocks.values())
         experiment_info = ExperimentInfo(graph_size, self.fragment_length,
                                          self.read_length)
@@ -99,7 +100,8 @@ class TestCallPeaksFromQValues(unittest.TestCase):
         found_max_paths = self._run_caller(graph, pileup)
         for path in max_paths:
             path.graph = graph
-            self.assertTrue(path in found_max_paths or path.get_reverse() in found_max_paths,
+            self.assertTrue(
+                path in found_max_paths or path.get_reverse() in found_max_paths,
                 "\nPath %s not found in max paths. Max paths: \n %s" % \
                 (path, '\n'.join([str(p) for p in found_max_paths])))
 

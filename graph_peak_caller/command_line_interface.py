@@ -3,11 +3,12 @@ import argparse
 import logging
 import sys
 import matplotlib as mpl
-from graph_peak_caller.densepileup import DensePileup
 mpl.use('Agg')
 
 import offsetbasedgraph as obg
 from graph_peak_caller.peakcollection import Peak, PeakCollection
+from graph_peak_caller.sparsediffs import SparseValues
+from graph_peak_caller.mindense import DensePileup
 
 from graph_peak_caller.callpeaks_interface import \
     run_callpeaks_interface, run_callpeaks_whole_genome,\
@@ -139,7 +140,8 @@ def peaks_to_linear(args):
 
 def get_summits(args):
     graph = args.graph
-    qvalues = DensePileup.from_sparse_files(graph, args.q_values_base_name)
+    qvalues = SparseValues.from_sparse_files(args.q_values_base_name)
+    qvalues = DensePileup(graph, qvalues)
     logging.info("Q values fetched")
     peaks = PeakCollection.from_fasta_file(args.peaks_fasta_file, graph)
     peaks.cut_around_summit(qvalues)
