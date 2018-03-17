@@ -248,16 +248,6 @@ class SampleAndControlCreator:
         # Delete control pileup
         self.control_intervals = None
 
-    def get_score(self):
-        logging.info("Getting p values.")
-        p_values_finder = PValuesFinder(
-            self._sample_pileup, self._control_pileup)
-        self._p_values_pileup = p_values_finder.get_p_values_pileup()
-
-        # Delete sample and control pileups
-        self._control_pileup = None
-        self._sample_pileup = None
-
     def get_p_to_q_values_mapping(self):
         return PToQValuesMapper.from_p_values_dense_pileup(self.p_values)
 
