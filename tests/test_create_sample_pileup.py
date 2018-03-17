@@ -1,5 +1,4 @@
 import unittest
-import numpy as np
 from offsetbasedgraph import GraphWithReversals as Graph, Block, \
     DirectedInterval as Interval, IntervalCollection
 from graph_peak_caller import ExperimentInfo, Configuration
