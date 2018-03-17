@@ -1,7 +1,6 @@
 import unittest
-from offsetbasedgraph import Graph, Block, Interval, IntervalCollection
-from graph_peak_caller import ExperimentInfo
-from graph_peak_caller.sampleandcontrolcreator import SampleAndControlCreator
+from offsetbasedgraph import Interval, IntervalCollection
+from graph_peak_caller.sampleandcontrolcreator import UniqueIntervals
 
 
 class DummyLinearMap:
@@ -11,35 +10,14 @@ class DummyLinearMap:
 
 class TestFilterDulicates(unittest.TestCase):
     def test_filter_duplicates(self):
-        graph = Graph({
-                        1: Block(10),
-                        2: Block(10),
-                        3: Block(10),
-                        4: Block(10)
-                    },
-            {
-                1: [2, 4],
-                2: [3],
-                4: [4]
-            })
-        graph.to_file("test_graph.tmp")
-
         intervals = [
             Interval(0, 10, [1, 2, 3]),
             Interval(1, 10, [1, 2, 3]),
             Interval(0, 10, [1, 2, 3])
         ]
 
-        experiment_info = ExperimentInfo(100, 10, 2)
-
         interval_collection = IntervalCollection(intervals)
-        caller = SampleAndControlCreator(graph,
-                                         interval_collection,
-                                         interval_collection,
-                                         experiment_info=experiment_info,
-                                         linear_map="dummy_linear_map")
-        intervals_filtered = list(caller.filter_duplicates_and_count_intervals(
-            caller.sample_intervals))
+        intervals_filtered = list(UniqueIntervals(interval_collection))
 
         self.assertEqual(len(intervals_filtered), len(intervals)-1)
         self.assertEqual(intervals_filtered[0], intervals[0])

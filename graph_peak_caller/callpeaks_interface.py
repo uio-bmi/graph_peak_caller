@@ -2,12 +2,13 @@ import logging
 
 import offsetbasedgraph as obg
 from pyvg.conversion import vg_json_file_to_interval_collection
-from pyvg.sequences import SequenceRetriever
+
 
 from . import ExperimentInfo, Configuration, CallPeaks
 from .multiplegraphscallpeaks import MultipleGraphsCallpeaks
 import os
 from graph_peak_caller.util import create_linear_map
+
 
 def run_callpeaks(ob_graph,
                   sample_file_name, control_file_name,
@@ -58,8 +59,9 @@ def run_callpeaks(ob_graph,
         linear_map=linear_map_file_name,
         configuration=config
     )
-    if sequence_graph != None:
-        caller.save_max_path_sequences_to_fasta_file("sequences.fasta", sequence_graph)
+    if sequence_graph is not None:
+        caller.save_max_path_sequences_to_fasta_file(
+            "sequences.fasta", sequence_graph)
     else:
         logging.info("Not saving max path sequences, since a sequence graph was not found.")
 

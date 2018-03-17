@@ -34,8 +34,13 @@ class PValuesFinder:
 class PToQValuesMapper:
 
     def __init__(self, p_values, cum_counts):
+        print("HHHHHHHHEEEEEEEEEERRRRRRRRRREEEEEEEEE")
         self.p_values = np.asanyarray(p_values)
         self.cum_counts = np.asanyarray(cum_counts)
+
+    def __str__(self):
+        print("#######__________#########")
+        return str(self.p_values) + ":" + str(self.cum_counts)
 
     @classmethod
     def __read_file(cls, file_name):
@@ -46,6 +51,7 @@ class PToQValuesMapper:
     @classmethod
     def _from_subcounts(cls, p_values, counts):
         p_values = p_values.ravel()
+        print("PVAL", p_values)
         counts = counts.ravel()
         args = np.argsort(p_values)[::-1]
         sorted_ps = p_values[args]
@@ -97,6 +103,7 @@ class PToQValuesMapper:
             1+np.r_[0, self.cum_counts[:-1]])-logN
         q_values[0] = max(0, q_values[0])
         q_values = np.minimum.accumulate(q_values)
+        print("PPPP", q_values)
         d = dict(zip(self.p_values, q_values))
         d[0] = 0
         return d

@@ -75,6 +75,8 @@ class CallPeaks(object):
         self.p_values_pileup = PValuesFinder(
             self.sample_pileup, self.control_pileup).get_p_values_pileup()
         self.p_values_pileup.track_size = self.graph.node_indexes[-1]
+        print("PVELUS")
+        print(self.p_values_pileup)
         self.sample_pileup = None
         self.control_pileup = None
 
@@ -82,14 +84,20 @@ class CallPeaks(object):
         assert self.p_values_pileup is not None
         finder = PToQValuesMapper.from_p_values_pileup(
             self.p_values_pileup)
+        print(finder)
         self.p_to_q_values_mapping = finder.get_p_to_q_values()
+        print("#", self.p_to_q_values_mapping)
 
     def get_q_values(self):
         assert self.p_values_pileup is not None
         assert self.p_to_q_values_mapping is not None
-        finder = QValuesFinder(self.p_values_pileup,
-                               self.p_to_q_values_mapping)
+        finder = QValuesFinder(
+            self.p_values_pileup,
+            self.p_to_q_values_mapping)
+
         self.q_values_pileup = finder.get_q_values()
+        print("QVALUES")
+        print(self.q_values_pileup)
         self.q_values_pileup.track_size = self.p_values_pileup.track_size
         self._reporter.add("qvalues", self.q_values_pileup)
 
@@ -254,4 +262,3 @@ class CallPeaksFromQvalues:
             if i % 100 == 0:
                 logging.info("Writing sequence # %d" % i)
         f.close()
-
