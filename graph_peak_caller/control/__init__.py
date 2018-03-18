@@ -38,3 +38,16 @@ def get_background_track_from_input(
     if global_min is not None:
         sc.set_min_value(global_min)
     return sc.create(intervals)
+
+
+def scale_tracks(fragment_pileup, background_track, ratio):
+    logger.info("Scaling tracks to ratio: %d" % ratio)
+    if ratio == 1:
+        return
+
+    if ratio > 1:
+        logging.warning("More reads in sample than in control")
+        fragment_pileup *= 1/ratio
+    else:
+        logging.info("Scaling control pileup down with ratio %.3f" % ratio)
+        background_track *= ratio
