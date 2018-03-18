@@ -15,7 +15,6 @@ class MultipleGraphsCallpeaks:
                  controls, linear_maps,
                  config, reporter,
                  sequence_retrievers=None,
-                 save_tmp_results_to_file=False,
                  stop_after_p_values=False,
                  ):
         self._config = config
@@ -68,6 +67,21 @@ class MultipleGraphsCallpeaks:
         self.create_joined_q_value_mapping()
         self.run_from_p_values()
 
+    def get_intervals(self, sample, control, graph):
+        if isinstance(sample, Intervals) or isinstance(sample, UniqueIntervals):
+            logging.info("Sample is already intervalcollection.")
+            return sample, control
+        elif sample.endswith(".intervalcollection"):
+            sample = obg.IntervalCollection.create_generator_from_file(
+                sample, graph=graph)
+            control = obg.IntervalCollection.create_generator_from_file(
+                control, graph=graph)
+        else:
+            logging.info("Creating interval collections from files")
+            sample = vg_json_file_to_interval_collection(sample, graph)
+            control = vg_json_file_to_interval_collection(control, graph)
+        return UniqueIntervals(sample), UniqueIntervals(control)
+
     def run_to_p_values(self):
         for name, graph_file_name, sample, control, lin_map in \
             zip(self.names, self.graph_file_names,
@@ -75,18 +89,7 @@ class MultipleGraphsCallpeaks:
             logging.info("Running %s" % name)
             ob_graph = obg.GraphWithReversals.from_unknown_file_format(
                 graph_file_name)
-            if isinstance(sample, Intervals) or isinstance(sample, UniqueIntervals):
-                logging.info("Sample is already intervalcollection.")
-            elif sample.endswith(".intervalcollection"):
-                sample = obg.IntervalCollection.create_generator_from_file(
-                    sample, graph=ob_graph)
-                control = obg.IntervalCollection.create_generator_from_file(
-                    control, graph=ob_graph)
-            else:
-                logging.info("Creating interval collections from files")
-                sample = vg_json_file_to_interval_collection(sample, ob_graph)
-                control = vg_json_file_to_interval_collection(control, ob_graph)
-
+            sample, control = self.get_intervals(sample, control, ob_graph)
             config = self._config.copy()
             config.linear_map_name = lin_map
             caller = CallPeaks(ob_graph, config,
