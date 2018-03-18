@@ -409,11 +409,16 @@ interface = \
         }
 }
 
-
+class GraphNotFoundException(Exception):
+    pass
 
 class GraphAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        new_values = obg.Graph.from_numpy_file(values)
+        try:
+            new_values = obg.Graph.from_numpy_file(values)
+        except FileNotFoundError:
+            raise GraphNotFoundException()
+
 
         setattr(namespace, self.dest, new_values)
         setattr(namespace, "graph_file_name", values)
@@ -474,7 +479,12 @@ def run_argument_parser(args):
         parser.print_help()
         sys.exit(1)
 
-    args = parser.parse_args(args)
+    try:
+        args = parser.parse_args(args)
+    except GraphNotFoundException:
+        logging.error("Specified graph file was not found. Aborting.")
+        sys.exit(1)
+
     if hasattr(args, 'func'):
         args.func(args)
     else:
