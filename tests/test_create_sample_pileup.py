@@ -1,8 +1,9 @@
 import unittest
 from offsetbasedgraph import GraphWithReversals as Graph, Block, \
-    DirectedInterval as Interval, IntervalCollection
-from graph_peak_caller import ExperimentInfo, Configuration
+    DirectedInterval as Interval
+from graph_peak_caller import Configuration
 from graph_peak_caller.sample import get_fragment_pileup
+from graph_peak_caller.intervals import Intervals
 from util import from_intervals
 
 
@@ -37,19 +38,14 @@ class Tester(unittest.TestCase):
         for read in self.sample_reads:
             print(read)
 
-        control_reads = self.sample_reads.copy()
-
         self.graph_size = sum(block.length() for block in
                               self.graph.blocks.values())
-        experiment_info = ExperimentInfo(
-            self.graph_size,
-            self.fragment_length(), self.read_length())
-
-        config = Configuration(skip_filter_duplicates=True)
-
+        config = Configuration()
+        config.fragment_length = self.fragment_length()
+        config.read_length = self.read_length()
         self.fragment_pileup = get_fragment_pileup(
-            self.graph, IntervalCollection(self.sample_reads),
-            experiment_info)
+            self.graph, Intervals(self.sample_reads),
+            config)
 
     def do_asserts(self):
         self.run_callpeaks()

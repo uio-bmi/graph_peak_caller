@@ -1,15 +1,45 @@
 import logging
+import os
 
 import offsetbasedgraph as obg
 from pyvg.conversion import vg_json_file_to_interval_collection
 
-
-from . import ExperimentInfo, Configuration, CallPeaks
+from . import Configuration, CallPeaks
 from .multiplegraphscallpeaks import MultipleGraphsCallpeaks
-import os
-from graph_peak_caller.util import create_linear_map
-from .custom_exceptions import *
-import json
+from .util import create_linear_map
+from .peakfasta import PeakFasta
+from .reporter import Reporter
+from .intervals import UniqueIntervals
+
+
+def get_confiugration(args):
+    config = Configuration()
+    config.has_control = args.control is not None
+    if args.linear_map is None:
+        config.linear_map_name = args.graph_file_name.split(".")[0] + "_linear_map.npz"
+    else:
+        config.linear_map_name = args.linear_map
+    config.fragment_length = int(args.fragment_length)
+    config.read_length = int(args.read_length)
+    if args.q_value_threshold is not None:
+        config.q_value_threshold = float(args.q_value_threshold)
+    return config
+
+
+def get_intervals(args):
+    iclass = UniqueIntervals  # Use Intervals to skip filter dup
+    samples = iclass(parse_input_file(args.sample, args.graph))
+    control_name = args.sample if args.control is None else args.control
+    controls = iclass(parse_input_file(control_name, args.graph))
+    return samples, controls
+
+
+def get_callpeaks(args):
+    config = get_confiugration(args)
+    find_or_create_linear_map(args.graph, config.linear_map_name)
+    out_name = args.out_name if args.out_name is not None else ""
+    reporter = Reporter(out_name)
+    return CallPeaks(args.graph, config, reporter)
 
 
 def parse_input_file(input, graph):
@@ -27,44 +57,18 @@ def parse_input_file(input, graph):
                 input, graph=graph, text_file=True)
         return intervals
 
+def run_callpeaks_interface(args):
+    caller = get_callpeaks(args)
+    inputs, controls = get_intervals(args)
+    caller.run(inputs, controls)
 
-def run_callpeaks(ob_graph,
-                  sample_file_name, control_file_name,
-                  sequence_graph,
-                  out_name="real_data_",
-                  has_control=True,
-                  limit_to_chromosomes=False,
-                  fragment_length=135, read_length=36,
-                  linear_map_file_name=False,
-                  qval_threshold=0.05):
-
-    logging.info("Running from gam files")
-
-    # Detect file format
-    sample_intervals = parse_input_file(sample_file_name, ob_graph)
-    control_intervals = parse_input_file(control_file_name, ob_graph)
-
-    graph_size = ob_graph.number_of_basepairs()
-    logging.info("Number of base pairs in graph: %d" % graph_size)
-
-    experiment_info = ExperimentInfo(graph_size, fragment_length, read_length)
-    config = Configuration(
-        skip_read_validation=True, save_tmp_results_to_file=True,
-        skip_filter_duplicates=False, p_val_cutoff=qval_threshold,
-        graph_is_partially_ordered=True)
-
-    caller = CallPeaks.run_from_intervals(
-        ob_graph, sample_intervals, control_intervals,
-        experiment_info=experiment_info,
-        out_file_base_name=out_name, has_control=has_control,
-        linear_map=linear_map_file_name,
-        configuration=config
-    )
-    if sequence_graph is not None:
-        caller.save_max_path_sequences_to_fasta_file(
-            "sequences.fasta", sequence_graph)
+    outname = args.out_name if args.out_name is not None else ""
+    if args.sequence_graph is not None:
+        PeakFasta(args.sequence_graph).write_max_path_sequences(
+            outname+"sequences.fasta", caller.max_path_peaks)
     else:
-        logging.info("Not saving max path sequences, since a sequence graph was not found.")
+        logging.info(
+            "Not saving max path sequences, since a sequence graph was not found.")
 
 
 def find_or_create_linear_map(graph, linear_map_name):
@@ -78,38 +82,8 @@ def find_or_create_linear_map(graph, linear_map_name):
         logging.info("Done creating linear map")
 
 
-def run_callpeaks_interface(args):
-    logging.info("Read offset based graph")
-
-    ob_graph = args.graph
-    control = args.sample
-    has_control = False
-    if args.control is not None:
-        control = args.control
-        has_control = True
-
-    out_name = args.out_name if args.out_name is not None else ""
-    linear_map_name = args.linear_map
-    if linear_map_name is None:
-        linear_map_name = args.graph_file_name.split(".")[0] + "_linear_map.npz"
-        find_or_create_linear_map(ob_graph, linear_map_name)
-
-    qval = 0.05 if args.q_value_threshold is None else float(args.q_value_thresholds)
-    run_callpeaks(
-        ob_graph,
-        args.sample,
-        control,
-        args.sequence_graph,
-        out_name,
-        has_control=has_control,
-        fragment_length=int(args.fragment_length),
-        read_length=int(args.read_length),
-        linear_map_file_name=linear_map_name,
-        qval_threshold=qval
-    )
-
-
 def run_callpeaks_whole_genome(args):
+    config = Configuration()
     logging.info("Running whole genome.")
     chromosomes = args.chromosomes.split(",")
     graph_file_names = [args.data_dir + "/" + chrom for chrom in chromosomes]
@@ -148,31 +122,28 @@ def run_callpeaks_whole_genome(args):
     else:
         control_file_names = sample_file_names.copy()
 
-    fragment_length = int(args.fragment_length)
+    config.fragment_length = int(args.fragment_length)
     genome_size = int(args.genome_size)
-    min_background = int(args.unique_reads) * fragment_length / genome_size
+    config.min_background = int(args.unique_reads) * fragment_length / genome_size
     logging.info(
         "Computed min background signal to be %.3f using fragment length %f, "
-        " %d unique reads, and genome size %d" % (min_background,
-                                                  fragment_length,
+        " %d unique reads, and genome size %d" % (config.min_background,
+                                                  config.fragment_length,
                                                   int(args.unique_reads),
                                                   int(genome_size)))
 
     out_name = args.out_name if args.out_name is not None else ""
-
+    reporter = Reporter(out_name)
+    config.has_control = args.control is not None
     caller = MultipleGraphsCallpeaks(
         chromosomes,
         graph_file_names,
         sample_file_names,
         control_file_names,
         linear_map_file_names,
-        int(args.fragment_length),
-        int(args.read_length),
-        has_control=args.control is not None,
+        config, reporter,
         sequence_retrievers=sequence_retrievers,
-        out_base_name=out_name,
         stop_after_p_values=args.stop_after_p_values == "True",
-        min_background=min_background
     )
     caller.run()
 

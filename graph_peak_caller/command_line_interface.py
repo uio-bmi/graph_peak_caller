@@ -146,8 +146,6 @@ def get_summits(args):
     peaks.to_fasta_file(args.peaks_fasta_file.split(".")[0] + "_summits.fasta", args.sequence_graph)
 
 
-
-
 interface = \
 {
     'callpeaks':

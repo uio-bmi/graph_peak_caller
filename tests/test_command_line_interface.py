@@ -28,7 +28,7 @@ class TestWrapper(unittest.TestCase):
 
 class TestCommandLineInterface(TestWrapper):
     def test_create_ob_graph(self):
-        run_argument_parser(["create_ob_graph" , "-o", "tests/testgraph.obg",
+        run_argument_parser(["create_ob_graph", "-o", "tests/testgraph.obg",
                              "tests/vg_test_graph.json"])
         graph = GraphWithReversals.from_numpy_file("tests/testgraph.obg")
         self.assertEqual(graph, self.correct_ob_graph)
@@ -49,6 +49,15 @@ class TestCommandLineInterface(TestWrapper):
             "tests/sample.intervalcollection")
 
         run_argument_parser(["callpeaks",
+                             "--graph", "tests/testgraph.obg",
+                             "-s", "tests/sample.intervalcollection",
+                             "-n", "tests/test_experiment_",
+                             "-f", "10",
+                             "-r", "7"])
+
+    def _test_multigraph(self):
+        run_argument_parser(["callpeaks_whole_genome",
+                             "--chromosomes",
                              "--graph", "tests/testgraph.obg",
                              "-s", "tests/sample.intervalcollection",
                              "-n", "tests/test_experiment_",
