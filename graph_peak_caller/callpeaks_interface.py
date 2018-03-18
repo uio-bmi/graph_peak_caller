@@ -13,9 +13,12 @@ import json
 
 
 def parse_input_file(input, graph):
+    print(input)
     if isinstance(input, obg.IntervalCollection):
+        print("IS IC")
         return input
     elif input.endswith(".json"):
+        print("IS JSON")
         intervals = vg_json_file_to_interval_collection(input, graph)
         return intervals
     else:
@@ -25,8 +28,7 @@ def parse_input_file(input, graph):
         except OSError:
             intervals = obg.IntervalCollection.from_file(
                 input, graph=graph, text_file=True)
-        return input
-
+        return intervals
 
 
 def run_callpeaks(ob_graph,
@@ -54,6 +56,7 @@ def run_callpeaks(ob_graph,
         skip_filter_duplicates=False, p_val_cutoff=qval_threshold,
         graph_is_partially_ordered=True)
 
+    print(sample_intervals)
     caller = CallPeaks.run_from_intervals(
         ob_graph, sample_intervals, control_intervals,
         experiment_info=experiment_info,
