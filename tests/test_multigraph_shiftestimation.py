@@ -9,7 +9,7 @@ class TestMultiGraphShiftEstimation(unittest.TestCase):
 
         shift = 150
         genome_size = 10000000
-        n_peaks = 5000
+        n_peaks = 400
 
         positions = {"+":
                    {1: []},
