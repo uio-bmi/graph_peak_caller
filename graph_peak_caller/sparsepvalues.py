@@ -24,10 +24,6 @@ class PValuesFinder:
         p_values = self.sample.apply_binary_func(
             clean_p_values, self.control,
             return_values=True)
-        print("---------------")
-        print(self.sample)
-        print(self.control)
-        print(p_values)
         return p_values
 
 
@@ -36,6 +32,9 @@ class PToQValuesMapper:
     def __init__(self, p_values, cum_counts):
         self.p_values = np.asanyarray(p_values)
         self.cum_counts = np.asanyarray(cum_counts)
+
+    def __str__(self):
+        return str(self.p_values) + ":" + str(self.cum_counts)
 
     @classmethod
     def __read_file(cls, file_name):
@@ -120,19 +119,5 @@ class QValuesFinder:
 
     def get_q_array_from_p_array(self, p_values):
         assert isinstance(p_values, np.ndarray)
-
-        def translation(x):
-            # if abs(x) < 1e-9:
-            #    return 0
-            # if math.isnan(x):
-            #    return 0
-            # x = "%.7f" % x
-            # if x not in self.p_to_q_values:
-            #     print(self.p_to_q_values)
-            #     print(x)
-            #     logging.error("P value not found in mapping dict. Could be due to rounding errors.")
-            return self.p_to_q_values[x]
-
-        trans = np.vectorize(translation, otypes=[np.float])
-        new_values = trans(p_values)
-        return new_values
+        trans = np.vectorize(self.p_to_q_values.get, otypes=[np.float])
+        return trans(p_values)

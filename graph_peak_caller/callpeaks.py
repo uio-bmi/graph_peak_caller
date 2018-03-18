@@ -1,13 +1,14 @@
 import logging
 import numpy as np
-from offsetbasedgraph import IntervalCollection, DirectedInterval
 from .mindense import DensePileup
-from .sampleandcontrolcreator import SampleAndControlCreator
+from .sample import get_fragment_pileup
+from .control import get_background_track_from_control,\
+    get_background_track_from_input, scale_tracks
+from .intervals import Intervals, UniqueIntervals
 from .sparsepvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
 from .postprocess import HolesCleaner, SparseMaxPaths
 from .sparsediffs import SparseValues
 from .reporter import Reporter
-IntervalCollection.interval_class = DirectedInterval
 
 
 class Configuration:
@@ -52,22 +53,24 @@ class CallPeaks(object):
         if configuration is None:
             configuration = Configuration.default()
             logging.warning("Config is not set. Setting to default")
-        creator = SampleAndControlCreator(
-            self.graph,
-            self.sample_intervals,
-            self.control_intervals,
-            experiment_info,
-            out_file_base_name=self.out_file_base_name,
-            has_control=has_control,
-            linear_map=linear_map,
-            configuration=configuration
-            )
-        creator.run()
-        self.sample_pileup = creator._sample_pileup
+        self.sample_pileup = get_fragment_pileup(
+            self.graph, self.sample_intervals,
+            experiment_info, self._reporter)
+        background_func = get_background_track_from_control
+        if not has_control:
+            background_func = get_background_track_from_input
+
+        self.control_pileup = background_func(self.graph, linear_map,
+                                              experiment_info.fragment_length,
+                                              self.control_intervals,
+                                              self.sample_pileup.touched_nodes,
+                                              configuration.use_global_min_value)
+        scale_tracks(self.sample_pileup, self.control_pileup,
+                     self.sample_intervals.n_reads/self.control_intervals.n_reads)
+
         self._reporter.add("fragment_pileup", self.sample_pileup)
-        self.control_pileup = creator._control_pileup
         self._reporter.add("background_track", self.control_pileup)
-        self.touched_nodes = creator.touched_nodes
+        self.touched_nodes = self.sample_pileup.touched_nodes
 
     def get_p_values(self):
         assert self.sample_pileup is not None
@@ -75,6 +78,8 @@ class CallPeaks(object):
         self.p_values_pileup = PValuesFinder(
             self.sample_pileup, self.control_pileup).get_p_values_pileup()
         self.p_values_pileup.track_size = self.graph.node_indexes[-1]
+        print("PVELUS")
+        print(self.p_values_pileup)
         self.sample_pileup = None
         self.control_pileup = None
 
@@ -82,14 +87,20 @@ class CallPeaks(object):
         assert self.p_values_pileup is not None
         finder = PToQValuesMapper.from_p_values_pileup(
             self.p_values_pileup)
+        print(finder)
         self.p_to_q_values_mapping = finder.get_p_to_q_values()
+        print("#", self.p_to_q_values_mapping)
 
     def get_q_values(self):
         assert self.p_values_pileup is not None
         assert self.p_to_q_values_mapping is not None
-        finder = QValuesFinder(self.p_values_pileup,
-                               self.p_to_q_values_mapping)
+        finder = QValuesFinder(
+            self.p_values_pileup,
+            self.p_to_q_values_mapping)
+
         self.q_values_pileup = finder.get_q_values()
+        print("QVALUES")
+        print(self.q_values_pileup)
         self.q_values_pileup.track_size = self.p_values_pileup.track_size
         self._reporter.add("qvalues", self.q_values_pileup)
 
@@ -125,8 +136,13 @@ class CallPeaks(object):
             out_file_base_name="", has_control=True,
             linear_map=None, configuration=None, stop_after_p_values=False):
         caller = cls(graph, out_file_base_name)
-        caller.sample_intervals = sample_intervals
-        caller.control_intervals = control_intervals
+        if configuration is None:
+            configuration = Configuration.default()
+        interval_cls = UniqueIntervals
+        if configuration.skip_filter_duplicates:
+            interval_cls = Intervals
+        caller.sample_intervals = interval_cls(sample_intervals)
+        caller.control_intervals = interval_cls(control_intervals)
 
         caller.run_pre_callpeaks(has_control, experiment_info,
                                  linear_map, configuration)
@@ -254,4 +270,3 @@ class CallPeaksFromQvalues:
             if i % 100 == 0:
                 logging.info("Writing sequence # %d" % i)
         f.close()
-
