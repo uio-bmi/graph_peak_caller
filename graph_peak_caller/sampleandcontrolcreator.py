@@ -68,7 +68,6 @@ class SampleAndControlCreator:
             self.control_intervals.n_reads))
         ratio = self.sample_intervals.n_reads/self.control_intervals.n_reads
         if ratio == 1:
-            print("NO RATIO")
             return
 
         if ratio > 1:
@@ -100,20 +99,17 @@ class SampleAndControlCreator:
         logging.info(
             "Number of control reads: %d" % self.control_intervals.n_reads)
         self._control_pileup = control_pileup
-        print(control_pileup)
 
     def create_sample_pileup(self):
         logging.info("Creating sample pileup")
-        print("---------CREATING SAMPLE_____________")
         generator = SamplePileupGenerator(
             self.graph, self.info.fragment_length-self.info.read_length)
         pileup = generator.run(self.sample_intervals,
                                self.out_file_base_name+"direct_pileup")
         self.touched_nodes = pileup.touched_nodes
-        
+
         self._sample_track = self.out_file_base_name + "sample_track"
         self._sample_pileup = pileup
-        print(pileup.get_sparse_values())
         logging.info("N Sample Reads %s" % self.sample_intervals.n_reads)
         logging.info("Found in total %d duplicate reads that were removed"
                      % self.sample_intervals.n_duplicates)
