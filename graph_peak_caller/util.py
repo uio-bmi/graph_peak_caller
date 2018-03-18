@@ -61,92 +61,11 @@ def get_linear_paths_in_graph(ob_graph, vg_graph, write_to_file_name=None):
     return intervals
 
 
-def sparse_maximum(indices1, values1, indices2, values2, genome_size):
-
-    if indices1[0] != 0:
-        np.insert(indices1, 0, 0)
-        np.insert(values1, 0, 0)
-
-    if indices2[0] != 0:
-        np.insert(indices2, 0, 0)
-        np.insert(values2, 0, 0)
-
-    indices1 = np.insert(indices1, len(indices1), genome_size)
-    indices2 = np.insert(indices2, len(indices2), genome_size)
-
-    a = indices1[:-1] * 2
-    b = indices2[:-1] * 2 + 1
-    all_idxs = np.concatenate([a, b])
-    all_idxs.sort()
-    vi_list = [values1, values2]
-    values_list = []
-    for i, vals in enumerate(vi_list):
-        idxs = np.nonzero((all_idxs % 2) == i)[0]
-        all_values = vals
-        value_diffs = np.diff(all_values)
-        values = np.zeros(all_idxs.shape)
-        values[idxs[1:]] = value_diffs
-        values[idxs[0]] = all_values[0]
-        values_list.append(values.cumsum())
-    values = np.maximum(values_list[0], values_list[1])
-    idxs = all_idxs // 2
-    empty_ends = np.nonzero(np.diff(idxs) == 0)[0]
-    max_values = np.maximum(values[empty_ends], values[empty_ends+1])
-    values[empty_ends+1] = max_values
-    values[empty_ends] = max_values
-
-    indices = idxs
-    values = values
-
-    indices, values = sanitize_indices_and_values(indices, values)
-    return indices, values
-
-
-def continuous_sparse_maximum(indices1, values1, indices2, values2):
-    all_indices = np.concatenate([indices1, indices2])
-    # all_values = np.concatenate([values1, values2])
-    codes = np.concatenate([np.zeros_like(indices1), np.ones_like(indices2)])
-    sorted_args = np.argsort(all_indices)
-
-    sorted_indices = all_indices[sorted_args]
-    sorted_codes = codes[sorted_args]
-    values_list = []
-    for code, values in enumerate(values1, values2):
-        my_args = sorted_codes == code
-        diffs = np.diff(values)
-        my_values = np.zeros(sorted_indices.shape)
-        my_values[my_args[1:]] = diffs
-        my_values[my_args[0]] = values[0]
-        values_list.append(my_values.cumsum())
-
-    values = np.maximum(values_list[0], values_list[1])
-    empty_ends = np.nonzero(np.diff(sorted_indices) == 0)[0]
-    max_values = np.maximum(values[empty_ends], values[empty_ends+1])
-    values[empty_ends+1] = max_values
-    values[empty_ends] = max_values
-    indices, values = sanitize_indices_and_values(sorted_indices, values)
-    return indices, values
-
-
-def sanitize_indices_and_values(indices, values):
-
-    new_indices = []
-    new_values = []
-
-    prev = None
-    for i, index in enumerate(indices):
-        if values[i] != prev:
-            new_indices.append(index)
-            new_values.append(values[i])
-        prev = values[i]
-
-    return new_indices, new_values
-
-
 def create_linear_map(ob_graph, out_file_name="linear_map.npz"):
     linear_map = LinearMap.from_graph(ob_graph)
     linear_map.to_file(out_file_name)
     logging.info("Created linear map, wrote to file %s" % out_file_name)
+
 
 def create_ob_graph_from_vg(vg_json_graph_file_name, ob_graph_file_name="graph.obg"):
     vg_graph = pyvg.Graph.create_from_file(vg_json_graph_file_name)

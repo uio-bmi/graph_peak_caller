@@ -18,6 +18,10 @@ class Reporter:
         data.to_sparse_files(
             self._base_name + "qvalues")
 
+    def pvalues(self, data):
+        data.to_sparse_files(
+            self._base_name + "pvalues")
+
     def all_max_paths(self, data):
         PeakCollection(data).to_file(
             self._base_name+"all_max_paths.intervalcollection",
@@ -43,9 +47,16 @@ class Reporter:
     def direct_pileup(self, data):
         data.to_sparse_files(self._base_name+"direct_pileup")
 
+    def touched_nodes(self, data):
+        np.save(self._base_name + "touched_nodes.npy",
+                np.array(list(data), dtype="int"))
+
     def add(self, name, data):
         if hasattr(self, name):
             getattr(self, name)(data)
             logging.info("Wrote %s to file", name)
         else:
             logging.info("Skipping reporting of %s", name)
+
+    def get_sub_reporter(self, name):
+        return self.__class__(self._base_name + name + "_")

@@ -2,7 +2,6 @@ import numpy as np
 import logging
 import offsetbasedgraph as obg
 from pyvg.sequences import SequenceRetriever
-from . import CallPeaksFromQvalues
 from .analysis.peakscomparer import PeaksComparerV2, AnalysisResults
 from .analysis.manually_classified_peaks import \
     CheckOverlapWithManuallyClassifiedPeaks
@@ -12,6 +11,7 @@ from .analysis.fimowrapper import FimoFile
 from .peakcollection import PeakCollection
 from .analysis.nongraphpeaks import NonGraphPeakCollection
 from .analysis.motifenrichment import plot_true_positives
+from .peakfasta import PeakFasta
 
 
 def analyse_peaks_whole_genome(args):
@@ -92,7 +92,8 @@ def differential_expression(args):
         np.load(subgraphs_file_name),
         np.load(node_ids_file_name),
         graph)
-    retriever = obg.SequenceGraph.from_file(args.graph_file_name + ".sequences")
+    retriever = obg.SequenceGraph.from_file(
+        args.graph_file_name + ".sequences")
     out_file_name = test_name + "_diffexpr.fasta"
     out_f = open(out_file_name, "w")
     n = 0
@@ -132,8 +133,8 @@ def intervals_to_fasta(args):
     intervals = obg.IntervalCollection.create_generator_from_file(
         args.intervals_file_name)
     logging.info("Writing to fasta")
-    CallPeaksFromQvalues.intervals_to_fasta_file(
-        intervals, args.out_file_name, retriever)
+    PeakFasta(retriever).save_intervals(args.out_file_name,
+                                        intervals)
 
 
 def linear_peaks_to_fasta(args):

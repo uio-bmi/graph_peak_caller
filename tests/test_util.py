@@ -1,9 +1,9 @@
-from graph_peak_caller.util import sparse_maximum
+# from graph_peak_caller.util import sparse_maximum
 import unittest
 import numpy as np
 
 
-class TestUtil(unittest.TestCase):
+class _TestUtil:
 
     def test_sparse_maximum(self):
 

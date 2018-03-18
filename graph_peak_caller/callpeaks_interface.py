@@ -3,22 +3,50 @@ import logging
 import offsetbasedgraph as obg
 from pyvg.conversion import vg_json_file_to_interval_collection
 
-
 from . import ExperimentInfo, Configuration, CallPeaks
 from .multiplegraphscallpeaks import MultipleGraphsCallpeaks
 import os
 from graph_peak_caller.util import create_linear_map
-from .custom_exceptions import *
-import json
+from .peakfasta import PeakFasta
+from .reporter import Reporter
+from .intervals import Intervals, UniqueIntervals
+
+
+def get_confiugration(args):
+    config = Configuration()
+    config.has_control = args.control is not None
+    if args.linear_map is None:
+        config.linear_map_name = args.graph_file_name.split(".")[0] + "_linear_map.npz"
+    else:
+        config.linear_map_name = args.linear_map
+    config.fragment_length = int(args.fragment_length)
+    config.read_length = int(args.read_length)
+    if args.q_value_threshold is not None:
+        config.q_value_threshold = float(args.q_value_threshold)
+    return config
+
+
+def get_intervals(args):
+    iclass = Intervals if args.skip_filter_duplicates else UniqueIntervals
+    samples = iclass(parse_input_file(args.sample))
+    control_name = args.sample if args.control is None else args.control
+    controls = iclass(parse_input_file(control_name))
+    return samples, controls
+
+
+def get_callpeaks(args):
+    config = get_confiugration(args)
+    find_or_create_linear_map(args.graph, config.linear_map_name)
+    out_name = args.out_name if args.out_name is not None else ""
+    reporter = Reporter(out_name)
+    return CallPeaks(args.graph, config, reporter)
 
 
 def parse_input_file(input, graph):
     print(input)
     if isinstance(input, obg.IntervalCollection):
-        print("IS IC")
         return input
     elif input.endswith(".json"):
-        print("IS JSON")
         intervals = vg_json_file_to_interval_collection(input, graph)
         return intervals
     else:
@@ -31,44 +59,18 @@ def parse_input_file(input, graph):
         return intervals
 
 
-def run_callpeaks(ob_graph,
-                  sample_file_name, control_file_name,
-                  sequence_graph,
-                  out_name="real_data_",
-                  has_control=True,
-                  limit_to_chromosomes=False,
-                  fragment_length=135, read_length=36,
-                  linear_map_file_name=False,
-                  qval_threshold=0.05):
+def run_callpeaks_interface(args):
+    caller = get_callpeaks(args)
+    inputs, controls = get_intervals(args)
+    caller.run(inputs, controls)
 
-    logging.info("Running from gam files")
-
-    # Detect file format
-    sample_intervals = parse_input_file(sample_file_name, ob_graph)
-    control_intervals = parse_input_file(control_file_name, ob_graph)
-
-    graph_size = ob_graph.number_of_basepairs()
-    logging.info("Number of base pairs in graph: %d" % graph_size)
-
-    experiment_info = ExperimentInfo(graph_size, fragment_length, read_length)
-    config = Configuration(
-        skip_read_validation=True, save_tmp_results_to_file=True,
-        skip_filter_duplicates=False, p_val_cutoff=qval_threshold,
-        graph_is_partially_ordered=True)
-
-    print(sample_intervals)
-    caller = CallPeaks.run_from_intervals(
-        ob_graph, sample_intervals, control_intervals,
-        experiment_info=experiment_info,
-        out_file_base_name=out_name, has_control=has_control,
-        linear_map=linear_map_file_name,
-        configuration=config
-    )
-    if sequence_graph is not None:
-        caller.save_max_path_sequences_to_fasta_file(
-            "sequences.fasta", sequence_graph)
+    outname = args.out_name if args.out_name is not None else ""
+    if args.sequence_graph is not None:
+        PeakFasta(args.sequence_graph).write_max_path_sequences(
+            outname+"sequences.fasta", caller.max_path_peaks)
     else:
-        logging.info("Not saving max path sequences, since a sequence graph was not found.")
+        logging.info(
+            "Not saving max path sequences, since a sequence graph was not found.")
 
 
 def find_or_create_linear_map(graph, linear_map_name):
@@ -80,37 +82,6 @@ def find_or_create_linear_map(graph, linear_map_name):
         logging.info("No linear map provided, and none found. Will create now.")
         create_linear_map(graph, linear_map_name)
         logging.info("Done creating linear map")
-
-
-def run_callpeaks_interface(args):
-    logging.info("Read offset based graph")
-
-    ob_graph = args.graph
-    control = args.sample
-    has_control = False
-    if args.control is not None:
-        control = args.control
-        has_control = True
-
-    out_name = args.out_name if args.out_name is not None else ""
-    linear_map_name = args.linear_map
-    if linear_map_name is None:
-        linear_map_name = args.graph_file_name.split(".")[0] + "_linear_map.npz"
-        find_or_create_linear_map(ob_graph, linear_map_name)
-
-    qval = 0.05 if args.q_value_threshold is None else float(args.q_value_thresholds)
-    run_callpeaks(
-        ob_graph,
-        args.sample,
-        control,
-        args.sequence_graph,
-        out_name,
-        has_control=has_control,
-        fragment_length=int(args.fragment_length),
-        read_length=int(args.read_length),
-        linear_map_file_name=linear_map_name,
-        qval_threshold=qval
-    )
 
 
 def run_callpeaks_whole_genome(args):

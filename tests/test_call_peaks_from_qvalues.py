@@ -1,7 +1,8 @@
 import unittest
 import logging
 from offsetbasedgraph import Block, Interval, GraphWithReversals
-from graph_peak_caller import CallPeaksFromQvalues, ExperimentInfo
+from graph_peak_caller import CallPeaksFromQvalues, Configuration
+from graph_peak_caller.reporter import Reporter
 from graph_peak_caller.legacy.sparsepileup import SparsePileup, ValuedIndexes
 from util import convert_old_sparse
 
@@ -84,14 +85,12 @@ class TestCallPeaksFromQValues(unittest.TestCase):
         self.read_length = 2
 
     def _run_caller(self, graph, pileup):
-        print(pileup)
         new_sparse = convert_old_sparse(pileup)
-        print(new_sparse)
-        graph_size = sum(block.length() for block in graph.blocks.values())
-        experiment_info = ExperimentInfo(graph_size, self.fragment_length,
-                                         self.read_length)
-        caller = CallPeaksFromQvalues(graph, new_sparse, experiment_info,
-                                      out_file_base_name="test_",
+        config = Configuration()
+        config.fragment_length = self.fragment_length
+        config.read_length = self.read_length
+        caller = CallPeaksFromQvalues(graph, new_sparse, config,
+                                      Reporter("test_"),
                                       cutoff=0.1, q_values_max_path=True)
         caller.callpeaks()
         return caller.max_paths

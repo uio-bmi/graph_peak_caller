@@ -2,9 +2,10 @@ import numpy as np
 import logging
 import offsetbasedgraph as obg
 from pyvg.conversion import vg_json_file_to_interval_collection
-from . import ExperimentInfo, CallPeaks, Configuration
+from . import CallPeaks, Configuration
 from .sparsepvalues import PToQValuesMapper
 from .sparsediffs import SparseValues
+from .intervals import Intervals
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s, %(levelname)s: %(message)s")
@@ -15,35 +16,22 @@ class MultipleGraphsCallpeaks:
     def __init__(self, graph_names, graph_file_names,
                  samples,
                  controls, linear_maps,
-                 fragment_length, read_length,
-                 has_control=False,
+                 config, reporter,
                  sequence_retrievers=None,
-                 out_base_name="multigraphs_",
-                 skip_filter_duplicates=False,
                  save_tmp_results_to_file=False,
                  stop_after_p_values=False,
-                 min_background=None
                  ):
-
-        self._config = Configuration(
-            skip_read_validation=True, save_tmp_results_to_file=save_tmp_results_to_file,
-            skip_filter_duplicates=skip_filter_duplicates, p_val_cutoff=0.05,
-            graph_is_partially_ordered=True,
-            use_global_min_value=min_background)
+        self._config = config
+        self._reporter = reporter
         self.names = graph_names
         self.graph_file_names = graph_file_names
-        self.fragment_length = fragment_length
-        self.read_length = read_length
         self.linear_maps = linear_maps
-        self.has_control = has_control
-        self._base_name = out_base_name
         self.sequence_retrievers = sequence_retrievers
         self.samples = samples
         self.controls = controls
         self.stop_after_p_values = stop_after_p_values
         if self.stop_after_p_values:
             logging.info("Will only run until p-values have been computed.")
-        #self.run()
 
     @classmethod
     def count_number_of_unique_reads(cls, sample_reads):
@@ -90,29 +78,27 @@ class MultipleGraphsCallpeaks:
             logging.info("Running %s" % name)
             ob_graph = obg.GraphWithReversals.from_unknown_file_format(
                 graph_file_name)
-            if isinstance(sample, obg.IntervalCollection):
+            if isinstance(sample, obg.IntervalCollection) or isinstance(sample, Intervals):
                 logging.info("Sample is already intervalcollection.")
             elif sample.endswith(".intervalcollection"):
-                sample = obg.IntervalCollection.create_generator_from_file(sample, graph=ob_graph)
-                control = obg.IntervalCollection.create_generator_from_file(control, graph=ob_graph)
+                sample = obg.IntervalCollection.create_generator_from_file(
+                    sample, graph=ob_graph)
+                control = obg.IntervalCollection.create_generator_from_file(
+                    control, graph=ob_graph)
             else:
                 logging.info("Creating interval collections from files")
                 sample = vg_json_file_to_interval_collection(sample, ob_graph)
                 control = vg_json_file_to_interval_collection(control, ob_graph)
 
-            graph_size = ob_graph.number_of_basepairs()
-            info = ExperimentInfo(
-                graph_size, self.fragment_length, self.read_length)
-            CallPeaks.run_from_intervals(
-                ob_graph, sample, control, info, self._base_name + name + "_",
-                self.has_control,
-                lin_map, self._config,
-                stop_after_p_values=True
-            )
+            config = self._config.copy()
+            config.linear_map_name = lin_map
+            caller = CallPeaks(ob_graph, config,
+                               self._reporter.get_sub_reporter(name))
+            caller.run_to_p_values(sample, control)
             logging.info("Done until p values.")
 
     def create_joined_q_value_mapping(self):
-        mapper = PToQValuesMapper.from_files(self._base_name)
+        mapper = PToQValuesMapper.from_files(self._reporter._base_name)
         self._q_value_mapping = mapper.get_p_to_q_values()
 
     def run_from_p_values(self, only_chromosome=None):
@@ -124,20 +110,16 @@ class MultipleGraphsCallpeaks:
             graph_file_name = self.graph_file_names[i]
             ob_graph = obg.GraphWithReversals.from_unknown_file_format(
                 graph_file_name)
-            graph_size = sum(
-                block.length() for block in ob_graph.blocks.values())
-            info = ExperimentInfo(
-                graph_size, self.fragment_length, self.read_length)
             assert ob_graph is not None
-            caller = CallPeaks(ob_graph, self._base_name + name + "_")
+            caller = CallPeaks(ob_graph, self._config,
+                               self._reporter.get_sub_reporter(name))
             caller.p_to_q_values_mapping = self._q_value_mapping
             caller.p_values_pileup = SparseValues.from_sparse_files(
-                self._base_name + name + "_" + "pvalues")
+                self._reporter._base_name + name + "_" + "pvalues")
             caller.touched_nodes = set(np.load(
-                self._base_name + name + "_" + "touched_nodes.npy"))
+                self._reporter._base_name + name + "_" + "touched_nodes.npy"))
             caller.get_q_values()
-            caller.call_peaks_from_q_values(
-                experiment_info=info, config=self._config)
+            caller.call_peaks_from_q_values()
             if self.sequence_retrievers is not None:
                 caller.save_max_path_sequences_to_fasta_file(
                     "sequences.fasta", self.sequence_retrievers.__next__())

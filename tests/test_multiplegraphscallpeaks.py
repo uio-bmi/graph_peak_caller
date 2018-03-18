@@ -1,4 +1,7 @@
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
+from graph_peak_caller.intervals import Intervals
+from graph_peak_caller import Configuration
+from graph_peak_caller.reporter import Reporter
 from offsetbasedgraph import GraphWithReversals as Graph, \
     DirectedInterval, IntervalCollection, Block
 import unittest
@@ -31,6 +34,11 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
                 os.remove("multigraphs_%s_max_paths.intervalcollection" % chrom)
 
         self._create_data()
+        self.config = Configuration()
+        self.config.fragment_length = self.fragment_length
+        self.config.read_length = self.read_length
+        self.config.has_control = False
+        self.reporter = Reporter("multigraphs_")
 
     def _create_data(self):
         node_offset = 1
@@ -68,22 +76,18 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
                 right_sub_reverse = right_sub.get_reverse()
                 sample_reads.append(right_sub_reverse)
                 control_reads.append(right_sub_reverse)
-        self.sample_reads.append(IntervalCollection(sample_reads))
-        self.control_reads.append(IntervalCollection(control_reads))
+        self.sample_reads.append(Intervals(sample_reads))
+        self.control_reads.append(Intervals(control_reads))
 
     def test_run_from_init(self):
-
         caller = MultipleGraphsCallpeaks(
             self.chromosomes,
             self.chromosomes,
             self.sample_reads,
             self.control_reads,
             self.linear_maps,
-            self.fragment_length,
-            self.read_length,
-            has_control=False,
-            sequence_retrievers=None,
-            skip_filter_duplicates=True
+            self.config,
+            self.reporter
         )
         caller.run()
         self.do_asserts()
@@ -96,11 +100,8 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
             self.sample_reads,
             self.control_reads,
             self.linear_maps,
-            self.fragment_length,
-            self.read_length,
-            has_control=False,
-            sequence_retrievers=None,
-            skip_filter_duplicates=True,
+            self.config,
+            self.reporter,
             stop_after_p_values=True
         )
         caller.run()
@@ -113,11 +114,8 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
                 None,
                 None,
                 None,
-                self.fragment_length,
-                self.read_length,
-                has_control=False,
-                sequence_retrievers=None,
-                skip_filter_duplicates=True
+                self.config,
+                self.reporter
             )
             caller.create_joined_q_value_mapping()
             caller.run_from_p_values(only_chromosome=chromosome)

@@ -4,6 +4,8 @@ from offsetbasedgraph import GraphWithReversals, Block, \
     DirectedInterval, IntervalCollection
 from graph_peak_caller import ExperimentInfo, CallPeaks, Configuration
 from graph_peak_caller.control.linearmap import LinearMap
+from graph_peak_caller.reporter import Reporter
+from graph_peak_caller.intervals import Intervals
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s, %(levelname)s: %(message)s")
 
@@ -39,17 +41,12 @@ class TestWholeCallPeaks(unittest.TestCase):
 
         self.graph_size = sum(block.length()
                               for block in self.graph.blocks.values())
-        experiment_info = ExperimentInfo(
-            self.graph_size, self.fragment_length, self.read_length)
-        config = Configuration(skip_filter_duplicates=True)
-        CallPeaks.run_from_intervals(self.graph,
-                                     IntervalCollection(self.sample_reads),
-                                     IntervalCollection(control_reads),
-                                     out_file_base_name="test_",
-                                     experiment_info=experiment_info,
-                                     has_control=False,
-                                     configuration=config,
-                                     linear_map="test_linear_map.npz")
+        config = Configuration()
+        config.fragment_length = self.fragment_length
+        config.read_length = self.read_length
+        config.linear_map_name = "test_linear_map.npz"
+        caller = CallPeaks(self.graph, config, Reporter("test_"))
+        caller.run(Intervals(self.sample_reads), Intervals(control_reads))
 
     def do_asserts(self):
         for peak in self.peaks:
