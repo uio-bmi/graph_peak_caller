@@ -3,6 +3,7 @@ source=graph_peak_caller
 
 
 omit =
+    graph_peak_caller/analysis/*
     tests/*
     graph_peak_caller/legacy/*
     benchmarking/*
