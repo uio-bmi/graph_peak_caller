@@ -206,7 +206,7 @@ class SamplePileupGenerator:
         self._neg_extender = ReverseSparseExtender(
             graph, self._pileup, extension)
 
-    def save_direct(self, base_name):
+    def get_direct_pileup(self):
         new_pileup = SparseGraphPileup(self._graph)
         new_pileup.ends = self._pileup.ends + self._reads_adder.pos_read_ends
         new_pileup.starts = self._pileup.starts + self._reads_adder.neg_read_ends
@@ -216,12 +216,12 @@ class SamplePileupGenerator:
         sparsediff.clean()
         sparse_values = sparsediff.get_sparse_values()
         sparse_values.track_size = self._graph.node_indexes[-1]
-        sparse_values.to_sparse_files(base_name)
+        return sparse_values
 
-    def run(self, reads, save_name=None):
+    def run(self, reads, reporter=None):
         self._reads_adder.add_reads(reads)
-        if save_name is not None:
-            self.save_direct(save_name)
+        if reporter is not None:
+            reporter.add("direct_pileup", self.get_direct_pileup())
         self._pos_extender.run_linear(self._reads_adder.get_pos_ends())
         self._neg_extender.run_linear(self._reads_adder.get_neg_ends())
         sdiffs = SparseDiffs.from_pileup(self._pileup,

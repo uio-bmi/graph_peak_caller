@@ -119,19 +119,5 @@ class QValuesFinder:
 
     def get_q_array_from_p_array(self, p_values):
         assert isinstance(p_values, np.ndarray)
-
-        def translation(x):
-            # if abs(x) < 1e-9:
-            #    return 0
-            # if math.isnan(x):
-            #    return 0
-            # x = "%.7f" % x
-            # if x not in self.p_to_q_values:
-            #     print(self.p_to_q_values)
-            #     print(x)
-            #     logging.error("P value not found in mapping dict. Could be due to rounding errors.")
-            return self.p_to_q_values[x]
-
         trans = np.vectorize(self.p_to_q_values.get, otypes=[np.float])
-        new_values = trans(p_values)
-        return new_values
+        return trans(p_values)

@@ -52,11 +52,9 @@ class Tester(unittest.TestCase):
             IntervalCollection(self.sample_reads),
             IntervalCollection(control_reads),
             experiment_info,
-            "test_",
             has_control=False,
             linear_map="test_linear_map.tmp",
             configuration=config
-
         )
         self.creator.create_sample_pileup()
 

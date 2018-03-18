@@ -2,18 +2,15 @@ import logging
 
 from .experiment_info import ExperimentInfo
 from .control import SparseControl
-from .sample import SamplePileupGenerator
+from .sample import get_fragment_pileup
 
 
 class SampleAndControlCreator:
     def __init__(self, graph, sample_intervals,
                  control_intervals=None, experiment_info=None,
-                 verbose=False, out_file_base_name="", has_control=True,
+                 has_control=True,
                  linear_map=None, skip_filter_duplicates=False,
-                 skip_read_validation=False,
-                 save_tmp_results_to_file=True,
-                 configuration=None,
-                 graph_is_partially_ordered=False):
+                 configuration=None, reporter=None):
 
         assert linear_map is not None, "LinearMap cannot be None"
         assert isinstance(linear_map, str), "Must be file name"
@@ -24,16 +21,12 @@ class SampleAndControlCreator:
             logging.info("Running with control")
 
         self.graph = graph
-
+        self.reporter = reporter
         self.has_control = has_control
         self.linear_map = linear_map
 
         self.info = experiment_info
-        self._control_pileup = None
-        self._sample_pileup = None
-        self.out_file_base_name = out_file_base_name
         self.skip_filter_duplicates = skip_filter_duplicates
-        self.save_tmp_results_to_file = save_tmp_results_to_file
         self.n_duplicates_found_sample = 0
         self.touched_nodes = None  # Nodes touched by sample pileup
 
@@ -52,7 +45,6 @@ class SampleAndControlCreator:
         else:
             self.sample_intervals = UniqueIntervals(sample_intervals)
             self.control_intervals = UniqueIntervals(control_intervals)
-
 
     def run(self):
         if self.info is None:
@@ -73,15 +65,9 @@ class SampleAndControlCreator:
         if ratio > 1:
             logging.warning("More reads in sample than in control")
             self._sample_pileup *= 1/ratio
-            # self._sample_pileup.scale(1/ratio)
         else:
             logging.info("Scaling control pileup down with ratio %.3f" % ratio)
             self._control_pileup *= ratio
-
-    def find_info(self):
-        sizes = (block.length() for block in self.graph.blocks.values())
-        self.genome_size = sum(sizes)
-        self.n_reads = sum(1 for line in open(self.control_file_name))
 
     def create_control(self):
         logging.info("Creating control track using linear map %s"
@@ -93,27 +79,25 @@ class SampleAndControlCreator:
         if self.use_global_min_value:
             sparse_control.set_min_value(self.use_global_min_value)
         control_pileup = sparse_control.create(self.control_intervals)
-        self.linear_map = None
-        self.info.n_control_reads = self.control_intervals.n_reads
-        # control_pileup.graph = self.ob_graph
         logging.info(
             "Number of control reads: %d" % self.control_intervals.n_reads)
         self._control_pileup = control_pileup
 
     def create_sample_pileup(self):
         logging.info("Creating sample pileup")
-        generator = SamplePileupGenerator(
-            self.graph, self.info.fragment_length-self.info.read_length)
-        pileup = generator.run(self.sample_intervals,
-                               self.out_file_base_name+"direct_pileup")
-        self.touched_nodes = pileup.touched_nodes
-
-        self._sample_track = self.out_file_base_name + "sample_track"
-        self._sample_pileup = pileup
-        logging.info("N Sample Reads %s" % self.sample_intervals.n_reads)
-        logging.info("Found in total %d duplicate reads that were removed"
-                     % self.sample_intervals.n_duplicates)
-        self.info.n_sample_reads = self.sample_intervals.n_reads
+        self._sample_pileup = get_fragment_pileup(
+            self.graph, self.sample_intervals, self.info, self.reporter)
+        self.touched_nodes = self._sample_pileup.touched_nodes
+        # generator = SamplePileupGenerator(
+        #     self.graph, self.info.fragment_length-self.info.read_length)
+        # pileup = generator.run(self.sample_intervals,
+        #                        self.out_file_base_name+"direct_pileup")
+        # self.touched_nodes = pileup.touched_nodes
+        # 
+        # self._sample_pileup = pileup
+        # logging.info("N Sample Reads %s" % self.sample_intervals.n_reads)
+        # logging.info("Found in total %d duplicate reads that were removed"
+        #              % self.sample_intervals.n_duplicates)
 
 
 class Intervals:

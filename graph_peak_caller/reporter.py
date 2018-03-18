@@ -40,6 +40,9 @@ class Reporter:
     def thersholded(self, data):
         data.to_sparse_files(self._base_name+"thresholded")
 
+    def direct_pileup(self, data):
+        data.to_sparse_files(self._base_name+"direct_pileup")
+
     def add(self, name, data):
         if hasattr(self, name):
             getattr(self, name)(data)

@@ -57,10 +57,10 @@ class CallPeaks(object):
             self.sample_intervals,
             self.control_intervals,
             experiment_info,
-            out_file_base_name=self.out_file_base_name,
             has_control=has_control,
             linear_map=linear_map,
-            configuration=configuration
+            configuration=configuration,
+            reporter=self._reporter
             )
         creator.run()
         self.sample_pileup = creator._sample_pileup
