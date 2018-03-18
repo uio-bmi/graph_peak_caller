@@ -438,10 +438,6 @@ def run_argument_parser(args):
 
     for command in interface:
 
-        subparser.add_argument('-v', '--verbose', action=GraphAction,
-                               help='Verbosity level. 0 (show only warnings and errors), 1 (show info, '
-                                    'warnings and errors), 2 (show everything). Default is 1.', dest='verbose',
-                               required=False, metavar='VERBOSE', const=1, type=int)
         example = ""
         if "example_run" in interface[command]:
             example = "\nExample: " + interface[command]["example_run"]
@@ -450,10 +446,15 @@ def run_argument_parser(args):
             command,
             help=interface[command]["help"] + example)
 
+        subparser.add_argument('-v', '--verbose',
+                               help='Verbosity level. 0 (show only warnings and errors), 1 (show info, '
+                                    'warnings and errors), 2 (show everything). Default is 1.', dest='verbose',
+                               required=False, metavar='N', const=1, type=int, nargs='?', default=1)
+
         if 'requires_graph' in interface[command]:
             subparser.add_argument('-g', '--graph', action=GraphAction,
                                    help='Graph file name', dest='graph',
-                                   required=True, metavar='GRAPH')
+                                   required=True, metavar='file.nobg')
 
         for argument, help in interface[command]["arguments"]:
 
@@ -475,17 +476,19 @@ def run_argument_parser(args):
                 subparser.add_argument(argument, help=help)
         subparser.set_defaults(func=interface[command]["method"])
 
-    set_logging_config()
 
     if len(args) == 0:
         parser.print_help()
         sys.exit(1)
+
 
     try:
         args = parser.parse_args(args)
     except GraphNotFoundException:
         logging.error("Specified graph file was not found. Aborting.")
         sys.exit(1)
+
+    set_logging_config(args.verbose)
 
     if hasattr(args, 'func'):
         args.func(args)
