@@ -1,7 +1,8 @@
 import logging
 
 from .experiment_info import ExperimentInfo
-from .control import SparseControl
+from .control import get_background_track_from_control,\
+    get_background_track_from_input
 from .sample import get_fragment_pileup
 
 
@@ -72,16 +73,16 @@ class SampleAndControlCreator:
     def create_control(self):
         logging.info("Creating control track using linear map %s"
                      % self.linear_map)
-        extensions = [self.info.fragment_length, 1000, 10000] if self.has_control else [10000]
-        sparse_control = SparseControl(
-            self.linear_map, self.graph, extensions,
-            self.info.fragment_length, self.touched_nodes)
-        if self.use_global_min_value:
-            sparse_control.set_min_value(self.use_global_min_value)
-        control_pileup = sparse_control.create(self.control_intervals)
+        creator = get_background_track_from_control
+        if not self.has_control:
+            creator = get_background_track_from_input
+        self._control_pileup = creator(self.graph, self.linear_map,
+                                       self.info.fragment_length,
+                                       self.control_intervals,
+                                       self.touched_nodes,
+                                       self.use_global_min_value)
         logging.info(
             "Number of control reads: %d" % self.control_intervals.n_reads)
-        self._control_pileup = control_pileup
 
     def create_sample_pileup(self):
         logging.info("Creating sample pileup")
