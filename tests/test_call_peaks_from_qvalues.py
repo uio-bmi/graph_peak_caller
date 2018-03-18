@@ -5,7 +5,6 @@ from graph_peak_caller import CallPeaksFromQvalues, ExperimentInfo
 from graph_peak_caller.legacy.sparsepileup import SparsePileup, ValuedIndexes
 from util import convert_old_sparse
 
-logging.basicConfig(level=logging.ERROR)
 
 
 class TestCallPeaksFromQValues(unittest.TestCase):

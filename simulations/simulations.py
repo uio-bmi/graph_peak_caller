@@ -7,7 +7,6 @@ from graph_peak_caller.linearsnarls import LinearSnarlMap
 from offsetbasedgraph import IntervalCollection
 from graph_peak_caller.peakcollection import PeakCollection
 import logging
-logging.basicConfig(level=logging.INFO)
 
 
 class DummySequenceRetriever(object):

@@ -2,8 +2,6 @@ import unittest
 from graph_peak_caller.shiftestimation.shift_estimation_multigraph import MultiGraphShiftEstimator
 import numpy as np
 import logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
 class TestMultiGraphShiftEstimation(unittest.TestCase):
 

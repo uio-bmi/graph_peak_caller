@@ -6,7 +6,6 @@ from .areas import BinaryContinousAreas
 import offsetbasedgraph as obg
 import numpy as np
 import itertools
-# logging.basicConfig(level=logging.DEBUG)
 
 
 class Areas(object):

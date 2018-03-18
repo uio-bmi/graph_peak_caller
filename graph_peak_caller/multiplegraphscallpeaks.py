@@ -6,9 +6,6 @@ from . import ExperimentInfo, CallPeaks, Configuration
 from .sparsepvalues import PToQValuesMapper
 from .sparsediffs import SparseValues
 
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s, %(levelname)s: %(message)s")
-
 
 class MultipleGraphsCallpeaks:
 

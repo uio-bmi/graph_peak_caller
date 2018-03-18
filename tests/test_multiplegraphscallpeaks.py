@@ -6,7 +6,6 @@ from graph_peak_caller.control.linearmap import LinearMap
 from pyvg.sequences import SequenceRetriever
 import logging
 import os
-logging.basicConfig(level=logging.WARNING)
 
 
 class TestMultipleGraphsCallPeaks(unittest.TestCase):

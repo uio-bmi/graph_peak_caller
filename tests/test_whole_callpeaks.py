@@ -4,8 +4,6 @@ from offsetbasedgraph import GraphWithReversals, Block, \
     DirectedInterval, IntervalCollection
 from graph_peak_caller import ExperimentInfo, CallPeaks, Configuration
 from graph_peak_caller.control.linearmap import LinearMap
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s, %(levelname)s: %(message)s")
 
 
 class TestWholeCallPeaks(unittest.TestCase):

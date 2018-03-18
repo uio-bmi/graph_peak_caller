@@ -9,8 +9,6 @@ from graph_peak_caller.util import create_linear_map, create_ob_graph_from_vg
 import traceback
 import warnings
 import sys
-logging.basicConfig(level=logging.INFO)
-
 
 def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
 
@@ -57,7 +55,6 @@ def run_with_gam(ob_graph_file_name,
                  fragment_length=135, read_length=36,
                  linear_map_file_name = False):
 
-    logging.basicConfig(level=logging.INFO)
     logging.info("Running from gam files")
 
     ob_graph = obg.GraphWithReversals.from_file(ob_graph_file_name)

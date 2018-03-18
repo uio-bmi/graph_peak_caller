@@ -12,8 +12,6 @@ from cyclic_graph import get_small_cyclic_graph, get_large_cyclic_graph
 logging.getLogger("extender").setLevel("DEBUG")
 
 
-logging.basicConfig(level=logging.DEBUG)
-
 Graph = GraphWithReversals
 nodes = {i: Block(20) for i in range(1, 4)}
 tmp_edges = {1: [2, -2],

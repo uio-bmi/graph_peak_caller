@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 import argparse
-import logging
 import sys
+import logging
+from .logging_config import set_logging_config
+
 import matplotlib as mpl
 from .custom_exceptions import *
 mpl.use('Agg')  # Required for server usage (e.g. travis)
@@ -24,11 +26,6 @@ from graph_peak_caller.preprocess_interface import \
     count_unique_reads_interface, create_ob_graph,\
     create_linear_map_interface,\
     split_vg_json_reads_into_chromosomes, shift_estimation
-
-
-logging.basicConfig(
-    stream=sys.stdout, level=logging.WARNING,
-    format="%(asctime)s, %(levelname)s: %(message)s")
 
 
 def main():
@@ -441,6 +438,10 @@ def run_argument_parser(args):
 
     for command in interface:
 
+        subparser.add_argument('-v', '--verbose', action=GraphAction,
+                               help='Verbosity level. 0 (show only warnings and errors), 1 (show info, '
+                                    'warnings and errors), 2 (show everything). Default is 1.', dest='verbose',
+                               required=False, metavar='VERBOSE', const=1, type=int)
         example = ""
         if "example_run" in interface[command]:
             example = "\nExample: " + interface[command]["example_run"]
@@ -473,6 +474,8 @@ def run_argument_parser(args):
             else:
                 subparser.add_argument(argument, help=help)
         subparser.set_defaults(func=interface[command]["method"])
+
+    set_logging_config()
 
     if len(args) == 0:
         parser.print_help()
