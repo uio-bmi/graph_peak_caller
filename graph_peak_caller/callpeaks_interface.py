@@ -8,6 +8,25 @@ from . import ExperimentInfo, Configuration, CallPeaks
 from .multiplegraphscallpeaks import MultipleGraphsCallpeaks
 import os
 from graph_peak_caller.util import create_linear_map
+from .custom_exceptions import *
+import json
+
+
+def parse_input_file(input, graph):
+    if isinstance(input, obg.IntervalCollection):
+        return input
+    elif input.endswith(".json"):
+        intervals = vg_json_file_to_interval_collection(input, graph)
+        return intervals
+    else:
+        try:
+            intervals = obg.IntervalCollection.from_file(
+                input, graph=graph)
+        except OSError:
+            intervals = obg.IntervalCollection.from_file(
+                input, graph=graph, text_file=True)
+        return input
+
 
 def run_callpeaks(ob_graph,
                   sample_file_name, control_file_name,
@@ -22,25 +41,8 @@ def run_callpeaks(ob_graph,
     logging.info("Running from gam files")
 
     # Detect file format
-    if isinstance(sample_file_name, obg.IntervalCollection):
-        sample_intervals = sample_file_name
-        control_intervals = control_file_name
-    elif sample_file_name.endswith(".json"):
-        sample_intervals = vg_json_file_to_interval_collection(
-            sample_file_name, ob_graph)
-        control_intervals = vg_json_file_to_interval_collection(
-            control_file_name, ob_graph)
-    else:
-        try:
-            sample_intervals = obg.IntervalCollection.from_file(
-                sample_file_name, graph=ob_graph)
-            control_intervals = obg.IntervalCollection.from_file(
-                control_file_name, graph=ob_graph)
-        except OSError:
-            sample_intervals = obg.IntervalCollection.from_file(
-                sample_file_name, graph=ob_graph, text_file=True)
-            control_intervals = obg.IntervalCollection.from_file(
-                control_file_name, graph=ob_graph, text_file=True)
+    sample_intervals = parse_input_file(sample_file_name, ob_graph)
+    control_intervals = parse_input_file(control_file_name, ob_graph)
 
     graph_size = ob_graph.number_of_basepairs()
     logging.info("Number of base pairs in graph: %d" % graph_size)

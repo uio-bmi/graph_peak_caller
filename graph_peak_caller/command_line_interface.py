@@ -3,7 +3,8 @@ import argparse
 import logging
 import sys
 import matplotlib as mpl
-mpl.use('Agg')
+from .custom_exceptions import *
+mpl.use('Agg')  # Required for server usage (e.g. travis)
 
 import offsetbasedgraph as obg
 from graph_peak_caller.peakcollection import Peak, PeakCollection
@@ -409,8 +410,6 @@ interface = \
         }
 }
 
-class GraphNotFoundException(Exception):
-    pass
 
 class GraphAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
