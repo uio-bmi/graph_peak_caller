@@ -27,10 +27,10 @@ def get_confiugration(args):
 
 
 def get_intervals(args):
-    iclass = Intervals if args.skip_filter_duplicates else UniqueIntervals
-    samples = iclass(parse_input_file(args.sample))
+    iclass = UniqueIntervals  # Use Intervals to skip filter dup
+    samples = iclass(parse_input_file(args.sample, args.graph))
     control_name = args.sample if args.control is None else args.control
-    controls = iclass(parse_input_file(control_name))
+    controls = iclass(parse_input_file(control_name, args.graph))
     return samples, controls
 
 
