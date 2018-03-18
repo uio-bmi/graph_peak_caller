@@ -1,6 +1,6 @@
 import unittest
 from offsetbasedgraph import Interval, IntervalCollection
-from graph_peak_caller.sampleandcontrolcreator import UniqueIntervals
+from graph_peak_caller.intervals import UniqueIntervals
 
 
 class DummyLinearMap:

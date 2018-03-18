@@ -2,7 +2,7 @@ import unittest
 from offsetbasedgraph import GraphWithReversals as Graph, Block, \
     DirectedInterval as Interval, IntervalCollection
 from graph_peak_caller import ExperimentInfo, Configuration
-from graph_peak_caller.sampleandcontrolcreator import SampleAndControlCreator
+from graph_peak_caller.sample import get_fragment_pileup
 from util import from_intervals
 
 
@@ -21,7 +21,7 @@ class Tester(unittest.TestCase):
             self.sample_reads.append(right_sub_reverse)
 
     def assert_final_pileup_equals_correct_pileup(self):
-        found_pileup = self.creator._sample_pileup.get_sparse_values()
+        found_pileup = self.fragment_pileup.get_sparse_values()
         correct_pileup = self.correct_pileup.get_sparse_values()
         print("Found pileup")
         print(found_pileup)
@@ -47,16 +47,9 @@ class Tester(unittest.TestCase):
 
         config = Configuration(skip_filter_duplicates=True)
 
-        self.creator = SampleAndControlCreator(
-            self.graph,
-            IntervalCollection(self.sample_reads),
-            IntervalCollection(control_reads),
-            experiment_info,
-            has_control=False,
-            linear_map="test_linear_map.tmp",
-            configuration=config
-        )
-        self.creator.create_sample_pileup()
+        self.fragment_pileup = get_fragment_pileup(
+            self.graph, IntervalCollection(self.sample_reads),
+            experiment_info)
 
     def do_asserts(self):
         self.run_callpeaks()
