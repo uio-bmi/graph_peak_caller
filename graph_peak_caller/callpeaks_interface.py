@@ -1,15 +1,15 @@
 import logging
+import os
 
 import offsetbasedgraph as obg
 from pyvg.conversion import vg_json_file_to_interval_collection
 
-from . import ExperimentInfo, Configuration, CallPeaks
+from . import Configuration, CallPeaks
 from .multiplegraphscallpeaks import MultipleGraphsCallpeaks
-import os
-from graph_peak_caller.util import create_linear_map
+from .util import create_linear_map
 from .peakfasta import PeakFasta
 from .reporter import Reporter
-from .intervals import Intervals, UniqueIntervals
+from .intervals import UniqueIntervals
 
 
 def get_confiugration(args):
@@ -85,6 +85,7 @@ def find_or_create_linear_map(graph, linear_map_name):
 
 
 def run_callpeaks_whole_genome(args):
+    config = Configuration()
     logging.info("Running whole genome.")
     chromosomes = args.chromosomes.split(",")
     graph_file_names = [args.data_dir + "/" + chrom for chrom in chromosomes]
@@ -123,31 +124,28 @@ def run_callpeaks_whole_genome(args):
     else:
         control_file_names = sample_file_names.copy()
 
-    fragment_length = int(args.fragment_length)
+    config.fragment_length = int(args.fragment_length)
     genome_size = int(args.genome_size)
-    min_background = int(args.unique_reads) * fragment_length / genome_size
+    config.min_background = int(args.unique_reads) * fragment_length / genome_size
     logging.info(
         "Computed min background signal to be %.3f using fragment length %f, "
-        " %d unique reads, and genome size %d" % (min_background,
-                                                  fragment_length,
+        " %d unique reads, and genome size %d" % (config.min_background,
+                                                  config.fragment_length,
                                                   int(args.unique_reads),
                                                   int(genome_size)))
 
     out_name = args.out_name if args.out_name is not None else ""
-
+    reporter = Reporter(out_name)
+    config.has_control = args.control is not None
     caller = MultipleGraphsCallpeaks(
         chromosomes,
         graph_file_names,
         sample_file_names,
         control_file_names,
         linear_map_file_names,
-        int(args.fragment_length),
-        int(args.read_length),
-        has_control=args.control is not None,
+        config, reporter,
         sequence_retrievers=sequence_retrievers,
-        out_base_name=out_name,
         stop_after_p_values=args.stop_after_p_values == "True",
-        min_background=min_background
     )
     caller.run()
 

@@ -2,10 +2,10 @@ import numpy as np
 import logging
 import offsetbasedgraph as obg
 from pyvg.conversion import vg_json_file_to_interval_collection
-from . import CallPeaks, Configuration
+from . import CallPeaks
 from .sparsepvalues import PToQValuesMapper
 from .sparsediffs import SparseValues
-from .intervals import Intervals
+from .intervals import Intervals, UniqueIntervals
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s, %(levelname)s: %(message)s")
@@ -78,7 +78,7 @@ class MultipleGraphsCallpeaks:
             logging.info("Running %s" % name)
             ob_graph = obg.GraphWithReversals.from_unknown_file_format(
                 graph_file_name)
-            if isinstance(sample, obg.IntervalCollection) or isinstance(sample, Intervals):
+            if isinstance(sample, Intervals) or isinstance(sample, UniqueIntervals):
                 logging.info("Sample is already intervalcollection.")
             elif sample.endswith(".intervalcollection"):
                 sample = obg.IntervalCollection.create_generator_from_file(
