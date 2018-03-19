@@ -245,11 +245,14 @@ class PeakCollection(obg.IntervalCollection):
             interval_json = header[1]
             peak = Peak.from_file_line(interval_json)
             peak.unique_id = id
-            peak.sequence = sequence
+            peak.sequence = sequence.strip()
             peak.graph = graph
             peaks.append(peak)
-        avg_peak_size = np.mean([p.length() for p in peaks])
-        logging.info("Avg peak size: %2.f" % avg_peak_size)
+        if graph is not None:
+            avg_peak_size = np.mean([p.length() for p in peaks])
+            logging.info("Avg peak size: %2.f" % avg_peak_size)
+
+        f.close()
 
         return cls(peaks)
 

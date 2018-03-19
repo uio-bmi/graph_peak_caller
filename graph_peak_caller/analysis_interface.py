@@ -126,11 +126,11 @@ def plot_motif_enrichment(args):
     )
 
 
-def intervals_to_fasta(args):
+def peaks_to_fasta(args):
     logging.info("Getting sequence retriever")
-    retriever = SequenceRetriever.from_vg_graph(args.vg_graph_file_name)
+    retriever = obg.SequenceGraph.from_file(args.sequence_graph)
     logging.info("Getting intervals")
-    intervals = obg.IntervalCollection.create_generator_from_file(
+    intervals = PeakCollection.create_generator_from_file(
         args.intervals_file_name)
     logging.info("Writing to fasta")
     PeakFasta(retriever).save_intervals(args.out_file_name,

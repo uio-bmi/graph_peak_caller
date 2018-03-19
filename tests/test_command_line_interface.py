@@ -1,7 +1,7 @@
 import unittest
 from offsetbasedgraph import GraphWithReversals, Block, \
     IntervalCollection, DirectedInterval as Interval
-from graph_peak_caller.peakcollection import Peak
+from graph_peak_caller.peakcollection import Peak, PeakCollection
 import os
 from graph_peak_caller.command_line_interface import run_argument_parser
 
@@ -20,7 +20,8 @@ class TestWrapper(unittest.TestCase):
 
         remove_files = ["tests/testgraph.obg", "tests/test_linear_map_starts.pickle",
                         "tests/test_linear_map_ends.pickle", "tests/test_linear_map.length",
-                        "tests/sample.intervalcollection"]
+                        "tests/sample.intervalcollection", "tests/testintervals.intervalcollection",
+                        "tests/testsequences.fasta"]
         for file in remove_files:
             if os.path.isfile(file):
                 os.remove(file)
@@ -90,6 +91,20 @@ class TestCommandLineInterface(TestWrapper):
         self.assertEqual(Peak.from_file_line(lines[2].split(maxsplit=1)[1]), peak1)
         outfile.close()
 
+    def test_intervals_to_fasta_from_fasta(self):
+        run_argument_parser(["create_ob_graph", "-o",
+                             "tests/testgraph.obg",
+                             "tests/vg_test_graph.json"])
+
+
+        PeakCollection([Peak(0, 2, [1, 2], score=3)]).to_file("tests/testintervals.intervalcollection",
+                                                     text_file=True)
+        run_argument_parser(["peaks_to_fasta", "tests/testgraph.obg.sequences",
+                            "tests/testintervals.intervalcollection", "tests/testsequences.fasta"])
+
+        collection = PeakCollection.from_fasta_file("tests/testsequences.fasta")
+        self.assertEqual(len(collection.intervals), 1)
+        self.assertEqual(collection.intervals[0].sequence.lower(), "tttcccctt")
 
 
 

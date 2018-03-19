@@ -18,7 +18,7 @@ from graph_peak_caller.callpeaks_interface import \
     run_callpeaks_whole_genome_from_p_values
 
 from graph_peak_caller.analysis_interface import analyse_peaks_whole_genome,\
-    analyse_peaks, intervals_to_fasta, linear_peaks_to_fasta,\
+    analyse_peaks, peaks_to_fasta, linear_peaks_to_fasta,\
     analyse_manually_classified_peaks, differential_expression,\
     plot_motif_enrichment
 
@@ -55,6 +55,7 @@ def concatenate_sequence_files(args):
             else:
                 # This is sequence, add to prev entry
                 all_fasta_entries[-1][1] = line
+        fasta_file.close()
 
     peaks = []
     for fasta_entry in all_fasta_entries:
@@ -210,16 +211,17 @@ interface = \
                 ],
             'method': run_callpeaks_whole_genome_from_p_values
         },
-    'intervals_to_fasta':
+    'peaks_to_fasta':
         {
             'help': 'Get sequences for intervals in interval file.',
             'arguments':
                 [
-                    ('vg_graph_file_name', ''),
+                    ('sequence_graph', 'Sequence Graph, e.g. graph.nobg.sequences '
+                                       '(created by calling create_ob_graph'),
                     ('intervals_file_name', ''),
                     ('out_file_name', '')
                 ],
-            'method': intervals_to_fasta
+            'method': peaks_to_fasta
         },
     'linear_peaks_to_fasta':
         {
