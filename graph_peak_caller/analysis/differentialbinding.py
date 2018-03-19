@@ -30,23 +30,25 @@ class MotifLocation:
     @classmethod
     def from_fimo_and_peaks(cls, fimo_entry, peaks):
         mpeaks = [p for p in peaks if p.unique_id == fimo_entry.peak_id]
-        assert len(mpeaks) == 1
+        assert len(mpeaks) == 1, "Matching either 0 or multiple peaks: %s" % mpeaks
         return cls(mpeaks[0], fimo_entry._start-1, fimo_entry._end-1)
 
 
 def main(ff, pc, subgraphs, node_ids, graph):
     peaks = list(pc.intervals)
     for i, p in enumerate(peaks):
+        logging.info("Peak %d" %i)
         p.graph = graph
         p.unique_id = "peak%s" % i
     motif_locations = [MotifLocation.from_fimo_and_peaks(entry, peaks)
                        for entry in chain.from_iterable(
                                ff._entry_dict.values())]
+    
     diffs = [get_differential(motif_location, subgraphs, node_ids)
              for motif_location in motif_locations]
     diffs = [diff for diff in diffs if diff is not None]
-    for diff in diffs:
-        print(diff)
+    logging.info("Found in total %d candidates" % len(diffs))
+
     return diffs
 
 

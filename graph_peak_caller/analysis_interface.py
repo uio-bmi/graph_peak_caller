@@ -79,18 +79,23 @@ def analyse_peaks(args):
 
 
 def differential_expression(args):
-
+    logging.info("Running differential expression.")
     test_name = args.test_name
     fimo_file_name = "fimo_%s/fimo.txt" % test_name
     peaks_file_name = "%s_max_paths.intervalcollection" % test_name
     subgraphs_file_name = "%s_sub_graphs.graphs.npz" % test_name
     node_ids_file_name = "%s_sub_graphs.nodeids.npz" % test_name
     graph = args.graph
+
+    subgraphs = np.load(subgraphs_file_name)
+    logging.info("Found %d subgraphs" % len(subgraphs.keys()))
+    node_ids = np.load(node_ids_file_name)
+
     res = main(
         FimoFile.from_file(fimo_file_name),
         PeakCollection.from_file(peaks_file_name, True),
-        np.load(subgraphs_file_name),
-        np.load(node_ids_file_name),
+        subgraphs,
+        node_ids,
         graph)
     retriever = obg.SequenceGraph.from_file(
         args.graph_file_name + ".sequences")
