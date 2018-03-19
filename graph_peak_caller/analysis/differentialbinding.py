@@ -37,7 +37,6 @@ class MotifLocation:
 def main(ff, pc, subgraphs, node_ids, graph):
     peaks = list(pc.intervals)
     for i, p in enumerate(peaks):
-        logging.info("Peak %d" %i)
         p.graph = graph
         p.unique_id = "peak%s" % i
     motif_locations = [MotifLocation.from_fimo_and_peaks(entry, peaks)
