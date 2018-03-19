@@ -79,13 +79,14 @@ def split_vg_json_reads_into_chromosomes(args):
     chromosome_limits = {}
     logging.info("Found the following chromosome ranges:")
     for chrom in chromosomes:
-        start_end = open(
+        f = open(
             args.range_files_base_name + "node_range_" + chrom + ".txt")
-        start_end = start_end.read().split(":")
+        start_end = f.read().split(":")
         start = int(start_end[0])
         end = int(start_end[1])
         chromosome_limits[chrom] = (start, end)
         logging.info("   Chr%s: %d-%d" % (chrom, start, end))
+        f.close()
 
     out_files = {chrom: open(reads_base_name + "_" + chrom + ".json", "w")
                  for chrom in chromosomes}

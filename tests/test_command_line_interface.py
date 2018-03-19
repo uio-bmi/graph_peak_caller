@@ -28,7 +28,12 @@ class TestWrapper(unittest.TestCase):
         remove_files = ["tests/testgraph.obg", "tests/test_linear_map_starts.pickle",
                         "tests/test_linear_map_ends.pickle", "tests/test_linear_map.length",
                         "tests/sample.intervalcollection", "tests/testintervals.intervalcollection",
-                        "tests/testsequences.fasta"]
+                        "tests/testsequences.fasta",
+                        "tests/node_range_test_data/vg_alignments_1.json"
+                        "tests/node_range_test_data/vg_alignments_2.json"
+                        "tests/node_range_test_data/vg_alignments_3.json"
+                        "tests/node_range_test_data/vg_alignments_4.json"
+                        "tests/node_range_test_data/vg_alignments_5.json"]
         for file in remove_files:
             if os.path.isfile(file):
                 os.remove(file)
@@ -131,6 +136,18 @@ class TestCommandLineInterface(TestWrapper):
         result = PeakCollection.from_fasta_file("tests/test_max_paths_summits.fasta")
         self.assertEqual(result.intervals[0], Peak(2, 6, [1]))
         self.assertEqual(result.intervals[0].sequence.lower(), "tccc")
+
+    def test_split_vg_alignments(self):
+        run_argument_parser([
+            "split_vg_json_reads_into_chromosomes", "1,2,3,4,5", "tests/node_range_test_data/vg_alignments.json",
+            "tests/node_range_test_data/"
+        ])
+
+        for chrom in ["1", "2", "3", "4", "5"]:
+            f = open("tests/node_range_test_data/vg_alignments_" + chrom + ".json")
+            self.assertEqual(len(f.readlines()), 3)
+            f.close()
+
 
 
 if __name__ == "__main__":
