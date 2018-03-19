@@ -5,9 +5,13 @@ from graph_peak_caller import CallPeaksFromQvalues, Configuration
 from graph_peak_caller.reporter import Reporter
 from graph_peak_caller.legacy.sparsepileup import SparsePileup, ValuedIndexes
 from util import convert_old_sparse
+import pytest
+
+if pytest.__version__ < "3.0.0":
+    pytest.skip()
 
 
-
+@pytest.mark.skip("Legacy")
 class TestCallPeaksFromQValues(unittest.TestCase):
 
     def setUp(self):

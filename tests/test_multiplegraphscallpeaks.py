@@ -133,7 +133,7 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
             for peak in self.peaks[i]:
                 assert peak in final_peaks
 
-
+"""
 class TestMultipleGraphsCallPeaksCommandLine(TestMultipleGraphsCallPeaks):
     # Same test, but using commmand line interface
 
@@ -156,18 +156,18 @@ class TestMultipleGraphsCallPeaksCommandLine(TestMultipleGraphsCallPeaks):
                              "-p", "False",
                              "-D", "True"])
 
-        """
-        for i, chromosome in enumerate(self.chromosomes):
-            run_argument_parser(["callpeaks_whole_genome_from_p_values", chromosome,
-                                 "-d", "./",
-                                 "-f", "%s" % self.fragment_length,
-                                 "-r", "%s" % self.read_length,
-                                 "-n", "multigraphs_"])
-        """
+
+        #for i, chromosome in enumerate(self.chromosomes):
+        #    run_argument_parser(["callpeaks_whole_genome_from_p_values", chromosome,
+        #                         "-d", "./",
+        #                         "-f", "%s" % self.fragment_length,
+        #                         "-r", "%s" % self.read_length,
+        #                         "-n", "multigraphs_"])
+        
     #def test_run_from_init_in_two_steps(self):
     #    pass
 
-
+"""
 
 if __name__ == "__main__":
     unittest.main()

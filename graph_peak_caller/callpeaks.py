@@ -157,6 +157,7 @@ class CallPeaksFromQvalues:
             _pileup = SparseValues.from_sparse_files(file_name)
             self.raw_pileup = _pileup
         else:
+            raise NotImplementedError()
             _pileup = self.q_values
 
         assert(self.graph.uses_numpy_backend)
