@@ -1,9 +1,12 @@
 import unittest
 from offsetbasedgraph import GraphWithReversals, Block, \
-    IntervalCollection, DirectedInterval as Interval
+    IntervalCollection, DirectedInterval as Interval, SequenceGraph
 from graph_peak_caller.peakcollection import Peak, PeakCollection
 import os
+from graph_peak_caller.sparsediffs import SparseValues
 from graph_peak_caller.command_line_interface import run_argument_parser
+import numpy as np
+from graph_peak_caller.peakfasta import PeakFasta
 
 
 class Arguments(object):
@@ -17,6 +20,10 @@ class TestWrapper(unittest.TestCase):
         self.correct_ob_graph = GraphWithReversals(
             {1: Block(7), 2: Block(4), 3: Block(7), 4: Block(4)},
             {1: [2, 3], 2: [4], 3: [4]})
+        self.correct_ob_graph.convert_to_numpy_backend()
+
+        self.correct_sequence_graph = SequenceGraph.create_empty_from_ob_graph(self.correct_ob_graph)
+        self.correct_sequence_graph.set_sequences_using_vg_json_graph("tests/vg_test_graph.json")
 
         remove_files = ["tests/testgraph.obg", "tests/test_linear_map_starts.pickle",
                         "tests/test_linear_map_ends.pickle", "tests/test_linear_map.length",
@@ -106,6 +113,24 @@ class TestCommandLineInterface(TestWrapper):
         self.assertEqual(len(collection.intervals), 1)
         self.assertEqual(collection.intervals[0].sequence.lower(), "tttcccctt")
 
+    def test_get_summits(self):
+
+        qvalues = SparseValues(np.array([0]), np.array([3]))
+        qvalues.track_size = 22
+        qvalues.to_sparse_files("tests/test_qvalues")
+
+        run_argument_parser(["create_ob_graph", "-o",
+                             "tests/testgraph.obg",
+                             "tests/vg_test_graph.json"])
+        max_paths = PeakCollection([Peak(0, 2, [1, 2], score=3)])
+        PeakFasta(self.correct_sequence_graph).write_max_path_sequences("tests/test_max_paths.fasta", max_paths)
+
+        run_argument_parser(["get_summits", "-g", "tests/testgraph.obg",
+                            "tests/test_max_paths.fasta", "tests/test_qvalues", "2"])
+
+        result = PeakCollection.from_fasta_file("tests/test_max_paths_summits.fasta")
+        self.assertEqual(result.intervals[0], Peak(2, 6, [1]))
+        self.assertEqual(result.intervals[0].sequence.lower(), "tccc")
 
 
 if __name__ == "__main__":

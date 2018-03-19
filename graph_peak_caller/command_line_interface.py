@@ -144,7 +144,13 @@ def get_summits(args):
     qvalues = DensePileup(graph, dense_qvalues)
     logging.info("Q values fetched")
     peaks = PeakCollection.from_fasta_file(args.peaks_fasta_file, graph)
-    peaks.cut_around_summit(qvalues)
+
+    if args.window_size is not None:
+        window = int(args.window_size)
+    else:
+        window = 60
+
+    peaks.cut_around_summit(qvalues, n_base_pairs_around=window)
     peaks.to_fasta_file(args.peaks_fasta_file.split(".")[0] + "_summits.fasta", args.sequence_graph)
 
 
@@ -404,7 +410,8 @@ interface = \
             'arguments':
                 [
                     ('peaks_fasta_file', 'Fasta file containing graph peaks.'),
-                    ('q_values_base_name', 'Base file name of q values')
+                    ('q_values_base_name', 'Base file name of q values'),
+                    ('window_size', 'Optional. Number of basepairs to each side from summit to include. Default is 60.')
                 ],
             'method': get_summits
         }
