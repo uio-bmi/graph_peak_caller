@@ -10,6 +10,7 @@ from .util import create_linear_map
 from .peakfasta import PeakFasta
 from .reporter import Reporter
 from .intervals import UniqueIntervals
+import sys
 
 
 def get_confiugration(args):
@@ -107,9 +108,11 @@ def run_callpeaks_whole_genome(args):
             logging.info("Found linear map %s that will be used." % linear_map_name)
         linear_map_file_names.append(linear_map_name)
 
+
     sequence_retrievers = \
-        (obg.SequenceGraph.from_file(args.data_dir + "/" + chrom + ".nobg.sequences")
-         for chrom in chromosomes)
+            (obg.SequenceGraph.from_file(args.data_dir + "/" + chrom + ".nobg.sequences")
+             for chrom in chromosomes)
+
 
     if args.sample.endswith(".intervalcollection"):
         sample_file_names = [args.sample.replace("chrom", chrom) for chrom in chromosomes]
@@ -134,6 +137,13 @@ def run_callpeaks_whole_genome(args):
         control_file_names = sample_file_names.copy()
 
     config.fragment_length = int(args.fragment_length)
+    config.read_length = int(args.read_length)
+
+    if config.fragment_length < config.read_length:
+        logging.critical("Fragment length is smaller than read length. Cannot call peaks.")
+        sys.exit(1)
+
+
     genome_size = int(args.genome_size)
     config.min_background = int(args.unique_reads) * int(args.fragment_length) / genome_size
     logging.info(

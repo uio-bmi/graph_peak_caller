@@ -43,3 +43,10 @@ class DensePileup:
             offset += end-start
 
         return values
+
+    def __str__(self):
+        out = "Minimum DensePileup. Values: %s. Sum: %.3f" % (self._values, np.sum(self._values))
+        return out
+
+    def __repr__(self):
+        return out

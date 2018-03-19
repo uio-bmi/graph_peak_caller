@@ -109,7 +109,6 @@ class MultipleGraphsCallpeaks:
         self._q_value_mapping = mapper.get_p_to_q_values()
 
     def run_from_p_values(self, only_chromosome=None):
-        logging.info(" ======== Running from q-values  ==== ")
         for i, name in enumerate(self.names):
             if only_chromosome is not None:
                 if only_chromosome != name:
@@ -129,7 +128,13 @@ class MultipleGraphsCallpeaks:
             caller.get_q_values()
             caller.call_peaks_from_q_values()
             if self.sequence_retrievers is not None:
-                PeakFasta(self.sequence_retrievers.__next__()).write_max_path_sequences(
+                try:
+                    sequencegraph = self.sequence_retrievers.__next__()
+                except FileNotFoundError:
+                    logging.warning("Could not find sequence graphs. Will not store max paths.")
+                    continue
+
+                PeakFasta(sequencegraph).write_max_path_sequences(
                   self._reporter._base_name + name + "_sequences.fasta", caller.max_path_peaks)
                 #caller.save_max_path_sequences_to_fasta_file(
                 #    "sequences.fasta", self.sequence_retrievers.__next__())

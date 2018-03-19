@@ -170,6 +170,7 @@ class SparseDiffs:
     @classmethod
     def from_pileup(cls, pileup, node_indexes):
         indices = np.r_[pileup.starts, pileup.ends, node_indexes]
+
         diffs = np.r_[np.ones(len(pileup.starts)),
                       -1*np.ones(len(pileup.ends)),
                       pileup.node_starts]

@@ -3,7 +3,7 @@ from graph_peak_caller.intervals import Intervals
 from graph_peak_caller import Configuration
 from graph_peak_caller.reporter import Reporter
 from offsetbasedgraph import GraphWithReversals as Graph, \
-    DirectedInterval, IntervalCollection, Block
+    DirectedInterval, IntervalCollection, Block, SequenceGraph
 import unittest
 from graph_peak_caller.control.linearmap import LinearMap
 from pyvg.sequences import SequenceRetriever
@@ -62,6 +62,7 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
             self._create_reads(chrom_number, chromosome, graph)
             node_offset += 3
             graph.convert_to_numpy_backend()
+            SequenceGraph.create_empty_from_ob_graph(graph).to_file(chromosome + ".nobg.sequences")
             graph.to_numpy_file(chromosome + ".nobg")
 
     def _create_reads(self, chrom_number, chrom, graph):
@@ -112,7 +113,6 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
         caller.run()
 
         for i, chromosome in enumerate(self.chromosomes):
-            print("Running chrom %s" % chromosome)
             caller = MultipleGraphsCallpeaks(
                 self.chromosomes,
                  [chrom + ".nobg" for chrom in self.chromosomes],
@@ -133,7 +133,7 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
             for peak in self.peaks[i]:
                 assert peak in final_peaks
 
-"""
+
 class TestMultipleGraphsCallPeaksCommandLine(TestMultipleGraphsCallPeaks):
     # Same test, but using commmand line interface
 
@@ -142,7 +142,7 @@ class TestMultipleGraphsCallPeaksCommandLine(TestMultipleGraphsCallPeaks):
         for intervals, chrom in zip(self.sample_reads, self.chromosomes):
             IntervalCollection(intervals._intervals).to_file("test_sample_" + chrom + ".intervalcollection", text_file=True)
 
-    def test_run_from_init(self):
+    def test_typical_run(self):
 
         print(" ========= Running start ====")
         run_argument_parser(["callpeaks_whole_genome", ','.join(self.chromosomes),
@@ -153,21 +153,19 @@ class TestMultipleGraphsCallPeaksCommandLine(TestMultipleGraphsCallPeaks):
                              "-u", "100",
                              "-g", "150",
                              "-n", "multigraphs_",
-                             "-p", "False",
+                             "-p", "True",
                              "-D", "True"])
 
 
-        #for i, chromosome in enumerate(self.chromosomes):
-        #    run_argument_parser(["callpeaks_whole_genome_from_p_values", chromosome,
-        #                         "-d", "./",
-        #                         "-f", "%s" % self.fragment_length,
-        #                         "-r", "%s" % self.read_length,
-        #                         "-n", "multigraphs_"])
-        
-    #def test_run_from_init_in_two_steps(self):
-    #    pass
+        for i, chromosome in enumerate(self.chromosomes):
+            run_argument_parser(["callpeaks_whole_genome_from_p_values", chromosome,
+                                 "-d", "./",
+                                 "-f", "%s" % self.fragment_length,
+                                 "-r", "%s" % self.read_length,
+                                 "-n", "multigraphs_"])
+        self.do_asserts()
 
-"""
+
 
 if __name__ == "__main__":
     unittest.main()

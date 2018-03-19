@@ -11,8 +11,8 @@ from .sparsediffs import SparseValues
 
 class Configuration:
     def __init__(self):
-        self.read_length = 35
-        self.fragment_length = 135
+        self.read_length = None
+        self.fragment_length = None
         self.linear_map_name = None
         self.has_control = False
         self.q_values_threshold = 0.05
@@ -36,6 +36,8 @@ class CallPeaks(object):
     def __init__(self, graph, config, reporter):
         self.graph = graph
         self.config = config
+        assert self.config.fragment_length > self.config.read_length, \
+            "Read length %d is larger than fragment size" % (self.config.read_length)
         self.info = config
         self._reporter = reporter
 
@@ -167,6 +169,7 @@ class CallPeaksFromQvalues:
 
         self._reporter.add("all_max_paths", max_paths)
         logging.info("All max paths found")
+
         self.q_values = DensePileup(
             self.graph, self.q_values.to_dense_pileup(
                 self.graph.node_indexes[-1]))

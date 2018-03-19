@@ -113,6 +113,9 @@ class SparseExtender:
         self._graph = graph
         self._pileup = pileup
         self._fragment_length = fragment_length
+        if self._fragment_length <= 0:
+            raise Exception("Invalid fragment length %d used in SparseExtender" % self._fragment_length)
+
         self._set_adj_list()
         self._graph_size = graph.node_indexes[-1]
 
@@ -199,6 +202,8 @@ class ReverseSparseExtender(SparseExtender):
 
 class SamplePileupGenerator:
     def __init__(self, graph, extension):
+        if extension < 0:
+            raise Exception("Invalid extension size %d used. Must be positive. Is fragment length < read length?" % extension)
         self._pileup = SparseGraphPileup(graph)
         self._graph = graph
         self._reads_adder = ReadsAdderWDirect(graph, self._pileup)
@@ -211,6 +216,7 @@ class SamplePileupGenerator:
         new_pileup.ends = self._pileup.ends + self._reads_adder.pos_read_ends
         new_pileup.starts = self._pileup.starts + self._reads_adder.neg_read_ends
         new_pileup.node_starts = self._pileup.node_starts
+
         sparsediff = SparseDiffs.from_pileup(
             new_pileup, self._graph.node_indexes)
         sparsediff.clean()
