@@ -2,7 +2,7 @@
 import argparse
 import sys
 import logging
-from .logging_config import set_logging_config
+from graph_peak_caller.logging_config import set_logging_config
 
 import matplotlib as mpl
 from .custom_exceptions import *
