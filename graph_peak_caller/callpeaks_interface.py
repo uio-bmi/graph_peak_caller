@@ -86,7 +86,7 @@ def run_callpeaks_whole_genome(args):
     config = Configuration()
     logging.info("Running whole genome.")
     chromosomes = args.chromosomes.split(",")
-    graph_file_names = [args.data_dir + "/" + chrom for chrom in chromosomes]
+    graph_file_names = [args.data_dir + "/" + chrom + ".nobg" for chrom in chromosomes]
 
     linear_map_file_names = []
     for i, chrom in enumerate(chromosomes):
@@ -94,7 +94,8 @@ def run_callpeaks_whole_genome(args):
         if not os.path.isfile(linear_map_name):
             logging.warning("Did not find linear map for "
                             "chromosome %s. Will create." % chrom)
-            create_linear_map(obg.Graph.from_numpy_file(graph_file_names[i]), linear_map_name)
+            graph = obg.Graph.from_numpy_file(graph_file_names[i])
+            create_linear_map(graph, linear_map_name)
         else:
             logging.info("Found linear map %s that will be used." % linear_map_name)
         linear_map_file_names.append(linear_map_name)
@@ -124,7 +125,7 @@ def run_callpeaks_whole_genome(args):
 
     config.fragment_length = int(args.fragment_length)
     genome_size = int(args.genome_size)
-    config.min_background = int(args.unique_reads) * fragment_length / genome_size
+    config.min_background = int(args.unique_reads) * int(args.fragment_length) / genome_size
     logging.info(
         "Computed min background signal to be %.3f using fragment length %f, "
         " %d unique reads, and genome size %d" % (config.min_background,

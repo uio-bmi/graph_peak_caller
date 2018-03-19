@@ -9,6 +9,7 @@ from graph_peak_caller.control.linearmap import LinearMap
 from pyvg.sequences import SequenceRetriever
 import logging
 import os
+from graph_peak_caller.command_line_interface import run_argument_parser
 
 
 class TestMultipleGraphsCallPeaks(unittest.TestCase):
@@ -47,7 +48,7 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
                 {i+node_offset: [i+1+node_offset] for i in range(0, 2)})
 
             linear_map = LinearMap.from_graph(graph)
-            linear_map_file_name = "test_linear_map_%s.npz" % chromosome
+            linear_map_file_name = "linear_map_%s.npz" % chromosome
             linear_map.to_file(linear_map_file_name)
             self.linear_maps.append(linear_map_file_name)
             self.sequence_retrievers.append(
@@ -56,7 +57,8 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
             )
             self._create_reads(chrom_number, chromosome, graph)
             node_offset += 3
-            graph.to_file(chromosome + ".obg")
+            graph.convert_to_numpy_backend()
+            graph.to_numpy_file(chromosome + ".nobg")
 
     def _create_reads(self, chrom_number, chrom, graph):
         i = chrom_number
@@ -126,6 +128,28 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
                 "multigraphs_" + chromosome + "_max_paths.intervalcollection")
             for peak in self.peaks[i]:
                 assert peak in final_peaks
+
+
+class TestMultipleGraphsCallPeaksCommandLine(TestMultipleGraphsCallPeaks):
+    # Same test, but using commmand line interface
+
+    def _create_reads(self, *args):
+        super(TestMultipleGraphsCallPeaksCommandLine, self)._create_reads(*args)
+        for intervals, chrom in zip(self.sample_reads, self.chromosomes):
+            IntervalCollection(intervals._intervals).to_file("test_sample_" + chrom + ".intervalcollection", text_file=True)
+
+    def test_run_from_init(self):
+        run_argument_parser(["callpeaks_whole_genome", ','.join(self.chromosomes),
+                             "-d", "./",
+                             "-s", "test_sample_chrom.intervalcollection",
+                             "-f", "%s" % self.fragment_length,
+                             "-r", "%s" % self.read_length,
+                             "-u", "100",
+                             "-g", "150"])
+
+    def test_run_from_init_in_two_steps(self):
+        pass
+
 
 
 if __name__ == "__main__":

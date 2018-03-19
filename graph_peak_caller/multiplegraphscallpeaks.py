@@ -73,7 +73,7 @@ class MultipleGraphsCallpeaks:
             zip(self.names, self.graph_file_names,
                 self.samples, self.controls, self.linear_maps):
             logging.info("Running %s" % name)
-            ob_graph = obg.GraphWithReversals.from_unknown_file_format(
+            ob_graph = obg.GraphWithReversals.from_numpy_file(
                 graph_file_name)
             if isinstance(sample, Intervals) or isinstance(sample, UniqueIntervals):
                 logging.info("Sample is already intervalcollection.")
