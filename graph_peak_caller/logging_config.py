@@ -2,6 +2,7 @@ import logging
 import sys
 import warnings
 import numpy as np
+import scipy
 
 def customwarn(message, category, filename, lineno, file=None, line=None):
     sys.stdout.write(warnings.formatwarning(message, category, filename, lineno))
@@ -51,3 +52,4 @@ def set_logging_config(chosen_level=1):
 
     warnings.showwarning = customwarn
     np.seterr(all='print')
+    scipy.seterr(all='print')
