@@ -82,7 +82,6 @@ class SparseValues:
         values = pileup[indices]
         obj = cls(indices, values)
         obj.track_size = pileup.size
-        print(obj)
         return obj
 
 

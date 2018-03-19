@@ -8,8 +8,11 @@ import unittest
 from graph_peak_caller.control.linearmap import LinearMap
 from pyvg.sequences import SequenceRetriever
 import logging
+from graph_peak_caller.logging_config import set_logging_config
+#set_logging_config(1)
 import os
 from graph_peak_caller.command_line_interface import run_argument_parser
+
 
 
 class TestMultipleGraphsCallPeaks(unittest.TestCase):
@@ -38,6 +41,7 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
         self.config.fragment_length = self.fragment_length
         self.config.read_length = self.read_length
         self.config.has_control = False
+        self.config.min_background = 0.33
         self.reporter = Reporter("multigraphs_")
 
     def _create_data(self):
@@ -83,7 +87,7 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
     def test_run_from_init(self):
         caller = MultipleGraphsCallpeaks(
             self.chromosomes,
-            self.chromosomes,
+            [chrom + ".nobg" for chrom in self.chromosomes],
             self.sample_reads,
             self.control_reads,
             self.linear_maps,
@@ -97,7 +101,7 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
 
         caller = MultipleGraphsCallpeaks(
             self.chromosomes,
-            self.chromosomes,
+            [chrom + ".nobg" for chrom in self.chromosomes],
             self.sample_reads,
             self.control_reads,
             self.linear_maps,
@@ -111,7 +115,7 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
             print("Running chrom %s" % chromosome)
             caller = MultipleGraphsCallpeaks(
                 self.chromosomes,
-                self.chromosomes,
+                 [chrom + ".nobg" for chrom in self.chromosomes],
                 None,
                 None,
                 None,
@@ -139,16 +143,29 @@ class TestMultipleGraphsCallPeaksCommandLine(TestMultipleGraphsCallPeaks):
             IntervalCollection(intervals._intervals).to_file("test_sample_" + chrom + ".intervalcollection", text_file=True)
 
     def test_run_from_init(self):
+
+        print(" ========= Running start ====")
         run_argument_parser(["callpeaks_whole_genome", ','.join(self.chromosomes),
                              "-d", "./",
                              "-s", "test_sample_chrom.intervalcollection",
                              "-f", "%s" % self.fragment_length,
                              "-r", "%s" % self.read_length,
                              "-u", "100",
-                             "-g", "150"])
+                             "-g", "150",
+                             "-n", "multigraphs_",
+                             "-p", "False",
+                             "-D", "True"])
 
-    def test_run_from_init_in_two_steps(self):
-        pass
+        """
+        for i, chromosome in enumerate(self.chromosomes):
+            run_argument_parser(["callpeaks_whole_genome_from_p_values", chromosome,
+                                 "-d", "./",
+                                 "-f", "%s" % self.fragment_length,
+                                 "-r", "%s" % self.read_length,
+                                 "-n", "multigraphs_"])
+        """
+    #def test_run_from_init_in_two_steps(self):
+    #    pass
 
 
 

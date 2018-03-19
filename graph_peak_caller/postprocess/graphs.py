@@ -108,6 +108,12 @@ class SubGraph:
         self._node_ids = node_ids
         self._graph = graph
 
+    def __str__(self):
+        return "Subgraph (%s)" % self._node_ids
+
+    def __repr__(self):
+        return self.__str__()
+
 
 class LineGraph:
     stub_class = StubsFilter
@@ -239,7 +245,7 @@ class DividedLinegraph(LineGraph):
         complete_mask = np.zeros(self.end_stub, dtype="bool")
         self._lookup = np.empty(self.end_stub+1, dtype="int")
         for comp in range(n_components):
-            if comp % 100 == 0:
+            if comp % 1000 == 0:
                 logging.info("Component %s of %s", comp, n_components)
 
             idxs = np.r_[np.flatnonzero(

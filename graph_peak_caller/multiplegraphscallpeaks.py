@@ -7,6 +7,7 @@ from .sparsepvalues import PToQValuesMapper
 from .sparsediffs import SparseValues
 from .intervals import Intervals, UniqueIntervals
 
+from .peakfasta import PeakFasta
 
 class MultipleGraphsCallpeaks:
 
@@ -80,14 +81,19 @@ class MultipleGraphsCallpeaks:
             logging.info("Creating interval collections from files")
             sample = vg_json_file_to_interval_collection(sample, graph)
             control = vg_json_file_to_interval_collection(control, graph)
-        return UniqueIntervals(sample), UniqueIntervals(control)
+
+        if self._config.keep_duplicates:
+            logging.warning("Keeping duplicates. Should only be used for testing.")
+            return Intervals(sample), Intervals(control)
+        else:
+            return UniqueIntervals(sample), UniqueIntervals(control)
 
     def run_to_p_values(self):
         for name, graph_file_name, sample, control, lin_map in \
             zip(self.names, self.graph_file_names,
                 self.samples, self.controls, self.linear_maps):
             logging.info("Running %s" % name)
-            ob_graph = obg.GraphWithReversals.from_numpy_file(
+            ob_graph = obg.Graph.from_numpy_file(
                 graph_file_name)
             sample, control = self.get_intervals(sample, control, ob_graph)
             config = self._config.copy()
@@ -96,19 +102,21 @@ class MultipleGraphsCallpeaks:
                                self._reporter.get_sub_reporter(name))
             caller.run_to_p_values(sample, control)
             logging.info("Done until p values.")
+            logging.info("In total %d duplicates were removed from sample" % sample.n_duplicates)
 
     def create_joined_q_value_mapping(self):
         mapper = PToQValuesMapper.from_files(self._reporter._base_name)
         self._q_value_mapping = mapper.get_p_to_q_values()
 
     def run_from_p_values(self, only_chromosome=None):
+        logging.info(" ======== Running from q-values  ==== ")
         for i, name in enumerate(self.names):
             if only_chromosome is not None:
                 if only_chromosome != name:
                     logging.info("Skipping %s" % str(name))
                     continue
             graph_file_name = self.graph_file_names[i]
-            ob_graph = obg.GraphWithReversals.from_unknown_file_format(
+            ob_graph = obg.Graph.from_numpy_file(
                 graph_file_name)
             assert ob_graph is not None
             caller = CallPeaks(ob_graph, self._config,
@@ -121,5 +129,7 @@ class MultipleGraphsCallpeaks:
             caller.get_q_values()
             caller.call_peaks_from_q_values()
             if self.sequence_retrievers is not None:
-                caller.save_max_path_sequences_to_fasta_file(
-                    "sequences.fasta", self.sequence_retrievers.__next__())
+                PeakFasta(self.sequence_retrievers.__next__()).write_max_path_sequences(
+                  self._reporter._base_name + name + "_sequences.fasta", caller.max_path_peaks)
+                #caller.save_max_path_sequences_to_fasta_file(
+                #    "sequences.fasta", self.sequence_retrievers.__next__())

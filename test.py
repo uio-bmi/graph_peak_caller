@@ -4,8 +4,6 @@ from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
 from offsetbasedgraph import GraphWithReversals, IntervalCollection
 import logging
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s, %(levelname)s: %(message)s")
 
 def find_linear_path_through_chromosome(chromosome, chromend, fasta_file_name, ob_graph_file_name, vg_graph_file_name):
     genome = Fasta(fasta_file_name)

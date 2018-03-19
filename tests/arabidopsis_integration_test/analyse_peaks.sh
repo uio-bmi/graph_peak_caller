@@ -13,8 +13,9 @@ do
     cat ${chromosome}_diffexpr.fasta >> diff_expr.fasta
 done
 
-
 for chromosome in $(seq 1 2)
 do
     graph_peak_caller get_summits -g graphs/$chromosome.nobg ${chromosome}_sequences.fasta ${chromosome}_qvalues
 done
+
+#graph_peak_caller analyse_peaks_whole_genome 1,2 ./ graphs/ results

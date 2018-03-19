@@ -139,7 +139,8 @@ def peaks_to_linear(args):
 def get_summits(args):
     graph = args.graph
     qvalues = SparseValues.from_sparse_files(args.q_values_base_name)
-    qvalues = DensePileup(graph, qvalues)
+    dense_qvalues = qvalues.to_dense_pileup(size=graph.number_of_basepairs())
+    qvalues = DensePileup(graph, dense_qvalues)
     logging.info("Q values fetched")
     peaks = PeakCollection.from_fasta_file(args.peaks_fasta_file, graph)
     peaks.cut_around_summit(qvalues)
@@ -190,7 +191,9 @@ interface = \
                                           'Found by calling count_unique_reads'),
                     ('-g/--genome_size', 'Number of base pairs covered by '
                                          'graphs in total (on a linear genome)'),
-                    ('-n/--out_name', 'Optional. Out base name. Prepended to output files.')
+                    ('-n/--out_name', 'Optional. Out base name. Prepended to output files.'),
+                    ('-D/--keep_duplicates', 'Optional. Set to True in order to keep '
+                                             'duplicate input alignments.')
                 ],
             'method': run_callpeaks_whole_genome
         },

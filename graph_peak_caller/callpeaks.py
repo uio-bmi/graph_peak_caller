@@ -17,6 +17,7 @@ class Configuration:
         self.has_control = False
         self.q_values_threshold = 0.05
         self.global_min = None
+        self.keep_duplicates = False
 
     def copy(self):
         o = Configuration()
@@ -26,6 +27,7 @@ class Configuration:
         o.has_control = self.has_control
         o.q_values_threshold = self.q_values_threshold
         o.global_min = self.global_min
+        o.keep_duplicates = self.keep_duplicates
         return o
 
 
@@ -71,7 +73,6 @@ class CallPeaks(object):
         assert self.p_values_pileup is not None
         finder = PToQValuesMapper.from_p_values_pileup(
             self.p_values_pileup)
-        print(finder)
         self.p_to_q_values_mapping = finder.get_p_to_q_values()
 
     def get_q_values(self):
@@ -112,6 +113,7 @@ class CallPeaksFromQvalues:
                  experiment_info, reporter,
                  cutoff=0.1, raw_pileup=None, touched_nodes=None,
                  config=None, q_values_max_path=False):
+
         self.graph = graph
         self.q_values = q_values_pileup
         self.info = experiment_info
@@ -150,12 +152,14 @@ class CallPeaksFromQvalues:
     def __get_max_paths(self):
         logging.info("Getting maxpaths")
         if not self.q_values_max_path:
-            _pileup = SparseValues.from_sparse_files(
-                self._reporter._base_name+"direct_pileup")
+            file_name = self._reporter._base_name+"direct_pileup"
+            logging.info("Reading raw direct pileup from file %s" % file_name)
+            _pileup = SparseValues.from_sparse_files(file_name)
             self.raw_pileup = _pileup
         else:
             _pileup = self.q_values
 
+        assert(self.graph.uses_numpy_backend)
         logging.info("Running Sparse Max Paths")
         max_paths, sub_graphs = SparseMaxPaths(
             self.filtered_peaks, self.graph, _pileup).run()
@@ -167,6 +171,7 @@ class CallPeaksFromQvalues:
                 self.graph.node_indexes[-1]))
 
         for max_path in max_paths:
+            assert max_path.length() > 0, "Max path %s has negative length" % max_path
             max_path.set_score(np.max(
                 self.q_values.get_interval_values(max_path)))
         pairs = list(zip(max_paths, sub_graphs))

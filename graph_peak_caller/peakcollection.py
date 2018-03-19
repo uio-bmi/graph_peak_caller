@@ -94,7 +94,7 @@ class PeakCollection(obg.IntervalCollection):
         for i, peak in enumerate(self.intervals):
             assert np.all(np.array(peak.region_paths) > 0), "Assuming forward peaks."
 
-            peak_qvalues = q_values.data.get_interval_values(peak)
+            peak_qvalues = q_values.get_interval_values(peak)
             # Finding summit position of average summit from both sides (to get middle
             # if many equal q values)
             summit_position = int((np.argmax(peak_qvalues) + \
@@ -226,9 +226,8 @@ class PeakCollection(obg.IntervalCollection):
         return NonGraphPeakCollection(linear_peaks)
 
     def to_fasta_file(self, file_name, sequence_graph):
-        from .callpeaks import CallPeaksFromQvalues
-        CallPeaksFromQvalues.intervals_to_fasta_file(
-        self, file_name, sequence_graph)
+        from .peakfasta import PeakFasta
+        PeakFasta(sequence_graph).save_intervals(file_name, self)
 
 
     @classmethod

@@ -83,10 +83,17 @@ def find_or_create_linear_map(graph, linear_map_name):
 
 
 def run_callpeaks_whole_genome(args):
+    logging.info("Running run_callpeaks_whole_genome")
+
     config = Configuration()
+    if args.keep_duplicates == "True":
+        config.keep_duplicates = True
+        logging.info("Keeping duplicates")
+
     logging.info("Running whole genome.")
     chromosomes = args.chromosomes.split(",")
     graph_file_names = [args.data_dir + "/" + chrom + ".nobg" for chrom in chromosomes]
+    logging.info("Will use graphs: %s" % graph_file_names)
 
     linear_map_file_names = []
     for i, chrom in enumerate(chromosomes):
@@ -111,6 +118,8 @@ def run_callpeaks_whole_genome(args):
         sample_base_name = args.sample.replace(".json", "_")
         sample_file_names = [sample_base_name + chrom + ".json" for chrom in chromosomes]
 
+    logging.info("Will use input alignments from %s" % sample_file_names)
+
     if args.control is not None:
         if args.control.endswith(".intervalcollection"):
             control_file_names = [
@@ -121,6 +130,7 @@ def run_callpeaks_whole_genome(args):
             control_file_names = [control_base_name + chrom + ".json"
                                   for chrom in chromosomes]
     else:
+        logging.info("Using input alignments as control")
         control_file_names = sample_file_names.copy()
 
     config.fragment_length = int(args.fragment_length)
@@ -153,12 +163,12 @@ def run_callpeaks_whole_genome_from_p_values(args):
     logging.info("Running whole genome from p-values.")
     chromosome = args.chromosome
     chromosomes = [chromosome]
-    graph_file_names = [args.data_dir + chrom for chrom in chromosomes]
+    graph_file_names = [args.data_dir + chrom + ".nobg" for chrom in chromosomes]
     sequence_retrievers = \
         (obg.SequenceGraph.from_file(args.data_dir + "/" + chrom + ".nobg.sequences") for chrom in chromosomes)
     out_name = args.out_name if args.out_name is not None else ""
     config = Configuration()
-    conifg.fragment_length = int(args.fragment_length)
+    config.fragment_length = int(args.fragment_length)
     config.read_length = int(args.read_length)
     reporter = Reporter(out_name)
     caller = MultipleGraphsCallpeaks(

@@ -37,7 +37,7 @@ def set_logging_config(chosen_level=1):
         raise ValueError("Invalid logging level set by -v/--verbose. Choose between 0, 1 and 2.")
 
     use_level = levels[chosen_level]
-
+    print("Setting logging config to %d" % chosen_level)
     logging.basicConfig(
         level=use_level,
         format="%(asctime)s, %(levelname)s: %(message)s",
