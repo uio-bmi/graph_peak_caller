@@ -4,6 +4,8 @@ arabidopsis_graph_dir=$1
 dm_graph_dir=$2
 human_graph_dir=$3
 
+echo "Using graph dirs $arabidopsis_graph_dir, $dm_graph_dir and $human_graph_dir"
+
 # This script runs on jenkins
 
 # Arabidopsis (available at NCBI: svp, ataf1, erf115, WRKY33)
