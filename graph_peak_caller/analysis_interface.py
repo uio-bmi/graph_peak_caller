@@ -81,7 +81,7 @@ def analyse_peaks(args):
 def differential_expression(args):
     logging.info("Running differential expression.")
     test_name = args.test_name
-    fimo_file_name = "fimo_%s/fimo.txt" % test_name
+    fimo_file_name = args.fimo_file_name
     peaks_file_name = "%s_max_paths.intervalcollection" % test_name
     subgraphs_file_name = "%s_sub_graphs.graphs.npz" % test_name
     node_ids_file_name = "%s_sub_graphs.nodeids.npz" % test_name

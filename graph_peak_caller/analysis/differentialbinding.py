@@ -43,7 +43,7 @@ def main(ff, pc, subgraphs, node_ids, graph):
     motif_locations = [MotifLocation.from_fimo_and_peaks(entry, peaks)
                        for entry in chain.from_iterable(
                                ff._entry_dict.values())]
-    
+
     diffs = [get_differential(motif_location, subgraphs, node_ids)
              for motif_location in motif_locations]
     diffs = [diff for diff in diffs if diff is not None]
