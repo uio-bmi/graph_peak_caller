@@ -3,9 +3,9 @@ import argparse
 import sys
 import logging
 from graph_peak_caller.logging_config import set_logging_config
+from graph_peak_caller.custom_exceptions import *
 
 import matplotlib as mpl
-from .custom_exceptions import *
 mpl.use('Agg')  # Required for server usage (e.g. travis)
 
 import offsetbasedgraph as obg
