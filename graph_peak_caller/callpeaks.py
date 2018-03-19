@@ -176,8 +176,10 @@ class CallPeaksFromQvalues:
 
         for max_path in max_paths:
             assert max_path.length() > 0, "Max path %s has negative length" % max_path
-            max_path.set_score(np.max(
-                self.q_values.get_interval_values(max_path)))
+            score = np.max(self.q_values.get_interval_values(max_path))
+            max_path.set_score(score)
+            assert not np.isnan(score), "Score %s is nan" % score
+
         pairs = list(zip(max_paths, sub_graphs))
         pairs.sort(key=lambda p: p[0].score, reverse=True)
         logging.info("N unfiltered peaks: %s", len(max_paths))

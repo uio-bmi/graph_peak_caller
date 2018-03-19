@@ -14,6 +14,7 @@ class DensePileup:
         assert array_end < len(self._values), "Array end %d > len of values %s" % (array_end, len(self._values))
         out = self._values[array_start:array_end]
         assert len(out) > 0
+        return out
 
     def values(self, node_id):
         index = node_id - self._graph.min_node
@@ -26,6 +27,12 @@ class DensePileup:
         assert interval_length > 0, "Trying to get value of interval with negative length, %s" % interval
         values = np.zeros(interval_length)
         offset = 0
+
+        is_reverse = False
+        if interval.region_paths[0] < 0:
+            assert np.all(np.array(interval.region_paths) < 0), " First region path negative, but not rest. Interval: %s" % interval
+            is_reverse = True
+            interval = interval.get_reverse()
 
         for i, rp in enumerate(interval.region_paths):
             assert rp > 0, "Currently only implemented for forward directed intervals"
@@ -42,6 +49,13 @@ class DensePileup:
 
             offset += end-start
 
+
+        if is_reverse:
+            out = values[::-1]
+        else:
+            out = values
+
+        assert np.sum(np.isnan(values)) == 0, "%s contains nan" % (values)
         return values
 
     def __str__(self):
