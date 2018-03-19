@@ -1,5 +1,11 @@
 import logging
 import sys
+import warnings
+import numpy as np
+
+def customwarn(message, category, filename, lineno, file=None, line=None):
+    sys.stdout.write(warnings.formatwarning(message, category, filename, lineno))
+
 def set_logging_config(chosen_level=1):
 
     # Remove handlers already set (if not, new config will not be set)
@@ -42,3 +48,6 @@ def set_logging_config(chosen_level=1):
         format="%(asctime)s, %(levelname)s: %(message)s",
         handlers=[h1, h2]
     )
+
+    warnings.showwarning = customwarn
+    np.seterr(all='print')
