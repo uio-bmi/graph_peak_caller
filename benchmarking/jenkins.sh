@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 arabidopsis_graph_dir=$1
+dm_graph_dir=$2
+human_graph_dir=$3
 
 # This script runs on jenkins
 
