@@ -16,7 +16,7 @@ class PValuesFinder:
         baseEtoTen = np.log(10)
 
         def clean_p_values(counts, lambdas):
-            with scipy.errstate(divide='print'):
+            with scipy.errstate(divide='ignore'):
                 p_values = poisson.logsf(counts, lambdas)
 
                 p_values /= -baseEtoTen
