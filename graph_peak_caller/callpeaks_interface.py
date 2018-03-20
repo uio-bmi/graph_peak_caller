@@ -32,6 +32,8 @@ def get_intervals(args):
     samples = iclass(parse_input_file(args.sample, args.graph))
     control_name = args.sample if args.control is None else args.control
     controls = iclass(parse_input_file(control_name, args.graph))
+
+
     return samples, controls
 
 
@@ -44,19 +46,24 @@ def get_callpeaks(args):
 
 
 def parse_input_file(input, graph):
-    if isinstance(input, obg.IntervalCollection):
-        return input
-    elif input.endswith(".json"):
-        intervals = vg_json_file_to_interval_collection(input, graph)
-        return intervals
-    else:
-        try:
-            intervals = obg.IntervalCollection.from_file(
-                input, graph=graph)
-        except OSError:
-            intervals = obg.IntervalCollection.from_file(
-                input, graph=graph, text_file=True)
-        return intervals
+    try:
+        if isinstance(input, obg.IntervalCollection):
+            return input
+        elif input.endswith(".json"):
+            intervals = vg_json_file_to_interval_collection(input, graph)
+            return intervals
+        else:
+            try:
+                intervals = obg.IntervalCollection.from_file(
+                    input, graph=graph)
+            except OSError:
+                intervals = obg.IntervalCollection.from_file(
+                    input, graph=graph, text_file=True)
+            return intervals
+    except FileNotFoundError as e:
+        logging.debug(e)
+        logging.critical("Input file %s not found. Aborting. " % input)
+        sys.exit(1)
 
 def run_callpeaks_interface(args):
     caller = get_callpeaks(args)

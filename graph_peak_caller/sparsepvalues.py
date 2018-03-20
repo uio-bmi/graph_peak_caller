@@ -2,6 +2,7 @@ import pickle
 import numpy as np
 import os
 from scipy.stats import poisson
+import scipy
 import logging
 from .sparsediffs import SparseValues
 
@@ -15,11 +16,13 @@ class PValuesFinder:
         baseEtoTen = np.log(10)
 
         def clean_p_values(counts, lambdas):
-            p_values = poisson.logsf(counts, lambdas)
-            p_values /= -baseEtoTen
-            p_values[counts == 0] = 0
-            p_values[np.isinf(p_values)] = 1000
-            return p_values
+            with scipy.errstate(divide='print'):
+                p_values = poisson.logsf(counts, lambdas)
+
+                p_values /= -baseEtoTen
+                p_values[counts == 0] = 0
+                p_values[np.isinf(p_values)] = 1000
+                return p_values
 
         p_values = self.sample.apply_binary_func(
             clean_p_values, self.control,

@@ -7,7 +7,8 @@ from .control import get_background_track_from_control,\
 from .sparsepvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
 from .postprocess import HolesCleaner, SparseMaxPaths
 from .sparsediffs import SparseValues
-
+import json
+import sys
 
 class Configuration:
     def __init__(self):
@@ -42,10 +43,17 @@ class CallPeaks(object):
         self._reporter = reporter
 
     def run_pre_callpeaks(self, input_reads, control_reads):
-        sample_pileup = get_fragment_pileup(
-            self.graph, input_reads, self.config,
-            self._reporter)
-        background_func = get_background_track_from_control
+        try:
+            sample_pileup = get_fragment_pileup(
+                self.graph, input_reads, self.config,
+                self._reporter)
+            background_func = get_background_track_from_control
+        except json.decoder.JSONDecodeError as e:
+            logging.debug(e)
+            logging.critical("Error when parsing json reads. Input file is not valid JSON."
+                             "Turn on debugging (--verbose 2) for more debug info.")
+            sys.exit(1)
+
         if not self.config.has_control:
             background_func = get_background_track_from_input
         control_pileup = background_func(self.graph, control_reads,
