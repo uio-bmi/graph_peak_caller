@@ -11,7 +11,7 @@ class DensePileup:
         array_start = self._graph.node_indexes[index] + start
         array_end = self._graph.node_indexes[index] + end
         assert array_end > array_start
-        assert array_end < len(self._values), "Array end %d > len of values %s" % (array_end, len(self._values))
+        assert array_end <= len(self._values), "Array end %d > len of values %s" % (array_end, len(self._values))
         out = self._values[array_start:array_end]
         assert len(out) > 0
         return out
