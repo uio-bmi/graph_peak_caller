@@ -71,6 +71,9 @@ Change *chromosome* to the chromosome that you want to be used when writing the 
 ## Advanced usage
 If you want to do Peak Calling on a whole-genome reference, vg will typically produce one graph for each chromosome, and it is best to divide the peak calling into one process for each chromosome. Check out [this guide](https://github.com/uio-bmi/graph_peak_caller/wiki/Graph-based-ChIP-seq-tutorial) for a detailed explanation on how that can be done.
 
+# Reproducing the results from the Graph Peak Caller manuscript.
+Follow [this guide](https://github.com/uio-bmi/graph_peak_caller/wiki/Reproducing-the-results-in-Graph-Peak-Caller-Paper) in order to run the ChIP-seq experiments presented in the manuscript.
+
 # Development
 Graph Peak Caller is an open source project, and we warmly welcome contributions. Simply clone this repository to get started. We have a policy (for now) that Graph Peak Caller should use the same principles that Macs2 use and produce results similar to Macs2. This helps us validate the corectness of our graph-based approach and lets us focus on how "linear" principles of peak-calling can be generalized to graphs rather than spending time on inventing new peak calling principles.
 
