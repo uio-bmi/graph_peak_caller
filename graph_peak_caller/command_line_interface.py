@@ -33,7 +33,7 @@ def main():
 
 
 def version(args):
-    print("Graph Peak Caller v1.0.4")
+    print("Graph Peak Caller v1.0.12")
 
 
 def concatenate_sequence_files(args):
