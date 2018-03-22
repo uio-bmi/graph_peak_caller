@@ -75,7 +75,10 @@ class HtmlReportGenerator:
     def _create_report_figures(self):
         self.html += "<h3>Motifenrichment plots</h3>"
         for tf in self.tfs:
-            self.html += "<img style='width: 300px; height: auto; padding: 50px;' src='" + tf + ".png'/>"
+            self.html += "<p>All peaks.</p>" \
+                         "<img style='width: 300px; height: auto; padding: 50px;' src='" + tf + ".png'/>"
+            self.html += "<p>Unique peaks:</p>" \
+                         "<img style='width: 300px; height: auto; padding: 50px;' src='" + tf + "_unique_peaks.png'/>"
 
     def _html_start(self):
         return """

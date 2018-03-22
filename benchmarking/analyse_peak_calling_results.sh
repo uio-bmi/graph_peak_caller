@@ -65,3 +65,24 @@ done
 
 # Analyse peak results
 graph_peak_caller analyse_peaks_whole_genome $chromosomes ./ $data_dir ../../../figures_tables/$tf
+
+
+# Hack to also run analysis for unique peaks
+for chromosome in $(echo $chromosomes | tr "," "\n")
+do
+    graph_peak_caller peaks_to_fasta $data_dir/$chromosome.nobg.sequences macs_sequences_chr${chromosome}_summits_unique.intervalcollection  macs_sequences_chr${chromosome}_summits_unique.fasta
+    graph_peak_caller peaks_to_fasta $data_dir/$chromosome.nobg.sequences ${chromosome}_sequences_summits_unique.intervalcollection ${chromosome}_sequences_summits_unique.fasta
+
+    fimo -oc fimo_macs_unique_chr$chromosome motif.meme macs_sequences_chr${chromosome}_summits_unique.fasta
+    fimo -oc fimo_graph_unique_chr$chromosome motif.meme ${chromosome}_sequences_summits_unique.fasta
+done
+
+    graph_peak_caller concatenate_sequence_files -f macs_sequences_chr[chrom]_summits_unique.fasta $chromosomes unique_macs.fasta
+    graph_peak_caller concatenate_sequence_files -f [chrom]_sequences_summits_unique.fasta $chromosomes unique_graph.fasta
+
+fimo -oc unique_graph motif.meme unique_graph.fasta
+fimo -oc unique_macs motif.meme unique_macs.fasta
+
+$base_dir/plot_motif_enrichments.sh unique_graph.fasta unique_macs.fasta $motif_url motif_enrichment_unique_peaks.png $tf
+cp motif_enrichment_unique_peaks.png ../../../figures_tables/${tf}_unique_peaks.png
+
