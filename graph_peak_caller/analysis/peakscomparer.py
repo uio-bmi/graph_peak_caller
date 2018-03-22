@@ -99,8 +99,9 @@ class PeaksComparerV2(object):
         assert isinstance(linear_path, NumpyIndexedInterval), \
             "Linear path should be numpy indexed interval for fast comparison"
 
-        self.linear_base_file_name = linear_peaks_fasta_file_name.split(".")[0]
-        self.graph_base_file_name = graph_peaks_fasta_file_name.split(".")[0]
+        logging.info("Linear fasta file: %s" % linear_peaks_fasta_file_name)
+        self.linear_base_file_name = linear_peaks_fasta_file_name.rsplit(".", 1)[0]
+        self.graph_base_file_name = graph_peaks_fasta_file_name.rsplit(".", 1)[0]
         assert self.linear_base_file_name != "" and self.linear_base_file_name is not None
         logging.info("Linear base name: %s" % self.linear_base_file_name)
 

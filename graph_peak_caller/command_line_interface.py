@@ -52,7 +52,11 @@ def concatenate_sequence_files(args):
         if args.use_input_file_pattern is not None:
             assert "[chrom]" in args.use_input_file_pattern, \
                 "Use [chrom] to specify where chromosome should be replaced."
-            fasta_file = open(args.use_input_file_pattern).replace("[chrom]", chromosome)
+            try:
+                fasta_file = open(args.use_input_file_pattern.replace("[chrom]", chromosome))
+            except FileNotFoundError:
+                logging.info("Did not find file matching patterh %s. Does those files exist?" % args.use_input_file_pattern)
+                raise
         else:
             logging.info("Guessing file name since use_input_file_pattern is not specified")
             fasta_file = open(chromosome + file_endings)
