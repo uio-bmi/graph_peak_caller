@@ -48,7 +48,15 @@ def concatenate_sequence_files(args):
     all_fasta_entries = []
     for chromosome in chromosomes:
         print("Processing chromosome %s" % chromosome)
-        fasta_file = open(chromosome + file_endings)
+
+        if args.use_input_file_pattern is not None:
+            assert "[chrom]" in args.use_input_file_pattern, \
+                "Use [chrom] to specify where chromosome should be replaced."
+            fasta_file = open(args.use_input_file_pattern).replace("[chrom]", chromosome)
+        else:
+            logging.info("Guessing file name since use_input_file_pattern is not specified")
+            fasta_file = open(chromosome + file_endings)
+
         for line in fasta_file:
             if line.startswith(">"):
                 all_fasta_entries.append([line, None])
@@ -294,7 +302,10 @@ interface = \
                     ('chromosomes', 'comma delimted, e.g 1,2,3, used to fetch files of type chr1_sequences.fasta, ...'),
                     ('out_file_name', ''),
                     ('-s/--is_summits', 'Optional. Set to True if input files are *_sequences_summits.fasta.'
-                                        'If False or not set, will search for *_sequences.fasta')
+                                        'If False or not set, will search for *_sequences.fasta'),
+                    ('-f/--use_input_file_pattern', 'Optional. If set, will look for input files'
+                                                    'following the pattern. Use [chrom] where chromosome should'
+                                                    'be replaced. E.g. peaks_[chrom].fasta')
                 ],
             'method': concatenate_sequence_files
         },

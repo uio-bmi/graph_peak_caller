@@ -99,6 +99,9 @@ class PeaksComparerV2(object):
         assert isinstance(linear_path, NumpyIndexedInterval), \
             "Linear path should be numpy indexed interval for fast comparison"
 
+        self.linear_base_file_name = linear_peaks_fasta_file_name.split(".")[0]
+        self.graph_base_file_name = graph_peaks_fasta_file_name.split(".")[0]
+
         self.graph = graph
         self.graph_peaks_fasta_file_name = graph_peaks_fasta_file_name
         self.linear_peaks_fasta_file_name = linear_peaks_fasta_file_name
@@ -140,8 +143,19 @@ class PeaksComparerV2(object):
         self.peaks1_not_in_peaks2 = []
         self.peaks2_not_in_peaks1 = []
         self.run_all_analysis()
+        self.write_unique_peaks_to_file()
 
-
+    def write_unique_peaks_to_file(self):
+        name = self.graph_base_file_name + "_unique.intervalcollection"
+        PeakCollection(self.peaks1_not_in_peaks2).to_file(
+            name, text_file=True
+        )
+        logging.info("Wrote unique graph peaks to %s" % name)
+        name = self.linear_base_file_name + "_unique.intervalcollection"
+        PeakCollection(self.peaks2_not_in_peaks1).to_file(
+            name, text_file=True
+        )
+        logging.info("Wrote unique linear peaks to %s" % name)
 
     def bp_in_peak_overlapping_indexed_interval(self, peak, indexed_interval):
         nodes = indexed_interval.nodes_in_interval()
