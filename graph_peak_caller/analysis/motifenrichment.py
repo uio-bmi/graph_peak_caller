@@ -62,7 +62,7 @@ def plot_true_positives(peak_file_sets, meme_file_name, plot_title="", save_to_f
     import numpy as np
     matplotlib.rc('font', **font)
 
-    plt.figure(figsize=(3.3, 3.3), dpi=300)
+    plt.figure(figsize=(3.0, 3.0), dpi=300)
     axis = plt.gca()
     # Major ticks every 20, minor ticks every 5
     major_ticks = np.linspace(0, 1.0, 5)
@@ -83,7 +83,7 @@ def plot_true_positives(peak_file_sets, meme_file_name, plot_title="", save_to_f
         n_tot = len(matcher.sorted_peaks)
         print("N tot: %d" % n_tot)
         print("True positives for %s: %d / %d = %.3f" % (name, n_matching, n_tot, n_matching/n_tot))
-        plt.plot(true_positives, color=colors[i], label=name, linewidth=2.0)
+        plt.plot(true_positives, color=colors[i], label=name, linewidth=1.0)
         i += 1
     #axis.set_ylim([0.75,1.0])
     axis.set_xlim(0)
