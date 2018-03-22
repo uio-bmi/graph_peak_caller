@@ -74,7 +74,7 @@ def plot_true_positives(peak_file_sets, meme_file_name, plot_title="", save_to_f
     #ax.set_xticks(major_ticks)
     #ax.set_xticks(minor_ticks, minor=True)
 
-
+    max_y = 0.0
     for name, fasta_file_name in peak_file_sets:
         matcher = MotifMatcher(fasta_file_name, meme_file_name)
         true_positives = matcher.compute_true_positives()
@@ -84,12 +84,14 @@ def plot_true_positives(peak_file_sets, meme_file_name, plot_title="", save_to_f
         print("N tot: %d" % n_tot)
         print("True positives for %s: %d / %d = %.3f" % (name, n_matching, n_tot, n_matching/n_tot))
         plt.plot(true_positives, color=colors[i], label=name, linewidth=1.0)
+        max_y = max(max_y, np.max(true_positives[2:]))
         i += 1
     #axis.set_ylim([0.75,1.0])
     axis.set_xlim(0)
     min_y = n_matching / n_tot
     idx = np.where(possible_yticks > min_y)
     yticks = possible_yticks[idx]
+    yticks = yticks[np.where(yticks <= max_y)]
     axis.set_yticks(yticks)
     axis.grid(which='both')
 
