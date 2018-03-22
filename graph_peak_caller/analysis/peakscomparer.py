@@ -101,6 +101,9 @@ class PeaksComparerV2(object):
 
         self.linear_base_file_name = linear_peaks_fasta_file_name.split(".")[0]
         self.graph_base_file_name = graph_peaks_fasta_file_name.split(".")[0]
+        assert self.linear_base_file_name != "" and self.linear_base_file_name is not None
+        logging.info("Linear base name: %s" % self.linear_base_file_name)
+
 
         self.graph = graph
         self.graph_peaks_fasta_file_name = graph_peaks_fasta_file_name
