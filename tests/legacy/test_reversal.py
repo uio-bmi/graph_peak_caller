@@ -5,7 +5,7 @@ if pytest.__version__ < "3.0.0":
     pytest.skip()
 
 # from graph_peak_caller.extender import Extender, Areas
-from graph_peak_caller.areas import BinaryContinousAreas
+# from graph_peak_caller.areas import BinaryContinousAreas
 from offsetbasedgraph import Block, GraphWithReversals,\
     DirectedInterval, Position
 from cyclic_graph import get_small_cyclic_graph, get_large_cyclic_graph

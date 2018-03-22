@@ -17,7 +17,7 @@ from graph_peak_caller.callpeaks_interface import \
     run_callpeaks_interface, run_callpeaks_whole_genome,\
     run_callpeaks_whole_genome_from_p_values
 
-from graph_peak_caller.analysis_interface import analyse_peaks_whole_genome,\
+from graph_peak_caller.analysis.analysis_interface import analyse_peaks_whole_genome,\
     analyse_peaks, peaks_to_fasta, linear_peaks_to_fasta,\
     analyse_manually_classified_peaks, differential_expression,\
     plot_motif_enrichment
