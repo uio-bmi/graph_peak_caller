@@ -99,8 +99,6 @@ class PeaksComparerV2(object):
         assert isinstance(linear_path, NumpyIndexedInterval), \
             "Linear path should be numpy indexed interval for fast comparison"
 
-        print(linear_path)
-
         self.graph = graph
         self.graph_peaks_fasta_file_name = graph_peaks_fasta_file_name
         self.linear_peaks_fasta_file_name = linear_peaks_fasta_file_name
@@ -142,6 +140,7 @@ class PeaksComparerV2(object):
         self.peaks1_not_in_peaks2 = []
         self.peaks2_not_in_peaks1 = []
         self.run_all_analysis()
+
 
 
     def bp_in_peak_overlapping_indexed_interval(self, peak, indexed_interval):
@@ -204,6 +203,26 @@ class PeaksComparerV2(object):
                 print("MA: ", a, "MNA:", b, "NMA:", c, "NMNA:", d)
                 self.results.peaks2_in_peaks1_matching_motif = n
             i += 1
+
+        # Find all peaks in peaks1 matching motif that are found but not matching motif in peaks2
+        for peak in self.peaks1_in_peaks2:
+            if peak.unique_id in self.graph_matching_motif:
+                peak_on_same_pos = self.peaks2.which_approx_contains_part_of_interval(peak)
+
+                if peak_on_same_pos.unique_id not in self.linear_matching_motif:
+                    logging.info("Found graph peak matching motif where linear "
+                                 "peak not matching. (%s, %s) \nGraph peak: %s. \nLinear peak: %s" %
+                                 (peak.unique_id, peak_on_same_pos.unique_id, peak, peak_on_same_pos))
+
+        # Find all peaks in 1 not in 2 that matches motif
+        for peak in self.peaks1_not_in_peaks2:
+            if peak.unique_id in self.graph_matching_motif:
+                n_not_on_linear = peak.length() - \
+                                  self.bp_in_peak_overlapping_indexed_interval(peak, self.linear_path)
+                logging.info("Peak not in macs, matching motif. N base pairs "
+                             "not on linear: %d\n %s, %s" % (n_not_on_linear, peak.unique_id, peak))
+
+
 
     def check_non_matching_for_motif_hits(self):
         print("\n--- Checking peaks that are not in other set for motif hits --- ")

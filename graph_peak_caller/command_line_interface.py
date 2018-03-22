@@ -151,7 +151,9 @@ def get_summits(args):
         window = 60
 
     peaks.cut_around_summit(qvalues, n_base_pairs_around=window)
-    peaks.to_fasta_file(args.peaks_fasta_file.split(".")[0] + "_summits.fasta", args.sequence_graph)
+    out_file_name = args.peaks_fasta_file.split(".")[0] + "_summits.fasta"
+    peaks.to_fasta_file(out_file_name, args.sequence_graph)
+    logging.info("Wrote summits to " + out_file_name)
 
 
 interface = \
@@ -234,9 +236,21 @@ interface = \
             'help': 'Converts bed file of peaks to fasta',
             'arguments':
                 [
-                    ('linear_reads_file_name', ''),
-                    ('fasta_file', ''),
+                    ('linear_reads_file_name', 'E.g a macs file, peaks.narrowPeak'),
+                    ('fasta_file', 'Reference genome fasta file. Will be used to fetch sequences.'),
                     ('out_file_name', '')
+                ],
+            'method': linear_peaks_to_fasta
+        },
+    'linear_peaks_to_fasta_summits':
+        {
+            'help': 'Converts bed file of peaks to fasta (but keep only summits)',
+            'arguments':
+                [
+                    ('linear_reads_file_name', 'E.g a macs file, peaks.narrowPeak'),
+                    ('fasta_file', 'Reference genome fasta file. Will be used to fetch sequences.'),
+                    ('out_file_name', ''),
+                    ('window', 'Number of bps around summits to keep')
                 ],
             'method': linear_peaks_to_fasta
         },
@@ -304,7 +318,6 @@ interface = \
             'requires_graph': True,
             'arguments':
                 [
-                    ('vg_graph_file_name', ''),
                     ('linear_peaks_fasta_file_name', ''),
                     ('graph_peaks_fasta_file_name', ''),
                     ('linear_peaks_fimo_results_file', ''),
@@ -397,7 +410,9 @@ interface = \
             'help': 'Estimate shift using one or multiple graphs.',
             'arguments':
                 [
-                    ('chromosomes', 'Graph base names. Set to empty string if only single  graph is being used. If whole-genome, use comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
+                    ('chromosomes', 'Graph base names. Set to empty string if only single '
+                                    'graph is being used. If whole-genome, use comma-separated '
+                                    'list of chromosomes to use, e.g. 1,2,X,8,Y'),
                     ('ob_graphs_location', 'Location of graph files'),
                     ('sample_reads_base_name', 'Will use files [base_name][chromosome].json'),
                 ],
@@ -405,13 +420,15 @@ interface = \
         },
     'get_summits':
         {
-            'help': 'Get summit around peaks.',
+            'help': 'Get summit around peaks. Will write to a new file, using input file base name + _summits.fasta',
             'requires_graph': True,
             'arguments':
                 [
                     ('peaks_fasta_file', 'Fasta file containing graph peaks.'),
-                    ('q_values_base_name', 'Base file name of q values'),
-                    ('window_size', 'Optional. Number of basepairs to each side from summit to include. Default is 60.')
+                    ('q_values_base_name', 'Base file name of q values from running '
+                                           'the peak caller. Will be peak caller output base name + _qvalues'),
+                    ('window_size', 'Optional. Number of basepairs to each side '
+                                    'from summit to include. Default is 60.')
                 ],
             'method': get_summits
         }

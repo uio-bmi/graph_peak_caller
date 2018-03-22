@@ -58,7 +58,7 @@ def analyse_manually_classified_peaks(args):
 
 
 def analyse_peaks(args):
-    graph = obg.GraphWithReversals.from_numpy_file(args.ob_graph_file_name)
+    graph = args.graph
 
     end = int(args.graph_end)
     if end == 0:
@@ -150,8 +150,14 @@ def linear_peaks_to_fasta(args):
     collection.save_to_sorted_fasta(args.out_file_name)
     logging.info("Saved sequences to %s" % args.out_file_name)
 
+    window = 60
+    if hasattr(args, "window"):
+        if args.window is not None:
+            window = int(args.window)
+            logging.info("Using window size of %d" % window)
+
     summits = NonGraphPeakCollection.from_bed_file(
-        args.linear_reads_file_name, cut_around_summit=60)
+        args.linear_reads_file_name, cut_around_summit=window)
     summits.set_peak_sequences_using_fasta(
         fasta_file_location=args.fasta_file)
     out_name = args.out_file_name.split(".")[0] + "_summits.fasta"
