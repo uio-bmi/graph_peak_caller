@@ -11,7 +11,7 @@ if pytest.__version__ < "3.0.0":
     pytest.skip()
 
 
-@pytest.mark.skip("Legacy")
+# @pytest.mark.skip("Legacy")
 class TestCallPeaksFromQValues(unittest.TestCase):
 
     def setUp(self):

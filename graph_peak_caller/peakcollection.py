@@ -229,7 +229,6 @@ class PeakCollection(obg.IntervalCollection):
         from .peakfasta import PeakFasta
         PeakFasta(sequence_graph).save_intervals(file_name, self)
 
-
     @classmethod
     def from_fasta_file(cls, file_name, graph=None):
         f = open(file_name)

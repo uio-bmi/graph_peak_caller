@@ -1,9 +1,10 @@
 from scipy.sparse import csr_matrix
 from itertools import chain
-from .fimowrapper import *
-from ..peakcollection import *
 import numpy as np
+import logging
 from scipy.sparse.csgraph import shortest_path
+
+import offsetbasedgraph as obg
 
 
 class DiffExpression:
@@ -13,6 +14,14 @@ class DiffExpression:
         self.var_path = var_path
         self.main_count = main_count
         self.var_count = var_count
+
+    def __eq__(self, other):
+        t = self.peak_id == other.peak_id
+        t = t and self.main_path == other.main_path
+        t = t and self.var_path == other.var_path
+        t = t and self.var_count == other.var_count
+        t = t and self.main_count == other.main_count
+        return t
 
     def __repr__(self):
         return "%s (%s)\n%s (%s)" % (self.main_path, self.main_count,
@@ -53,18 +62,17 @@ def main(ff, pc, subgraphs, node_ids, graph):
 
 def is_differential(motif_location, sub_graphs, node_ids_list):
     peak_id = motif_location._id
-    all_rps = motif_location._peak.region_paths
     motif_rps = motif_location.location.region_paths
     graph = sub_graphs[peak_id][()]*-1
     node_ids = list(node_ids_list[peak_id])
-    graph_idxs = [node_ids.index(rp) for rp in all_rps]
     motif_idxs = [node_ids.index(rp) for rp in motif_rps]
     node_scores = np.asarray(np.max(graph, axis=1).todense())
     node_scores = node_scores.flatten()
     new_data = node_scores[graph.indices]
     new_graph = csr_matrix((new_data, graph.indices, graph.indptr))
     are_differential = [i for i, row in enumerate(new_graph)
-                        if i in motif_idxs and np.flatnonzero(row.data).size > 1]
+                        if i in motif_idxs and
+                        np.flatnonzero(row.data).size > 1]
     for idx in are_differential:
         in_motif = [i in motif_idxs for i in new_graph[idx].indices]
         if any(in_motif) and not all(in_motif):
