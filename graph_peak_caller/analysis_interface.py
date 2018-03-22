@@ -125,7 +125,7 @@ def plot_motif_enrichment(args):
             ("MACS2", fasta2)
         ],
         meme,
-        plot_title=args.plot_title,
+        plot_title=args.plot_title.replace("ARABIDOPSIS_", ""),
         save_to_file=args.out_figure_file_name,
         run_fimo=args.run_fimo == "True"
     )
