@@ -212,15 +212,3 @@ class SparseDiffs:
             return SparseValues(new_indexes, ret, sanitize=True)
         return SparseDiffs(
             new_indexes, np.ediff1d(ret, to_begin=ret[0]))
-
-
-def _get_random_vec(n_points, size):
-    from numpy.random import rand, randint
-    return SparseDiffs(np.sort(randint(0, size, n_points)),
-                       rand(n_points))
-
-if __name__ == "__main__":
-    import cProfile
-    a = _get_random_vec(20000000, 500000000)
-    b = _get_random_vec(20000000, 500000000)
-    cProfile.run("a.maximum(b)")
