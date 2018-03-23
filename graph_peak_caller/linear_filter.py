@@ -17,7 +17,7 @@ class LinearFilter:
 
     def find_start_positions(self):
         start_positions = {"+": [],
-                 "-": [] }
+                           "-": [] }
 
         logging.info("Mapping graph position to linear positions")
         nodes_in_linear_path = set(self._indexed_interval.region_paths)
@@ -37,7 +37,6 @@ class LinearFilter:
 
             offset = self._indexed_interval.get_offset_at_position(
                 pos, direction)
-            #   offset = self._indexed_interval.get_offset_at_node(node) + pos.offset
             assert isinstance(offset, int), "Offset is of type %s" % type(offset)
             start_positions[direction].append(offset)
 
@@ -54,7 +53,6 @@ class LinearFilter:
         haplotyper = HaploTyper(graph, obg.IntervalCollection(intervals))
         haplotyper.build()
         indexed_interval = haplotyper.get_maximum_interval_through_graph()
-        #indexed_interval = graph.get_indexed_interval_through_graph()
 
         intervals =  vg_json_file_to_intervals(json_file_name, graph)
         positions = (interval.start_position for interval in intervals)
