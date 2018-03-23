@@ -7,7 +7,7 @@ from offsetbasedgraph.graphtraverser import GraphTraverserUsingSequence
 from graph_peak_caller.peakcollection import PeakCollection
 from offsetbasedgraph import IntervalCollection, DirectedInterval
 # from graph_peak_caller.subgraphcollection import SubgraphCollection
-from graph_peak_caller.util import LinearRegion, get_linear_paths_in_graph
+from .util import LinearRegion, get_linear_paths_in_graph
 from graph_peak_caller.legacy.sparsepileup import SparsePileup
 import numpy as np
 
