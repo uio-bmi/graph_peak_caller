@@ -3,7 +3,7 @@ from graph_peak_caller.intervals import Intervals
 from graph_peak_caller import Configuration
 from graph_peak_caller.reporter import Reporter
 from offsetbasedgraph import GraphWithReversals as Graph, \
-    DirectedInterval, IntervalCollection, Block, SequenceGraph
+    DirectedInterval, IntervalCollection, Block, SequenceGraph, Interval
 import unittest
 from graph_peak_caller.control.linearmap import LinearMap
 from pyvg.sequences import SequenceRetriever
@@ -164,6 +164,19 @@ class TestMultipleGraphsCallPeaksCommandLine(TestMultipleGraphsCallPeaks):
                                  "-r", "%s" % self.read_length,
                                  "-n", "multigraphs_"])
         self.do_asserts()
+
+    def test_count_unique_reads(self):
+        reads = [
+            IntervalCollection([
+                Interval(4, 10, [1, 2, 3]),
+                Interval(4, 5, [1]),
+                Interval(5, 5, [1]),
+                Interval(6, 2, [-3, -2, -1])
+            ])
+        ]
+        unique = MultipleGraphsCallpeaks.count_number_of_unique_reads(reads)
+        self.assertEqual(unique, 3)
+
 
 
 

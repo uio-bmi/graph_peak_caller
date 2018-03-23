@@ -196,17 +196,6 @@ class PeakCollection(obg.IntervalCollection):
 
         return identical_intervals
 
-    def get_peaks_not_in_other_collection(self, other_collection,
-                                          allowed_mismatches=0):
-        out = []
-        for peak in self:
-            similar = other_collection.get_similar_intervals(
-                peak, allowed_mismatches)
-            if len(similar) == 0:
-                out.append(peak)
-
-        return out
-
     def get_overlapping_intervals(self, interval, minimum_overlap=1):
         overlapping = []
         for i in self.intervals:

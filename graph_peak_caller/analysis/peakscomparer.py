@@ -462,12 +462,6 @@ class PeaksComparerV2(object):
             i += 1
         f.close()
 
-    def graph_peaks_on_main_path_not_in_linear(self):
-        on_linear = self.get_peaks_on_linear_path(self.peaks2)
-        print("On linear path: %d" % len(on_linear))
-        on_linear = PeakCollection(on_linear)
-        return on_linear.get_peaks_not_in_other_collection(self.peaks1, 20)
-
 
 class PeaksComparer(object):
 

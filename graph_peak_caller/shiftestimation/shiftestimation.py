@@ -59,35 +59,9 @@ class Treatment:
 
     def get_chr_names(self):
         return self._chroms
-        return ["chr%s" % i for i in range(1, 10)]
 
     def get_locations_by_chr(self, chrom):
         return self._pos_dict[chrom], self._neg_dict[chrom]
-
-        n_peaks = 10000
-        a = np.array([1, 2, 3, 4, 5], dtype="int")
-        pos_tags = np.empty(5*n_peaks, dtype="int")
-        for i in range(n_peaks):
-            pos_tags[(i*5):((i+1)*5)] = i*1000+a
-        return pos_tags, pos_tags+50
-
-    @classmethod
-    def from_bed_file(cls, file_name):
-        dicts = {"+": defaultdict(list),
-                 "-": defaultdict(list)}
-        with open(file_name) as f:
-            for line in f:
-                if line.startswith("#"):
-                    continue
-                parts = line.split()
-                chr_name = parts[0]
-                start = int(parts[1])
-                end = int(parts[2])
-                strand = parts[5]
-                pos = start if strand == "+" else end
-                dicts[strand][chr_name].append(pos)
-
-        return cls(dicts)
 
 
 class Opt:
@@ -258,44 +232,6 @@ class PeakModel:
                 i2 += 1
         return
 
-    def __model_add_line_vanilla(self, pos1, pos2, start, end):
-        """Project each pos in pos2 which is included in
-        [pos1-self.peaksize, pos1+self.peaksize] to the line.
-        pos1: paired centers -- array.array
-        pos2: tags of certain strand -- a numpy.array object
-        line: numpy array object where we pileup tags
-        """
-        i1 = 0                  # index for pos1
-        i2 = 0                  # index for pos2
-        i2_prev = 0             # index for pos2 in previous pos1
-        i1_max = len(pos1)
-        i2_max = pos2.shape[0]
-        flag_find_overlap = False
-
-        max_index = start.shape[0] - 1
-        psize_adjusted1 = self.peaksize + self.tag_expansion_size // 2
-
-        while i1 < i1_max and i2 < i2_max:
-            p1 = pos1[i1]
-            p2 = pos2[i2]
-            if p1-psize_adjusted1 > p2:
-                i2 += 1
-            elif p1+psize_adjusted1 < p2:
-                i1 += 1
-                i2 = i2_prev    # search minus peaks from previous index
-                flag_find_overlap = False
-            else:               # overlap!
-                if not flag_find_overlap:
-                    flag_find_overlap = True
-                    i2_prev = i2
-                s = max(p2-self.tag_expansion_size//2-p1+psize_adjusted1, 0)
-                start[s] += 1
-                e = min(p2+self.tag_expansion_size//2-p1+psize_adjusted1,
-                        max_index)
-                end[e] -= 1
-                i2 += 1
-        return
-
     def __count(self, start, end, line):
         pileup = 0
         for i in range(line.shape[0]):
@@ -377,17 +313,6 @@ class PeakModel:
                                              # need to call peak;
                                              # 2. current_tag_list is []
         return peak_info
-
-    def __get_horizon_line_sparse(self, pos_list, start, peak_length):
-        positions = np.empty(pos_list.size*2)
-        positions[:pos_list.size] = np.maximum(
-            pos_list-start-self.tag_expansion_size//2,
-            0)
-        positions[pos_list.size:] = np.minimum(
-            pos_list-start+self.tag_expansion_size//2,
-            peak_length)
-        args = np.argsort(positions)
-        codes = 1-2*(args >= pos_list.size)
 
     def __get_horizon_line(self, pos_list):
         # pos_list = np.array(pos_list, dtype="int")

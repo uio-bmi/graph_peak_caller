@@ -9,6 +9,41 @@ from graph_peak_caller.analysis.analyse_peaks import LinearRegion
 
 class TestPeakCollection(unittest.TestCase):
 
+    def setUp(self):
+
+        self.graph = Graph({i: Block(3) for i in range(1, 7)}, {i: [i+1] for i in range(1, 6)})
+        self.peaks = PeakCollection(
+            [
+                Peak(3, 3, [1, 2, 3, 4], self.graph),
+                Peak(3, 3, [5, 6], self.graph)
+            ]
+        )
+
+    def test_contains_interval(self):
+        self.assertTrue(self.peaks.contains_interval(Peak(3, 3, [1, 2, 3, 4])))
+        self.assertFalse(self.peaks.contains_interval(Peak(2, 3, [1, 2, 3, 4])))
+
+    def test_get_similar_intervals(self):
+        similar = self.peaks.get_similar_intervals(Peak(2, 3, [1, 2, 3, 4], self.graph), 1)
+        self.assertTrue(len(similar) == 1)
+        self.assertEqual(similar[0], self.peaks.intervals[0])
+
+    def test_get_identical_intervals(self):
+        identical = self.peaks.get_identical_intervals(
+            PeakCollection([Peak(2, 3, [1, 2, 3, 4], self.graph)]))
+        self.assertEqual(len(identical), 0)
+
+        identical = self.peaks.get_identical_intervals(
+            PeakCollection([Peak(3, 3, [1, 2, 3, 4], self.graph)]))
+        self.assertEqual(len(identical), 1)
+
+    def test_get_overlapping_intervals(self):
+        overlapping = self.peaks.get_overlapping_intervals(Peak(3, 3, [1, 2], self.graph))
+        self.assertTrue(len(overlapping), 1)
+
+        overlapping = self.peaks.get_overlapping_intervals(Peak(3, 3, [1, 6], self.graph))
+        self.assertTrue(len(overlapping), 2)
+
     def test_approx_contains(self):
 
         peaks = PeakCollection(
