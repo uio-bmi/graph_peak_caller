@@ -13,22 +13,6 @@ with the distribution).
 """
 import numpy as np
 import logging
-from collections import defaultdict
-
-def median(nums):
-    """Calculate Median.
-    Parameters:
-    nums:  list of numbers
-    Return Value:
-    median value
-    """
-    p = sorted(nums)
-    l = len(p)
-    if l % 2 == 0:
-        return (p[l//2]+p[l//2-1])//2
-    else:
-        return p[l//2]
-
 
 class NotEnoughPairsException(Exception):
     def __init__(self, value):
