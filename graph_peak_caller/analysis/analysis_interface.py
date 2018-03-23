@@ -2,16 +2,16 @@ import numpy as np
 import logging
 import offsetbasedgraph as obg
 from pyvg.sequences import SequenceRetriever
-from .analysis.peakscomparer import PeaksComparerV2, AnalysisResults
-from .analysis.manually_classified_peaks import \
+from .peakscomparer import PeaksComparerV2, AnalysisResults
+from .manually_classified_peaks import \
     CheckOverlapWithManuallyClassifiedPeaks
-from .analysis.analyse_peaks import LinearRegion
-from .analysis.differentialbinding import main
-from .analysis.fimowrapper import FimoFile
-from .peakcollection import PeakCollection
-from .analysis.nongraphpeaks import NonGraphPeakCollection
-from .analysis.motifenrichment import plot_true_positives
-from .peakfasta import PeakFasta
+from .analyse_peaks import LinearRegion
+from .differentialbinding import main
+from .fimowrapper import FimoFile
+from ..peakcollection import PeakCollection
+from .nongraphpeaks import NonGraphPeakCollection
+from .motifenrichment import plot_true_positives
+from ..peakfasta import PeakFasta
 
 
 def analyse_peaks_whole_genome(args):

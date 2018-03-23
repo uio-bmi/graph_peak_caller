@@ -1,10 +1,15 @@
 import unittest
+import pytest
 import numpy as np
 import offsetbasedgraph as obg
-from graph_peak_caller.areas import ValuedAreas,\
-    BinaryContinousAreas
+# from graph_peak_caller.areas import ValuedAreas,\
+#     BinaryContinousAreas
+
+if pytest.__version__ < "3.0.0":
+    pytest.skip()
 
 
+@pytest.mark.skip("Legacy")
 class TestValuedAreas(unittest.TestCase):
     def test_add_binary_areas(self):
         touched_nodes = set()
