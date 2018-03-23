@@ -25,7 +25,7 @@ class LinearFilter:
         for pos in self._position_tuples:
             direction = "+"
             node = pos.region_path_id
-            if node  < 0:
+            if node < 0:
                 direction = "-"
 
             if i % 10000 == 0:
