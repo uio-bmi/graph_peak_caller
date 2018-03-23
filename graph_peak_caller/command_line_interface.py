@@ -35,7 +35,7 @@ def main():
 
 
 def version(args):
-    print("Graph Peak Caller v1.0.12")
+    print("Graph Peak Caller v1.1.0")
 
 
 interface = \
