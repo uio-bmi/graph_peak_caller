@@ -3,6 +3,7 @@ import logging
 from itertools import chain
 from collections import defaultdict
 from ..sparsediffs import SparseDiffs
+from ..custom_exceptions import InvalidPileupInterval
 
 
 class NodeInfo:
@@ -68,10 +69,14 @@ class ReadsAdder:
 
     def add_open_pos_interval(self, interval):
         rps = [rp-self.min_id for rp in interval.region_paths]
-        self._pileup.touched_nodes[rps] = True
-        self._pileup.node_starts[rps[1:]] += 1
-        self._pileup.node_starts[1:][rps[:-1]] -= 1
-        self._add_start_pos(interval.start_position)
+        try:
+            self._pileup.touched_nodes[rps] = True
+            self._pileup.node_starts[rps[1:]] += 1
+            self._pileup.node_starts[1:][rps[:-1]] -= 1
+            self._add_start_pos(interval.start_position)
+        except IndexError as e:
+            raise InvalidPileupInterval("Interval has node(s) not part of "
+                                        "graph/pileup: %s. Message %s" % (interval.region_paths, e))
 
     def add_open_neg_interval(self, interval):
         rps = [abs(rp)-self.min_id for rp in interval.region_paths]

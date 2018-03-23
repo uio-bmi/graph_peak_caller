@@ -11,3 +11,6 @@ class InvalidVgJsonGamFile(Exception):
             by using vg view -aj.
             """
             super(InvalidVgJsonGamFile, self).__init__(msg)
+
+class InvalidPileupInterval(Exception):
+    pass

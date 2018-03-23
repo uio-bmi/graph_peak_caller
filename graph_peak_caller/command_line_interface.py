@@ -4,6 +4,7 @@ import sys
 import logging
 from graph_peak_caller.logging_config import set_logging_config
 from graph_peak_caller.custom_exceptions import *
+import pyvg
 
 import matplotlib as mpl
 mpl.use('Agg')  # Required for server usage (e.g. travis)
@@ -533,7 +534,13 @@ def run_argument_parser(args):
     set_logging_config(args.verbose)
 
     if hasattr(args, 'func'):
-        args.func(args)
+        try:
+            args.func(args)
+        except (pyvg.vgobjects.IntervalNotInGraphException, InvalidPileupInterval) as e:
+            logging.debug(e)
+            logging.error("Found an alignment not compatible with the graph that was used."
+                          " Are you sure alignments/intervals are mapped to the same graph that was used?"
+                          " Turn on debuging with --verbose 2 to see full log.")
     else:
         parser.help()
 
