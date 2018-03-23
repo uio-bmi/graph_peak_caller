@@ -15,4 +15,3 @@ class MultiGraphShiftEstimator(object):
         peakmodel = PeakModel(opt, treatment)
         peakmodel.build()
         return round(peakmodel.d)
-    
