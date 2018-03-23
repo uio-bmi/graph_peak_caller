@@ -1,8 +1,9 @@
 from graph_peak_caller.peakcollection import PeakCollection
 import pyvg
 import logging
-from graph_peak_caller.util import create_linear_path
+from .util import create_linear_path
 import offsetbasedgraph as obg
+
 
 class CheckOverlapWithManuallyClassifiedPeaks:
 
