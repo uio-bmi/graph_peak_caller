@@ -2,7 +2,7 @@ import unittest
 import logging
 from offsetbasedgraph import GraphWithReversals, Block, \
     DirectedInterval, IntervalCollection
-from graph_peak_caller import ExperimentInfo, CallPeaks, Configuration
+from graph_peak_caller import CallPeaks, Configuration
 from graph_peak_caller.control.linearmap import LinearMap
 from graph_peak_caller.reporter import Reporter
 from graph_peak_caller.intervals import Intervals
