@@ -36,6 +36,7 @@ class SparseGraphPileup:
 
 class ReadsAdder:
     def __init__(self, graph, pileup, keep_ends=False):
+        self._graph = graph
         self.min_id = graph.min_node
         self._node_indexes = graph.node_indexes
         self._pileup = pileup
@@ -47,12 +48,17 @@ class ReadsAdder:
         # self._pileup.add_interval(interval)
         end_pos = interval.end_position
         rp = end_pos.region_path_id
-        if rp < 0:
-            self.add_open_neg_interval(interval)
-            self._neg_ends[rp].append(end_pos.offset)
-        else:
-            self.add_open_pos_interval(interval)
-            self._pos_ends[rp].append(end_pos.offset)
+        try:
+            if rp < 0:
+                self.add_open_neg_interval(interval)
+                self._neg_ends[rp].append(end_pos.offset)
+            else:
+                self.add_open_pos_interval(interval)
+                self._pos_ends[rp].append(end_pos.offset)
+        except KeyError:
+            logging.critical("Error with read/interval %s" % interval)
+            print(self._graph)
+            raise
 
     def get_pos_ends(self):
         return self._pos_ends
@@ -207,6 +213,7 @@ class ReverseSparseExtender(SparseExtender):
 
 class SamplePileupGenerator:
     def __init__(self, graph, extension):
+        logging.info("Using extension %d when extending reads. " % extension)
         if extension < 0:
             raise Exception("Invalid extension size %d used. Must be positive. Is fragment length < read length?" % extension)
         self._pileup = SparseGraphPileup(graph)

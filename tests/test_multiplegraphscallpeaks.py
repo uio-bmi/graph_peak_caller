@@ -63,7 +63,7 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
             node_offset += 3
             graph.convert_to_numpy_backend()
             SequenceGraph.create_empty_from_ob_graph(graph).to_file(chromosome + ".nobg.sequences")
-            graph.to_numpy_file(chromosome + ".nobg")
+            graph.to_file(chromosome + ".nobg")
 
     def _create_reads(self, chrom_number, chrom, graph):
         i = chrom_number
@@ -145,13 +145,13 @@ class TestMultipleGraphsCallPeaksCommandLine(TestMultipleGraphsCallPeaks):
     def test_typical_run(self):
 
         print(" ========= Running start ====")
-        run_argument_parser(["callpeaks_whole_genome", ','.join(self.chromosomes),
-                             "-d", "./",
-                             "-s", "test_sample_chrom.intervalcollection",
+        run_argument_parser(["callpeaks",
+                             "-g", "*.nobg",
+                             "-s", "test_sample_*.intervalcollection",
                              "-f", "%s" % self.fragment_length,
                              "-r", "%s" % self.read_length,
                              "-u", "100",
-                             "-g", "150",
+                             "-G", "150",
                              "-n", "multigraphs_",
                              "-p", "True",
                              "-D", "True"])

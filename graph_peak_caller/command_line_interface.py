@@ -16,7 +16,7 @@ from graph_peak_caller.mindense import DensePileup
 
 from graph_peak_caller.callpeaks_interface import \
     run_callpeaks_interface, run_callpeaks_whole_genome,\
-    run_callpeaks_whole_genome_from_p_values
+    run_callpeaks_whole_genome_from_p_values, run_callpeaks2
 
 from graph_peak_caller.analysis.analysis_interface import analyse_peaks_whole_genome,\
     analyse_peaks, peaks_to_fasta, linear_peaks_to_fasta,\
@@ -40,54 +40,42 @@ def version(args):
 
 interface = \
 {
+
     'callpeaks':
         {
-            'help': 'Call peaks on a single graph.',
-            'requires_graph': True,
+            'help': 'Call peaks one or multiple graphs.',
             'arguments':
                 [
-                    ('-m/--linear_map', "Optional. Linear map file name. Will look for '"
-                                        " files matching graph name if not set or create if"
-                                        " no file is found."),
-                    ('-s/--sample', 'File name to a vg JSON file or intervalcollection file.'),
-                    ('-c/--control', '(Optional) File name to a vg JSON file or intervalcollection file. '
-                                     'Only include if a separate control is used.'),
-                    ('-n/--out_name', 'Optional. Will be prepended to all output files. Default is nothing.'),
-                    ('-f/--fragment_length', 'The fragment length used in this ChIP-seq experiment. If unknown, set to an '
-                                        'arbitrary number, e.g. 200. However, for good results, this number should be accurate.'),
-                    ('-r/--read_length', 'The read length.'),
-                    ('-q/--q_value_threshold', 'Optional. Q value threshold. Default 0.05.')
-                ],
-            'method': run_callpeaks_interface
-        },
-    'callpeaks_whole_genome':
-        {
-            'help': 'Callpeaks on whole genome, using one graph for each chromosome.',
-            'arguments':
-                [
-                    ('chromosomes', 'Comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
-                    ('-d/--data_dir', 'Path to data directory containing '
-                                      'ob graphs and linear maps.'),
-                    ('-s/--sample', 'Sample reads base name. Will use '
-                                    'files *_[chromosome].json where * is the base name'),
-                    ('-c/--control', 'Optional. Control reads base ame. Will use '
-                                     'files *_[chromosome].json where * is the base name'),
-
-                    ('-f/--fragment_length', 'Fragment length.'),
-                    ('-r/--read_length', 'Read length'),
-                    ('-p/--stop_after_p_values', 'Optional. True or False (default). Whether to '
-                                                 'only run until p-value track is '
-                                                 'computed (before peak calling)'),
-                    ('-u/--unique_reads', 'Number of unique reads. '
-                                          'Found by calling count_unique_reads'),
-                    ('-g/--genome_size', 'Number of base pairs covered by '
-                                         'graphs in total (on a linear genome)'),
+                    ('-g/--graph', 'Graph(s) file name. Either a single file name, e.g. graph.nobg or a '
+                                   'pattern with the * wildcard, such as graph_*.nobg. In the latter case'
+                                   ', * will be replaced by the names specified in --chromosomes.'),
+                    ('-s/--sample', 'Sample alignments. Use wildcard * to specify multiple files'),
+                    ('-c/--control', 'Optional. Use wildcard * to specify multiple files.'
+                                     ' Use only this option if you have separate control alignments'),
+                    ('-C/--chromosomes', 'Optional. Comma-separated list of chromosomes/names that'
+                                         ' will replace the wildcard * in graph and sample file '
+                                         ' names. Specify if running on multiple graphs/chromosomes'),
+                    ('-f/--fragment_length', 'Optional. Specify if you know the exact fragment length. '
+                                             'Will be estimated if not specified.'),
+                    ('-r/--read_length', 'Optional. '),
+                    ('-p/--stop_after_p_values', 'Optional. Default False. Set to True in order to'
+                                                 'stop the whole run after p-values has been computed.'
+                                                 ' Useful if wanting to run multiple chromosomes in parallell, and'
+                                                 'waiting before continuing from p-values.'),
                     ('-n/--out_name', 'Optional. Out base name. Prepended to output files.'),
+                    ('-u/--unique_reads', 'Optional. Number of unique reads. '
+                                          'Found by calling count_unique_reads'),
+                    ('-G/--genome_size', 'Optional. Number of base pairs covered by '
+                                         'graphs in total (on a linear genome). '
+                                         'If not set, will be estimated if running on single graph. '
+                                         'Must be set if running on multiple graphs.'),
                     ('-D/--keep_duplicates', 'Optional. Set to True in order to keep '
                                              'duplicate input alignments.')
+
                 ],
-            'method': run_callpeaks_whole_genome
+                'method': run_callpeaks2,
         },
+
     'callpeaks_whole_genome_from_p_values':
         {
             'help': 'Callpeaks on whole genome from pvalues.',
@@ -381,9 +369,13 @@ def run_argument_parser(args):
                 if "Optional" in help or "optional" in help:
                     required = False
 
+                nargs = None
+                if "wildcard" in help:
+                    nargs = "+"
+
                 subparser.add_argument(short_command, long_command,
                                        dest=long_command.replace("--", ""), help=help,
-                                       required=required)
+                                       required=required, nargs=nargs)
             else:
                 subparser.add_argument(argument, help=help)
         subparser.set_defaults(func=interface[command]["method"])
