@@ -1,5 +1,6 @@
 import logging
 import os
+import numpy as np
 
 import offsetbasedgraph as obg
 from pyvg.conversion import vg_json_file_to_interval_collection
@@ -12,6 +13,16 @@ from .reporter import Reporter
 from .intervals import UniqueIntervals
 from .shiftestimation import MultiGraphShiftEstimator
 import sys
+
+
+def estimate_read_length(file_name, graph_name):
+    graph = obg.Graph.from_file(graph_name)
+    if file_name.endswith(".intervalcollection"):
+        intervals = obg.IntervalCollection.create_generator_from_file(
+            file_name, graph=graph)
+    else:
+        intervals = vg_json_file_to_interval_collection(file_name, graph)
+    return int(np.median([i.length() for i in intervals]))
 
 
 def get_confiugration(args):
@@ -174,7 +185,11 @@ def run_callpeaks2(args):
             graphs, samples).get_estimates()
     else:
         config.fragment_length = int(args.fragment_length)
-    config.read_length = int(args.read_length)
+    if args.read_length is None:
+        config.read_length = estimate_read_length(samples[0], graphs[0])
+        logging.info("Estimated read length to %s" % config.read_length)
+    else:
+        config.read_length = int(args.read_length)
 
     if config.fragment_length < config.read_length:
         logging.critical("Fragment length is smaller than read length. Cannot call peaks.")

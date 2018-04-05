@@ -14,6 +14,7 @@ with the distribution).
 import numpy as np
 import logging
 
+
 class NotEnoughPairsException(Exception):
     def __init__(self, value):
         self.value = value
@@ -324,11 +325,9 @@ class PeakModel:
         top_pos = self.__find_top_pos(horizon_line, peak_length)
         return (top_pos[len(top_pos)//2]+start)
 
-
     def __find_top_pos(self, horizon_line, peak_length):
         m = np.max(horizon_line)
         return np.where(horizon_line == m)[0]
-
 
 
 # smooth function from SciPy cookbook: http://www.scipy.org/Cookbook/SignalSmooth
