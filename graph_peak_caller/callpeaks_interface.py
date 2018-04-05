@@ -149,11 +149,11 @@ def run_callpeaks2(args):
                  "If only running on single graph, this should be empty. " % names)
 
     linear_map_file_names = []
-    for i, chrom in enumerate(names):
-        linear_map_name = data_dir + "/" + chrom + "_linear_map.npz"
+    for i, graph_file_name in enumerate(graphs):
+        linear_map_name = graph_file_name.split(".nobg")[0] + "_linear_map.npz"
         if not os.path.isfile(linear_map_name):
             logging.warning("Did not find linear map for "
-                            "chromosome %s. Will create." % chrom)
+                            " for graph %s. Will create." % graph_file_name)
             graph = obg.Graph.from_file(graphs[i])
             create_linear_map(graph, linear_map_name)
         else:
