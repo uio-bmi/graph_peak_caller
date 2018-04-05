@@ -149,15 +149,6 @@ fi
 
 unique_reads=$(tail -n 1 count_unique_reads_output.txt)
 
-#if [ ! -f unique_reads.txt ]; then
-#    echo "Counting unique reads"
-#    unique_reads=$(pcregrep -o1 '"sequence": "([ACGTNacgtn]{20,})"' filtered_low_qual_reads_removed.json | sort | uniq | wc -l)
-#    echo $unique_reads > unique_reads.txt
-#    echo "$unique_reads unique reads in total"
-#else
-#    echo "Using cached count for unique reads."
-#    unique_reads=$(tail -n 1 unique_reads.txt)
-#fi
 
 # Step 6 run peak caller to get p-values for every chromosome
 pids=""
@@ -165,15 +156,15 @@ RESULT=0
 for chromosome in $(echo $chromosomes | tr "," "\n")
 do
     if [ ! -f ${chromosome}_pvalues_values.npy ]; then
-        graph_peak_caller callpeaks_whole_genome $chromosome \
-            -d $graph_dir \
-            -s filtered_low_qual_reads_removed_ \
+        graph_peak_caller callpeaks \
+            -g $graph_dir/$chromosome.nobg \
+            -s filtered_low_qual_reads_removed_$chromosome.json \
             -n "" \
             -f $fragment_length \
             -r $read_length \
             -p True \
             -u $unique_reads \
-            -g $genome_size \
+            -G $genome_size \
             > log_before_p_values_$chromosome.txt 2>&1 &
             pids="$pids $!"
         echo "Peak calling (until p-values) for chr $chromosome started as process. Log will be written to $work_dir/log_before_p_values_$chromosome.txt"
