@@ -171,7 +171,7 @@ def run_callpeaks2(args):
 
     if args.fragment_length is None:
         config.fragment_length = MultiGraphShiftEstimator.from_files(
-            graphs, samples)
+            graphs, samples).get_esimates()
     else:
         config.fragment_length = int(args.fragment_length)
     config.read_length = int(args.read_length)
