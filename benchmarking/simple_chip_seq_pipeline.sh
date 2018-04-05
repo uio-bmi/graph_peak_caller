@@ -92,8 +92,7 @@ fi
 
 read_length=$(cat macs_output_whole_run.txt | gawk 'match($0,  /tag size = ([0-9]+)/, ary) {print ary[1]}' )
 echo "Found read length: $read_length"
-
-#fragment_length=$(cat macs_output_whole_run.txt | gawk 'match($0,  /fragment length is ([0-9]+)/, ary) {print ary[1]}' )
+fragment_length=$(cat macs_output_whole_run.txt | gawk 'match($0,  /fragment length is ([0-9]+)/, ary) {print ary[1]}' )
 
 #echo "Found fragment length: $fragment_length"
 
@@ -135,13 +134,13 @@ echo "Removing low quality reads."
 
 # Get fragment length
 
-if [ ! -f shift_estimation_log.txt ]; then
-    graph_peak_caller estimate_shift $chromosomes $graph_dir/ filtered_low_qual_reads_removed_ 3 100 > shift_estimation_log.txt 2>&1
-else
-    echo "Not finding fragment length. Already done."
-fi
-fragment_length=$(cat shift_estimation_log.txt | gawk 'match($0,  /Found shift: ([0-9]+)/, ary) {print ary[1]}' )
-echo "Fragment length is $fragment_length"
+#if [ ! -f shift_estimation_log.txt ]; then
+#    graph_peak_caller estimate_shift $chromosomes $graph_dir/ filtered_low_qual_reads_removed_ 3 100 > shift_estimation_log.txt 2>&1
+#else
+#    echo "Not finding fragment length. Already done."
+#fi
+#fragment_length=$(cat shift_estimation_log.txt | gawk 'match($0,  /Found shift: ([0-9]+)/, ary) {print ary[1]}' )
+#echo "Fragment length is $fragment_length"
 
 
 # Step 5: Split filtered into chromosomes
