@@ -154,7 +154,7 @@ def run_callpeaks2(args):
         if not os.path.isfile(linear_map_name):
             logging.warning("Did not find linear map for "
                             "chromosome %s. Will create." % chrom)
-            graph = obg.Graph.from_numpy_file(graphs[i])
+            graph = obg.Graph.from_file(graphs[i])
             create_linear_map(graph, linear_map_name)
         else:
             logging.info("Found linear map %s that will be used." % linear_map_name)
@@ -166,6 +166,7 @@ def run_callpeaks2(args):
     if args.keep_duplicates == "True":
         config.keep_duplicates = True
         logging.info("Keeping duplicates")
+
 
     config.fragment_length = int(args.fragment_length)
     config.read_length = int(args.read_length)
@@ -191,7 +192,7 @@ def run_callpeaks2(args):
 
     out_name = args.out_name if args.out_name is not None else ""
     reporter = Reporter(out_name)
-    config.has_control = controls is not None
+    config.has_control = args.control is not None
     caller = MultipleGraphsCallpeaks(
         names,
         graphs,
@@ -223,7 +224,7 @@ def run_callpeaks_whole_genome(args):
         if not os.path.isfile(linear_map_name):
             logging.warning("Did not find linear map for "
                             "chromosome %s. Will create." % chrom)
-            graph = obg.Graph.from_numpy_file(graph_file_names[i])
+            graph = obg.Graph.from_file(graph_file_names[i])
             create_linear_map(graph, linear_map_name)
         else:
             logging.info("Found linear map %s that will be used." % linear_map_name)

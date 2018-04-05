@@ -52,9 +52,6 @@ interface = \
                     ('-s/--sample', 'Sample alignments. Use wildcard * to specify multiple files'),
                     ('-c/--control', 'Optional. Use wildcard * to specify multiple files.'
                                      ' Use only this option if you have separate control alignments'),
-                    ('-C/--chromosomes', 'Optional. Comma-separated list of chromosomes/names that'
-                                         ' will replace the wildcard * in graph and sample file '
-                                         ' names. Specify if running on multiple graphs/chromosomes'),
                     ('-f/--fragment_length', 'Optional. Specify if you know the exact fragment length. '
                                              'Will be estimated if not specified.'),
                     ('-r/--read_length', 'Optional. '),

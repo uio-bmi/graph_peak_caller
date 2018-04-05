@@ -100,6 +100,7 @@ class TestMultipleGraphsCallPeaks(unittest.TestCase):
 
     def test_run_from_init_in_two_steps(self):
 
+        set_logging_config(2)
         caller = MultipleGraphsCallpeaks(
             self.chromosomes,
             [chrom + ".nobg" for chrom in self.chromosomes],
