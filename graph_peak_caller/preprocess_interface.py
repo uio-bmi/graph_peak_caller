@@ -2,7 +2,8 @@ import logging
 from pyvg.conversion import vg_json_file_to_interval_collection,\
     json_file_to_obg_numpy_graph
 import offsetbasedgraph as obg
-from graph_peak_caller.shiftestimation.shift_estimation_multigraph import MultiGraphShiftEstimator
+from graph_peak_caller.shiftestimation.shift_estimation_multigraph \
+    import MultiGraphShiftEstimator
 from graph_peak_caller.util import create_linear_map
 from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 
@@ -16,9 +17,11 @@ def count_unique_reads_interface(args):
     count_unique_reads(chromosomes, graph_file_names,
                        reads_file_names)
 
+
 def shift_estimation(args):
     chromosomes = args.chromosomes.split(",")
-    graphs = [args.ob_graphs_location + "/" + chrom + ".nobg" for chrom in chromosomes]
+    graphs = [args.ob_graphs_location + "/" + chrom + ".nobg"
+              for chrom in chromosomes]
     print(graphs)
     logging.info("Will try to use graphs %s" % graphs)
     sample_file_names = [args.sample_reads_base_name + chrom + ".json"
@@ -32,6 +35,7 @@ def shift_estimation(args):
 
     d = estimator.get_estimates()
     logging.info("Found shift: %d" % d)
+
 
 def count_unique_reads(chromosomes, graph_file_names, reads_file_names):
     graphs = (obg.GraphWithReversals.from_numpy_file(f)
