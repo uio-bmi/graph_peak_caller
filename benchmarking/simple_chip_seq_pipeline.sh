@@ -140,7 +140,7 @@ if [ ! -f shift_estimation_log.txt ]; then
 else
     echo "Not finding fragment length. Already done."
 fi
-fragment_length = (cat test.txt | gawk 'match($0,  /Found shift: ([0-9]+)/, ary) {print ary[1]}' )
+fragment_length = $(cat test.txt | gawk 'match($0,  /Found shift: ([0-9]+)/, ary) {print ary[1]}' )
 echo "Fragment length is $fragment_length"
 
 
