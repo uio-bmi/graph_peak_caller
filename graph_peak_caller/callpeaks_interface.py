@@ -170,8 +170,16 @@ def run_callpeaks2(args):
         logging.info("Keeping duplicates")
 
     if args.fragment_length is None:
-        config.fragment_length = MultiGraphShiftEstimator.from_files(
-            graphs, samples).get_estimates()
+        logging.info("Fragment length was not specified. Will now"
+                     " predict fragment length.")
+
+        min_m = 5 if args.min_fold_enrichment is None else int(args.min_fold_enrichment)
+        max_m = 50 if args.max_fold_enrichment is None else int(args.max_fold_enrichment)
+        config.fragment_length = int(MultiGraphShiftEstimator.from_files(
+            graphs, samples, min_m, max_m).get_estimates())
+        logging.info("Estimated fragment length to be %d" % config.fragment_length)
+        assert config.fragment_length < 1000, "Suspiciously high fragment length. Probably a bad estimate." \
+                                       " Change -m/-M to try to get more paired peaks."
     else:
         config.fragment_length = int(args.fragment_length)
     config.read_length = int(args.read_length)

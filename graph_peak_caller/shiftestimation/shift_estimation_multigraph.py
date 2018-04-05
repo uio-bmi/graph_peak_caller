@@ -22,8 +22,6 @@ class MultiGraphShiftEstimator(object):
     @classmethod
     def from_files(cls, graph_file_names, interval_json_file_names, min_fold_enrichment=5,
                    max_fold_enrichment=50):
-        logging.info("Min/max fold: %d/%d " % (min_fold_enrichment, max_fold_enrichment))
-
         start_positions = {
             "+": {str(i): [] for i, _ in enumerate(graph_file_names)},
             "-": {str(i): [] for i, _ in enumerate(graph_file_names)}
