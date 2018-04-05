@@ -171,7 +171,7 @@ do
         graph_peak_caller callpeaks \
             -g $graph_dir/$chromosome.nobg \
             -s filtered_low_qual_reads_removed_$chromosome.json \
-            -n "" \
+            -n ${chromosome}_ \
             -f $fragment_length \
             -r $read_length \
             -p True \
