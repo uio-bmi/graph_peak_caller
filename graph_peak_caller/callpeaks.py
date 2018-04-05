@@ -10,6 +10,7 @@ from .sparsediffs import SparseValues
 import json
 import sys
 
+
 class Configuration:
     def __init__(self):
         self.read_length = None

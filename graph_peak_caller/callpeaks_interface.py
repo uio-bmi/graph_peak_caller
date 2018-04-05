@@ -10,6 +10,7 @@ from .util import create_linear_map
 from .peakfasta import PeakFasta
 from .reporter import Reporter
 from .intervals import UniqueIntervals
+from .shiftestimation import MultiGraphShiftEstimator
 import sys
 
 
@@ -32,8 +33,6 @@ def get_intervals(args):
     samples = iclass(parse_input_file(args.sample, args.graph))
     control_name = args.sample if args.control is None else args.control
     controls = iclass(parse_input_file(control_name, args.graph))
-
-
     return samples, controls
 
 
@@ -66,6 +65,7 @@ def parse_input_file(input, graph):
         logging.critical("Input file %s not found. Aborting. " % input)
         sys.exit(1)
 
+
 def run_callpeaks_interface(args):
     caller = get_callpeaks(args)
     inputs, controls = get_intervals(args)
@@ -90,6 +90,7 @@ def find_or_create_linear_map(graph, linear_map_name):
         create_linear_map(graph, linear_map_name)
         logging.info("Done creating linear map")
 
+
 def _get_file_names(pattern):
     from glob import glob
 
@@ -107,6 +108,7 @@ def _get_file_names(pattern):
                 return sorted(glob(pattern[0]))
 
     return sorted(pattern)
+
 
 def run_callpeaks2(args):
     graphs = _get_file_names(args.graph)
@@ -126,12 +128,11 @@ def run_callpeaks2(args):
     logging.debug("Control files: %s" % samples)
     logging.debug("Graph files: %s" % graphs)
 
-
     logging.info("Using graphs: %s " % graphs)
     sequence_graph_file_names = [fn + ".sequences" for fn in graphs]
     logging.info("Will use sequence graphs. %s" % sequence_graph_file_names)
-    sequence_retrievers = (obg.SequenceGraph.from_file(fn) for fn in sequence_graph_file_names)
-
+    sequence_retrievers = (obg.SequenceGraph.from_file(fn)
+                           for fn in sequence_graph_file_names)
 
     data_dir = os.path.dirname(graphs[0])
     if data_dir == "":
@@ -157,7 +158,8 @@ def run_callpeaks2(args):
             graph = obg.Graph.from_file(graphs[i])
             create_linear_map(graph, linear_map_name)
         else:
-            logging.info("Found linear map %s that will be used." % linear_map_name)
+            logging.info(
+                "Found linear map %s that will be used." % linear_map_name)
         linear_map_file_names.append(linear_map_name)
 
     logging.info("Will use linear maps: %s" % linear_map_file_names)
@@ -167,8 +169,11 @@ def run_callpeaks2(args):
         config.keep_duplicates = True
         logging.info("Keeping duplicates")
 
-
-    config.fragment_length = int(args.fragment_length)
+    if args.fragment_length is None:
+        config.fragment_length = MultiGraphShiftEstimator.from_files(
+            graphs, samples)
+    else:
+        config.fragment_length = int(args.fragment_length)
     config.read_length = int(args.read_length)
 
     if config.fragment_length < config.read_length:
@@ -188,7 +193,6 @@ def run_callpeaks2(args):
     else:
         logging.info("Not using min background.")
         config.min_background = None
-
 
     out_name = args.out_name if args.out_name is not None else ""
     reporter = Reporter(out_name)
