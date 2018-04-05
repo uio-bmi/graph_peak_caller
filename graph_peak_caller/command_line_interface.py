@@ -67,7 +67,11 @@ interface = \
                                          'If not set, will be estimated if running on single graph. '
                                          'Must be set if running on multiple graphs.'),
                     ('-D/--keep_duplicates', 'Optional. Set to True in order to keep '
-                                             'duplicate input alignments.')
+                                             'duplicate input alignments.'),
+                    ('-m/--min_fold_enrichment', 'Optional. Minimum fold enrichment required for '
+                                               'candidate peaks when estimating fragment length. Default 5.'),
+                    ('-M /--max_fold_enrichment', 'Optional. Maximum fold enrichment required for '
+                                               'candidate peaks when estimating fragment length. Default 50.'),
 
                 ],
                 'method': run_callpeaks2,
@@ -285,6 +289,10 @@ interface = \
                                     'list of chromosomes to use, e.g. 1,2,X,8,Y'),
                     ('ob_graphs_location', 'Location of graph files'),
                     ('sample_reads_base_name', 'Will use files [base_name][chromosome].json'),
+                    ('min_fold_enrichment', 'Optional. Minimum fold enrichment when '
+                                            'finding candidates. Default is 5.'),
+                    ('max_fold_enrichment', 'Optional. Maximum fold enrichment when '
+                                            'finding candidates. Default is 50.')
                 ],
             'method': shift_estimation
         },

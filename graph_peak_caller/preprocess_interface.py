@@ -19,16 +19,17 @@ def count_unique_reads_interface(args):
 def shift_estimation(args):
     chromosomes = args.chromosomes.split(",")
     graphs = [args.ob_graphs_location + "/" + chrom + ".nobg" for chrom in chromosomes]
-    print(graphs)
     logging.info("Will try to use graphs %s" % graphs)
     sample_file_names = [args.sample_reads_base_name + chrom + ".json"
                          for chrom in chromosomes]
     logging.info("Will use reads from %s" % sample_file_names)
 
-    estimator = MultiGraphShiftEstimator.from_files(
-        chromosomes, graphs, sample_file_names)
+    min_m = 5 if args.min_fold_enrichment is None else int(args.min_fold_enrichment)
+    max_m = 50 if args.max_fold_enrichment is None else int(args.max_fold_enrichment)
 
-    estimator.to_linear_bed_file("linear_bed.bed", read_length=36)
+    estimator = MultiGraphShiftEstimator.from_files(graphs, sample_file_names,
+                                                    min_fold_enrichment=min_m,
+                                                    max_fold_enrichment=max_m)
 
     d = estimator.get_estimates()
     logging.info("Found shift: %d" % d)

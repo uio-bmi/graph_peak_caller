@@ -4,12 +4,15 @@ import logging
 
 
 class MultiGraphShiftEstimator(object):
-    def __init__(self, position_tuples, genome_size):
+    def __init__(self, position_tuples, genome_size,
+                 min_fold_enrichment=5, max_fold_enrichment=50):
         self._position_tuples = position_tuples
         self.genome_size = genome_size
+        self.min_fold_enrichment = min_fold_enrichment
+        self.max_fold_enrichment = max_fold_enrichment
 
     def get_estimates(self):
-        opt = Opt()
+        opt = Opt(self.min_fold_enrichment, self.max_fold_enrichment)
         opt.gsize = self.genome_size
         treatment = Treatment(self._position_tuples)
         peakmodel = PeakModel(opt, treatment)
@@ -17,7 +20,9 @@ class MultiGraphShiftEstimator(object):
         return round(peakmodel.d)
 
     @classmethod
-    def from_files(cls, graph_file_names, interval_json_file_names):
+    def from_files(cls, graph_file_names, interval_json_file_names, min_fold_enrichment=5,
+                   max_fold_enrichment=50):
+        logging.info("Min/max fold: %d/%d " % (min_fold_enrichment, max_fold_enrichment))
 
         start_positions = {
             "+": {str(i): [] for i, _ in enumerate(graph_file_names)},
@@ -38,7 +43,7 @@ class MultiGraphShiftEstimator(object):
             genome_size += linear_filter._indexed_interval.length()
 
         logging.info("Using genome size %d" % genome_size)
-        return cls(start_positions, genome_size)
+        return cls(start_positions, genome_size, min_fold_enrichment, max_fold_enrichment)
 
     @classmethod
     def _from_files(cls, graph_file_names, interval_json_file_names):
