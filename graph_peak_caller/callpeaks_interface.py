@@ -171,7 +171,7 @@ def run_callpeaks2(args):
 
     if args.fragment_length is None:
         config.fragment_length = MultiGraphShiftEstimator.from_files(
-            graphs, samples).get_esimates()
+            graphs, samples).get_estimates()
     else:
         config.fragment_length = int(args.fragment_length)
     config.read_length = int(args.read_length)
@@ -208,6 +208,7 @@ def run_callpeaks2(args):
         stop_after_p_values=args.stop_after_p_values == "True",
     )
     caller.run()
+
 
 def run_callpeaks_whole_genome(args):
     logging.info("Running run_callpeaks_whole_genome")
