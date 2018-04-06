@@ -4,10 +4,11 @@ for chromosome in $(seq 1 2)
 do
 
     graph_peak_caller callpeaks \
-        -g $graph_dir/$chromosome.nobg -s arabidopsis_sample/sample_$chromosome.json -n "" -f 230 -r 50 \
+        -g $graph_dir/$chromosome.nobg -s arabidopsis_sample/sample_$chromosome.json -f 230 -r 50 \
         -p True \
         -u 250000 \
-        -G 135000000 &
+        -G 135000000
+        -n ${chromosome}_ &
 done
 wait
 
