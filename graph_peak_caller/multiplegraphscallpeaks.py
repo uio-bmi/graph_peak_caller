@@ -73,10 +73,18 @@ class MultipleGraphsCallpeaks:
             logging.info("Sample is already intervalcollection.")
             return sample, control
         elif sample.endswith(".intervalcollection"):
-            sample = obg.IntervalCollection.create_generator_from_file(
-                sample, graph=graph)
-            control = obg.IntervalCollection.create_generator_from_file(
-                control, graph=graph)
+            try:
+                sample = obg.IntervalCollection.from_file(
+                    sample, graph=graph)
+            except OSError:
+                sample = obg.IntervalCollection.from_file(
+                    sample, graph=graph, text_file=True)
+            try:
+                control = obg.IntervalCollection.from_file(
+                    control, graph=graph)
+            except:
+                control = obg.IntervalCollection.from_file(
+                    control, graph=graph, text_file=True)
         else:
             logging.info("Creating interval collections from files")
             sample = vg_json_file_to_interval_collection(sample, graph)
