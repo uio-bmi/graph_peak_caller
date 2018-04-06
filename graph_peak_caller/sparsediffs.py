@@ -103,6 +103,8 @@ class SparseDiffs:
         np.save(file_base_name + "_indexes.npy",
                 self._indices)
         np.save(file_base_name + "_values.npy", self._diffs)
+        logging.info("Wrote to %s and %s" % (file_base_name + "_indexes.npy",
+                                             file_base_name + "_values.npy"))
 
     def to_bed_graph(self, filename):
         logging.warning("Not writing to %s", filename)

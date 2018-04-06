@@ -40,12 +40,16 @@ Note that even though Graph Peak Caller is typically used with vg, it is possibl
 ### Step 2: Call peaks
 Finally, we can call peaks by using the *callpeaks* command:
 ```
-graph_peak_caller callpeaks -g graph.nobg -s alignments.json -f FRAGMENT_LENGTH -r READ_LENGTH
+graph_peak_caller callpeaks -g graph.nobg -s alignments.json
 ```
 
-Make sure to change *FRAGMENT_LENGTH* and *READ_LENGTH* with numbers matching your data. If you do not know the fragment length of your ChIP-seq experiment, you can use Macs' predictd command to estimate it: `macs predict -t alignments.bam`.
-
 If you do not have a control track, use your sample reads as control and change True to False in the above command. Changing True to False is important as Graph Peak Caller will generate the background signal in a different way when the sample is used as control. 
+
+Note that you easily can send a list of graphs and input files to run on multiple graphs. This is useful if you e.g. have one graph and one input file for each chromosome:
+```
+graph_peak_caller callpeaks -g graph_chr*.nobg -s alignments_chr*.json
+```
+On a unix command line, the * will work as a wildcard. `-g` and `-s` can also take multiple file names separated by space.
 
 ### Output
 The peak caller will create various output files, some of which are less relevant and only useful for debugging. The two files containing peak information are:
@@ -69,7 +73,7 @@ Change *chromosome* to the chromosome that you want to be used when writing the 
 
 
 ## Advanced usage
-If you want to do Peak Calling on a whole-genome reference, vg will typically produce one graph for each chromosome, and it is best to divide the peak calling into one process for each chromosome. Check out [this guide](https://github.com/uio-bmi/graph_peak_caller/wiki/Graph-based-ChIP-seq-tutorial) for a detailed explanation on how that can be done.
+If you want to do Peak Calling on a whole-genome reference, vg will typically produce one graph for each chromosome, and it is best to divide the peak calling into one process for each chromosome. You can simply do that by sending multiple graphs and input files to the `callpeaks` command, but if you are running on huge data, it will be faster to start one callpeaks process for each chromosome and run these in parallel. An important thing to keep in mind then, is that each process should only run until p-values have been computed before continuing, since q-values needs to be computed from all p-values. Check out [this guide](https://github.com/uio-bmi/graph_peak_caller/wiki/Graph-based-ChIP-seq-tutorial) for a detailed explanation on how that can be done.
 
 # Reproducing the results from the Graph Peak Caller manuscript.
 Follow [this guide](https://github.com/uio-bmi/graph_peak_caller/wiki/Reproducing-the-results-in-Graph-Peak-Caller-Paper) in order to run the ChIP-seq experiments presented in the manuscript.

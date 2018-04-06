@@ -1,3 +1,4 @@
+from glob import glob
 import pickle
 import numpy as np
 import os
@@ -76,9 +77,7 @@ class PToQValuesMapper:
     def from_files(cls, base_file_name):
         search = base_file_name
         logging.info("Searching for files starting with %s" % search)
-        files = (f for f in os.listdir()
-                 if f.startswith(search) and
-                 "pvalues" in f and f.endswith("_indexes.npy"))
+        files = glob(base_file_name + "*pvalues_indexes.npy")
         sub_counts = []
         p_values = []
         for filename in files:

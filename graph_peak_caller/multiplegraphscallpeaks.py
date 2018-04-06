@@ -9,6 +9,7 @@ from .intervals import Intervals, UniqueIntervals
 
 from .peakfasta import PeakFasta
 
+
 class MultipleGraphsCallpeaks:
 
     def __init__(self, graph_names, graph_file_names,
@@ -50,7 +51,7 @@ class MultipleGraphsCallpeaks:
                     n_unique += 1
                 interval_hashes.add(hash)
 
-            print("Found %d duplicates" % n_duplicates)
+            logging.info("Found %d duplicates" % n_duplicates)
 
         logging.info("In total %d unique reads" % n_unique)
         return n_unique
@@ -73,10 +74,18 @@ class MultipleGraphsCallpeaks:
             logging.info("Sample is already intervalcollection.")
             return sample, control
         elif sample.endswith(".intervalcollection"):
-            sample = obg.IntervalCollection.create_generator_from_file(
-                sample, graph=graph)
-            control = obg.IntervalCollection.create_generator_from_file(
-                control, graph=graph)
+            try:
+                sample = obg.IntervalCollection.from_file(
+                    sample, graph=graph)
+            except OSError:
+                sample = obg.IntervalCollection.from_file(
+                    sample, graph=graph, text_file=True)
+            try:
+                control = obg.IntervalCollection.from_file(
+                    control, graph=graph)
+            except:
+                control = obg.IntervalCollection.from_file(
+                    control, graph=graph, text_file=True)
         else:
             logging.info("Creating interval collections from files")
             sample = vg_json_file_to_interval_collection(sample, graph)
@@ -92,8 +101,8 @@ class MultipleGraphsCallpeaks:
         for name, graph_file_name, sample, control, lin_map in \
             zip(self.names, self.graph_file_names,
                 self.samples, self.controls, self.linear_maps):
-            logging.info("Running %s" % name)
-            ob_graph = obg.Graph.from_numpy_file(
+            logging.info("Running to p values, %s" % name)
+            ob_graph = obg.Graph.from_file(
                 graph_file_name)
             sample, control = self.get_intervals(sample, control, ob_graph)
             config = self._config.copy()
@@ -110,6 +119,7 @@ class MultipleGraphsCallpeaks:
 
     def run_from_p_values(self, only_chromosome=None):
         for i, name in enumerate(self.names):
+            logging.info("Name: %s" % name)
             if only_chromosome is not None:
                 if only_chromosome != name:
                     logging.info("Skipping %s" % str(name))
@@ -121,10 +131,12 @@ class MultipleGraphsCallpeaks:
             caller = CallPeaks(ob_graph, self._config,
                                self._reporter.get_sub_reporter(name))
             caller.p_to_q_values_mapping = self._q_value_mapping
+            if name != "":
+                name += "_"
             caller.p_values_pileup = SparseValues.from_sparse_files(
-                self._reporter._base_name + name + "_" + "pvalues")
+                self._reporter._base_name + name + "pvalues")
             caller.touched_nodes = set(np.load(
-                self._reporter._base_name + name + "_" + "touched_nodes.npy"))
+                self._reporter._base_name + name + "touched_nodes.npy"))
             caller.get_q_values()
             caller.call_peaks_from_q_values()
             if self.sequence_retrievers is not None:
@@ -135,6 +147,6 @@ class MultipleGraphsCallpeaks:
                     continue
 
                 PeakFasta(sequencegraph).write_max_path_sequences(
-                  self._reporter._base_name + name + "_sequences.fasta", caller.max_path_peaks)
+                  self._reporter._base_name + name + "sequences.fasta", caller.max_path_peaks)
                 #caller.save_max_path_sequences_to_fasta_file(
                 #    "sequences.fasta", self.sequence_retrievers.__next__())

@@ -10,6 +10,7 @@ from .sparsediffs import SparseValues
 import json
 import sys
 
+
 class Configuration:
     def __init__(self):
         self.read_length = None
@@ -47,6 +48,7 @@ class CallPeaks(object):
             sample_pileup = get_fragment_pileup(
                 self.graph, input_reads, self.config,
                 self._reporter)
+
             background_func = get_background_track_from_control
         except json.decoder.JSONDecodeError as e:
             logging.debug(e)
@@ -155,8 +157,6 @@ class CallPeaksFromQvalues:
             self.touched_nodes
         ).run()
         self._reporter.add("hole_cleaned", self.pre_processed_peaks)
-
-        logging.info("Not removing small peaks")
         self.filtered_peaks = self.pre_processed_peaks
 
     def __get_max_paths(self):

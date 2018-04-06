@@ -3,6 +3,7 @@ from collections import defaultdict
 from offsetbasedgraph import IndexedInterval
 import logging
 
+
 class HaploTyper:
     """
     Simple naive haplotyper
@@ -42,8 +43,6 @@ class HaploTyper:
             next_blocks = graph.adj_list[current_block]
             if len(next_blocks) < 1:
                 print("Stopping at %d" % current_block)
-                print(nodes)
-
                 break
 
             next = None

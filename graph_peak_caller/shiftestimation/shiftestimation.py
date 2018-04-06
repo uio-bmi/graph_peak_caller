@@ -14,6 +14,7 @@ with the distribution).
 import numpy as np
 import logging
 
+
 class NotEnoughPairsException(Exception):
     def __init__(self, value):
         self.value = value
@@ -49,9 +50,11 @@ class Treatment:
 
 
 class Opt:
-    def __init__(self):
-        self.umfold = 50
-        self.lmfold = 5
+    def __init__(self, lmfold=5, umfold=50):
+        logging.info("Initing shift estimator options with"
+                     " fold enrichment min/max %d/%d. " % (lmfold, umfold))
+        self.umfold = umfold
+        self.lmfold = lmfold
         self.bw = 300
         self.info = logging.info
         self.debug = logging.debug
@@ -106,9 +109,13 @@ class PeakModel:
         self.info("#2 number of paired peaks: %d" % (num_paired_peakpos))
         if num_paired_peakpos < 100:
             logging.warning("Too few paired peaks (%d) to get good shift estimate" % num_paired_peakpos)
-            raise NotEnoughPairsException("No enough pairs to build model")
+            raise NotEnoughPairsException("Not enough pairs to build model. "
+                                          "Try a broader range by setting -m lower and/or -M higher.")
         elif num_paired_peakpos < self.max_pairnum:
-            logging.warning("Few paired peaks (%d) than %d! Model may not be build well! Lower your MFOLD parameter may erase this warning. Now I will use %d pairs to build model!" % (num_paired_peakpos, self.max_pairnum,num_paired_peakpos_picked))
+            logging.warning("Few paired peaks (%d) when estimating fragment length, which may lead"
+                            "to bad estimate of fragment length. Set min "
+                            "fold enrichment (-m lower) or max (-M) higher in "
+                            "order get more paired peaks." % (num_paired_peakpos))
         self.__paired_peak_model(paired_peakpos)
 
     def __paired_peak_model(self, paired_peakpos):
@@ -324,11 +331,9 @@ class PeakModel:
         top_pos = self.__find_top_pos(horizon_line, peak_length)
         return (top_pos[len(top_pos)//2]+start)
 
-
     def __find_top_pos(self, horizon_line, peak_length):
         m = np.max(horizon_line)
         return np.where(horizon_line == m)[0]
-
 
 
 # smooth function from SciPy cookbook: http://www.scipy.org/Cookbook/SignalSmooth
