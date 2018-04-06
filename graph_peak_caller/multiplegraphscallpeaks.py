@@ -51,7 +51,7 @@ class MultipleGraphsCallpeaks:
                     n_unique += 1
                 interval_hashes.add(hash)
 
-            print("Found %d duplicates" % n_duplicates)
+            logging.info("Found %d duplicates" % n_duplicates)
 
         logging.info("In total %d unique reads" % n_unique)
         return n_unique
