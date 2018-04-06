@@ -63,7 +63,7 @@ intervals = peaks.intervals  # This is now a list of all your peaks, represented
 
 Often, it is useful to know the approximate position of the peaks on a linear reference genome. Graph Peak Caller has a subcommand for doing that, which requires as input a "linear path" through the graph which it will project the peaks down to. Luckily *vg* contains path information in (most) graphs, so it it fairly easy to extract the path:
 ```
-graph_peak_caller find_linear_path vg_graph.json graph.nobg ref path.interval
+graph_peak_caller find_linear_path -g graph.nobg vg_graph.json ref path.interval
 ```
 Here *ref* should be the name of the path in the vg graph. Usually, this is 'ref', but it can also be the name of the chromosome that the graph is representing (which it will be if you have whole genome graphs). A linear path will be written to path.interval, and we can use that to project the peaks:
 ```
