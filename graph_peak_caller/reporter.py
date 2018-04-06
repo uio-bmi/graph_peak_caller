@@ -59,4 +59,7 @@ class Reporter:
             logging.info("Skipping reporting of %s", name)
 
     def get_sub_reporter(self, name):
-        return self.__class__(self._base_name + name + "_")
+        if name != "":
+            name += "_"
+
+        return self.__class__(self._base_name + name)

@@ -93,7 +93,8 @@ fi
 read_length=$(cat macs_output_whole_run.txt | gawk 'match($0,  /tag size = ([0-9]+)/, ary) {print ary[1]}' )
 echo "Found read length: $read_length"
 fragment_length=$(cat macs_output_whole_run.txt | gawk 'match($0,  /fragment length is ([0-9]+)/, ary) {print ary[1]}' )
-echo "Found fragment length: $fragment_length"
+
+#echo "Found fragment length: $fragment_length"
 
 
 # Step 3: Map reads
@@ -131,6 +132,16 @@ echo "Removing low quality reads."
 #cp filtered.json filtered_low_qual_reads_removed.json
 
 
+# Get fragment length
+
+#if [ ! -f shift_estimation_log.txt ]; then
+#    graph_peak_caller estimate_shift $chromosomes $graph_dir/ filtered_low_qual_reads_removed_ 3 100 > shift_estimation_log.txt 2>&1
+#else
+#    echo "Not finding fragment length. Already done."
+#fi
+#fragment_length=$(cat shift_estimation_log.txt | gawk 'match($0,  /Found shift: ([0-9]+)/, ary) {print ary[1]}' )
+#echo "Fragment length is $fragment_length"
+
 
 # Step 5: Split filtered into chromosomes
 if ls filtered_low_qual_reads_removed_* 1> /dev/null 2>&1; then
@@ -149,15 +160,6 @@ fi
 
 unique_reads=$(tail -n 1 count_unique_reads_output.txt)
 
-#if [ ! -f unique_reads.txt ]; then
-#    echo "Counting unique reads"
-#    unique_reads=$(pcregrep -o1 '"sequence": "([ACGTNacgtn]{20,})"' filtered_low_qual_reads_removed.json | sort | uniq | wc -l)
-#    echo $unique_reads > unique_reads.txt
-#    echo "$unique_reads unique reads in total"
-#else
-#    echo "Using cached count for unique reads."
-#    unique_reads=$(tail -n 1 unique_reads.txt)
-#fi
 
 # Step 6 run peak caller to get p-values for every chromosome
 pids=""
@@ -165,15 +167,15 @@ RESULT=0
 for chromosome in $(echo $chromosomes | tr "," "\n")
 do
     if [ ! -f ${chromosome}_pvalues_values.npy ]; then
-        graph_peak_caller callpeaks_whole_genome $chromosome \
-            -d $graph_dir \
-            -s filtered_low_qual_reads_removed_ \
-            -n "" \
+        graph_peak_caller callpeaks \
+            -g $graph_dir/$chromosome.nobg \
+            -s filtered_low_qual_reads_removed_$chromosome.json \
+            -n ${chromosome}_ \
             -f $fragment_length \
             -r $read_length \
             -p True \
             -u $unique_reads \
-            -g $genome_size \
+            -G $genome_size \
             > log_before_p_values_$chromosome.txt 2>&1 &
             pids="$pids $!"
         echo "Peak calling (until p-values) for chr $chromosome started as process. Log will be written to $work_dir/log_before_p_values_$chromosome.txt"
