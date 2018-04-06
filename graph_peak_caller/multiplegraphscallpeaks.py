@@ -9,6 +9,7 @@ from .intervals import Intervals, UniqueIntervals
 
 from .peakfasta import PeakFasta
 
+
 class MultipleGraphsCallpeaks:
 
     def __init__(self, graph_names, graph_file_names,

@@ -7,7 +7,7 @@ do
         -g $graph_dir/$chromosome.nobg -s arabidopsis_sample/sample_$chromosome.json -f 230 -r 50 \
         -p True \
         -u 250000 \
-        -G 135000000
+        -G 135000000 \
         -n ${chromosome}_ &
 done
 wait
