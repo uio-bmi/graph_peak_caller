@@ -38,6 +38,15 @@ def version(args):
     print("Graph Peak Caller v1.0.12")
 
 
+def project_vg_alignments(args):
+    from pyvg.conversion import vg_json_file_to_intervals
+    linear_path = obg.NumpyIndexedInterval.from_file(args.linear_path_file_name)
+    alignments = vg_json_file_to_intervals(args.alignments_json_file_name, graph=args.graph)
+    for alignment in alignments:
+        start, end = alignment.to_linear_offsets(linear_path)
+        print(start, end)
+
+
 interface = \
 {
 
@@ -267,7 +276,7 @@ interface = \
             'arguments':
                 [
                     ('peaks_file_name', "Shuold be a JSON intervalcollection, e.g. one created by callpeaks."),
-                    ('linear_path_file_name', "Name of linera path file"),
+                    ('linear_path_file_name', "Name of linear path file"),
                     ('chromosome', 'Name of chromosome that will be used when writing the bed file'),
                     ('out_file_name', 'Out file name')
                 ],
@@ -309,6 +318,16 @@ interface = \
                                     'from summit to include. Default is 60.')
                 ],
             'method': get_summits
+        },
+    'project_vg_alignments':
+        {
+            'help': '',
+            'arguments':
+                [
+                    ('alignments_json_file_name', ''),
+                    ('linear_path_file_name', '')
+                ],
+            'method': project_vg_alignments
         }
 }
 
