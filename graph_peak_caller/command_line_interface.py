@@ -41,7 +41,8 @@ def version(args):
 def project_vg_alignments(args):
     from pyvg.conversion import vg_json_file_to_intervals
     linear_path = obg.NumpyIndexedInterval.from_file(args.linear_path_file_name)
-    alignments = vg_json_file_to_intervals(args.alignments_json_file_name, graph=args.graph)
+    #print(linear_path.nodes_in_interval())
+    alignments = vg_json_file_to_intervals(args.alignments_json_file_name, args.graph)
     for alignment in alignments:
         start, end = alignment.to_linear_offsets(linear_path)
         print(start, end)
@@ -322,6 +323,7 @@ interface = \
     'project_vg_alignments':
         {
             'help': '',
+            'requires_graph': True,
             'arguments':
                 [
                     ('alignments_json_file_name', ''),
