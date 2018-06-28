@@ -55,10 +55,10 @@ def project_vg_alignments(args):
             try:
                 if alignment.region_paths[0] < 0:
                     assert np.all(np.array(alignment.region_paths) < 0)
-                    start, end = alignment.get_reverse().to_linear_offsets(linear_path)
+                    start, end = alignment.get_reverse().to_linear_offsets2(linear_path)
                     strand = "+"
                 else:
-                    start, end = alignment.to_linear_offsets(linear_path)
+                    start, end = alignment.to_linear_offsets2(linear_path)
                     strand = "-"
             except NoLinearProjectionException:
                 logging.warning("Found no linear projection for %s. Skipping" % alignment) 
