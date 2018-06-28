@@ -40,17 +40,30 @@ def version(args):
 
 def project_vg_alignments(args):
     from pyvg.conversion import vg_json_file_to_intervals
+    from offsetbasedgraph.interval import NoLinearProjectionException
     import numpy as np
     linear_path = obg.NumpyIndexedInterval.from_file(args.linear_path_file_name)
     #print(linear_path.nodes_in_interval())
     alignments = vg_json_file_to_intervals(args.alignments_json_file_name, args.graph)
-    for alignment in alignments:
-        if alignment.region_paths[0] < 0:
-            assert np.all(alignment.region_paths < 0)
-            end, start = alignment.to_linear_offsets(alignment.get_reverse())
-        else:
-            start, end = alignment.to_linear_offsets(linear_path)
-        print(start, end)
+    i = 0
+    with open(args.out_file_name, "w") as f:
+        for alignment in alignments:
+            if i % 10000 == 0:
+                logging.info("Processed %d alignments" % i)
+            i += 1
+
+            try:
+                if alignment.region_paths[0] < 0:
+                    assert np.all(np.array(alignment.region_paths) < 0)
+                    start, end = alignment.get_reverse().to_linear_offsets(linear_path)
+                    strand = "+"
+                else:
+                    start, end = alignment.to_linear_offsets(linear_path)
+                    strand = "-"
+            except NoLinearProjectionException:
+                logging.warning("Found no linear projection for %s. Skipping" % alignment) 
+
+            f.writelines(["%s\t%d\t%d\t.\t0\t%s\n" % (args.chromosome, start, end, strand)])
 
 
 interface = \
@@ -332,7 +345,9 @@ interface = \
             'arguments':
                 [
                     ('alignments_json_file_name', ''),
-                    ('linear_path_file_name', '')
+                    ('linear_path_file_name', ''),
+                    ('chromosome', ''),
+                    ('out_file_name', 'Writes bed to this file')
                 ],
             'method': project_vg_alignments
         }
