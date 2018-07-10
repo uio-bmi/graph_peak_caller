@@ -53,6 +53,7 @@ def project_alignments(alignments, linear_path):
                 start, end = alignment.get_reverse().to_linear_offsets2(linear_path)
                 strand = "-"
             else:
+                assert np.all(np.array(alignment.region_paths) > 0)
                 start, end = alignment.to_linear_offsets2(linear_path)
                 strand = "+"
         except NoLinearProjectionException:
