@@ -38,31 +38,37 @@ def version(args):
     print("Graph Peak Caller v1.0.12")
 
 
-def project_vg_alignments(args):
-    from pyvg.conversion import vg_json_file_to_intervals
+def project_alignments(alignments, linear_path):
     from offsetbasedgraph.interval import NoLinearProjectionException
     import numpy as np
+    for alignment in alignments:
+        i = 0
+        if i % 10000 == 0:
+            logging.info("Processed %d alignments" % i)
+        i += 1
+
+        try:
+            if alignment.region_paths[0] < 0:
+                assert np.all(np.array(alignment.region_paths) < 0)
+                start, end = alignment.get_reverse().to_linear_offsets2(linear_path)
+                strand = "-"
+            else:
+                start, end = alignment.to_linear_offsets2(linear_path)
+                strand = "+"
+        except NoLinearProjectionException:
+            logging.warning("Found no linear projection for %s. Skipping" % alignment)
+
+        yield start, end, strand
+
+def project_vg_alignments(args):
+    from pyvg.conversion import vg_json_file_to_intervals
     linear_path = obg.NumpyIndexedInterval.from_file(args.linear_path_file_name)
     #print(linear_path.nodes_in_interval())
     alignments = vg_json_file_to_intervals(args.alignments_json_file_name, args.graph)
-    i = 0
+
     with open(args.out_file_name, "w") as f:
-        for alignment in alignments:
-            if i % 10000 == 0:
-                logging.info("Processed %d alignments" % i)
-            i += 1
-
-            try:
-                if alignment.region_paths[0] < 0:
-                    assert np.all(np.array(alignment.region_paths) < 0)
-                    start, end = alignment.get_reverse().to_linear_offsets2(linear_path)
-                    strand = "+"
-                else:
-                    start, end = alignment.to_linear_offsets2(linear_path)
-                    strand = "-"
-            except NoLinearProjectionException:
-                logging.warning("Found no linear projection for %s. Skipping" % alignment) 
-
+        projected_alignments = project_alignments()
+        for start, end, strand in projected_alignments:
             f.writelines(["%s\t%d\t%d\t.\t0\t%s\n" % (args.chromosome, start, end, strand)])
 
 
