@@ -41,8 +41,8 @@ def version(args):
 def project_alignments(alignments, linear_path):
     from offsetbasedgraph.interval import NoLinearProjectionException
     import numpy as np
+    i = 0
     for alignment in alignments:
-        i = 0
         if i % 10000 == 0:
             logging.info("Processed %d alignments" % i)
         i += 1
