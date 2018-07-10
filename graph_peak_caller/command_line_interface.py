@@ -67,7 +67,7 @@ def project_vg_alignments(args):
     alignments = vg_json_file_to_intervals(args.alignments_json_file_name, args.graph)
 
     with open(args.out_file_name, "w") as f:
-        projected_alignments = project_alignments()
+        projected_alignments = project_alignments(alignments, linear_path)
         for start, end, strand in projected_alignments:
             f.writelines(["%s\t%d\t%d\t.\t0\t%s\n" % (args.chromosome, start, end, strand)])
 
