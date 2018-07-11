@@ -155,7 +155,7 @@ fi
 for chromosome in $(echo $chromosomes | tr "," "\n")
 do 
     echo "Projecting alignments for chrom $chromosome"
-    #graph_peak_caller project_vg_alignments -g $graph_dir/$chromosome.nobg filtered_low_qual_reads_removed_$chromosome.json $graph_dir/${chromosome}_linear_pathv2.interval $chromosome projected_alignments_$chromosome.bed &
+    graph_peak_caller project_vg_alignments -g $graph_dir/$chromosome.nobg filtered_low_qual_reads_removed_$chromosome.json $graph_dir/${chromosome}_linear_pathv2.interval $chromosome projected_alignments_$chromosome.bed &
 done
 
 wait  # Wait for all projections
