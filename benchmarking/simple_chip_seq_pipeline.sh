@@ -101,7 +101,7 @@ fragment_length=$(cat macs_output_whole_run.txt | gawk 'match($0,  /fragment len
 echo "Mapping reads"
 if [ ! -f mapped.gam ]; then
     echo "Using indices: $vg_gcsa_index and $vg_xg_index"
-    vg map -c 5000 -f raw_trimmed.fq -g $vg_gcsa_index -x $vg_xg_index > mapped.gam
+    vg map -f raw_trimmed.fq -g $vg_gcsa_index -x $vg_xg_index > mapped.gam
     #vg mpmap --mq-method 2 -S -x $vg_xg_index -g $vg_gcsa_index -f raw_trimmed.fq > mapped.gam
 else
     echo "Mapped reads exist. Not mapping"
