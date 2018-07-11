@@ -99,7 +99,7 @@ def split_vg_json_reads_into_chromosomes(args):
     reads_file = open(args.vg_json_reads_file_name)
     i = 0
     import re
-    regex = re.compile(r"node_id\": ([0-9]+)")
+    regex = re.compile(r"node_id\":\"([0-9]+)\"")
 
     def get_mapped_chrom(node):
         mapped_chrom = None
