@@ -94,7 +94,7 @@ read_length=$(cat macs_output_whole_run.txt | gawk 'match($0,  /tag size = ([0-9
 echo "Found read length: $read_length"
 fragment_length=$(cat macs_output_whole_run.txt | gawk 'match($0,  /fragment length is ([0-9]+)/, ary) {print ary[1]}' )
 
-#echo "Found fragment length: $fragment_length"
+echo "Using $fragment_length and read length $read_length"
 
 
 # Step 3: Map reads
@@ -177,6 +177,7 @@ unique_reads=$(tail -n 1 count_unique_reads_output.txt)
 
 
 # Step 6 run peak caller to get p-values for every chromosome
+echo "Calling peaks with command graph_peak_caller callpeaks -g $graph_dir/$chromosome.nobg  -s filtered_low_qual_reads_removed_$chromosome.json -n ${chromosome}_  -f $fragment_length -r $read_length  -p True  -u $unique_reads  -G $genome_size "
 pids=""
 RESULT=0
 for chromosome in $(echo $chromosomes | tr "," "\n")
