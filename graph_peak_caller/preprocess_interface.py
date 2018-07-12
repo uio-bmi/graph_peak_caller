@@ -10,7 +10,7 @@ from graph_peak_caller.multiplegraphscallpeaks import MultipleGraphsCallpeaks
 
 def count_unique_reads_interface(args):
     chromosomes = args.chromosomes.split(",")
-    graph_file_names = [args.graphs_location + chrom for chrom in chromosomes]
+    graph_file_names = [args.graphs_location + chrom + ".nobg" for chrom in chromosomes]
     reads_file_names = [args.reads_base_name + chrom + ".json"
                         for chrom in chromosomes]
 

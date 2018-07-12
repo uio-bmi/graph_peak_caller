@@ -256,7 +256,7 @@ interface = \
             'arguments':
                 [
                     ('chromosomes', 'Comma-separated list of chromosomes to use, e.g. 1,2,X,8,Y'),
-                    ('graphs_location', 'Will use the graphs *_[chromosome]'),
+                    ('graphs_location', 'Will use the graphs *_[chromosome].nobg'),
                     ('reads_base_name', 'Will use files *_[chromosome].json')
                 ],
             'method': count_unique_reads_interface
