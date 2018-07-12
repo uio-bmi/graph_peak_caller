@@ -73,6 +73,11 @@ def project_vg_alignments(args):
             f.writelines(["%s\t%d\t%d\t.\t0\t%s\n" % (args.chromosome, start, end, strand)])
 
 
+def check_pruned_graphs_stats(args):
+    chromosomes = args.chromosome.split(",")
+    
+
+
 interface = \
 {
 
@@ -357,6 +362,17 @@ interface = \
                     ('out_file_name', 'Writes bed to this file')
                 ],
             'method': project_vg_alignments
+        },
+    'check_pruned_graphs_stats':
+        {
+            'help': 'Uses vg to check stats of pruned graph vs graphs in graph dir.',
+            'arguments':
+                [
+                    ('graph_dir', ''),
+                    ('chromosomes', 'Comma separated list of chromosomes.'
+                                    'Will look for graphs on form graph_dir/[chromosome].pruned.vg')
+                ],
+            'method': check_pruned_graphs_stats
         }
 }
 
