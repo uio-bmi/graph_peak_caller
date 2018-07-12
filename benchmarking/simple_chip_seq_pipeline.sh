@@ -153,7 +153,7 @@ fi
 
 # Project filtered reads onto reference
 for chromosome in $(echo $chromosomes | tr "," "\n")
-do 
+do
     echo "Projecting alignments for chrom $chromosome"
     #graph_peak_caller project_vg_alignments -g $graph_dir/$chromosome.nobg filtered_low_qual_reads_removed_$chromosome.json $graph_dir/${chromosome}_linear_pathv2.interval $chromosome projected_alignments_$chromosome.bed &
 done
@@ -178,6 +178,7 @@ unique_reads=$(tail -n 1 count_unique_reads_output.txt)
 
 # Step 6 run peak caller to get p-values for every chromosome
 echo "Calling peaks with command graph_peak_caller callpeaks -g $graph_dir/$chromosome.nobg  -s filtered_low_qual_reads_removed_$chromosome.json -n ${chromosome}_  -f $fragment_length -r $read_length  -p True  -u $unique_reads  -G $genome_size "
+
 pids=""
 RESULT=0
 for chromosome in $(echo $chromosomes | tr "," "\n")
