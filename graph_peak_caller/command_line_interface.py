@@ -74,8 +74,20 @@ def project_vg_alignments(args):
 
 
 def check_pruned_graphs_stats(args):
-    chromosomes = args.chromosome.split(",")
-    
+    from pyvg.util import get_stats
+    chromosomes = args.chromosomes.split(",")
+    graphs_dir = args.graphs_dir
+
+    nodes_pruned = {}
+    lengths_pruned = {}
+    edges_pruned = {}
+
+    for chromosome in chromosomes:
+        stats_pruned = get_stats(graphs_dir + "/" + chromosome + ".prune.vg")
+        stats_nonpruned = get_stats(graphs_dir + "/" + chromosome + ".prune.vg")
+
+        print(stats_pruned)
+        print(stats_nonpruned)
 
 
 interface = \
@@ -368,7 +380,7 @@ interface = \
             'help': 'Uses vg to check stats of pruned graph vs graphs in graph dir.',
             'arguments':
                 [
-                    ('graph_dir', ''),
+                    ('graphs_dir', ''),
                     ('chromosomes', 'Comma separated list of chromosomes.'
                                     'Will look for graphs on form graph_dir/[chromosome].pruned.vg')
                 ],
