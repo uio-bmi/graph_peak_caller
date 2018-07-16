@@ -83,8 +83,11 @@ fi
 
 # Run macs with encode linear mapped reads
 echo "Running macs2"
-macs2 callpeak -m 3 100 -g $genome_size -t linear_alignments.bam -n macs > macs_output_whole_run.txt 2>&1
-
+if [ ! -f macs_output_whole_run.txt ]; then
+    macs2 callpeak -m 3 100 -g $genome_size -t linear_alignments.bam -n macs > macs_output_whole_run.txt 2>&1
+else
+    echo "Not running macs whole run, done before"
+fi
 
 read_length=$(cat macs_output_whole_run.txt | gawk 'match($0,  /tag size = ([0-9]+)/, ary) {print ary[1]}' )
 echo "Found read length: $read_length"

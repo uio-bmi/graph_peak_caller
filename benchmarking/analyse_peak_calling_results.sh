@@ -19,6 +19,8 @@ cd $work_dir
 
 echo "Changed dir to $work_dir"
 
+summit_window_size=200
+
 # Extract macs2 sequences, write to fasta (for later comparison)
 echo "Extracting macs sequences"
 > macs_selected_chromosomes.bed  # Create empty file
@@ -32,13 +34,13 @@ do
     # Also sort out specific chromosome, making later analysis faster
     grep "^${chromosome}\s" $peaks_file_name > macs_peaks_chr${chromosome}.bed
     grep "chr${chromosome}\s" $peaks_file_name >> macs_peaks_chr${chromosome}.bed
-    graph_peak_caller linear_peaks_to_fasta macs_peaks_chr${chromosome}.bed $linear_genome_fasta_file  macs_sequences_chr${chromosome}.fasta
+    graph_peak_caller linear_peaks_to_fasta_summits macs_peaks_chr${chromosome}.bed $linear_genome_fasta_file  macs_sequences_chr${chromosome}.fasta $summit_window_size
 
 done
 
 # Fetch macs sequences for these peaks
 echo "Fetch macs sequences for selected chromosomes"
-graph_peak_caller linear_peaks_to_fasta_summits macs_selected_chromosomes.bed $linear_genome_fasta_file  macs_sequences.fasta 200
+graph_peak_caller linear_peaks_to_fasta_summits macs_selected_chromosomes.bed $linear_genome_fasta_file  macs_sequences.fasta $summit_window_size
 
 
 # Merge all graph peak caller result files into one single sorted sequence file
@@ -47,7 +49,7 @@ graph_peak_caller concatenate_sequence_files $chromosomes sequence_all_chromosom
 # Find summits of peaks
 for chromosome in $(echo $chromosomes | tr "," "\n")
 do
-    graph_peak_caller get_summits -g $data_dir/$chromosome.nobg ${chromosome}_sequences.fasta ${chromosome}_qvalues 200
+    graph_peak_caller get_summits -g $data_dir/$chromosome.nobg ${chromosome}_sequences.fasta ${chromosome}_qvalues $summit_window_size
 done
 graph_peak_caller concatenate_sequence_files -s True $chromosomes sequence_all_chromosomes_summits.fasta
 
@@ -78,8 +80,8 @@ do
     fimo -oc fimo_graph_unique_chr$chromosome motif.meme ${chromosome}_sequences_summits_unique.fasta
 done
 
-    graph_peak_caller concatenate_sequence_files -f macs_sequences_chr[chrom]_summits_unique.fasta $chromosomes unique_macs.fasta
-    graph_peak_caller concatenate_sequence_files -f [chrom]_sequences_summits_unique.fasta $chromosomes unique_graph.fasta
+graph_peak_caller concatenate_sequence_files -f macs_sequences_chr[chrom]_summits_unique.fasta $chromosomes unique_macs.fasta
+graph_peak_caller concatenate_sequence_files -f [chrom]_sequences_summits_unique.fasta $chromosomes unique_graph.fasta
 
 fimo -oc unique_graph motif.meme unique_graph.fasta
 fimo -oc unique_macs motif.meme unique_macs.fasta
