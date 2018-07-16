@@ -168,7 +168,12 @@ fi
 
 # Run MACS2 with projected alignments
 echo "Running macs2 with projected alignments."
-macs2 callpeak --nomodel --extsize $fragment_length -g $genome_size -t projected_alignments.bed -n macs_projected_alignments > macs_output_projected_alignments.txt 2>&1
+if [ ! -f macs_output_projected_alignments.txt ]; then
+    macs2 callpeak --nomodel --extsize $fragment_length -g $genome_size -t projected_alignments.bed -n macs_projected_alignments > macs_output_projected_alignments.txt 2>&1
+else
+    echo "Not running, already done"
+fi
+
 
 echo "Counting unique reads"
 # Count unique reads in filtered files
