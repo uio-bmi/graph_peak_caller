@@ -19,7 +19,7 @@ cd $work_dir
 
 echo "Changed dir to $work_dir"
 
-summit_window_size=200
+summit_window_size=500
 
 # Extract macs2 sequences, write to fasta (for later comparison)
 echo "Extracting macs sequences"
