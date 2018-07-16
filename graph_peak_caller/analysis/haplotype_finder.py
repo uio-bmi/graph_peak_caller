@@ -2,6 +2,8 @@ from pyfaidx import Fasta
 import offsetbasedgraph as obg
 import logging
 from collections import namedtuple
+from itertools import chain
+
 
 Variant = namedtuple("Variant", ["offset", "ref", "alt"])
 
@@ -9,10 +11,11 @@ Variant = namedtuple("Variant", ["offset", "ref", "alt"])
 class VCF:
     def __init__(self, vcf_file_name):
         self.file_name = vcf_file_name
+        self.f = open(self.file_name)
+        self.cur_lines = []
 
     def get_variants_from(self, start, end):
-        f = open(self.file_name)
-        for line in f:
+        for line in chain(self.cur_lines, self.f):
             if line.startswith("#"):
                 continue
             parts = line.split("\t")
@@ -20,17 +23,21 @@ class VCF:
             if pos < start:
                 continue
             if pos > end:
+                self.cur_lines = [line]
                 break
+            print(line)
             ref = parts[3]
-            # print(pos, ref, parts[4])
             for alt in parts[4].split(","):
                 for i, pair in enumerate(zip(ref, alt)):
-                    if pair[0] == pair[1]:
+                    if pair[0] != pair[1]:
+                        yield Variant(int(pos+i-start), ref[i:], alt[i:])
                         break
-                yield Variant(int(pos+i-start), ref[i:], alt[i:])
-        print("CLOSING FILE")
-        f.close()
+                else:
+                    i += 1
+                    yield Variant(int(pos+i-start), ref[i:], alt[i:])
 
+        self.cur_lines = []
+  
 
 def find_haplotype(seq, refseq, vcf, start, end):
     refseq = refseq.lower()
@@ -43,22 +50,27 @@ def find_haplotype(seq, refseq, vcf, start, end):
 
     possible_vars = []
     for i, variant in enumerate(vcf.get_variants_from(start, end)):
+        # print(variant)
         possible_vars.append(variant)
         new_offset = variant.offset
         l = new_offset - cur_ref_offset
-        assert seq[cur_offset:cur_offset+l] == refseq[cur_ref_offset:new_offset], (seq[cur_offset:cur_offset+l], refseq[cur_ref_offset:new_offset])
+        if seq[cur_offset:cur_offset+l] != refseq[cur_ref_offset:new_offset]:
+            logging.error("%s != %s", seq[cur_offset:cur_offset+l], refseq[cur_ref_offset:new_offset])
+            return ["ERROR"]
         cur_offset += l
         cur_ref_offset = new_offset
-        if seq[cur_offset:cur_offset+len(variant.alt)] == variant.alt:
-            if not seq[cur_offset:cur_offset+len(variant.ref)] == variant.ref or len(variant.alt) > len(variant.ref):
+        # print(cur_offset, seq[cur_offset:cur_offset+len(variant.alt)])
+        if seq[cur_offset:cur_offset+len(variant.alt)] == variant.alt.lower():
+            # print("+")
+            if (not seq[cur_offset:cur_offset+len(variant.ref)] == variant.ref.lower()) or len(variant.alt) > len(variant.ref):
+                # print("!")
                 haplotypes.append(1)
                 cur_offset += len(variant.alt)
                 cur_ref_offset += len(variant.ref)
                 continue
         # assert seq[cur_offset:cur_offset+len(variant.ref)] == variant.ref
         haplotypes.append(0)
-    print(possible_vars)
-    print(haplotypes)
+    logging.info(possible_vars)
     logging.info([var for var, h in zip(possible_vars, haplotypes) if h])
     return haplotypes
 
@@ -71,10 +83,16 @@ class Main:
         self.seq_graph = seq_graph
         self.fasta = fasta
         self.vcf = vcf
+        self.counter = 0
 
     def run_peak(self, peak):
         seq, ref_seq, interval = self.get_sequence_pair(peak)
+        # print("L:, ", peak.length(), interval[1]-interval[0], peak)
         haplo = find_haplotype(seq, ref_seq, self.vcf, interval[0], interval[1])
+        if haplo:
+            self.counter += 1
+        if self.counter > 5:
+            exit()
         return haplo
 
     def get_sequence_pair(self, peak):
@@ -85,7 +103,7 @@ class Main:
         ref_seq = self.fasta[int(interval[0]):int(interval[1])].seq
         if all(rp in self.indexed_interval.nodes_in_interval() for rp in peak.region_paths):
             if len(seq) == len(ref_seq):
-                assert seq == ref_seq.lower(), (seq, ref_seq.lower())
+                pass  # assert seq == ref_seq.lower(), (seq, ref_seq.lower())
         return seq, ref_seq, interval
 
     def extend_peak(self, seq, start_position, end_position):
@@ -124,7 +142,7 @@ class Main:
         graph = obg.Graph.from_file(name+".nobg")
         seq_graph = obg.SequenceGraph.from_file(name+".nobg.sequences")
         fasta = Fasta(fasta_file_name)[chrom]
-        vcf = VCF(name + "_variants.vcf")
+        vcf = VCF(name + "_variants_cut.vcf")
         return cls(indexed_interval, graph, seq_graph, fasta, vcf)
     # var_list.create_lookup(name+"_variants.vcf")
     # return var_list
