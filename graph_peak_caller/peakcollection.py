@@ -97,8 +97,12 @@ class PeakCollection(obg.IntervalCollection):
             peak_qvalues = q_values.get_interval_values(peak)
             # Finding summit position of average summit from both sides (to get middle
             # if many equal q values)
-            summit_position = int((np.argmax(peak_qvalues) + \
-                                  (len(peak_qvalues) - np.argmax(peak_qvalues[::-1])))/2)
+            #summit_position = int((np.argmax(peak_qvalues)  + \
+            #                      (len(peak_qvalues) - np.argmax(peak_qvalues[::-1])))/2)
+
+            max_positions = np.where(peak_qvalues == np.max(peak_qvalues))[0]
+            logging.info("N max position: %d" % len(max_positions))
+            summit_position = int(np.median(max_positions))
 
             summit = peak.get_subinterval(max(0, summit_position - n_base_pairs_around),
                 min(summit_position + n_base_pairs_around, peak.length()))
