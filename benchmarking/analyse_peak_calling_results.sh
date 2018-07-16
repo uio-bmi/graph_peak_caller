@@ -38,7 +38,7 @@ done
 
 # Fetch macs sequences for these peaks
 echo "Fetch macs sequences for selected chromosomes"
-graph_peak_caller linear_peaks_to_fasta macs_selected_chromosomes.bed $linear_genome_fasta_file  macs_sequences.fasta 200
+graph_peak_caller linear_peaks_to_fasta_summits macs_selected_chromosomes.bed $linear_genome_fasta_file  macs_sequences.fasta 200
 
 
 # Merge all graph peak caller result files into one single sorted sequence file

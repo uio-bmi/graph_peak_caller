@@ -141,6 +141,7 @@ def get_summits(args):
         window = int(args.window_size)
     else:
         window = 60
+        logging.warning("Using default window size %d when cutting peaks around summits." % window)
 
     peaks.cut_around_summit(qvalues, n_base_pairs_around=window)
     out_file_name = args.peaks_fasta_file.split(".")[0] + "_summits.fasta"
