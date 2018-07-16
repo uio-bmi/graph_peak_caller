@@ -15,6 +15,8 @@ class VCF:
         self.cur_lines = []
 
     def get_variants_from(self, start, end):
+        variants = []
+        cur_end = 0
         for line in chain(self.cur_lines, self.f):
             if line.startswith("#"):
                 continue
@@ -25,25 +27,68 @@ class VCF:
             if pos > end:
                 self.cur_lines = [line]
                 break
-            print(line)
+            # print(line)
             ref = parts[3]
+            variants.append(Variant(int(pos-start), ref, parts[4].split(",")))
+            continue
             for alt in parts[4].split(","):
                 for i, pair in enumerate(zip(ref, alt)):
                     if pair[0] != pair[1]:
-                        yield Variant(int(pos+i-start), ref[i:], alt[i:])
+                        variants.append(Variant(int(pos+i-start), ref[i:], alt[i:]))
                         break
                 else:
                     i += 1
-                    yield Variant(int(pos+i-start), ref[i:], alt[i:])
+                    variants.append(Variant(int(pos+i-start), ref[i:], alt[i:]))
 
         self.cur_lines = []
-  
+        variants.sort(key=lambda x: x.offset)
+        return variants
+
+
+def traverse_variants(alt_seq, ref_seq, variants):
+    tentative_valid = [([], 0, 0)]
+    for j, variant in enumerate(variants):
+        next_tentative = []
+        print(variant)
+        for tentative in tentative_valid:
+            cur_vars, alt_offset, prev_offset = tentative
+            print(tentative)
+            if not alt_seq[prev_offset+alt_offset:variant.offset+alt_offset] == ref_seq[prev_offset:variant.offset]:
+                print("--------")
+                continue
+            for code, seq in enumerate([variant.ref] + variant.alt):
+                if alt_seq[variant.offset+alt_offset:variant.offset+alt_offset+len(seq)] == seq.lower():
+                    next_tentative.append((cur_vars+[code], alt_offset+len(seq)-len(variant.ref), variant.offset+len(variant.ref)))
+        tentative_valid = next_tentative
+        assert all(len(t[0]) == j+1 for t in tentative_valid), (j, tentative_valid)
+    real = []
+    for tentative in tentative_valid:
+        cur_vars, alt_offset, prev_offset = tentative
+        if not len(alt_seq)-alt_offset == len(ref_seq):
+            # print("X", len(alt_seq), alt_offset, len(ref_seq))
+            continue
+        if not alt_seq[prev_offset+alt_offset:len(ref_seq)+alt_offset] == ref_seq[prev_offset:len(ref_seq)]:
+            print("Y")
+            continue
+        real.append(tentative)
+
+    if not len(real) == 1:
+        print(alt_seq)
+        print(ref_seq)
+        print(variants)
+        print("---->")
+        print(real, "#", tentative_valid)
+        return ["ERROR"]
+
+    return real[0][0]
+
 
 def find_haplotype(seq, refseq, vcf, start, end):
     refseq = refseq.lower()
     if seq == refseq:
         return []
-    logging.info("Finding haplotype for %s->%s, (%s, %s)", refseq, seq, start, end)
+    # logging.info("Finding haplotype for %s->%s, (%s, %s)", refseq, seq, start, end)
+    return traverse_variants(seq, refseq, vcf.get_variants_from(start, end))
     cur_offset = 0
     cur_ref_offset = 0
     haplotypes = []
@@ -84,15 +129,17 @@ class Main:
         self.fasta = fasta
         self.vcf = vcf
         self.counter = 0
+        self.prev_end = -1
 
     def run_peak(self, peak):
         seq, ref_seq, interval = self.get_sequence_pair(peak)
+        if interval[0] < self.prev_end:
+            return []
+        self.prev_end = interval[-1]
         # print("L:, ", peak.length(), interval[1]-interval[0], peak)
         haplo = find_haplotype(seq, ref_seq, self.vcf, interval[0], interval[1])
         if haplo:
             self.counter += 1
-        if self.counter > 5:
-            exit()
         return haplo
 
     def get_sequence_pair(self, peak):
@@ -116,7 +163,7 @@ class Main:
     def extend_peak_start(self, seq, start_offset, start_node):
         if start_node in self.indexed_interval.nodes_in_interval():
             return seq, self.indexed_interval.get_offset_at_node(start_node) + start_offset
-
+        print("Start-ALT")
         prev_node = max(-node for node in self.graph.reverse_adj_list[-start_node]
                         if -node in self.indexed_interval.nodes_in_interval())
         p_len = self.graph.node_size(prev_node)
@@ -127,7 +174,7 @@ class Main:
     def extend_peak_end(self, seq, end_offset, end_node):
         if end_node in self.indexed_interval.nodes_in_interval():
             return seq, self.indexed_interval.get_offset_at_node(end_node) + end_offset
-
+        print("End-ALT")
         next_node = min(node for node in self.graph.adj_list[end_node]
                         if node in self.indexed_interval.nodes_in_interval())
         p_len = self.graph.node_size(next_node)
@@ -184,7 +231,15 @@ def test4():
 
 
 if __name__ == "__main__":
-    test()
-    test2()
-    test3()
-    test4()
+    alt = "agtttcactggg"
+    ref = "agtttcagtagg"
+    variants = [Variant(offset=7, ref='G', alt=['C', 'A']), Variant(offset=8, ref='TA', alt=['T']), Variant(offset=9, ref='A', alt=['G'])]
+
+#     alt = "accttatagaaa"
+#     ref = "accttataagaaa"
+#     variants = [Variant(offset=6, ref='TA', alt=['T'])]
+
+    # alt = "agtttcactggg"
+    # ref = "agtttcagtagg"
+    # variants = [Variant(offset=7, ref='G', alt=['C', 'A']), Variant(offset=9, ref='A', alt=['', 'G'])]
+    print(traverse_variants(alt, ref, variants))
