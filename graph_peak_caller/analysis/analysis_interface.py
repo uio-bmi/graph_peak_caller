@@ -14,7 +14,7 @@ from .nongraphpeaks import NonGraphPeakCollection
 from .motifenrichment import plot_true_positives
 from ..peakfasta import PeakFasta
 from ..mindense import DensePileup
-from ..sparsediffs import SparseValues
+from ..sparsediffs import SparseValues, SparseDiffs
 from .util import create_linear_path
 
 
@@ -131,7 +131,8 @@ def peaks_to_linear(args):
 
 def get_summits(args):
     graph = args.graph
-    qvalues = SparseValues.from_sparse_files(args.q_values_base_name)
+    qvalues = SparseDiffs.from_sparse_files(args.q_values_base_name)
+    #qvalues = SparseValues.from_sparse_files(args.q_values_base_name)
     dense_qvalues = qvalues.to_dense_pileup(size=graph.number_of_basepairs())
     qvalues = DensePileup(graph, dense_qvalues)
     logging.info("Q values fetched")

@@ -75,6 +75,7 @@ class SparseValues:
             pileup = pileup.astype("bool")
         return pileup
 
+
     @classmethod
     def from_dense_pileup(cls, pileup):
         changes = pileup[1:] != pileup[:-1]
@@ -105,6 +106,15 @@ class SparseDiffs:
         np.save(file_base_name + "_values.npy", self._diffs)
         logging.info("Wrote to %s and %s" % (file_base_name + "_indexes.npy",
                                              file_base_name + "_values.npy"))
+
+    @classmethod
+    def from_sparse_files(cls, file_base_name):
+        indices = np.load(file_base_name + "_indexes.npy")
+        values = np.load(file_base_name + "_values.npy")
+        size = indices[-1] + 10  # hack
+        obj = cls(indices[:-1], values)
+        obj.track_size = size
+        return obj.get_sparse_values()
 
     def to_bed_graph(self, filename):
         logging.warning("Not writing to %s", filename)
