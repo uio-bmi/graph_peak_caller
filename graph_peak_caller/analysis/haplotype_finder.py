@@ -215,7 +215,7 @@ def traverse_variants(alt_seq, ref_seq, variants):
         print(variants)
         print("---->")
         print(real, "#", tentative_valid)
-        return ["ERROR"]
+        return ["No Match"]
     codes = real[0][0]
     f = None
     for code, variant in zip(codes, variants):
@@ -226,7 +226,7 @@ def traverse_variants(alt_seq, ref_seq, variants):
 def find_haplotype(seq, refseq, vcf, start, end):
     refseq = refseq.lower()
     if seq == refseq:
-        return []
+        return ["REF"]
     # logging.info("Finding haplotype for %s->%s, (%s, %s)", refseq, seq, start, end)
     return traverse_variants(seq, refseq, vcf.get_variants_from(start, end))
     cur_offset = 0
