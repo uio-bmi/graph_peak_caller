@@ -14,31 +14,52 @@ class VCF:
         self.f = open(self.file_name)
         self.cur_lines = []
 
+    def _join_variants(self, variants):
+        if len(variants) == 1:
+            return variants[0]
+        print(variants)
+        start = min(variant.offset for variant in variants)
+        end = max(variant.offset + len(variant.ref) for variant in variants)
+        ref = []*(end-start)
+        for variant in variants:
+            ref[variant.offset-start:variant.offset-start+len(variant.ref)] = variant.ref
+        ref = "".join(ref)
+        alts = [ref[:variant.offset-start] + v_alt + ref[variant.offset+len(variant.ref)-start:]
+                for variant in variants for v_alt in variant.alt]
+        return Variant(start, ref, alts)
+
     def get_variants_from(self, start, end):
         variants = []
         cur_end = 0
+        intersecting = []
         for line in chain(self.cur_lines, self.f):
             if line.startswith("#"):
                 continue
             parts = line.split("\t")
+            if "." in parts[4]:
+                print(parts[4], parts[4].split(","))
+
             pos = int(parts[1])-1
             if pos < start:
                 continue
-            if pos > end:
+            # print("#", pos, cur_end)
+            if pos >= cur_end:
+                if intersecting:
+                    variants.append(self._join_variants(intersecting))
+                intersecting = []
+            if pos >= end:
                 self.cur_lines = [line]
                 break
+
             # print(line)
             ref = parts[3]
-            variants.append(Variant(int(pos-start), ref, parts[4].split(",")))
+            if "." in parts[4]:
+                print(parts[4], parts[4].split(","))
+            intersecting.append(Variant(int(pos-start), ref, parts[4].split(",")))
+            cur_end = max(pos+len(ref), cur_end)
             continue
-            for alt in parts[4].split(","):
-                for i, pair in enumerate(zip(ref, alt)):
-                    if pair[0] != pair[1]:
-                        variants.append(Variant(int(pos+i-start), ref[i:], alt[i:]))
-                        break
-                else:
-                    i += 1
-                    variants.append(Variant(int(pos+i-start), ref[i:], alt[i:]))
+        if intersecting:
+            variants.append(self._join_variants(intersecting))
 
         self.cur_lines = []
         variants.sort(key=lambda x: x.offset)
@@ -49,15 +70,17 @@ def traverse_variants(alt_seq, ref_seq, variants):
     tentative_valid = [([], 0, 0)]
     for j, variant in enumerate(variants):
         next_tentative = []
-        print(variant)
+        logging.debug(variant)
         for tentative in tentative_valid:
             cur_vars, alt_offset, prev_offset = tentative
-            print(tentative)
+            logging.debug(tentative)
             if not alt_seq[prev_offset+alt_offset:variant.offset+alt_offset] == ref_seq[prev_offset:variant.offset]:
-                print("--------")
+                logging.debug("--------")
                 continue
             for code, seq in enumerate([variant.ref] + variant.alt):
+                logging.debug(alt_seq[variant.offset+alt_offset:variant.offset+alt_offset+len(seq)], seq.lower())
                 if alt_seq[variant.offset+alt_offset:variant.offset+alt_offset+len(seq)] == seq.lower():
+                    logging.debug("!")
                     next_tentative.append((cur_vars+[code], alt_offset+len(seq)-len(variant.ref), variant.offset+len(variant.ref)))
         tentative_valid = next_tentative
         assert all(len(t[0]) == j+1 for t in tentative_valid), (j, tentative_valid)
@@ -68,7 +91,7 @@ def traverse_variants(alt_seq, ref_seq, variants):
             # print("X", len(alt_seq), alt_offset, len(ref_seq))
             continue
         if not alt_seq[prev_offset+alt_offset:len(ref_seq)+alt_offset] == ref_seq[prev_offset:len(ref_seq)]:
-            print("Y")
+            # print("Y")
             continue
         real.append(tentative)
 
@@ -231,9 +254,22 @@ def test4():
 
 
 if __name__ == "__main__":
-    alt = "agtttcactggg"
-    ref = "agtttcagtagg"
-    variants = [Variant(offset=7, ref='G', alt=['C', 'A']), Variant(offset=8, ref='TA', alt=['T']), Variant(offset=9, ref='A', alt=['G'])]
+    alt = "aaaaaataagacgt"
+    ref = "ataaataagacgt"
+    variants = [Variant(offset=1, ref='T', alt=['A']), Variant(offset=8, ref='GACGTACCCTCA', alt=['G', 'GAGGTACCCTCA'])]
+
+    # alt = "cccttctttttttg"
+    # ref = "cttttttttttttg"
+    # variants = [Variant(offset=0, ref='CTT', alt=['TTT', 'C', 'CTTTT', 'CTTC']), Variant(offset=5, ref='T', alt=['C']), Variant(offset=6, ref='T', alt=['A']), Variant(offset=7, ref='T', alt=['C', 'TC'])]
+
+    # alt = "ggaaataaaaaa"
+    # ref = "ggaaataaaaa"
+    # variants = [Variant(offset=5, ref='T', alt=['C', 'TA']), Variant(offset=7, ref='A', alt=['C']), Variant(offset=8, ref='A', alt=['T', 'G']), Variant(offset=11, ref='T', alt=['A'])]
+
+    # alt = "agtttcactggg"
+    # ref = "agtttcagtagg"
+    # variants = [Variant(offset=7, ref='GTA', alt=['CTA', 'ATA', 'GT', 'GTG'])]
+    # [Variant(offset=7, ref='G', alt=['C', 'A']), Variant(offset=8, ref='TA', alt=['T']), Variant(offset=9, ref='A', alt=['G'])]
 
 #     alt = "accttatagaaa"
 #     ref = "accttataagaaa"

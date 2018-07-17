@@ -4,6 +4,19 @@ from .linearintervals import LinearIntervalCollection
 from ..sparsediffs import SparseDiffs
 
 
+def get_reference_map(graph, reference_path):
+    linear_map = LinearMap.from_graph(graph)
+    ref_starts = linear_map._node_starts[reference_path]
+    ref_ends = linear_map._node_ends[reference_path]
+    def mapping_func(intervals):
+        linear_intervals = LinearMap.map_interval_collection(intervals)
+        start_nodes = np.searchsorted(ref_starts, linear_intervals.starts)
+        start_offsets = linear_intervals.starts-LinearMap._node_starts[start_nodes]
+        
+        ends = np.searchsorted(ref_ends, linear_intervals.ends)
+    
+
+
 class LinearMap:
     def __init__(self, node_starts, node_ends, graph):
         self._node_starts = np.asanyarray(node_starts)

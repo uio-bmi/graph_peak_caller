@@ -22,7 +22,7 @@ from graph_peak_caller.analysis.analysis_interface import analyse_peaks_whole_ge
     analyse_peaks, peaks_to_fasta, linear_peaks_to_fasta,\
     analyse_manually_classified_peaks, differential_expression,\
     plot_motif_enrichment, get_summits, peaks_to_linear, move_linear_reads_to_graph,\
-    find_linear_path, concatenate_sequence_files
+    find_linear_path, concatenate_sequence_files, check_haplotype
 
 from graph_peak_caller.preprocess_interface import \
     count_unique_reads_interface, create_ob_graph,\
@@ -261,6 +261,19 @@ interface = \
                 ],
             'method': differential_expression
         },
+    'check_haplotype':
+        {
+            'help': 'Check motifs for haplotype',
+            'arguments':
+                [
+                    ('data_folder', ''),
+                    ('fasta_file', ''),
+                    ('result_folder', ''),
+                    ('chrom', '')
+                ],
+            'method': check_haplotype
+        },
+
     'peaks_to_linear':
         {
             'help': 'Converts graph peaks to linear peaks.',
