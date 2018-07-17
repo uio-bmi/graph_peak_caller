@@ -31,6 +31,10 @@ class FimoFile:
     def get_entries(self, peak_id):
         return self._entry_dict[peak_id]
 
+    def get_best_entries(self):
+        return [max(entries, key=lambda x: x.score) for entries in
+                self._entry_dict.values()]
+
     @classmethod
     def from_file(cls, filename):
         entries = defaultdict(list)
