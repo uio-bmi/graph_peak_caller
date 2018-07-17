@@ -21,9 +21,14 @@ class VariantPrecence:
 
     @classmethod
     def from_line(cls, line):
-        parts = line.replace("./.", "0|0").split("\t")
+        parts = line.replace(".", "0").replace("/", "|").split("\t")
         haplo_type = [part.split(":", 2)[0].split("|") for part in parts]
-        precence = np.array([[int(a), int(b)] for a, b in haplo_type])
+        try: 
+            precence = np.array([[int(a), int(b)] for a, b in haplo_type])
+        except:
+            print(line)
+            print(haplo_type)
+            raise
         return cls(precence)
 
     @classmethod
