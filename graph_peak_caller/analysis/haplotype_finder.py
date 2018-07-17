@@ -23,12 +23,7 @@ class VariantPrecence:
     def from_line(cls, line):
         parts = line.replace(".", "0").replace("/", "|").split("\t")
         haplo_type = [part.split(":", 2)[0].split("|") for part in parts]
-        try: 
-            precence = np.array([[int(a), int(b)] for a, b in haplo_type])
-        except:
-            print(line)
-            print(haplo_type)
-            raise
+        precence = np.array([[int(a), int(b)] for a, b in haplo_type])
         return cls(precence)
 
     @classmethod
@@ -261,9 +256,18 @@ class Main:
         self.counter = 0
         self.prev_end = -1
 
+    def run_peak_set(self, peaks_dict):
+        all_name_tuples = [(key, read) for key, reads in peaks_dict.items() for read in reads]
+        names, reads = zip(*sorted(all_name_tuples, key=lambda x: x[1].start_position.offset))
+        result_dict = {name: [] for name in peaks_dict}
+        for name, result in zip(names, self.run_peaks(reads)):
+            result_dict[name].append(result)
+        return result_dict
+
     def run_peaks(self, peaks):
         alts, refs, intervals = zip(*(self.get_sequence_pair(peak) for peak in peaks))
-        haplotypes = [traverse_variants(alt.lower(), ref.lower(), variants) for alt, ref, variants in
+        haplotypes = [traverse_variants(alt.lower(), ref.lower(), variants)
+                      for alt, ref, variants in
                       zip(alts, refs, self.vcf.get_variants_from_intervals(intervals))]
         return haplotypes
 

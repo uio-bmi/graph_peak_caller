@@ -45,13 +45,22 @@ def check_haplotype(args):
 
     motif_paths = obg.IntervalCollection.from_file(
         args.result_folder+args.chrom+"_motif_paths.intervalcollection", True)
-    motif_paths = list(sorted(motif_paths, key=lambda x: x.region_paths[0]))
-    haplotypes = main.run_peaks(motif_paths)
-    with open(args.result_folder+args.chrom+"_motif_paths.coverage", "w") as f:
-        for haplotype in haplotypes:
-            f.write(",".join(str(t) for t in haplotype) + "\n")
-            if len(haplotype) < 3 and "REF" not in haplotype:
-                print(haplotype)
+    alignment_collection = pyvg.AlignmentCollection.from_file(
+        args.result_folder + args.chrom + "_alignments.pickle")
+    peaks_dict = {i: alignment_collection.get_alignments_on_interval(interval)
+                  for i, interval in enumerate(motif_paths)}
+    result_dict = main.run_peak_set(peaks_dict)
+    lines = ("%s\t%s" % (i, result) for i, results in result_dict.items()
+             for result in results)
+    # motif_paths = list(sorted(motif_paths, key=lambda x: x.region_paths[0]))
+    # haplotypes = main.run_peaks(motif_paths)
+    with open(args.result_folder + args.chrom + "_motif_paths.setcoverage", "w") as f:
+        for line in lines:
+            f.write(line+"\n")
+        # for haplotype in haplotypes:
+        #     f.write(",".join(str(t) for t in haplotype) + "\n")
+        #     if len(haplotype) < 3 and "REF" not in haplotype:
+        #         print(haplotype)
 
 
 def concatenate_sequence_files(args):
