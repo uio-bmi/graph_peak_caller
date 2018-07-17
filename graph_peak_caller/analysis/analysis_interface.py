@@ -40,9 +40,10 @@ def check_haplotype(args):
     motif_paths = obg.IntervalCollection.from_file(args.result_folder+args.chrom+"_motif_paths.intervalcollection",
                                                    True)
     motif_paths = list(sorted(motif_paths, key=lambda x: x.region_paths[0]))
-    haplotype = [main.run_peak(motif_path) for motif_path in motif_paths]
-    print(haplotype)
-    print(len(haplotype))
+    haplotypes = main.run_peaks(motif_paths)
+    # haplotype = [main.run_peak(motif_path) for motif_path in motif_paths]
+    print(haplotypes)
+    print(len(haplotypes))
     # var_list = VariantList.from_name(args.data_folder+args.chrom)
     # types = [var_list.create_type(interval) for
     #          interval in motif_paths]

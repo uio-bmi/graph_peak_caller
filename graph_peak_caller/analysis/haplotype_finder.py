@@ -1,11 +1,82 @@
+import numpy as np
 from pyfaidx import Fasta
 import offsetbasedgraph as obg
 import logging
-from collections import namedtuple
+from collections import namedtuple, deque
 from itertools import chain
 
 
 Variant = namedtuple("Variant", ["offset", "ref", "alt"])
+FullVariant = namedtuple("FullVariant", ["offset", "ref", "alt", "precence"])
+
+
+class VariantPrecence:
+    def __init__(self, precence):
+        self._precence = precence
+
+    def get_samples(self, variant, f=None):
+        s = self._precence if f is None else self._precence[f, :]
+        match = np.any(s == variant, axis=-1)
+        return np.flatnonzero(match)
+
+    @classmethod
+    def from_line(cls, line):
+        parts = line.replace("./.", "0|0").split("\t")
+        haplo_type = [part.split(":", 2)[0].split("|") for part in parts]
+        precence = np.array([[int(a), int(b)] for a, b in haplo_type])
+        return cls(precence)
+
+    @classmethod
+    def join(cls, precences, counts):
+        offsets = [0] + list(np.cumsum(counts))[:-1]
+        combined = np.zeros_like(precences[0]._precence)
+        for precence, offset in zip(precences, offsets):
+            combined[precence._precence > 0] += precence._precence[precence._precence > 0] + offset
+        return cls(combined)
+
+
+class VariantList:
+    def __init__(self, start):
+        self._start = int(start)
+        self._variants = []
+
+    def append(self, variant):
+        self._variants.append(variant)
+
+    def finalize(self):
+        final_list = []
+        cur_end = 0
+        var_buffer = []
+        for variant in self._variants:
+            transformed_var = FullVariant(variant.offset-self._start,
+                                      variant.ref, variant.alt,
+                                      variant.precence)
+            if transformed_var.offset >= cur_end:
+                if var_buffer:
+                    final_list.append(self._join_variants(var_buffer))
+                var_buffer = []
+            var_buffer.append(transformed_var)
+            cur_end = max(transformed_var.offset + len(transformed_var.ref), cur_end)
+        if var_buffer:
+            final_list.append(self._join_variants(var_buffer))
+        return final_list
+
+    def _join_variants(self, variants):
+        if len(variants) == 1:
+            return variants[0]
+        # print(variants)
+        start = min(variant.offset for variant in variants)
+        end = max(variant.offset + len(variant.ref) for variant in variants)
+        ref = []*(end-start)
+        for variant in variants:
+            ref[variant.offset-start:variant.offset-start+len(variant.ref)] = variant.ref
+        ref = "".join(ref)
+        alts = [ref[:variant.offset-start] + v_alt + ref[variant.offset+len(variant.ref)-start:]
+                for variant in variants for v_alt in variant.alt]
+        counts = [len(variant.alt) for variant in variants]
+        precences = [variant.precence for variant in variants]
+        combined_precence = VariantPrecence.join(precences, counts)
+        return FullVariant(start, ref, alts, combined_precence)
 
 
 class VCF:
@@ -17,7 +88,7 @@ class VCF:
     def _join_variants(self, variants):
         if len(variants) == 1:
             return variants[0]
-        print(variants)
+        # print(variants)
         start = min(variant.offset for variant in variants)
         end = max(variant.offset + len(variant.ref) for variant in variants)
         ref = []*(end-start)
@@ -27,6 +98,48 @@ class VCF:
         alts = [ref[:variant.offset-start] + v_alt + ref[variant.offset+len(variant.ref)-start:]
                 for variant in variants for v_alt in variant.alt]
         return Variant(start, ref, alts)
+
+    def get_variants_from_intervals(self, intervals):
+        """ intervals reveresely sorted on start """
+        intervals = iter(intervals)
+        current_intervals = deque([])
+        cur_interval = next(intervals)
+        is_finished = False
+        for line in self.f:
+            if line.startswith("#"):
+                continue
+            parts = line.split("\t", 9)
+            try:
+                pos = int(parts[1])-1
+            except:
+                print("#", line)
+                continue
+            while pos >= cur_interval[0] and not is_finished:
+                current_intervals.append([cur_interval[-1], False,
+                                          VariantList(cur_interval[0])])
+                try:
+                    cur_interval = next(intervals)
+                except StopIteration:
+                    is_finished = True
+            if not current_intervals:
+                continue
+
+            # end = pos + len(parts[3])
+            for entry in current_intervals:
+                entry[1] = pos >= entry[0]
+
+            while current_intervals and current_intervals[0][1]:
+                yield current_intervals.popleft()[-1].finalize()
+            if not current_intervals:
+                if is_finished:
+                    break
+                continue
+            ref = parts[3]
+            alt = parts[4].lower().split(",")
+            precence = VariantPrecence.from_line(parts[-1])
+            var = FullVariant(int(pos), ref.lower(), alt, precence)
+            for _, _, entry in current_intervals:
+                entry.append(var)
 
     def get_variants_from(self, start, end):
         variants = []
@@ -53,8 +166,6 @@ class VCF:
 
             # print(line)
             ref = parts[3]
-            if "." in parts[4]:
-                print(parts[4], parts[4].split(","))
             intersecting.append(Variant(int(pos-start), ref, parts[4].split(",")))
             cur_end = max(pos+len(ref), cur_end)
             continue
@@ -67,8 +178,11 @@ class VCF:
 
 
 def traverse_variants(alt_seq, ref_seq, variants):
+    if ref_seq == alt_seq:
+        return ""
     tentative_valid = [([], 0, 0)]
     for j, variant in enumerate(variants):
+        # print(variant)
         next_tentative = []
         logging.debug(variant)
         for tentative in tentative_valid:
@@ -102,8 +216,11 @@ def traverse_variants(alt_seq, ref_seq, variants):
         print("---->")
         print(real, "#", tentative_valid)
         return ["ERROR"]
-
-    return real[0][0]
+    codes = real[0][0]
+    f = None
+    for code, variant in zip(codes, variants):
+        f = variant.precence.get_samples(code, f)
+    return f
 
 
 def find_haplotype(seq, refseq, vcf, start, end):
@@ -153,6 +270,12 @@ class Main:
         self.vcf = vcf
         self.counter = 0
         self.prev_end = -1
+
+    def run_peaks(self, peaks):
+        alts, refs, intervals = zip(*(self.get_sequence_pair(peak) for peak in peaks))
+        haplotypes = [traverse_variants(alt.lower(), ref.lower(), variants) for alt, ref, variants in
+                      zip(alts, refs, self.vcf.get_variants_from_intervals(intervals))]
+        return haplotypes
 
     def run_peak(self, peak):
         seq, ref_seq, interval = self.get_sequence_pair(peak)
@@ -212,7 +335,7 @@ class Main:
         graph = obg.Graph.from_file(name+".nobg")
         seq_graph = obg.SequenceGraph.from_file(name+".nobg.sequences")
         fasta = Fasta(fasta_file_name)[chrom]
-        vcf = VCF(name + "_variants_cut.vcf")
+        vcf = VCF(name + "_variants.vcf")
         return cls(indexed_interval, graph, seq_graph, fasta, vcf)
     # var_list.create_lookup(name+"_variants.vcf")
     # return var_list
@@ -254,9 +377,14 @@ def test4():
 
 
 if __name__ == "__main__":
-    alt = "aaaaaataagacgt"
-    ref = "ataaataagacgt"
-    variants = [Variant(offset=1, ref='T', alt=['A']), Variant(offset=8, ref='GACGTACCCTCA', alt=['G', 'GAGGTACCCTCA'])]
+    h = "./.:.:.	1|1:40:8	1|1:40:11	0|0:40:9	./.:.:.	./.:.:.	./.:.:.	0|0:40:8	0|0:40:9	./.:.:.	0|0:40:12	0|0:40:16	0|0:40:40	0|0:40:35	0|0:40:21	0|0:40:13	0|0:40:44	0|0:40:15	0|0:40:86	0|0:40:69	./.:.:.	0|0:40:14	0|0:40:59	0|0:40:51"
+    precence = VariantPrecence.from_line(h)
+    print(precence._precence)
+    print(precence.get_samples(1, [0, 1, 3]))
+
+    #alt = "aaaaaataagacgt"
+    #ref = "ataaataagacgt"
+    #variants = [Variant(offset=1, ref='T', alt=['A']), Variant(offset=8, ref='GACGTACCCTCA', alt=['G', 'GAGGTACCCTCA'])]
 
     # alt = "cccttctttttttg"
     # ref = "cttttttttttttg"
@@ -278,4 +406,4 @@ if __name__ == "__main__":
     # alt = "agtttcactggg"
     # ref = "agtttcagtagg"
     # variants = [Variant(offset=7, ref='G', alt=['C', 'A']), Variant(offset=9, ref='A', alt=['', 'G'])]
-    print(traverse_variants(alt, ref, variants))
+    # print(traverse_variants(alt, ref, variants))
