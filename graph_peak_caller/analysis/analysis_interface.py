@@ -1,5 +1,6 @@
 import numpy as np
 import logging
+from itertools import chain
 import offsetbasedgraph as obg
 import pyvg
 from pyvg.sequences import SequenceRetriever
@@ -7,7 +8,7 @@ from .peakscomparer import PeaksComparerV2, AnalysisResults
 from .manually_classified_peaks import \
     CheckOverlapWithManuallyClassifiedPeaks
 from .analyse_peaks import LinearRegion
-from .differentialbinding import main
+from .differentialbinding import main, MotifLocation
 from .fimowrapper import FimoFile
 from ..peakcollection import Peak, PeakCollection
 from .nongraphpeaks import NonGraphPeakCollection
@@ -16,7 +17,38 @@ from ..peakfasta import PeakFasta
 from ..mindense import DensePileup
 from ..sparsediffs import SparseValues, SparseDiffs
 from .util import create_linear_path
+from .genotype_matrix import VariantList
+from .haplotype_finder import Main
 
+def check_haplotype(args):
+    # graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
+    # peaks = obg.IntervalCollection.from_file(args.result_folder+args.chrom+"_max_paths.intervalcollection", True)
+    # peaks = list(peaks)
+    # 
+    # for i, p in enumerate(peaks):
+    #     p.graph = graph
+    #     p.unique_id = "peak%s" % i
+    # 
+    # fimo = FimoFile.from_file(args.result_folder+"fimo_graph_chr"+args.chrom+"/fimo.txt")
+    # motif_paths = [MotifLocation.from_fimo_and_peaks(entry, peaks).location
+    #                for entry in chain.from_iterable(fimo._entry_dict.values())]
+    # obg.IntervalCollection(motif_paths).to_file(
+    #     args.result_folder+args.chrom+"_motif_paths.intervalcollection", True)
+    name = args.data_folder+args.chrom
+    main = Main.from_name(name, args.fasta_file, args.chrom)
+
+    motif_paths = obg.IntervalCollection.from_file(args.result_folder+args.chrom+"_motif_paths.intervalcollection",
+                                                   True)
+    motif_paths = list(sorted(motif_paths, key=lambda x: x.region_paths[0]))
+    haplotypes = main.run_peaks(motif_paths)
+    # haplotype = [main.run_peak(motif_path) for motif_path in motif_paths]
+    print(haplotypes)
+    print(len(haplotypes))
+    # var_list = VariantList.from_name(args.data_folder+args.chrom)
+    # types = [var_list.create_type(interval) for
+    #          interval in motif_paths]
+    # matrix = GenoTypeMatrix.from_vcf(args.data_folder + name+"_variants.vcf")
+    # hits_list = [matrix.find_path(genotype) for genotype in types]
 
 def concatenate_sequence_files(args):
     chromosomes = args.chromosomes.split(",")
