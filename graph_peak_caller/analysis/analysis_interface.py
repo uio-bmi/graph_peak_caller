@@ -50,8 +50,8 @@ def check_haplotype(args):
     with open(args.result_folder+args.chrom+"_motif_paths.coverage", "w") as f:
         for haplotype in haplotypes:
             f.write(",".join(str(t) for t in haplotype) + "\n")
-        if len(haplotype) < 3:
-            print(haplotype)
+            if list(haplotype) < 3:
+                print(haplotype)
 
 
 def concatenate_sequence_files(args):
