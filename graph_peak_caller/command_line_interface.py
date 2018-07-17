@@ -325,6 +325,17 @@ interface = \
                 ],
             'method': check_haplotype
         },
+    'motif_locations':
+        {
+            'help': 'Check motifs for haplotype',
+            'arguments':
+                [
+                    ('data_folder', ''),
+                    ('result_folder', ''),
+                    ('chrom', '')
+                ],
+            'method': get_motif_locations
+        },
 
     'peaks_to_linear':
         {
