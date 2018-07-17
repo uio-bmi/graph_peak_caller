@@ -20,20 +20,26 @@ from .util import create_linear_path
 from .genotype_matrix import VariantList
 from .haplotype_finder import Main
 
+
+def get_motif_locations(args):
+    graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
+    peaks = obg.IntervalCollection.from_file(
+        args.result_folder+args.chrom+"_max_paths.intervalcollection", True)
+    peaks = list(peaks)
+
+    for i, p in enumerate(peaks):
+        p.graph = graph
+        p.unique_id = "peak%s" % i
+
+    fimo = FimoFile.from_file(
+        args.result_folder+"fimo_graph_chr"+args.chrom+"/fimo.txt")
+    motif_paths = [MotifLocation.from_fimo_and_peaks(entry, peaks).location
+                   for entry in chain.from_iterable(fimo._entry_dict.values())]
+    obg.IntervalCollection(motif_paths).to_file(
+        args.result_folder+args.chrom+"_motif_paths.intervalcollection", True)
+
+
 def check_haplotype(args):
-    # graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
-    # peaks = obg.IntervalCollection.from_file(args.result_folder+args.chrom+"_max_paths.intervalcollection", True)
-    # peaks = list(peaks)
-    # 
-    # for i, p in enumerate(peaks):
-    #     p.graph = graph
-    #     p.unique_id = "peak%s" % i
-    # 
-    # fimo = FimoFile.from_file(args.result_folder+"fimo_graph_chr"+args.chrom+"/fimo.txt")
-    # motif_paths = [MotifLocation.from_fimo_and_peaks(entry, peaks).location
-    #                for entry in chain.from_iterable(fimo._entry_dict.values())]
-    # obg.IntervalCollection(motif_paths).to_file(
-    #     args.result_folder+args.chrom+"_motif_paths.intervalcollection", True)
     name = args.data_folder+args.chrom
     main = Main.from_name(name, args.fasta_file, args.chrom)
 
@@ -49,6 +55,7 @@ def check_haplotype(args):
     #          interval in motif_paths]
     # matrix = GenoTypeMatrix.from_vcf(args.data_folder + name+"_variants.vcf")
     # hits_list = [matrix.find_path(genotype) for genotype in types]
+
 
 def concatenate_sequence_files(args):
     chromosomes = args.chromosomes.split(",")

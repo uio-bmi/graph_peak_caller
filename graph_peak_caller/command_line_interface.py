@@ -22,7 +22,7 @@ from graph_peak_caller.analysis.analysis_interface import analyse_peaks_whole_ge
     analyse_peaks, peaks_to_fasta, linear_peaks_to_fasta,\
     analyse_manually_classified_peaks, differential_expression,\
     plot_motif_enrichment, get_summits, peaks_to_linear, move_linear_reads_to_graph,\
-    find_linear_path, concatenate_sequence_files, check_haplotype
+    find_linear_path, concatenate_sequence_files, check_haplotype, get_motif_locations
 
 from graph_peak_caller.preprocess_interface import \
     count_unique_reads_interface, create_ob_graph,\
