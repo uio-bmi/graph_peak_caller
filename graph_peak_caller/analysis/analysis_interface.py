@@ -43,18 +43,15 @@ def check_haplotype(args):
     name = args.data_folder+args.chrom
     main = Main.from_name(name, args.fasta_file, args.chrom)
 
-    motif_paths = obg.IntervalCollection.from_file(args.result_folder+args.chrom+"_motif_paths.intervalcollection",
-                                                   True)
+    motif_paths = obg.IntervalCollection.from_file(
+        args.result_folder+args.chrom+"_motif_paths.intervalcollection", True)
     motif_paths = list(sorted(motif_paths, key=lambda x: x.region_paths[0]))
     haplotypes = main.run_peaks(motif_paths)
-    # haplotype = [main.run_peak(motif_path) for motif_path in motif_paths]
-    print(haplotypes)
-    print(len(haplotypes))
-    # var_list = VariantList.from_name(args.data_folder+args.chrom)
-    # types = [var_list.create_type(interval) for
-    #          interval in motif_paths]
-    # matrix = GenoTypeMatrix.from_vcf(args.data_folder + name+"_variants.vcf")
-    # hits_list = [matrix.find_path(genotype) for genotype in types]
+    with open(args.result_folder+args.chrom+"_motif_paths.coverage", "w") as f:
+        for haplotype in haplotypes:
+            f.write(",".join(str(t) for t in haplotype) + "\n")
+        if len(haplotype) < 3:
+            print(haplotype)
 
 
 def concatenate_sequence_files(args):
