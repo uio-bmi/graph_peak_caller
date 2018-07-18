@@ -1,5 +1,6 @@
 import numpy as np
 import logging
+from collections import Counter
 from itertools import chain
 import offsetbasedgraph as obg
 import pyvg
@@ -76,6 +77,24 @@ class IntervalDict(obg.IntervalCollection):
         return file_name
 
 
+def summarize_haplotypes(types):
+    N = len(types)
+    counter = Counter()
+    refs = 0
+    for t in types:
+        if len(t):
+            if t[0] == "REF":
+                refs += 1
+                continue
+            if isinstance(t[0], str):
+                continue
+        counter.update(t)
+    if not counter:
+        return (refs, N, "REF")
+    most_common = counter.most_common(1)
+    return (most_common[1]+refs, N, most_common[0])
+
+
 def check_haplotype(args):
     name = args.data_folder+args.chrom
     main = Main.from_name(name, args.fasta_file, args.chrom)
@@ -90,6 +109,9 @@ def check_haplotype(args):
     # IntervalDict(peaks_dict).to_file(args.result_folder + args.chrom + "_motif_reads.intervaldict")
     peaks_dict = IntervalDict.from_file(args.result_folder + args.chrom + "_motif_reads.intervaldict").intervals
     result_dict = main.run_peak_set(peaks_dict)
+    for k, v in result_dict:
+        print("%s, %s" % (k, summarize_haplotypes(v)))
+
     lines = ("%s\t%s" % (i.split()[0], result) for i, results in result_dict.items()
              for result in results)
     # motif_paths = list(sorted(motif_paths, key=lambda x: x.region_paths[0]))
