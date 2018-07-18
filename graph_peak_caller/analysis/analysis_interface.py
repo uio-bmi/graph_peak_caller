@@ -58,8 +58,8 @@ class IntervalDict(obg.IntervalCollection):
                 cur_name = line.strip()[1:]
                 intervals_dict[cur_name] = []
                 continue
-            intervals_dict[cur_name] = cls.interval_class.from_file_line(
-                line, graph=graph)
+            intervals_dict[cur_name].append(cls.interval_class.from_file_line(
+                line, graph=graph))
         f.close()
         return cls(intervals_dict)
 
@@ -68,7 +68,7 @@ class IntervalDict(obg.IntervalCollection):
         f = open(file_name, "w")
 
         for name, intervals in self.intervals.items():
-            f.write("#" + name)
+            f.write("#" + str(name))
             for interval in intervals:
                 f.writelines(["%s\n" % interval.to_file_line()])
         f.close()
@@ -82,13 +82,14 @@ def check_haplotype(args):
     motif_paths = obg.IntervalCollection.from_file(
         args.result_folder+args.chrom+"_motif_paths.intervalcollection", True)
     graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
-    alignment_collection = AlignmentCollection.from_file(
-        args.result_folder + args.chrom + "_alignments.pickle", graph)
-    peaks_dict = {i: alignment_collection.get_alignments_on_interval(interval).values()
-                  for i, interval in enumerate(motif_paths)}
-    IntervalDict(peaks_dict).to_file(args.result_folder + args.chrom + "_motif_reads.intervaldict")
+    # alignment_collection = AlignmentCollection.from_file(
+    #    args.result_folder + args.chrom + "_alignments.pickle", graph)
+    # peaks_dict = {i: alignment_collection.get_alignments_on_interval(interval).values()
+    #               for i, interval in enumerate(motif_paths)}
+    # IntervalDict(peaks_dict).to_file(args.result_folder + args.chrom + "_motif_reads.intervaldict")
+    peaks_dict = IntervalDict.from_file(args.result_folder + args.chrom + "_motif_reads.intervaldict").intervals
     result_dict = main.run_peak_set(peaks_dict)
-    lines = ("%s\t%s" % (i, result) for i, results in result_dict.items()
+    lines = ("%s\t%s" % (i.split()[0], result) for i, results in result_dict.items()
              for result in results)
     # motif_paths = list(sorted(motif_paths, key=lambda x: x.region_paths[0]))
     # haplotypes = main.run_peaks(motif_paths)

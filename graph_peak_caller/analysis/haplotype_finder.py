@@ -36,14 +36,17 @@ class VariantPrecence:
 
 
 class VariantList:
-    def __init__(self, start):
+    def __init__(self, start, end):
         self._start = int(start)
+        self._end = int(end)
         self._variants = []
 
     def append(self, variant):
         self._variants.append(variant)
 
     def finalize(self):
+        if not self._variants:
+            print(self._start, self._end)
         final_list = []
         cur_end = 0
         var_buffer = []
@@ -51,6 +54,7 @@ class VariantList:
             transformed_var = FullVariant(variant.offset-self._start,
                                       variant.ref, variant.alt,
                                       variant.precence)
+            assert transformed_var.offset <= self._end-self._start, (variant, self._start, transformed_var.offset, self._end-self._start)
             if transformed_var.offset >= cur_end:
                 if var_buffer:
                     final_list.append(self._join_variants(var_buffer))
@@ -103,19 +107,19 @@ class VCF:
         current_intervals = deque([])
         cur_interval = next(intervals)
         is_finished = False
+        prev_start = 0
         for line in self.f:
             if line.startswith("#"):
                 continue
             parts = line.split("\t", 9)
-            try:
-                pos = int(parts[1])-1
-            except:
-                continue
+            pos = int(parts[1])-1
             while pos >= cur_interval[0] and not is_finished:
                 current_intervals.append([cur_interval[-1], False,
-                                          VariantList(cur_interval[0])])
+                                          VariantList(*cur_interval)])
                 try:
                     cur_interval = next(intervals)
+                    assert cur_interval[0]>=prev_start, (cur_interval, prev_start)
+                    prev_start = cur_interval[0]
                 except StopIteration:
                     is_finished = True
             if not current_intervals:
@@ -135,8 +139,10 @@ class VCF:
             alt = parts[4].lower().split(",")
             precence = VariantPrecence.from_line(parts[-1])
             var = FullVariant(int(pos), ref.lower(), alt, precence)
-            for _, _, entry in current_intervals:
-                entry.append(var)
+            print(pos, [(i, e._start, i-pos) for i, s, e in current_intervals if not s]) 
+            for _, in_active, entry in current_intervals:
+                if not in_active:
+                    entry.append(var)
 
     def get_variants_from(self, start, end):
         variants = []
@@ -172,6 +178,8 @@ class VCF:
 def traverse_variants(alt_seq, ref_seq, variants):
     if ref_seq == alt_seq:
         return ["REF"]
+    if not variants:
+        return ["No variants"]
     tentative_valid = [([], 0, 0)]
     for j, variant in enumerate(variants):
         next_tentative = []
@@ -199,11 +207,11 @@ def traverse_variants(alt_seq, ref_seq, variants):
         real.append(tentative)
 
     if not len(real) == 1:
-        logging.debug(alt_seq)
-        logging.debug(ref_seq)
-        logging.debug(variants)
-        logging.debug("---->")
-        logging.debug(real, "#", tentative_valid)
+        logging.info(alt_seq)
+        logging.info(ref_seq)
+        logging.info(variants)
+        logging.info("---->")
+        logging.info("%s / %s", real, tentative_valid)
         return ["No Match"]
     codes = real[0][0]
     f = None
@@ -257,10 +265,13 @@ class Main:
         self.prev_end = -1
 
     def run_peak_set(self, peaks_dict):
-        all_name_tuples = [(key, read) for key, reads in peaks_dict.items() for read in reads]
-        names, reads = zip(*sorted(all_name_tuples, key=lambda x: x[1].start_position.offset))
+        all_name_tuples = [(key, self.get_sequence_pair(read)) for key, reads in peaks_dict.items() for read in reads]
+        names, tuples = zip(*sorted(all_name_tuples, key=lambda x: x[1][2][0]))
+        alts, refs, intervals = zip(*tuples)
+        params = zip(alts, refs, self.vcf.get_variants_from_intervals(intervals))
+        haplotypes = (traverse_variants(*param) for param in params)
         result_dict = {name: [] for name in peaks_dict}
-        for name, result in zip(names, self.run_peaks(reads)):
+        for name, result in zip(names, haplotypes):
             result_dict[name].append(result)
         return result_dict
 
@@ -290,14 +301,14 @@ class Main:
         if all(rp in self.indexed_interval.nodes_in_interval() for rp in peak.region_paths):
             if len(seq) == len(ref_seq):
                 pass  # assert seq == ref_seq.lower(), (seq, ref_seq.lower())
-        return seq, ref_seq, interval
+        return seq.lower(), ref_seq.lower(), interval
 
     def extend_peak(self, seq, start_position, end_position):
         seq, start_offset = self.extend_peak_start(
             seq, start_position.offset, start_position.region_path_id)
         seq, end_offset = self.extend_peak_end(
             seq, end_position.offset, end_position.region_path_id)
-        return seq, (start_offset, end_offset)
+        return seq.lower(), (start_offset, end_offset)
 
     def extend_peak_start(self, seq, start_offset, start_node):
         if start_node in self.indexed_interval.nodes_in_interval():
