@@ -4,6 +4,7 @@ from itertools import chain
 import offsetbasedgraph as obg
 import pyvg
 from pyvg.sequences import SequenceRetriever
+from pyvg.alignmentcollection import AlignmentCollection
 from .peakscomparer import PeaksComparerV2, AnalysisResults
 from .manually_classified_peaks import \
     CheckOverlapWithManuallyClassifiedPeaks
@@ -45,9 +46,10 @@ def check_haplotype(args):
 
     motif_paths = obg.IntervalCollection.from_file(
         args.result_folder+args.chrom+"_motif_paths.intervalcollection", True)
-    alignment_collection = pyvg.AlignmentCollection.from_file(
-        args.result_folder + args.chrom + "_alignments.pickle")
-    peaks_dict = {i: alignment_collection.get_alignments_on_interval(interval)
+    graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
+    alignment_collection = AlignmentCollection.from_file(
+        args.result_folder + args.chrom + "_alignments.pickle", graph)
+    peaks_dict = {i: alignment_collection.get_alignments_on_interval(interval).values()
                   for i, interval in enumerate(motif_paths)}
     result_dict = main.run_peak_set(peaks_dict)
     lines = ("%s\t%s" % (i, result) for i, results in result_dict.items()
