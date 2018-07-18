@@ -17,7 +17,10 @@ class VariantPrecence:
     def get_samples(self, variant, f=None):
         s = self._precence if f is None else self._precence[f, :]
         match = np.any(s == variant, axis=-1)
-        return np.flatnonzero(match)
+        res = np.flatnonzero(match)
+        if f is not None:
+            return f[res]
+        return res
 
     @classmethod
     def from_line(cls, line):
@@ -45,8 +48,6 @@ class VariantList:
         self._variants.append(variant)
 
     def finalize(self):
-        if not self._variants:
-            print(self._start, self._end)
         final_list = []
         cur_end = 0
         var_buffer = []
@@ -139,7 +140,6 @@ class VCF:
             alt = parts[4].lower().split(",")
             precence = VariantPrecence.from_line(parts[-1])
             var = FullVariant(int(pos), ref.lower(), alt, precence)
-            print(pos, [(i, e._start, i-pos) for i, s, e in current_intervals if not s]) 
             for _, in_active, entry in current_intervals:
                 if not in_active:
                     entry.append(var)

@@ -39,6 +39,7 @@ def get_motif_locations(args):
     obg.IntervalCollection(motif_paths).to_file(
         args.result_folder+args.chrom+"_motif_paths.intervalcollection", True)
 
+
 class IntervalDict(obg.IntervalCollection):
     """ Should be moved to obg"""
     def to_file(self, file_name, text_file=False):
@@ -68,7 +69,7 @@ class IntervalDict(obg.IntervalCollection):
         f = open(file_name, "w")
 
         for name, intervals in self.intervals.items():
-            f.write("#" + str(name))
+            f.write("#" + str(name)+"\n")
             for interval in intervals:
                 f.writelines(["%s\n" % interval.to_file_line()])
         f.close()
