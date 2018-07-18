@@ -39,6 +39,41 @@ def get_motif_locations(args):
     obg.IntervalCollection(motif_paths).to_file(
         args.result_folder+args.chrom+"_motif_paths.intervalcollection", True)
 
+class IntervalDict(obg.IntervalCollection):
+    """ Should be moved to obg"""
+    def to_file(self, file_name, text_file=False):
+        return self.to_text_file(file_name)
+
+    @classmethod
+    def from_file(cls, file_name, text_file=False, graph=None):
+        return cls.create_generator_from_file(file_name, graph=graph)
+
+    @classmethod
+    def create_generator_from_file(cls, file_name, graph=None):
+        cur_name = None
+        intervals_dict = {}
+        f = open(file_name)
+        for line in f:
+            if line.startswith("#"):
+                cur_name = line.strip()[1:]
+                intervals_dict[cur_name] = []
+                continue
+            intervals_dict[cur_name] = cls.interval_class.from_file_line(
+                line, graph=graph)
+        f.close()
+        return cls(intervals_dict)
+
+    def to_text_file(self, file_name):
+        logging.info("Writing to text file %s" % file_name)
+        f = open(file_name, "w")
+
+        for name, intervals in self.intervals.items():
+            f.write("#" + name)
+            for interval in intervals:
+                f.writelines(["%s\n" % interval.to_file_line()])
+        f.close()
+        return file_name
+
 
 def check_haplotype(args):
     name = args.data_folder+args.chrom
@@ -51,6 +86,7 @@ def check_haplotype(args):
         args.result_folder + args.chrom + "_alignments.pickle", graph)
     peaks_dict = {i: alignment_collection.get_alignments_on_interval(interval).values()
                   for i, interval in enumerate(motif_paths)}
+    IntervalDict(peaks_dict).to_file(args.result_folder + args.chrom + "_motif_reads.intervaldict")
     result_dict = main.run_peak_set(peaks_dict)
     lines = ("%s\t%s" % (i, result) for i, results in result_dict.items()
              for result in results)
