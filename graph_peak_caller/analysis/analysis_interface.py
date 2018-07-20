@@ -91,7 +91,7 @@ def summarize_haplotypes(types):
         counter.update(t)
     if not counter:
         return (refs, N, "REF")
-    most_common = counter.most_common(1)
+    most_common = counter.most_common(1)[0]
     return (most_common[1]+refs, N, most_common[0])
 
 
@@ -109,10 +109,12 @@ def check_haplotype(args):
     # IntervalDict(peaks_dict).to_file(args.result_folder + args.chrom + "_motif_reads.intervaldict")
     peaks_dict = IntervalDict.from_file(args.result_folder + args.chrom + "_motif_reads.intervaldict").intervals
     result_dict = main.run_peak_set(peaks_dict)
-    for k, v in result_dict:
-        print("%s, %s" % (k, summarize_haplotypes(v)))
+    with open(args.result_folder + args.chrom + "_motif_paths.setsummary", "w") as f:
+        for k, v in result_dict.items():
+            print("%s, %s" % (k, summarize_haplotypes(v)))
+            f.write("%s, %s\n" % (k, summarize_haplotypes(v)))
 
-    lines = ("%s\t%s" % (i.split()[0], result) for i, results in result_dict.items()
+    lines = ("%s\t%s" % (i, result) for i, results in result_dict.items()
              for result in results)
     # motif_paths = list(sorted(motif_paths, key=lambda x: x.region_paths[0]))
     # haplotypes = main.run_peaks(motif_paths)
