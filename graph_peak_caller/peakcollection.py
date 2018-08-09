@@ -101,8 +101,7 @@ class PeakCollection(obg.IntervalCollection):
             #                      (len(peak_qvalues) - np.argmax(peak_qvalues[::-1])))/2)
 
             max_positions = np.where(peak_qvalues == np.max(peak_qvalues))[0]
-            logging.info("N max position: %d" % len(max_positions))
-            print("max positions: %s" % list(max_positions))
+
             summit_position = int(np.median(max_positions))
 
             summit = peak.get_subinterval(max(0, summit_position - n_base_pairs_around),

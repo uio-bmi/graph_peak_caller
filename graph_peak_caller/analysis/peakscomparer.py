@@ -218,7 +218,7 @@ class PeaksComparerV2(object):
                 self.results.not_motif_not_ambiguous = d
                 self.results.peaks1_in_peaks2_matching_motif = n
             else:
-                print("MA: ", a, "MNA:", b, "NMA:", c, "NMNA:", d)
+                #print("MA: ", a, "MNA:", b, "NMA:", c, "NMNA:", d)
                 self.results.peaks2_in_peaks1_matching_motif = n
             i += 1
 
@@ -228,18 +228,26 @@ class PeaksComparerV2(object):
                 peak_on_same_pos = self.peaks2.which_approx_contains_part_of_interval(peak)
 
                 if peak_on_same_pos.unique_id not in self.linear_matching_motif:
-                    logging.info("Found graph peak matching motif where linear "
-                                 "peak not matching. (%s, %s) \nGraph peak: %s. \nLinear peak: %s" %
-                                 (peak.unique_id, peak_on_same_pos.unique_id, peak, peak_on_same_pos))
+                    #logging.info("Found graph peak matching motif where linear "
+                    #             "peak not matching. (%s, %s) \nGraph peak: %s. \nLinear peak: %s" %
+                    #             (peak.unique_id, peak_on_same_pos.unique_id, peak, peak_on_same_pos))
+                    continue
 
         # Find all peaks in 1 not in 2 that matches motif
+        n_not_on_linear_matching_motif = []
+        n_not_on_linear_not_matching_motif = []
         for peak in self.peaks1_not_in_peaks2:
+            n_not_on_linear = peak.length() - \
+                              self.bp_in_peak_overlapping_indexed_interval(peak, self.linear_path)
             if peak.unique_id in self.graph_matching_motif:
-                n_not_on_linear = peak.length() - \
-                                  self.bp_in_peak_overlapping_indexed_interval(peak, self.linear_path)
-                logging.info("Peak not in macs, matching motif. N base pairs "
-                             "not on linear: %d\n %s, %s" % (n_not_on_linear, peak.unique_id, peak))
+                n_not_on_linear_matching_motif.append(n_not_on_linear)
+                #logging.info("Peak not in macs, matching motif. N base pairs "
+                #             "not on linear: %d\n %s, %s" % (n_not_on_linear, peak.unique_id, peak))
+            else:
+                n_not_on_linear_not_matching_motif.append(n_not_on_linear)
 
+        logging.info("Base pairs not on linear among peaks NOT matching motif and not found by macs: %.2f" % np.mean(n_not_on_linear_not_matching_motif))
+        logging.info("Base pairs not on linear among peaks MATCHING motif and not found by macs: %.2f" % np.mean(n_not_on_linear_matching_motif))
 
 
     def check_non_matching_for_motif_hits(self):
@@ -508,12 +516,14 @@ class PeaksComparer(object):
             similar = self.peaks2.get_similar_intervals(
                 peak, allowed_mismatches=10)
             if len(similar) > 0:
-                print("Found match(es) for %s" % peak)
+                #print("Found match(es) for %s" % peak)
                 for matched_peak in similar:
-                    print("   Match agsinst %s with scores %.3f, %.3f" %
-                          (matched_peak, peak.score, matched_peak.score))
+                    #print("   Match agsinst %s with scores %.3f, %.3f" %
+                    #      (matched_peak, peak.score, matched_peak.score))
+                    continue
             else:
-                print("No match for peak %s" % peak)
+                #print("No match for peak %s" % peak)
+                continue
 
     @classmethod
     def create_from_graph_peaks_and_linear_peaks(
@@ -559,11 +569,11 @@ class PeaksComparer(object):
                 if len(similar_intervals) > 0:
                     n_similar += 1
                     tot_n_similar += len(similar_intervals)
-                    print(counter, peak.score, peak.start_position)
+                    #print(counter, peak.score, peak.start_position)
                     matching.append(peak)
                 else:
                     not_matching.append(peak)
-                    print(peak, "\t", 0)
+                    #print(peak, "\t", 0)
 
                 n_tot += 1
 
