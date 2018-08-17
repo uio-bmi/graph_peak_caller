@@ -24,6 +24,8 @@ class HtmlReportGenerator:
             <td>%.2f</td>
             <td>%.4f</td>
             <td>%.4f</td>
+            <td>%d</td>
+            <td>%d</td>
         </tr>
         """ % (tf,
                analysis_result.tot_peaks1,
@@ -39,7 +41,9 @@ class HtmlReportGenerator:
                np.mean(analysis_result.peaks1_in_peaks2_bp_not_on_linear),
                np.mean(analysis_result.peaks1_not_in_peaks2_bp_not_on_linear),
                analysis_result.peaks1_total_nodes / analysis_result.peaks1_total_basepairs,
-               analysis_result.peaks2_total_nodes / analysis_result.peaks2_total_basepairs
+               analysis_result.peaks2_total_nodes / analysis_result.peaks2_total_basepairs,
+               analysis_result.peaks1_total_basepairs / analysis_result.tot_peaks1,
+               analysis_result.peaks2_total_basepairs / analysis_result.tot_peaks2
                )
 
     def _create_report_table(self):
@@ -66,6 +70,8 @@ class HtmlReportGenerator:
                 <th>Average number of base pairs of GPC peaks NOT found by MACS2 that are part of linear reference genome</th>
                 <th>Nodes per base pair graph peak caller</th>
                 <th>Nodes per base pair MACS2</th>
+                <th>Average size gpc</th>
+                <th>Average size macs2</th>
             </tr>
         """
         summed_results = AnalysisResults()
