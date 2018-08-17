@@ -25,7 +25,10 @@ class AnalysisResults:
         self.not_motif_not_ambiguous = 0
         self.peaks1_in_peaks2_bp_not_on_linear = []
         self.peaks1_not_in_peaks2_bp_not_on_linear = []
-
+        self.peaks1_total_nodes = 0
+        self.peaks2_total_nodes = 0
+        self.peaks1_total_basepairs = 0
+        self.peaks2_total_basepairs = 0
 
     def __repr__(self):
         out = ""
@@ -47,6 +50,11 @@ class AnalysisResults:
                (np.mean(self.peaks1_in_peaks2_bp_not_on_linear))
         out += "Average bp of peaks 1 NOT in peaks 2 on linear path:  %.5f \n" % \
                (np.mean(self.peaks1_not_in_peaks2_bp_not_on_linear))
+        out += "Average number of nodes per base pair set 1: %.5f \n" % \
+               (self.peaks1_total_nodes / self.peaks1_total_basepairs)
+        out += "Average number of nodes per base pair set 2: %.5f \n" % \
+               (self.peaks2_total_nodes / self.peaks2_total_basepairs)
+
         out += "\n \n"
         return out
 
@@ -70,6 +78,12 @@ class AnalysisResults:
         self.not_motif_not_ambiguous += other.not_motif_not_ambiguous
         self.peaks1_in_peaks2_bp_not_on_linear.extend(other.peaks1_in_peaks2_bp_not_on_linear)
         self.peaks1_not_in_peaks2_bp_not_on_linear.extend(other.peaks1_not_in_peaks2_bp_not_on_linear)
+        self.peaks1_total_nodes += other.peaks1_total_nodes
+        self.peaks2_total_nodes += other.peaks2_total_nodes
+        self.peaks1_total_basepairs += other.peaks1_total_basepairs
+        self.peaks2_total_basepairs += other.peaks2_total_basepairs
+
+
         return self
 
     def to_file(self, file_name):
@@ -149,6 +163,21 @@ class PeaksComparerV2(object):
         self.run_all_analysis()
         self.write_unique_peaks_to_file()
 
+
+    def check_possible_variants_with_peaks(self):
+        i = 0
+        for peaks in [self.peaks1, self.peaks2]:
+            for peak in peaks:
+                n_nodes = len(peak.region_paths)
+                length = peak.length()
+            if i == 0:
+                self.results.peaks1_total_basepairs += length
+                self.results.peaks1_total_nodes += n_nodes
+            else:
+                self.results.peaks2_total_basepairs += length
+                self.results.peaks2_total_nodes += n_nodes
+
+
     def write_unique_peaks_to_file(self):
         name = self.graph_base_file_name + "_unique.intervalcollection"
         PeakCollection(self.peaks1_not_in_peaks2).to_file(
@@ -180,9 +209,11 @@ class PeaksComparerV2(object):
         return n_overlap
 
     def run_all_analysis(self):
+        self.check_possible_variants_with_peaks()
         self.check_similarity()
         self.check_non_matching_for_motif_hits()
         self.check_matching_for_motif_hits()
+
 
         self.results.peaks1_in_peaks2_bp_not_on_linear = \
             [peak.length() - self.bp_in_peak_overlapping_indexed_interval(peak, self.linear_path)
