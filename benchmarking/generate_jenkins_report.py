@@ -24,8 +24,10 @@ class HtmlReportGenerator:
             <td>%.2f</td>
             <td>%.4f</td>
             <td>%.4f</td>
-            <td>%d</td>
-            <td>%d</td>
+            <td>%.3f</td>
+            <td>%.3f</td>
+            <td>%.3f</td>
+            <td>%.3f</td>
         </tr>
         """ % (tf,
                analysis_result.tot_peaks1,
@@ -43,7 +45,9 @@ class HtmlReportGenerator:
                analysis_result.peaks1_total_nodes / analysis_result.peaks1_total_basepairs,
                analysis_result.peaks2_total_nodes / analysis_result.peaks2_total_basepairs,
                analysis_result.peaks1_total_basepairs / analysis_result.tot_peaks1,
-               analysis_result.peaks2_total_basepairs / analysis_result.tot_peaks2
+               analysis_result.peaks2_total_basepairs / analysis_result.tot_peaks2,
+               analysis_result.peaks1_total_basepairs,
+               analysis_result.peaks2_total_basepairs
                )
 
     def _create_report_table(self):
@@ -72,6 +76,8 @@ class HtmlReportGenerator:
                 <th>Nodes per base pair MACS2</th>
                 <th>Average size gpc</th>
                 <th>Average size macs2</th>
+                <th>Total base pairs gpc</th>
+                <th>Total base pairs macs</th>
             </tr>
         """
         summed_results = AnalysisResults()
