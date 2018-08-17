@@ -171,12 +171,12 @@ class PeaksComparerV2(object):
                 n_nodes = len(peak.region_paths)
                 length = peak.length()
                 print("Peak length: %d" % length)
-            if i == 0:
-                self.results.peaks1_total_basepairs += length
-                self.results.peaks1_total_nodes += n_nodes
-            else:
-                self.results.peaks2_total_basepairs += length
-                self.results.peaks2_total_nodes += n_nodes
+                if i == 0:
+                    self.results.peaks1_total_basepairs += length
+                    self.results.peaks1_total_nodes += n_nodes
+                else:
+                    self.results.peaks2_total_basepairs += length
+                    self.results.peaks2_total_nodes += n_nodes
 
             i += 1
 
