@@ -177,6 +177,8 @@ class PeaksComparerV2(object):
                 self.results.peaks2_total_basepairs += length
                 self.results.peaks2_total_nodes += n_nodes
 
+            i += 1
+
 
     def write_unique_peaks_to_file(self):
         name = self.graph_base_file_name + "_unique.intervalcollection"
