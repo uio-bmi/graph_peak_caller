@@ -33,6 +33,8 @@ class AnalysisResults:
         self.peaks2_unique_total_nodes = 0
         self.peaks1_unique_total_basepairs = 0
         self.peaks2_unique_total_basepairs = 0
+        self.peaks1_unique_scores = []
+        self.peaks2_unique_scores = []
 
     def __repr__(self):
         out = ""
@@ -90,7 +92,8 @@ class AnalysisResults:
         self.peaks2_unique_total_nodes += other.peaks2_unique_total_nodes
         self.peaks1_unique_total_basepairs += other.peaks1_unique_total_basepairs
         self.peaks2_unique_total_basepairs += other.peaks2_unique_total_basepairs
-
+        self.peaks1_unique_scores.extend(other.peaks1_unique_scores)
+        self.peaks2_unique_scores.extend(other.peaks2_unique_scores)
 
         return self
 
@@ -178,7 +181,6 @@ class PeaksComparerV2(object):
             for peak in peaks:
                 n_nodes = len(peak.region_paths)
                 length = peak.length()
-                print("Peak length: %d" % length)
                 if i == 0:
                     self.results.peaks1_total_basepairs += length
                     self.results.peaks1_total_nodes += n_nodes
@@ -188,9 +190,11 @@ class PeaksComparerV2(object):
                 elif i == 2:
                     self.results.peaks1_unique_total_basepairs += length
                     self.results.peaks1_unique_total_nodes += n_nodes
+                    self.results.peaks1_unique_scores.append(peak.score)
                 elif i == 3:
                     self.results.peaks2_unique_total_basepairs += length
                     self.results.peaks2_unique_total_nodes += n_nodes
+                    self.results.peaks2_unique_scores.append(peak.score)
 
             i += 1
 

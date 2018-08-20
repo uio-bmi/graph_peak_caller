@@ -56,6 +56,8 @@ class HtmlReportGenerator:
                analysis_result.peaks2_unique_total_basepairs,
                analysis_result.peaks1_unique_total_nodes / analysis_result.peaks1_unique_total_basepairs,
                analysis_result.peaks2_unique_total_nodes / analysis_result.peaks2_unique_total_basepairs,
+               np.mean(analysis_result.peaks1_unique_scores),
+               np.mean(analysis_result.peaks2_unique_scores),
                )
 
     def _create_report_table(self):
@@ -90,6 +92,8 @@ class HtmlReportGenerator:
                 <th>Unique macs peaks total base pairs</th>
                 <th>Unique gpc peaks nodes per bp</th>
                 <th>Unique macs peaks nodes per bp</th>
+                <th>Avg score unique gpc</th>
+                <th>Avg score unique macs</th>
             </tr>
         """
         summed_results = AnalysisResults()
