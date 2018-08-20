@@ -35,6 +35,8 @@ class AnalysisResults:
         self.peaks2_unique_total_basepairs = 0
         self.peaks1_unique_scores = []
         self.peaks2_unique_scores = []
+        self.peaks1_unique_alignments = []
+        self.peaks2_unique_alignments = []
 
     def __repr__(self):
         out = ""
@@ -94,6 +96,8 @@ class AnalysisResults:
         self.peaks2_unique_total_basepairs += other.peaks2_unique_total_basepairs
         self.peaks1_unique_scores.extend(other.peaks1_unique_scores)
         self.peaks2_unique_scores.extend(other.peaks2_unique_scores)
+        self.peaks1_unique_alignments.extend(other.peaks1_unique_alignments)
+        self.peaks2_unique_alignments.extend(other.peaks2_unique_alignments)
 
         return self
 
@@ -119,7 +123,9 @@ class PeaksComparerV2(object):
                  linear_peaks_fimo_results_file,
                  graph_peaks_fimo_results_file,
                  linear_path,
-                 region=None):
+                 region=None,
+                 alignments=None,
+                 chromosome=None):
 
         assert isinstance(linear_path, NumpyIndexedInterval), \
             "Linear path should be numpy indexed interval for fast comparison"
@@ -130,6 +136,8 @@ class PeaksComparerV2(object):
         assert self.linear_base_file_name != "" and self.linear_base_file_name is not None
         logging.info("Linear base name: %s" % self.linear_base_file_name)
 
+        self.alignments = alignments
+        self.chromosome = chromosome
 
         self.graph = graph
         self.graph_peaks_fasta_file_name = graph_peaks_fasta_file_name
@@ -244,7 +252,25 @@ class PeaksComparerV2(object):
             [peak.length() - self.bp_in_peak_overlapping_indexed_interval(peak, self.linear_path)
                      for peak in self.peaks1_not_in_peaks2]
 
+        if self.alignments is not None:
+            self.check_alignments()
+        else:
+            logging.info("Not checking alignments since alignment collection is not set")
+
         print(self.results)
+
+    def check_alignments(self):
+        logging.info("Checking alignments")
+        i = 1
+        for peaks in [self.peaks1_not_in_peaks2[0:50], self.peaks2_not_in_peaks1[0:50]]:
+            alignments = []
+            for peak in peaks:
+                alignments.extend(self.alignments.get_alignments_on_interval(peak).keys())
+
+            out_file_name = "peaks%d_alignments_chr%s.txt" % (i, self.chromosome)
+            with open(out_file_name, "w") as f:
+                for alignment in alignments:
+                    f.writlines([alignment + "\n"])
 
     def check_matching_for_motif_hits(self):
         print("\n--- Checking peaks matching for motif hits --- ")

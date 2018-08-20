@@ -25,6 +25,6 @@ class PeakFasta:
             f.write(">peak" + str(i) + " " +
                     max_path.to_file_line() + "\n" + seq + "\n")
             i += 1
-            if i % 100 == 0:
+            if i % 10000 == 0:
                 logging.info("Writing sequence # %d" % i)
         f.close()

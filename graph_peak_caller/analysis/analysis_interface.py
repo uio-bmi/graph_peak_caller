@@ -267,13 +267,22 @@ def analyse_peaks_whole_genome(args):
         linear_path = obg.NumpyIndexedInterval.from_file(
             args.graphs_dir + chrom + "_linear_pathv2.interval")
 
+        try:
+            alignments = pyvg.alignmentcollection.AlignmentCollection.from_file(
+                args.results_dir + "/" + chrom + "_alignments", graph)
+        except FileNotFoundError:
+            logging.warning("Did not find alignment collection. Will analyse without")
+            alignments = None
+
         analyser = PeaksComparerV2(
             graph,
             args.results_dir + "macs_sequences_chr%s_summits.fasta" % chrom,
             args.results_dir + "%s_sequences_summits.fasta" % chrom,
             args.results_dir + "/fimo_macs_chr%s/fimo.txt" % chrom,
             args.results_dir + "/fimo_graph_chr%s/fimo.txt" % chrom,
-            linear_path
+            linear_path,
+            alignments=alignments,
+            chromosome=chrom
         )
         results = results + analyser.results
 
