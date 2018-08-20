@@ -128,7 +128,7 @@ class VCF:
 
             # end = pos + len(parts[3])
             for entry in current_intervals:
-                entry[1] = pos >= entry[0]
+                entry[1] = pos+len(parts[3]) >= entry[0]
 
             while current_intervals and current_intervals[0][1]:
                 yield current_intervals.popleft()[-1].finalize()
@@ -176,10 +176,6 @@ class VCF:
 
 
 def traverse_variants(alt_seq, ref_seq, variants):
-    if ref_seq == alt_seq:
-        return ["REF"]
-    if not variants:
-        return ["No variants"]
     tentative_valid = [([], 0, 0)]
     for j, variant in enumerate(variants):
         next_tentative = []
@@ -270,6 +266,7 @@ class Main:
         alts, refs, intervals = zip(*tuples)
         params = zip(alts, refs, self.vcf.get_variants_from_intervals(intervals))
         haplotypes = (traverse_variants(*param) for param in params)
+        haplotypes = (h if h is not None else list(range(1024)) for h in haplotypes)
         result_dict = {name: [] for name in peaks_dict}
         for name, result in zip(names, haplotypes):
             result_dict[name].append(result)

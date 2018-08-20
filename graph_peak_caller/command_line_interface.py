@@ -321,7 +321,8 @@ interface = \
                     ('data_folder', ''),
                     ('fasta_file', ''),
                     ('result_folder', ''),
-                    ('chrom', '')
+                    ('chrom', ''),
+                    ('interval_name', '')
                 ],
             'method': check_haplotype
         },
