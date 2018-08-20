@@ -32,6 +32,8 @@ class HtmlReportGenerator:
             <td>%d</td>
             <td>%.3f</td>
             <td>%.3f</td>
+            <td>%.3f</td>
+            <td>%.3f</td>
         </tr>
         """ % (tf,
                analysis_result.tot_peaks1,
