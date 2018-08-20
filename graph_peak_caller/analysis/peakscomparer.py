@@ -272,6 +272,8 @@ class PeaksComparerV2(object):
                 for alignment in alignments:
                     f.writelines([alignment + "\n"])
 
+            i += 1
+
     def check_matching_for_motif_hits(self):
         print("\n--- Checking peaks matching for motif hits --- ")
         self._get_pair_ambig_status()
