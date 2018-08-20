@@ -269,7 +269,7 @@ def analyse_peaks_whole_genome(args):
 
         try:
             alignments = pyvg.alignmentcollection.AlignmentCollection.from_file(
-                args.results_dir + "/" + chrom + "_alignments", graph)
+                args.results_dir + "/" + chrom + "_alignments.pickle", graph)
         except FileNotFoundError:
             logging.warning("Did not find alignment collection. Will analyse without")
             alignments = None
