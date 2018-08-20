@@ -252,7 +252,7 @@ class PeaksComparerV2(object):
             [peak.length() - self.bp_in_peak_overlapping_indexed_interval(peak, self.linear_path)
                      for peak in self.peaks1_not_in_peaks2]
 
-        if False and self.alignments is not None:
+        if self.alignments is not None:
             self.check_alignments()
         else:
             logging.info("Not checking alignments since alignment collection is not set")
