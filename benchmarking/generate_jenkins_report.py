@@ -22,6 +22,18 @@ class HtmlReportGenerator:
             <td>%d (%d)</td>
             <td>%.2f</td>
             <td>%.2f</td>
+            <td>%.4f</td>
+            <td>%.4f</td>
+            <td>%.3f</td>
+            <td>%.3f</td>
+            <td>%.3f</td>
+            <td>%.3f</td>
+            <td>%d</td>
+            <td>%d</td>
+            <td>%.3f</td>
+            <td>%.3f</td>
+            <td>%.3f</td>
+            <td>%.3f</td>
         </tr>
         """ % (tf,
                analysis_result.tot_peaks1,
@@ -35,7 +47,19 @@ class HtmlReportGenerator:
                analysis_result.peaks2_not_in_peaks1,
                analysis_result.peaks2_not_in_peaks1_matching_motif,
                np.mean(analysis_result.peaks1_in_peaks2_bp_not_on_linear),
-               np.mean(analysis_result.peaks1_not_in_peaks2_bp_not_on_linear)
+               np.mean(analysis_result.peaks1_not_in_peaks2_bp_not_on_linear),
+               analysis_result.peaks1_total_nodes / analysis_result.peaks1_total_basepairs,
+               analysis_result.peaks2_total_nodes / analysis_result.peaks2_total_basepairs,
+               analysis_result.peaks1_total_basepairs / analysis_result.tot_peaks1,
+               analysis_result.peaks2_total_basepairs / analysis_result.tot_peaks2,
+               analysis_result.peaks1_total_basepairs,
+               analysis_result.peaks2_total_basepairs,
+               analysis_result.peaks1_unique_total_basepairs,
+               analysis_result.peaks2_unique_total_basepairs,
+               analysis_result.peaks1_unique_total_nodes / analysis_result.peaks1_unique_total_basepairs,
+               analysis_result.peaks2_unique_total_nodes / analysis_result.peaks2_unique_total_basepairs,
+               np.mean(analysis_result.peaks1_unique_scores),
+               np.mean(analysis_result.peaks2_unique_scores),
                )
 
     def _create_report_table(self):
@@ -60,6 +84,18 @@ class HtmlReportGenerator:
                 <th># Peaks NOT found by Graph Peak Caller</th>
                 <th>Average number of base pairs of GPC peaks also found by MACS2 that are part of linear reference genome</th>
                 <th>Average number of base pairs of GPC peaks NOT found by MACS2 that are part of linear reference genome</th>
+                <th>Nodes per base pair graph peak caller</th>
+                <th>Nodes per base pair MACS2</th>
+                <th>Average size gpc</th>
+                <th>Average size macs2</th>
+                <th>Total base pairs gpc</th>
+                <th>Total base pairs macs</th>
+                <th>Unique gpc peaks total base pairs</th>
+                <th>Unique macs peaks total base pairs</th>
+                <th>Unique gpc peaks nodes per bp</th>
+                <th>Unique macs peaks nodes per bp</th>
+                <th>Avg score unique gpc</th>
+                <th>Avg score unique macs</th>
             </tr>
         """
         summed_results = AnalysisResults()

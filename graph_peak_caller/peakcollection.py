@@ -101,8 +101,7 @@ class PeakCollection(obg.IntervalCollection):
             #                      (len(peak_qvalues) - np.argmax(peak_qvalues[::-1])))/2)
 
             max_positions = np.where(peak_qvalues == np.max(peak_qvalues))[0]
-            logging.info("N max position: %d" % len(max_positions))
-            print("max positions: %s" % list(max_positions))
+
             summit_position = int(np.median(max_positions))
 
             summit = peak.get_subinterval(max(0, summit_position - n_base_pairs_around),
@@ -165,7 +164,7 @@ class PeakCollection(obg.IntervalCollection):
                                         graph_region.end):
                     logging.info("Filtered out peak")
                     continue
-            if i % 100 == 0:
+            if i % 10000 == 0:
                 logging.info("%d peaks processed" % (i))
             i += 1
             linear_interval = linear_path_interval.get_exact_subinterval(start, end)

@@ -25,7 +25,18 @@ class AnalysisResults:
         self.not_motif_not_ambiguous = 0
         self.peaks1_in_peaks2_bp_not_on_linear = []
         self.peaks1_not_in_peaks2_bp_not_on_linear = []
-
+        self.peaks1_total_nodes = 0
+        self.peaks2_total_nodes = 0
+        self.peaks1_total_basepairs = 0
+        self.peaks2_total_basepairs = 0
+        self.peaks1_unique_total_nodes = 0
+        self.peaks2_unique_total_nodes = 0
+        self.peaks1_unique_total_basepairs = 0
+        self.peaks2_unique_total_basepairs = 0
+        self.peaks1_unique_scores = []
+        self.peaks2_unique_scores = []
+        self.peaks1_unique_alignments = []
+        self.peaks2_unique_alignments = []
 
     def __repr__(self):
         out = ""
@@ -47,6 +58,11 @@ class AnalysisResults:
                (np.mean(self.peaks1_in_peaks2_bp_not_on_linear))
         out += "Average bp of peaks 1 NOT in peaks 2 on linear path:  %.5f \n" % \
                (np.mean(self.peaks1_not_in_peaks2_bp_not_on_linear))
+        out += "Average number of nodes per base pair set 1: %.5f \n" % \
+               (self.peaks1_total_nodes / self.peaks1_total_basepairs)
+        out += "Average number of nodes per base pair set 2: %.5f \n" % \
+               (self.peaks2_total_nodes / self.peaks2_total_basepairs)
+
         out += "\n \n"
         return out
 
@@ -70,6 +86,19 @@ class AnalysisResults:
         self.not_motif_not_ambiguous += other.not_motif_not_ambiguous
         self.peaks1_in_peaks2_bp_not_on_linear.extend(other.peaks1_in_peaks2_bp_not_on_linear)
         self.peaks1_not_in_peaks2_bp_not_on_linear.extend(other.peaks1_not_in_peaks2_bp_not_on_linear)
+        self.peaks1_total_nodes += other.peaks1_total_nodes
+        self.peaks2_total_nodes += other.peaks2_total_nodes
+        self.peaks1_total_basepairs += other.peaks1_total_basepairs
+        self.peaks2_total_basepairs += other.peaks2_total_basepairs
+        self.peaks1_unique_total_nodes += other.peaks1_unique_total_nodes
+        self.peaks2_unique_total_nodes += other.peaks2_unique_total_nodes
+        self.peaks1_unique_total_basepairs += other.peaks1_unique_total_basepairs
+        self.peaks2_unique_total_basepairs += other.peaks2_unique_total_basepairs
+        self.peaks1_unique_scores.extend(other.peaks1_unique_scores)
+        self.peaks2_unique_scores.extend(other.peaks2_unique_scores)
+        self.peaks1_unique_alignments.extend(other.peaks1_unique_alignments)
+        self.peaks2_unique_alignments.extend(other.peaks2_unique_alignments)
+
         return self
 
     def to_file(self, file_name):
@@ -94,7 +123,9 @@ class PeaksComparerV2(object):
                  linear_peaks_fimo_results_file,
                  graph_peaks_fimo_results_file,
                  linear_path,
-                 region=None):
+                 region=None,
+                 alignments=None,
+                 chromosome=None):
 
         assert isinstance(linear_path, NumpyIndexedInterval), \
             "Linear path should be numpy indexed interval for fast comparison"
@@ -105,6 +136,8 @@ class PeaksComparerV2(object):
         assert self.linear_base_file_name != "" and self.linear_base_file_name is not None
         logging.info("Linear base name: %s" % self.linear_base_file_name)
 
+        self.alignments = alignments
+        self.chromosome = chromosome
 
         self.graph = graph
         self.graph_peaks_fasta_file_name = graph_peaks_fasta_file_name
@@ -149,6 +182,31 @@ class PeaksComparerV2(object):
         self.run_all_analysis()
         self.write_unique_peaks_to_file()
 
+
+    def check_possible_variants_within_peaks(self):
+        i = 0
+        for peaks in [self.peaks1, self.peaks2, self.peaks1_not_in_peaks2[0:50], self.peaks2_not_in_peaks1[0:50]]:
+            for peak in peaks:
+                n_nodes = len(peak.region_paths)
+                length = peak.length()
+                if i == 0:
+                    self.results.peaks1_total_basepairs += length
+                    self.results.peaks1_total_nodes += n_nodes
+                elif i == 1:
+                    self.results.peaks2_total_basepairs += length
+                    self.results.peaks2_total_nodes += n_nodes
+                elif i == 2:
+                    self.results.peaks1_unique_total_basepairs += length
+                    self.results.peaks1_unique_total_nodes += n_nodes
+                    self.results.peaks1_unique_scores.append(peak.score)
+                elif i == 3:
+                    self.results.peaks2_unique_total_basepairs += length
+                    self.results.peaks2_unique_total_nodes += n_nodes
+                    self.results.peaks2_unique_scores.append(peak.score)
+
+            i += 1
+
+
     def write_unique_peaks_to_file(self):
         name = self.graph_base_file_name + "_unique.intervalcollection"
         PeakCollection(self.peaks1_not_in_peaks2).to_file(
@@ -183,6 +241,8 @@ class PeaksComparerV2(object):
         self.check_similarity()
         self.check_non_matching_for_motif_hits()
         self.check_matching_for_motif_hits()
+        self.check_possible_variants_within_peaks()
+
 
         self.results.peaks1_in_peaks2_bp_not_on_linear = \
             [peak.length() - self.bp_in_peak_overlapping_indexed_interval(peak, self.linear_path)
@@ -192,7 +252,25 @@ class PeaksComparerV2(object):
             [peak.length() - self.bp_in_peak_overlapping_indexed_interval(peak, self.linear_path)
                      for peak in self.peaks1_not_in_peaks2]
 
+        if self.alignments is not None:
+            self.check_alignments()
+        else:
+            logging.info("Not checking alignments since alignment collection is not set")
+
         print(self.results)
+
+    def check_alignments(self):
+        logging.info("Checking alignments")
+        i = 1
+        for peaks in [self.peaks1_not_in_peaks2[0:50], self.peaks2_not_in_peaks1[0:50]]:
+            alignments = []
+            for peak in peaks:
+                alignments.extend(self.alignments.get_alignments_on_interval(peak).keys())
+
+            out_file_name = "peaks%d_alignments_chr%s.txt" % (i, self.chromosome)
+            with open(out_file_name, "w") as f:
+                for alignment in alignments:
+                    f.writelines([alignment + "\n"])
 
     def check_matching_for_motif_hits(self):
         print("\n--- Checking peaks matching for motif hits --- ")
@@ -218,7 +296,7 @@ class PeaksComparerV2(object):
                 self.results.not_motif_not_ambiguous = d
                 self.results.peaks1_in_peaks2_matching_motif = n
             else:
-                print("MA: ", a, "MNA:", b, "NMA:", c, "NMNA:", d)
+                #print("MA: ", a, "MNA:", b, "NMA:", c, "NMNA:", d)
                 self.results.peaks2_in_peaks1_matching_motif = n
             i += 1
 
@@ -228,18 +306,26 @@ class PeaksComparerV2(object):
                 peak_on_same_pos = self.peaks2.which_approx_contains_part_of_interval(peak)
 
                 if peak_on_same_pos.unique_id not in self.linear_matching_motif:
-                    logging.info("Found graph peak matching motif where linear "
-                                 "peak not matching. (%s, %s) \nGraph peak: %s. \nLinear peak: %s" %
-                                 (peak.unique_id, peak_on_same_pos.unique_id, peak, peak_on_same_pos))
+                    #logging.info("Found graph peak matching motif where linear "
+                    #             "peak not matching. (%s, %s) \nGraph peak: %s. \nLinear peak: %s" %
+                    #             (peak.unique_id, peak_on_same_pos.unique_id, peak, peak_on_same_pos))
+                    continue
 
         # Find all peaks in 1 not in 2 that matches motif
+        n_not_on_linear_matching_motif = []
+        n_not_on_linear_not_matching_motif = []
         for peak in self.peaks1_not_in_peaks2:
+            n_not_on_linear = peak.length() - \
+                              self.bp_in_peak_overlapping_indexed_interval(peak, self.linear_path)
             if peak.unique_id in self.graph_matching_motif:
-                n_not_on_linear = peak.length() - \
-                                  self.bp_in_peak_overlapping_indexed_interval(peak, self.linear_path)
-                logging.info("Peak not in macs, matching motif. N base pairs "
-                             "not on linear: %d\n %s, %s" % (n_not_on_linear, peak.unique_id, peak))
+                n_not_on_linear_matching_motif.append(n_not_on_linear)
+                #logging.info("Peak not in macs, matching motif. N base pairs "
+                #             "not on linear: %d\n %s, %s" % (n_not_on_linear, peak.unique_id, peak))
+            else:
+                n_not_on_linear_not_matching_motif.append(n_not_on_linear)
 
+        logging.info("Base pairs not on linear among peaks NOT matching motif and not found by macs: %.2f" % np.mean(n_not_on_linear_not_matching_motif))
+        logging.info("Base pairs not on linear among peaks MATCHING motif and not found by macs: %.2f" % np.mean(n_not_on_linear_matching_motif))
 
 
     def check_non_matching_for_motif_hits(self):
@@ -508,12 +594,14 @@ class PeaksComparer(object):
             similar = self.peaks2.get_similar_intervals(
                 peak, allowed_mismatches=10)
             if len(similar) > 0:
-                print("Found match(es) for %s" % peak)
+                #print("Found match(es) for %s" % peak)
                 for matched_peak in similar:
-                    print("   Match agsinst %s with scores %.3f, %.3f" %
-                          (matched_peak, peak.score, matched_peak.score))
+                    #print("   Match agsinst %s with scores %.3f, %.3f" %
+                    #      (matched_peak, peak.score, matched_peak.score))
+                    continue
             else:
-                print("No match for peak %s" % peak)
+                #print("No match for peak %s" % peak)
+                continue
 
     @classmethod
     def create_from_graph_peaks_and_linear_peaks(
@@ -559,11 +647,11 @@ class PeaksComparer(object):
                 if len(similar_intervals) > 0:
                     n_similar += 1
                     tot_n_similar += len(similar_intervals)
-                    print(counter, peak.score, peak.start_position)
+                    #print(counter, peak.score, peak.start_position)
                     matching.append(peak)
                 else:
                     not_matching.append(peak)
-                    print(peak, "\t", 0)
+                    #print(peak, "\t", 0)
 
                 n_tot += 1
 
