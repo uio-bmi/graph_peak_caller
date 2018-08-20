@@ -270,7 +270,7 @@ class PeaksComparerV2(object):
             out_file_name = "peaks%d_alignments_chr%s.txt" % (i, self.chromosome)
             with open(out_file_name, "w") as f:
                 for alignment in alignments:
-                    f.writlines([alignment + "\n"])
+                    f.writelines([alignment + "\n"])
 
     def check_matching_for_motif_hits(self):
         print("\n--- Checking peaks matching for motif hits --- ")
