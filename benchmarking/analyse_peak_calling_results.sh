@@ -85,9 +85,12 @@ done
 graph_peak_caller concatenate_sequence_files -f macs_sequences_chr[chrom]_summits_unique.fasta $chromosomes unique_macs.fasta
 graph_peak_caller concatenate_sequence_files -f [chrom]_sequences_summits_unique.fasta $chromosomes unique_graph.fasta
 
-fimo -oc unique_graph motif.meme unique_graph.fasta
-fimo -oc unique_macs motif.meme unique_macs.fasta
+head -n 1200 unique_macs.fasta > unique_macs_top600.fasta
+head -n 1200 unique_graph.fasta > unique_graph_top600.fasta
 
-$base_dir/plot_motif_enrichments.sh unique_graph.fasta unique_macs.fasta $motif_url motif_enrichment_unique_peaks.png $tf
+fimo -oc unique_graph motif.meme unique_graph_top600.fasta
+fimo -oc unique_macs motif.meme unique_macs_top600.fasta
+
+$base_dir/plot_motif_enrichments.sh unique_graph_top600.fasta unique_macs_top600.fasta $motif_url motif_enrichment_unique_peaks.png $tf
 cp motif_enrichment_unique_peaks.png ../../../figures_tables/${tf}_unique_peaks.png
 
