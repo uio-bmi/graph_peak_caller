@@ -272,8 +272,9 @@ def analyse_peaks_whole_genome(args):
         #try:
         alignments_file_name = args.results_dir + "/" + chrom + "_alignments.pickle"
         logging.info("Looking for alignment collection at %s" % alignments_file_name)
-        alignments = pyvg.alignmentcollection.AlignmentCollection.from_file(
-            alignments_file_name, graph)
+        #alignments = pyvg.alignmentcollection.AlignmentCollection.from_file(
+        #    alignments_file_name, graph)
+        alignments = None
         #except FileNotFoundError:
         #    logging.warning("Did not find alignment collection. Will analyse without")
         #    alignments = None
@@ -294,6 +295,7 @@ def analyse_peaks_whole_genome(args):
     print(results)
 
     results.to_file(args.out_file + ".pickle")
+    results.to_csv(args.out_file + ".csv")
     with open(args.out_file + ".txt", "w") as f:
         f.write(str(results))
     logging.info("Wrote results as pickle to %s and as text to %s"

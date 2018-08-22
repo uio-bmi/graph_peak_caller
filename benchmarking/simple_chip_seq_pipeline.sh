@@ -100,7 +100,7 @@ echo "Using $fragment_length and read length $read_length"
 echo "Mapping reads"
 if [ ! -f mapped.gam ]; then
     echo "Using indices: $vg_gcsa_index and $vg_xg_index"
-    vg map -f raw_trimmed.fq -g $vg_gcsa_index -x $vg_xg_index > mapped.gam
+    vg1.9 map -c 5000 -f raw_trimmed.fq -g $vg_gcsa_index -x $vg_xg_index > mapped.gam
     #vg mpmap --mq-method 2 -S -x $vg_xg_index -g $vg_gcsa_index -f raw_trimmed.fq > mapped.gam
 else
     echo "Mapped reads exist. Not mapping"
@@ -109,8 +109,8 @@ fi
 # Step 4: Filter mapped reads
 echo "Filtering"
 if [ ! -f filtered_low_qual_reads_removed.json ]; then
-	vg filter -q 37 -t 20 mapped.gam > filtered.gam
-	vg view -aj filtered.gam > filtered_low_qual_reads_removed.json
+	vg1.9 filter -q 37 -t 20 mapped.gam > filtered.gam
+	vg1.9 view -aj filtered.gam > filtered_low_qual_reads_removed.json
 else
 	echo "Filtered exists. Not filtering"
 fi
@@ -152,27 +152,27 @@ fi
 
 
 # Project filtered reads onto reference
-if [ ! -f projected_alignments.bed ]; then
+#if [ ! -f projected_alignments.bed ]; then
 
-    for chromosome in $(echo $chromosomes | tr "," "\n")
-    do
-        echo "Projecting alignments for chrom $chromosome"
-        graph_peak_caller project_vg_alignments -g $graph_dir/$chromosome.nobg filtered_low_qual_reads_removed_$chromosome.json $graph_dir/${chromosome}_linear_pathv2.interval $chromosome projected_alignments_$chromosome.bed &
-    done
+#    for chromosome in $(echo $chromosomes | tr "," "\n")
+#    do
+#        echo "Projecting alignments for chrom $chromosome"
+#        graph_peak_caller project_vg_alignments -g $graph_dir/$chromosome.nobg filtered_low_qual_reads_removed_$chromosome.json $graph_dir/${chromosome}_linear_pathv2.interval $chromosome projected_alignments_$chromosome.bed &
+#    done
 
-    wait  # Wait for all projections
-    cat projected_alignments_*.bed > projected_alignments.bed
-else
-    echo "Not projecting alignments, already done"
-fi
+#    wait  # Wait for all projections
+#    cat projected_alignments_*.bed > projected_alignments.bed
+#else
+#    echo "Not projecting alignments, already done"
+#fi
 
 # Run MACS2 with projected alignments
-echo "Running macs2 with projected alignments."
-if [ ! -f macs_output_projected_alignments.txt ]; then
-    macs2 callpeak --nomodel --extsize $fragment_length -g $genome_size -t projected_alignments.bed -n macs_projected_alignments > macs_output_projected_alignments.txt 2>&1
-else
-    echo "Not running, already done"
-fi
+#echo "Running macs2 with projected alignments."
+#if [ ! -f macs_output_projected_alignments.txt ]; then
+#    macs2 callpeak --nomodel --extsize $fragment_length -g $genome_size -t projected_alignments.bed -n macs_projected_alignments > macs_output_projected_alignments.txt 2>&1
+#else
+#    echo "Not running, already done"
+#fi
 
 
 echo "Counting unique reads"

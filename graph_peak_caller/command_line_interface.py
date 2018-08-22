@@ -84,7 +84,7 @@ def check_pruned_graphs_stats(args):
 
     for chromosome in chromosomes:
         stats_pruned = get_stats(graphs_dir + "/" + chromosome + ".prune.vg")
-        stats_nonpruned = get_stats(graphs_dir + "/" + chromosome + ".prune.vg")
+        stats_nonpruned = get_stats(graphs_dir + "/" + chromosome + ".vg")
 
         print(stats_pruned)
         print(stats_nonpruned)

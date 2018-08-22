@@ -8,6 +8,7 @@ class HtmlReportGenerator:
         self.tfs = transcription_factors
         self.html = ""
         self._create_report_table()
+        self.create_bar_plots()
         self._create_report_figures()
 
     def _write_table_row(self, tf, analysis_result):
@@ -124,13 +125,18 @@ class HtmlReportGenerator:
             <link rel="stylesheet" href="bootstrap.min.css">
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+            <script src="https://code.highcharts.com/highcharts.js"></script>
+            <script src="https://code.highcharts.com/modules/exporting.js"></script>
+            <script src="https://code.highcharts.com/modules/export-data.js"></script>
 
             <title>Graph Peak Caller - Jenkins results</title>
         </head>
         <body>
         <div class="container" style='margin-top: 50px;'>
 
+
         <h1>Graph Peak Caller - experiment results</h1>
+        <div id='bar-plot'></div>
         """
 
     def _html_end(self):
@@ -142,6 +148,85 @@ class HtmlReportGenerator:
         f.write(final_html)
         f.close()
 
+    def create_bar_plots(self):
+
+        category_names = "'" + "', '".join([tf.replace("ARABIDOPSIS_", "") for tf in self.tfs]) + "'"
+
+        self.html += """
+            <script>
+            Highcharts.chart('bar-plot', {
+
+                chart: {
+                    type: 'column'
+                },
+
+                title: {
+                    text: ''
+                },
+
+                xAxis: {
+                    categories: [%s]
+                },
+
+                yAxis: {
+                    allowDecimals: false,
+                    min: 0,
+                    title: {
+                        text: 'Number of peaks'
+                    }
+                },
+
+                tooltip: {
+                    formatter: function () {
+                        return '<b>' + this.x + '</b><br/>' +
+                            this.series.name + ': ' + this.y + '<br/>' +
+                            'Total: ' + this.point.stackTotal;
+                    }
+                },
+
+                plotOptions: {
+                    column: {
+                        stacking: 'percent'
+                    }
+                },
+        """ % (category_names)
+
+        total_gpc = []
+        total_gpc_with_motif = []
+        total_macs = []
+        total_macs_with_motif = []
+        for tf in self.tfs:
+            results = AnalysisResults.from_file("figures_tables/" + tf + ".pickle")
+            total_gpc.append(results.peaks1_not_in_peaks2)
+            total_macs.append(results.peaks2_not_in_peaks1)
+            total_gpc_with_motif.append(results.peaks1_not_in_peaks2_matching_motif)
+            total_macs_with_motif.append(results.peaks2_not_in_peaks1_matching_motif)
+
+
+
+        self.html += """series: [
+
+                {
+                    name: 'MACS2 unique peaks',
+                    data: [""" + ','.join(str(t) for t in total_macs) + """],
+                    stack: 'male'
+                }, {
+                    name: 'MACS2 unique peaks with motif hit',
+                    data: [""" + ','.join(str(t) for t in total_macs_with_motif) + """],
+                    stack: 'male'
+                }, {
+                    name: 'Graph Peak Caller unique peaks',
+                    data: [""" + ','.join(str(t) for t in total_gpc) + """],
+                    stack: 'female'
+                }, {
+                    name: 'Graph Peak Caller unique peaks with motif hit',
+                    data: [""" + ','.join(str(t) for t in total_gpc_with_motif) + """],
+                    stack: 'female'
+                }
+        ]
+            });
+            </script>
+            """
 
 if __name__ == "__main__":
     transcription_factors = sys.argv[1].split(",")

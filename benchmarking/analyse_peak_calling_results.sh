@@ -19,7 +19,7 @@ cd $work_dir
 
 echo "Changed dir to $work_dir"
 
-summit_window_size=3000
+summit_window_size=120
 echo "Will use window size $summit_window_size"
 
 # Extract macs2 sequences, write to fasta (for later comparison)
@@ -84,6 +84,9 @@ done
 
 graph_peak_caller concatenate_sequence_files -f macs_sequences_chr[chrom]_summits_unique.fasta $chromosomes unique_macs.fasta
 graph_peak_caller concatenate_sequence_files -f [chrom]_sequences_summits_unique.fasta $chromosomes unique_graph.fasta
+
+head -n 1200 unique_macs.fasta > unique_macs_top600.fasta
+head -n 1200 unique_graph.fasta > unique_graph_top600.fasta
 
 fimo -oc unique_graph motif.meme unique_graph.fasta
 fimo -oc unique_macs motif.meme unique_macs.fasta
