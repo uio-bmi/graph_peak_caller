@@ -11,7 +11,7 @@ echo "Using graph dirs $arabidopsis_graph_dir, $dm_graph_dir and $human_graph_di
 ./simple_chip_seq_pipeline.sh SRR931836 1 ARABIDOPSIS_ERF115 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 ./simple_chip_seq_pipeline.sh SRR1042995 1 ARABIDOPSIS_SEP3 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 ./simple_chip_seq_pipeline.sh SRX387187 1 ARABIDOPSIS_AP1 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
-./simple_chip_seq_pipeline.sh SRR822350	 1 ARABIDOPSIS_SOC1 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
+#./simple_chip_seq_pipeline.sh SRR822350	 1 ARABIDOPSIS_SOC1 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 #./simple_chip_seq_pipeline.sh SRR1044950 1 ARABIDOPSIS_HBI1 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 ./simple_chip_seq_pipeline.sh SRR502859 1 ARABIDOPSIS_PI 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 
@@ -36,7 +36,7 @@ wait
 ./analyse_peak_calling_results.sh  SRR931836 1 ARABIDOPSIS_ERF115 1,2,3,4,5 https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/ARABIDOPSIS_ERF115.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 macs_projected_alignments_peaks.narrowPeak &
 ./analyse_peak_calling_results.sh  SRR1042995 1 ARABIDOPSIS_SEP3 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0563.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 macs_projected_alignments_peaks.narrowPeak &
 ./analyse_peak_calling_results.sh  SRX387187 1 ARABIDOPSIS_AP1 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0940.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 macs_projected_alignments_peaks.narrowPeak &
-./analyse_peak_calling_results.sh  SRR822350 1 ARABIDOPSIS_SOC1 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0554.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 macs_projected_alignments_peaks.narrowPeak &
+#./analyse_peak_calling_results.sh  SRR822350 1 ARABIDOPSIS_SOC1 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0554.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 macs_projected_alignments_peaks.narrowPeak &
 ./analyse_peak_calling_results.sh  SRR502859 1 ARABIDOPSIS_PI 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0559.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 macs_projected_alignments_peaks.narrowPeak &
 
 if [ ! -z "$dm_graph_dir" ]
