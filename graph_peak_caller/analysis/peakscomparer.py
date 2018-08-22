@@ -101,6 +101,22 @@ class AnalysisResults:
 
         return self
 
+    def to_csv(self, file_name):
+        header = ["TOTAL_GPC", "TOTAL_MACS", "SHARED",
+                  "UNIQUE_GPC", "UNIQUE_MACS",
+                  "MOTIF_SHARED_GPC", "MOTIF_SHARED_MACS",
+                  "MOTIF_UNIQUE_GPC", "MOTIF_UNIQUE_MACS"]
+        data = [self.tot_peaks1, self.tot_peaks2,
+                len(self.peaks2_in_peaks1),
+                self.peaks1_in_peaks2_matching_motif,
+                self.peaks2_in_peaks1_matching_motif,
+                self.peaks1_not_in_peaks2_matching_motif,
+                self.peaks2_not_in_peaks1_matching_motif]
+
+        with open(file_name, "w") as f:
+            f.write("# %s\n" % "\t".join(header))
+            f.write("# %s\n" % "\t".join(str(n) for n in data))
+
     def to_file(self, file_name):
         with open(file_name, "wb") as f:
             pickle.dump(self, f)
@@ -206,7 +222,6 @@ class PeaksComparerV2(object):
                     self.results.peaks2_unique_scores.append(peak.score)
 
             i += 1
-
 
     def write_unique_peaks_to_file(self):
         name = self.graph_base_file_name + "_unique.intervalcollection"
