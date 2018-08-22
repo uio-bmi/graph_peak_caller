@@ -154,7 +154,8 @@ class PeaksComparerV2(object):
 
         self.peaks1.create_node_index()
 
-        nongraphpeaks = NonGraphPeakCollection.from_fasta(self.linear_peaks_fasta_file_name)
+        nongraphpeaks = NonGraphPeakCollection.from_fasta(
+            self.linear_peaks_fasta_file_name)
 
         if region is not None:
             nongraphpeaks.filter_peaks_outside_region(
@@ -243,14 +244,13 @@ class PeaksComparerV2(object):
         self.check_matching_for_motif_hits()
         self.check_possible_variants_within_peaks()
 
-
         self.results.peaks1_in_peaks2_bp_not_on_linear = \
             [peak.length() - self.bp_in_peak_overlapping_indexed_interval(peak, self.linear_path)
-                     for peak in self.peaks1_in_peaks2]
+             for peak in self.peaks1_in_peaks2]
 
         self.results.peaks1_not_in_peaks2_bp_not_on_linear = \
             [peak.length() - self.bp_in_peak_overlapping_indexed_interval(peak, self.linear_path)
-                     for peak in self.peaks1_not_in_peaks2]
+             for peak in self.peaks1_not_in_peaks2]
 
         if self.alignments is not None:
             self.check_alignments()
@@ -445,6 +445,36 @@ class PeaksComparerV2(object):
         return comparer
 
     def check_similarity(self, analyse_first_n_peaks=10000000):
+        print("Number of peaks in main set: %d" % len(self.peaks1.intervals))
+        self.results.tot_peaks1 = len(self.peaks1.intervals)
+        self.results.tot_peaks2 = len(self.peaks2.intervals)
+        counter = 0
+        visited = set([])
+        for peak in sorted(self.peaks1, key=lambda x: x.score, reverse=True)[0:analyse_first_n_peaks]:
+            assert peak.unique_id is not None
+            counter += 1
+            if counter % 500 == 0:
+                logging.info("Checked %d peaks" % counter)
+            touching = self.peaks2.approx_contains_part_of_interval(
+                peak, visited)
+            if touching:
+                visited.add(touching[0].unique_id)
+                self.peaks1_in_peaks2.append(peak)
+            else:
+                self.peaks1_not_in_peaks2.append(peak)
+        for peak in self.peaks2:
+            if peak.unique_id in visited:
+                self.peaks2_in_peaks1.append(peak)
+            else:
+                self.peaks2_not_in_peaks1.append(peak)
+
+        self.results.peaks1_in_peaks2 = len(self.peaks1_in_peaks2)
+        self.results.peaks2_in_peaks1 = len(self.peaks2_in_peaks1)
+
+        self.results.peaks1_not_in_peaks2 = len(self.peaks1_not_in_peaks2)
+        self.results.peaks2_not_in_peaks1 = len(self.peaks2_not_in_peaks1)
+
+    def check_similarity_old(self, analyse_first_n_peaks=10000000):
         i = 1
         for peak_datasets in [(self.peaks1, self.peaks2),
                               (self.peaks2, self.peaks1)]:
@@ -463,26 +493,21 @@ class PeaksComparerV2(object):
             not_matching = []
             matching = []
             counter = 0
+            visited = set([])
             for peak in sorted(peaks1, key=lambda x: x.score, reverse=True)[0:analyse_first_n_peaks]:
                 assert peak.unique_id is not None
                 counter += 1
-                #if peaks2.contains_interval(peak):
-                #    n_identical += 1
-
                 if counter % 500 == 0:
                     logging.info("Checked %d peaks" % counter)
-
-
-                #similar_intervals = peaks2.get_overlapping_intervals(peak, 50)
-                #print("Peak %s is overlapping with %d other peaks" % (peak.unique_id, len(similar_intervals)))
-                #if len(similar_intervals) > 0:
-                if peaks2.approx_contains_part_of_interval(peak):
+                touching = peaks2.approx_contains_part_of_interval(
+                    peak, visited)
+                if touching:
+                    visited.add(touching[0].unique_id)
                     n_similar += 1
                     if i == 1:
                         self.peaks1_in_peaks2.append(peak)
                     else:
                         self.peaks2_in_peaks1.append(peak)
-
                     matching.append(peak)
                 else:
                     not_matching.append(peak)

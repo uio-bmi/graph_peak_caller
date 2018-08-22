@@ -91,24 +91,15 @@ class PeakCollection(obg.IntervalCollection):
     interval_class = Peak
 
     def cut_around_summit(self, q_values, n_base_pairs_around=60):
-        for i, peak in enumerate(self.intervals):
-            assert np.all(np.array(peak.region_paths) > 0), "Assuming forward peaks."
-
+        def get_summit(peak):
             peak_qvalues = q_values.get_interval_values(peak)
-            # Finding summit position of average summit from both sides (to get middle
-            # if many equal q values)
-            #summit_position = int((np.argmax(peak_qvalues)  + \
-            #                      (len(peak_qvalues) - np.argmax(peak_qvalues[::-1])))/2)
-
-            max_positions = np.where(peak_qvalues == np.max(peak_qvalues))[0]
-
+            max_positions = np.flatnonzero(peak_qvalues == np.max(peak_qvalues))
             summit_position = int(np.median(max_positions))
-
-            summit = peak.get_subinterval(max(0, summit_position - n_base_pairs_around),
+            return peak.get_subinterval(
+                max(0, summit_position - n_base_pairs_around),
                 min(summit_position + n_base_pairs_around, peak.length()))
-            self.intervals[i] = summit
-            assert summit.length() <= n_base_pairs_around * 2
 
+        self.intervals = [get_summit(peak) for peak in self.intervals]
         for peak in self.intervals:
             assert peak.length() <= n_base_pairs_around * 2
 
@@ -124,17 +115,20 @@ class PeakCollection(obg.IntervalCollection):
         # Creates an index from region path to intervals touching the rp,
         # making it fast to do approx. overlap
         index = defaultdict(list)
-        for peak in self.intervals:
+        for peak in sorted(self.intervals, key=lambda x: x.score, reveres=True):
             for rp in peak.region_paths:
                 index[abs(rp)].append(peak)
 
         self._index = index
 
-    def approx_contains_part_of_interval(self, interval):
+    def approx_contains_part_of_interval(self, interval, visited=None):
         assert hasattr(self, "_index"), "Create index first by calling create_node_index()"
+        visited = visited if visited is not None else set([])
         for rp in interval.region_paths:
-            if len(self._index[abs(rp)]) > 0:
-                return True
+            touching = [peak for peak in self._index[abs(rp)]
+                        if peak.unique_id not in visited]
+            if len(touching):
+                return list(touching)
 
         return False
 
