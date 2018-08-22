@@ -295,6 +295,7 @@ def analyse_peaks_whole_genome(args):
     print(results)
 
     results.to_file(args.out_file + ".pickle")
+    results.to_csv(args.out_file + ".csv")
     with open(args.out_file + ".txt", "w") as f:
         f.write(str(results))
     logging.info("Wrote results as pickle to %s and as text to %s"
