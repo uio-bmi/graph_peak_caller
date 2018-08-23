@@ -115,7 +115,7 @@ class PeakCollection(obg.IntervalCollection):
         # Creates an index from region path to intervals touching the rp,
         # making it fast to do approx. overlap
         index = defaultdict(list)
-        for peak in sorted(self.intervals, key=lambda x: x.score, reveres=True):
+        for peak in sorted(self.intervals, key=lambda x: x.score, reverse=True):
             for rp in peak.region_paths:
                 index[abs(rp)].append(peak)
 
