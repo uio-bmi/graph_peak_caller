@@ -30,6 +30,8 @@ from graph_peak_caller.preprocess_interface import \
     split_vg_json_reads_into_chromosomes, shift_estimation
 
 
+from offsetbasedgraph.interval import NoLinearProjectionException
+
 def main():
     run_argument_parser(sys.argv[1:])
 
@@ -39,7 +41,6 @@ def version(args):
 
 
 def project_alignments(alignments, linear_path):
-    from offsetbasedgraph.interval import NoLinearProjectionException
     import numpy as np
     i = 0
     for alignment in alignments:
