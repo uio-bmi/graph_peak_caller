@@ -106,7 +106,8 @@ def check_haplotype(args):
        args.result_folder + args.chrom + "_alignments.pickle", graph)
     peaks_dict = {i: alignment_collection.get_alignments_on_interval(interval).values()
                   for i, interval in enumerate(motif_paths)}
-    IntervalDict(peaks_dict).to_file(args.result_folder + args.chrom + args.interval_name + "_reads.intervaldict")
+    IntervalDict(peaks_dict).to_file(
+        args.result_folder + args.chrom + args.interval_name + "_reads.intervaldict")
     # peaks_dict = IntervalDict.from_file(args.result_folder + args.chrom + "_motif_reads.intervaldict").intervals
     result_dict = main.run_peak_set(peaks_dict)
     with open(args.result_folder + args.chrom + "_"+ args.interval_name + ".setsummary", "w") as f:
