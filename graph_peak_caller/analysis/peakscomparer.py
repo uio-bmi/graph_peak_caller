@@ -107,7 +107,7 @@ class AnalysisResults:
                   "MOTIF_SHARED_GPC", "MOTIF_SHARED_MACS",
                   "MOTIF_UNIQUE_GPC", "MOTIF_UNIQUE_MACS"]
         data = [self.tot_peaks1, self.tot_peaks2,
-                len(self.peaks2_in_peaks1),
+                self.peaks2_in_peaks1,
                 self.peaks1_in_peaks2_matching_motif,
                 self.peaks2_in_peaks1_matching_motif,
                 self.peaks1_not_in_peaks2_matching_motif,
