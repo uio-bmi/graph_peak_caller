@@ -90,11 +90,13 @@ def compare_graph_and_linear(linear_alignments, graph_alignments):
     different_chrom = 0
     different_pos = 0
     same_pos = 0
+    not_in_linear_file = open("not_in_linear.txt", "w")
 
     for name in graph_alignments.keys():
 
         if name not in linear_alignments:
             not_in_linear += 1 
+            not_in_linear_file.writelines([name + "\n"])
             continue
         
         linear_chrom = linear_alignments[name][0]
@@ -107,12 +109,13 @@ def compare_graph_and_linear(linear_alignments, graph_alignments):
 
         linear_pos = linear_alignments[name][1]
         graph_pos = graph_alignments[name][1]
-        if abs(linear_pos - graph_pos) > 100:
+        if abs(linear_pos - graph_pos) > 5:
             different_pos += 1
         else:
             same_pos += 1
             #print("Same: %s --- %s" % (linear_alignments[name], graph_alignments[name]))
     
+    not_in_linear_file.close()
     print("Not in linear: %d" % not_in_linear)
     print("Different chrom: %d" % different_chrom)
     print("Different pos: %d" % different_pos)
