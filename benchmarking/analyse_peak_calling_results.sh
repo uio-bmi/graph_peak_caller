@@ -122,7 +122,7 @@ for chromosome in $(echo $chromosomes | tr "," "\n")
 do
     echo ""
     echo "------- Checking haplotypes --------"
-    graph_peak_caller motif_locations $data_dir ./ $chromosome
-    graph_peak_caller check_haplotype $data_dir ${data_dir}/reference1-5.fa ./ $chromosome motif_paths
+    #graph_peak_caller motif_locations $data_dir ./ $chromosome
+    #graph_peak_caller check_haplotype $data_dir ${data_dir}/reference1-5.fa ./ $chromosome motif_paths
 done
     
