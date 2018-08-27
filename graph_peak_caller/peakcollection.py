@@ -121,6 +121,9 @@ class PeakCollection(obg.IntervalCollection):
 
         self._index = index
 
+    def get_all_overlapping(self, interval):
+        return {peak for rp in interval.region_paths for peak in self._index[abs(rp)]}
+
     def approx_contains_part_of_interval(self, interval, visited=None):
         assert hasattr(self, "_index"), "Create index first by calling create_node_index()"
         visited = visited if visited is not None else set([])
