@@ -179,6 +179,7 @@ def concatenate_sequence_files(args):
     i = 0
     for peak in peaks:
         out_fasta.writelines([">peak%d %s\n" % (i, peak.to_file_line())])
+        out_fasta.writelines(["%s\n" % peak.sequence])
         out_intervalcollection.writelines(["%s\n" % peak.to_file_line()])
         i += 1
     out_fasta.close()
