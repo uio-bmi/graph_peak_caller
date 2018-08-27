@@ -205,17 +205,17 @@ def run_callpeaks2(args):
 
     if args.genome_size is not None:
         genome_size = int(args.genome_size)
-        config.min_background = int(args.unique_reads) * int(args.fragment_length) / genome_size
+        config.global_min = int(args.unique_reads) * int(args.fragment_length) / genome_size
 
         logging.info(
             "Computed min background signal to be %.3f using fragment length %f, "
-            " %d unique reads, and genome size %d" % (config.min_background,
+            " %d unique reads, and genome size %d" % (config.global_min,
                                                       config.fragment_length,
                                                       int(args.unique_reads),
                                                       int(genome_size)))
     else:
         logging.info("Not using min background.")
-        config.min_background = None
+        config.global_min = None
 
     out_name = args.out_name if args.out_name is not None else ""
     reporter = Reporter(out_name)
@@ -295,10 +295,10 @@ def run_callpeaks_whole_genome(args):
 
 
     genome_size = int(args.genome_size)
-    config.min_background = int(args.unique_reads) * int(args.fragment_length) / genome_size
+    config.global_min = int(args.unique_reads) * int(args.fragment_length) / genome_size
     logging.info(
         "Computed min background signal to be %.3f using fragment length %f, "
-        " %d unique reads, and genome size %d" % (config.min_background,
+        " %d unique reads, and genome size %d" % (config.global_min,
                                                   config.fragment_length,
                                                   int(args.unique_reads),
                                                   int(genome_size)))
