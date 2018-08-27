@@ -132,7 +132,7 @@ def concatenate_sequence_files(args):
     chromosomes = args.chromosomes.split(",")
     out_file_name = args.out_file_name
 
-    out_file_name_json = args.out_file_name.split(".")[:-1] + ".intervalcollection"
+    out_file_name_json = '.'.join(args.out_file_name.split(".")[:-1]) + ".intervalcollection"
 
     if args.is_summits == "True":
         file_endings = "_sequences_summits.fasta"
@@ -175,7 +175,7 @@ def concatenate_sequence_files(args):
 
     peaks = sorted(peaks, key=lambda s: -s.score)
     out_fasta = open(out_file_name, "w")
-    out_intervalcollection = open(out_file_name_json)
+    out_intervalcollection = open(out_file_name_json, "w")
     i = 0
     for peak in peaks:
         out_fasta.writelines([">peak%d %s\n" % (i, peak.to_file_line())])
