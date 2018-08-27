@@ -132,6 +132,8 @@ def concatenate_sequence_files(args):
     chromosomes = args.chromosomes.split(",")
     out_file_name = args.out_file_name
 
+    out_file_name_json = args.out_file_name.split(".")[:-1] + ".intervalcollection"
+
     if args.is_summits == "True":
         file_endings = "_sequences_summits.fasta"
     else:
@@ -173,14 +175,17 @@ def concatenate_sequence_files(args):
 
     peaks = sorted(peaks, key=lambda s: -s.score)
     out_fasta = open(out_file_name, "w")
+    out_intervalcollection = open(out_file_name_json)
     i = 0
     for peak in peaks:
         out_fasta.writelines([">peak%d %s\n" % (i, peak.to_file_line())])
-        out_fasta.writelines(["%s\n" % peak.sequence])
+        out_intervalcollection.writelines(["%s\n" % peak.to_file_line()])
         i += 1
     out_fasta.close()
+    out_intervalcollection.close()
 
     logging.info("Wrote all peaks in sorted order to %s" % out_file_name)
+    logging.info("Wrote all peaks in sorted order to %s" % out_file_name_json)
 
 
 def find_linear_path(args):
@@ -270,7 +275,7 @@ def analyse_peaks_whole_genome(args):
         linear_path = obg.NumpyIndexedInterval.from_file(
             args.graphs_dir + chrom + "_linear_pathv2.interval")
 
-        #try:
+        #   try:
         alignments_file_name = args.results_dir + "/" + chrom + "_alignments.pickle"
         logging.info("Looking for alignment collection at %s" % alignments_file_name)
         #alignments = pyvg.alignmentcollection.AlignmentCollection.from_file(
@@ -409,13 +414,13 @@ def linear_peaks_to_fasta(args):
     collection.save_to_sorted_fasta(args.out_file_name)
     logging.info("Saved sequences to %s" % args.out_file_name)
 
-    window = 60
+    window = None
     if hasattr(args, "window"):
         if args.window is not None:
             window = int(args.window)
             logging.info("Using window size of %d" % window)
         else:
-            logging.warning("Using default window size %d when writing peaks to fasta" % window)
+            logging.warning("Not cutting around summit when writing peaks to fasta" % window)
 
     summits = NonGraphPeakCollection.from_bed_file(
         args.linear_reads_file_name, cut_around_summit=window)

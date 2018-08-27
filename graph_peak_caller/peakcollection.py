@@ -76,7 +76,7 @@ class Peak(obg.DirectedInterval):
 
         linear_start_pos = linear_path.get_offset_at_node(first_node) + start_offset
         linear_end_pos = linear_path.get_offset_at_node(last_node) + end_offset
-        return NonGraphPeak(chromosome, linear_start_pos, linear_end_pos)
+        return NonGraphPeak(chromosome, linear_start_pos, linear_end_pos, score=self.score)
 
     def get_subinterval(self, start_offset, end_offset):
         subinterval = obg.Interval.get_subinterval(self, start_offset, end_offset)
