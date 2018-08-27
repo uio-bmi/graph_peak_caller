@@ -308,7 +308,7 @@ class PeaksComparerV2(object):
                 match2 += 1
             else:
                 match_none += 1
-        self._shared_counts += np.array(
+        self.results._shared_counts += np.array(
             [match_both, match1, match2, match_none])
         # END
 
