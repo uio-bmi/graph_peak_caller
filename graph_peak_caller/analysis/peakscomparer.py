@@ -202,7 +202,6 @@ class PeaksComparerV2(object):
         self.run_all_analysis()
         self.write_unique_peaks_to_file()
 
-
     def check_possible_variants_within_peaks(self):
         i = 0
         for peaks in [self.peaks1, self.peaks2, self.peaks1_not_in_peaks2[0:50], self.peaks2_not_in_peaks1[0:50]]:

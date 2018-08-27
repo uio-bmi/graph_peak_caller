@@ -94,7 +94,7 @@ class PeakCollection(obg.IntervalCollection):
         def get_summit(peak):
             peak_qvalues = q_values.get_interval_values(peak)
             max_positions = np.flatnonzero(peak_qvalues == np.max(peak_qvalues))
-            summit_position = int(np.median(max_positions))
+            summit_position = np.partition(max_positions, max_positions.size//2)[max_positions.size//2)
             return peak.get_subinterval(
                 max(0, summit_position - n_base_pairs_around),
                 min(summit_position + n_base_pairs_around, peak.length()))
