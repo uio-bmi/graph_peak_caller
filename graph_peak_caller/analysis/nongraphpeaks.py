@@ -75,7 +75,11 @@ class NonGraphPeakCollection(object):
             chrom = peak[0]
             start = int(peak[1])
             end = int(peak[2])
-            score = float(peak[8])  # q value
+
+            if len(peak) >= 7:
+                score = float(peak[8])  # q value
+            else:
+                score = -1
 
 
             if cut_around_summit is not None:
