@@ -37,6 +37,7 @@ class AnalysisResults:
         self.peaks2_unique_scores = []
         self.peaks1_unique_alignments = []
         self.peaks2_unique_alignments = []
+        self._shared_counts = np.zeros(4)
 
     def __repr__(self):
         out = ""
@@ -98,18 +99,19 @@ class AnalysisResults:
         self.peaks2_unique_scores.extend(other.peaks2_unique_scores)
         self.peaks1_unique_alignments.extend(other.peaks1_unique_alignments)
         self.peaks2_unique_alignments.extend(other.peaks2_unique_alignments)
-
+        self._shared_counts += other._shared_counts
         return self
 
     def to_csv(self, file_name):
         header = ["TOTAL_GPC", "TOTAL_MACS", "SHARED",
                   "UNIQUE_GPC", "UNIQUE_MACS",
                   "MOTIF_SHARED_GPC", "MOTIF_SHARED_MACS",
-                  "MOTIF_UNIQUE_GPC", "MOTIF_UNIQUE_MACS"]
+                  "MOTIF_UNIQUE_GPC", "MOTIF_UNIQUE_MACS", "MOTIF_BOTH"]
         data = [self.tot_peaks1, self.tot_peaks2, self.peaks2_in_peaks1,
                 self.peaks1_not_in_peaks2, self.peaks2_not_in_peaks1,
                 self.peaks1_in_peaks2_matching_motif, self.peaks2_in_peaks1_matching_motif,
-                self.peaks1_not_in_peaks2_matching_motif, self.peaks2_not_in_peaks1_matching_motif]
+                self.peaks1_not_in_peaks2_matching_motif, self.peaks2_not_in_peaks1_matching_motif,
+                self._shared_counts[0]]
 
         with open(file_name, "w") as f:
             f.write("# %s\n" % "\t".join(header))
@@ -292,6 +294,24 @@ class PeaksComparerV2(object):
         print("\n--- Checking peaks matching for motif hits --- ")
         self._get_pair_ambig_status()
         i = 1
+
+        # NEW COUNTS:
+        match_both, match1, match2, match_none = (0, 0, 0, 0)
+        for peak1, peak2 in zip(self.peaks1_in_peaks2, self.peaks2_in_peaks1):
+            a, b = (peak1 in self.graph_matching_motif,
+                    peak2 in self.linear_matching_motif)
+            if a and b:
+                match_both += 1
+            elif a:
+                match1 += 1
+            elif b:
+                match2 += 1
+            else:
+                match_none += 1
+        self._shared_counts = np.array(
+            [match_both, match1, match2, match_none])
+        # END
+
         for matching in [self.peaks1_in_peaks2, self.peaks2_in_peaks1]:
             if i == 1:
                 print("Checking graph peaks, in total %d in other set" % len(matching))
@@ -320,7 +340,6 @@ class PeaksComparerV2(object):
         for peak in self.peaks1_in_peaks2:
             if peak.unique_id in self.graph_matching_motif:
                 peak_on_same_pos = self.peaks2.which_approx_contains_part_of_interval(peak)
-
                 if peak_on_same_pos.unique_id not in self.linear_matching_motif:
                     #logging.info("Found graph peak matching motif where linear "
                     #             "peak not matching. (%s, %s) \nGraph peak: %s. \nLinear peak: %s" %
@@ -473,13 +492,12 @@ class PeaksComparerV2(object):
                 peak, visited)
             if touching:
                 visited.add(touching[0].unique_id)
+                self.peaks2_in_peaks1.append(touching[0])
                 self.peaks1_in_peaks2.append(peak)
             else:
                 self.peaks1_not_in_peaks2.append(peak)
         for peak in self.peaks2:
-            if peak.unique_id in visited:
-                self.peaks2_in_peaks1.append(peak)
-            else:
+            if peak.unique_id not in visited:
                 self.peaks2_not_in_peaks1.append(peak)
 
         self.results.peaks1_in_peaks2 = len(self.peaks1_in_peaks2)

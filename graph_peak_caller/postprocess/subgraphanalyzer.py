@@ -11,6 +11,11 @@ class SubGraphAnalyzer:
     def get_info(self):
         return (self.has_two_bindings(), self.is_ambiguous())
 
+    def get_pruned_graph(self):
+        to_dists = self.dists[self._max_path[], :]
+        from_dists = self.dists[:, -1]
+        return np.flatnonzero(to_dists+from_dists == self._score)
+
     def has_two_bindings(self):
         if len(self._max_path) <= 1:
             return False
