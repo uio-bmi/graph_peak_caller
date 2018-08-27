@@ -22,6 +22,10 @@ echo "Changed dir to $work_dir"
 summit_window_size=120
 echo "Will use window size $summit_window_size"
 
+
+
+
+
 # Extract macs2 sequences, write to fasta (for later comparison)
 echo "Extracting macs sequences"
 > macs_selected_chromosomes.bed  # Create empty file
@@ -53,7 +57,26 @@ do
     #graph_peak_caller get_summits -g $data_dir/$chromosome.nobg ${chromosome}_sequences.fasta ${chromosome}_qvalues $summit_window_size
     graph_peak_caller get_summits -g $data_dir/$chromosome.nobg ${chromosome}_sequences.fasta ${chromosome}_fragment_pileup $summit_window_size
 done
+
 graph_peak_caller concatenate_sequence_files -s True $chromosomes sequence_all_chromosomes_summits.fasta
+
+head -n 100 sequence_all_chromosomes_summits.intervalcollection > sequence_all_chromosomes_summits_best.intervalcollection
+
+
+# Project graph peaks to linear
+for chromosome in $(echo "1,2,3,4,5" | tr "," "\n")
+do
+    grep ">" ${chromosome}_sequences_summits.fasta | cut -d " " -f2-100000 > ${chromosome}_summits.intervalcollection
+	graph_peak_caller peaks_to_linear ${chromosome}_summits.intervalcollection /data/bioinf/tair2/${chromosome}_linear_pathv2.interval $chromosome ${chromosome}_peaks_to_linear.bed
+done
+
+# Fetch sequences for projected peaks
+cat *_peaks_to_linear.bed | sort -r -n -k 9 > peaks_to_linear.bed
+graph_peak_caller linear_peaks_to_fasta peaks_to_linear.bed /data/bioinf/tair2/reference1-5.fa peaks_to_linear_sequences.fasta
+
+fimo -oc fimo_peaks_to_linear_sequences motif.meme peaks_to_linear_sequences.fasta
+$base_dir/plot_motif_enrichments.sh peaks_to_linear_sequences.fasta macs_sequences_summits.fasta $motif_url motif_enrichment_peaks_to_linear.png $tf
+
 
 # Run motif enrichment analysis
 $base_dir/plot_motif_enrichments.sh sequence_all_chromosomes_summits.fasta macs_sequences_summits.fasta $motif_url motif_enrichment.png $tf
