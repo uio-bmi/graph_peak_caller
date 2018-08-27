@@ -35,7 +35,11 @@ class NonGraphPeak:
         return True
 
     def to_bed_line(self):
-        return "%s\t%d\t%d\n" % (self.chromosome, self.start, self.end)
+        name = self.unique_id
+        if name is None:
+            name = "."
+
+        return "%s\t%d\t%d\t%s\t.\t.\t.\t.\t%.2f\n" % (self.chromosome, self.start, self.end, name, self.score)
 
     def to_file_line(self):
         object = {

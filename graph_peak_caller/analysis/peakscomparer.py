@@ -275,7 +275,8 @@ class PeaksComparerV2(object):
     def check_alignments(self):
         logging.info("Checking alignments")
         i = 1
-        for peaks in [self.peaks1_not_in_peaks2[0:50], self.peaks2_not_in_peaks1[0:50]]:
+        #for peaks in [self.peaks1_not_in_peaks2[0:50], self.peaks2_not_in_peaks1[0:50]]:
+        for peaks in [self.peaks1, self.peaks2]:
             alignments = []
             for peak in peaks:
                 alignments.extend(self.alignments.get_alignments_on_interval(peak).keys())
