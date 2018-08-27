@@ -270,7 +270,7 @@ def analyse_peaks_whole_genome(args):
         linear_path = obg.NumpyIndexedInterval.from_file(
             args.graphs_dir + chrom + "_linear_pathv2.interval")
 
-        #try:
+        #   try:
         alignments_file_name = args.results_dir + "/" + chrom + "_alignments.pickle"
         logging.info("Looking for alignment collection at %s" % alignments_file_name)
         #alignments = pyvg.alignmentcollection.AlignmentCollection.from_file(
@@ -409,13 +409,13 @@ def linear_peaks_to_fasta(args):
     collection.save_to_sorted_fasta(args.out_file_name)
     logging.info("Saved sequences to %s" % args.out_file_name)
 
-    window = 60
+    window = None
     if hasattr(args, "window"):
         if args.window is not None:
             window = int(args.window)
             logging.info("Using window size of %d" % window)
         else:
-            logging.warning("Using default window size %d when writing peaks to fasta" % window)
+            logging.warning("Not cutting around summit when writing peaks to fasta" % window)
 
     summits = NonGraphPeakCollection.from_bed_file(
         args.linear_reads_file_name, cut_around_summit=window)
