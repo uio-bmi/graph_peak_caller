@@ -3,6 +3,7 @@ from graph_peak_caller.analysis.peakscomparer import AnalysisResults
 import logging
 import numpy as np
 
+
 class HtmlReportGenerator:
     def __init__(self, transcription_factors):
         self.tfs = transcription_factors
