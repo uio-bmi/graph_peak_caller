@@ -1,5 +1,6 @@
 from ..peakcollection import PeakCollection
 from .nongraphpeaks import NonGraphPeakCollection
+from .venn_diagrams import save_venn_from_csv
 from offsetbasedgraph import IntervalCollection
 from offsetbasedgraph import NumpyIndexedInterval
 import pickle
@@ -116,6 +117,8 @@ class AnalysisResults:
         with open(file_name, "w") as f:
             f.write("# %s\n" % "\t".join(header))
             f.write("# %s\n" % "\t".join(str(n) for n in data))
+
+        save_venn_from_csv(file_name, file_name)
 
     def to_file(self, file_name):
         with open(file_name, "wb") as f:
