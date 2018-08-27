@@ -108,7 +108,24 @@ def save_venn_from_csv(filename, out_name):
     numbers = from_csv(filename)
     save_venn(numbers, out_name)
 
+def save_venn_from_csvs(filenames, out_name):
+    fig, axes = plt.subplots(2,3)
+    axes = [ax for row in axes for ax in row]
+    numbers_list = [from_csv(filename) for filename in filenames]
+    for numbers, ax in zip(numbers_list, axes):
+        column_venn(ax, *numbers)
+    total = [sum(elems) for elems in zip(*numbers_list)]
+    print(total)
+    column_venn(axes[-1], *total)
+    plt.show()
+    # plt.text(xs[0], 0.8, "GPC", ha="center")
+    # plt.text(xs[1], 0.8, "MACS", ha="center")
+    # plt.text(xs[2], 0.8, "SHARED", ha="center")
+    # plt.savefig(out_name+"_venn.pdf", bbox_inches='tight')
+    # numbers = from_csv(filename)
+    # save_venn(numbers, out_name)
+
 if __name__ == "__main__":
     import sys
     filename = sys.argv[1]
-    save_venn(filename, "tmp")
+    save_venn_from_csvs([filename]*5, "tmp")

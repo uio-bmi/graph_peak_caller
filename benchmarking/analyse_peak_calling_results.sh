@@ -117,3 +117,12 @@ fimo -oc unique_macs motif.meme unique_macs.fasta
 $base_dir/plot_motif_enrichments.sh unique_graph.fasta unique_macs.fasta $motif_url motif_enrichment_unique_peaks.png $tf
 cp motif_enrichment_unique_peaks.png ../../../figures_tables/${tf}_unique_peaks.png
 
+# Haplotype analysis
+for chromosome in $(echo $chromosomes | tr "," "\n")
+do
+    echo ""
+    echo "------- Checking haplotypes --------"
+    graph_peak_caller motif_locations $data_dir ./ $chromosome
+    graph_peak_caller check_haplotype $data_dir ${data_dir}/reference1-5.fa ./ $chromosome motif_paths
+done
+    
