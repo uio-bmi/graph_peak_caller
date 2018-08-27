@@ -298,8 +298,8 @@ class PeaksComparerV2(object):
         # NEW COUNTS:
         match_both, match1, match2, match_none = (0, 0, 0, 0)
         for peak1, peak2 in zip(self.peaks1_in_peaks2, self.peaks2_in_peaks1):
-            a, b = (peak1 in self.graph_matching_motif,
-                    peak2 in self.linear_matching_motif)
+            a, b = (peak1.unique_id in self.graph_matching_motif,
+                    peak2.unique_id in self.linear_matching_motif)
             if a and b:
                 match_both += 1
             elif a:
