@@ -19,7 +19,7 @@ cd $work_dir
 
 echo "Changed dir to $work_dir"
 
-summit_window_size=4000 
+summit_window_size=120
 echo "Will use window size $summit_window_size"
 
 
