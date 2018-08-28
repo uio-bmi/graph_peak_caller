@@ -4,6 +4,7 @@ import logging
 from collections import defaultdict
 import numpy as np
 from .analysis.nongraphpeaks import NonGraphPeakCollection, NonGraphPeak
+from .summits import find_summits
 
 
 class Peak(obg.DirectedInterval):
@@ -99,7 +100,18 @@ class PeakCollection(obg.IntervalCollection):
                 max(0, summit_position - n_base_pairs_around),
                 min(summit_position + n_base_pairs_around, peak.length()))
 
-        self.intervals = [get_summit(peak) for peak in self.intervals]
+        def get_summit_fancy(peak):
+            peak_qvalues = q_values.get_interval_values(peak)
+            summits = find_summits(peak_qvalues)
+            if not summits.size:
+                return get_summit(peak)
+            summit_values = peak_qvalues[summits]
+            summit_position = summits[np.argmax(summit_values)]
+            return peak.get_subinterval(
+                max(0, summit_position - n_base_pairs_around),
+                min(summit_position + n_base_pairs_around, peak.length()))
+
+        self.intervals = [get_summit_fancy(peak) for peak in self.intervals]
         for peak in self.intervals:
             assert peak.length() <= n_base_pairs_around * 2
 
