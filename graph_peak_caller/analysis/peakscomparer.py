@@ -508,6 +508,19 @@ class PeaksComparerV2(object):
         self.results.peaks1_not_in_peaks2 = len(self.peaks1_not_in_peaks2)
         self.results.peaks2_not_in_peaks1 = len(self.peaks2_not_in_peaks1)
 
+        chromosome = self.chromosome
+        if chromosome is None:
+            chromosome = "unknown"
+
+        gpc_not_matching_macs = IntervalCollection(self.peaks1_not_in_peaks2)
+        gpc_not_matching_macs.to_file("gpc_not_matching_macs_chr.intervals" % chromosome, text_file=True)
+        logging.info("Wrote peaks not matching to file gpc_not_matching_macs_chr.intervals" % chromosome)
+
+        macs_not_matching_gpc = IntervalCollection(self.peaks2_not_in_peaks1)
+        macs_not_matching_gpc.to_file("macs_not_matching_gpc_chr.intervals" % chromosome, text_file=True)
+        logging.info("Wrote peaks not matching to file macs_not_matching_gpc_chr.intervals" % chromosome)
+
+
     def check_similarity_old(self, analyse_first_n_peaks=10000000):
         i = 1
         for peak_datasets in [(self.peaks1, self.peaks2),
