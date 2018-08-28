@@ -274,5 +274,43 @@ class TestCallPeaksFromQValues(unittest.TestCase):
         }
 
 
+    def test_complicated_example(self):
+        graph = GraphWithReversals(
+            {i: Block(i) for i in range(136, 160)},
+            {
+                136: [139, 138, 137],
+                137: [140, 141],
+                138: [140],
+                139: [140],
+                140: [142],
+                142: [144, 143],
+                143: [145],
+                145: [146],
+                146: [148],
+                148: [149, 150],
+                149: [151],
+                150: [151],
+                152: [153],
+                154: [155],
+                153: [155],
+                155: [156, 157, 158],
+                156: [159],
+                157: [159],
+                158: [159]
+            }
+        )
+        graph.convert_to_numpy_backend()
+        pileup = SparsePileup(self.multi_start_end_graph)
+        pileup.data = {
+            136: ValuedIndexes([], [], 2, 1),
+            159: ValuedIndexes([], [], 2, 1)
+        }
+        self._assert_finds_max_paths(
+            [
+                Interval(0, 10, [2, 3, 5])
+            ],
+            graph, pileup
+        )
+
 if __name__ == "__main__":
     unittest.main()

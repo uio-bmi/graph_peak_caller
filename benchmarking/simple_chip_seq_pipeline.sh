@@ -169,7 +169,7 @@ fi
 # Run MACS2 with projected alignments
 echo "Running macs2 with projected alignments."
 if [ ! -f macs_output_projected_alignments.txt ]; then
-    macs2 callpeak --nomodel --extsize $fragment_length -g $genome_size -t projected_alignments.bed -n macs_projected_alignments > macs_output_projected_alignments.txt 2>&1
+        macs2 callpeak --nomodel --bdg --trackline --extsize $fragment_length -g $genome_size -t projected_alignments.bed -n macs_projected_alignments > macs_output_projected_alignments.txt 2>&1
 else
     echo "Not running, already done"
 fi
