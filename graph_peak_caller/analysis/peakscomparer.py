@@ -513,12 +513,12 @@ class PeaksComparerV2(object):
             chromosome = "unknown"
 
         gpc_not_matching_macs = IntervalCollection(self.peaks1_not_in_peaks2)
-        gpc_not_matching_macs.to_file("gpc_not_matching_macs_chr.intervals" % chromosome, text_file=True)
-        logging.info("Wrote peaks not matching to file gpc_not_matching_macs_chr.intervals" % chromosome)
+        gpc_not_matching_macs.to_file("gpc_not_matching_macs_chr%s.intervals" % chromosome, text_file=True)
+        logging.info("Wrote peaks not matching to file gpc_not_matching_macs_chr%s.intervals" % chromosome)
 
         macs_not_matching_gpc = IntervalCollection(self.peaks2_not_in_peaks1)
-        macs_not_matching_gpc.to_file("macs_not_matching_gpc_chr.intervals" % chromosome, text_file=True)
-        logging.info("Wrote peaks not matching to file macs_not_matching_gpc_chr.intervals" % chromosome)
+        macs_not_matching_gpc.to_file("macs_not_matching_gpc_chr%s.intervals" % chromosome, text_file=True)
+        logging.info("Wrote peaks not matching to file macs_not_matching_gpc_chr%s.intervals" % chromosome)
 
 
     def check_similarity_old(self, analyse_first_n_peaks=10000000):
