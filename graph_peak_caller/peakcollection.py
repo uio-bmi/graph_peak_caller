@@ -103,6 +103,7 @@ class PeakCollection(obg.IntervalCollection):
         def get_summit_fancy(peak):
             peak_qvalues = q_values.get_interval_values(peak)
             summits = find_summits(peak_qvalues)
+            print(summits)
             if not summits.size:
                 return get_summit(peak)
             summit_values = peak_qvalues[summits]
