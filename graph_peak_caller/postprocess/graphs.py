@@ -45,7 +45,7 @@ class StubsFilter:
             self.find_sub_ends(self.filtered_starts))
 
     def find_sub_starts(self, nodes):
-        r = np.array([not all(-adj in self._pos_from_nodes or adj
+        r = np.array([not all(-adj in self._pos_from_nodes or -adj
                               not in self._touched_nodes
                               for adj in self._graph.reverse_adj_list[-node])
                       for node in nodes], dtype="bool")
