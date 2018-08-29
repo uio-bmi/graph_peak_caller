@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-arabidopsis_graph_dir=$1
-dm_graph_dir=$2
-human_graph_dir=$3
-summit_window_size=$4
+summit_window_size=$1
+arabidopsis_graph_dir=$2
+dm_graph_dir=$3
+human_graph_dir=$4
 
 echo "Using graph dirs $arabidopsis_graph_dir, $dm_graph_dir and $human_graph_dir"
 
