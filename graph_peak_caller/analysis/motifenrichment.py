@@ -22,7 +22,7 @@ class MotifMatcher():
         out_dir = "fimo_" + self.fasta_file.replace(".fasta", "")
 
         if self.run_fimo:
-            subprocess.check_output(["fimo -oc %s %s %s" % (out_dir, self.meme_file, self.fasta_file)], shell=True)
+            subprocess.check_output(["fimo --qv-thresh --thresh 0.1 -oc %s %s %s" % (out_dir, self.meme_file, self.fasta_file)], shell=True)
 
         result_file = out_dir + "/fimo.txt"
 
