@@ -9,6 +9,7 @@ data_dir=$6
 linear_genome_fasta_file=$7
 genome_size=$8
 peaks_file_name=$9
+summit_window_size=${10}
 
 base_dir=$(pwd)
 n_threads=$(grep -c ^processor /proc/cpuinfo)
@@ -19,7 +20,6 @@ cd $work_dir
 
 echo "Changed dir to $work_dir"
 
-summit_window_size=120
 echo "Will use window size $summit_window_size"
 
 
