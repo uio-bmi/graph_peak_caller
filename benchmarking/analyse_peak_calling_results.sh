@@ -74,7 +74,7 @@ done
 cat *_peaks_to_linear.bed | sort -r -n -k 9 > peaks_to_linear.bed
 graph_peak_caller linear_peaks_to_fasta peaks_to_linear.bed /data/bioinf/tair2/reference1-5.fa peaks_to_linear_sequences.fasta
 
-fimo  -oc fimo_peaks_to_linear_sequences motif.meme peaks_to_linear_sequences.fasta
+fimo --bgfile $data_dir/background.model -oc fimo_peaks_to_linear_sequences motif.meme peaks_to_linear_sequences.fasta
 $base_dir/plot_motif_enrichments.sh peaks_to_linear_sequences.fasta macs_sequences_summits.fasta $motif_url motif_enrichment_peaks_to_linear.png $tf
 
 
@@ -87,8 +87,8 @@ for chromosome in $(echo $chromosomes | tr "," "\n")
 do
     echo ""
     echo "----- Running fimo separately for chr $chromosome --- "
-    fimo  -oc fimo_macs_chr$chromosome motif.meme macs_sequences_chr${chromosome}_summits.fasta
-    fimo  -oc fimo_graph_chr$chromosome motif.meme ${chromosome}_sequences_summits.fasta
+    fimo --bgfile $data_dir/background.model -oc fimo_macs_chr$chromosome motif.meme macs_sequences_chr${chromosome}_summits.fasta
+    fimo --bgfile $data_dir/background.model -oc fimo_graph_chr$chromosome motif.meme ${chromosome}_sequences_summits.fasta
 done
 
 # Analyse peak results
@@ -101,8 +101,8 @@ do
     graph_peak_caller peaks_to_fasta $data_dir/$chromosome.nobg.sequences macs_sequences_chr${chromosome}_summits_unique.intervalcollection  macs_sequences_chr${chromosome}_summits_unique.fasta
     graph_peak_caller peaks_to_fasta $data_dir/$chromosome.nobg.sequences ${chromosome}_sequences_summits_unique.intervalcollection ${chromosome}_sequences_summits_unique.fasta
 
-    fimo  -oc fimo_macs_unique_chr$chromosome motif.meme macs_sequences_chr${chromosome}_summits_unique.fasta
-    fimo  -oc fimo_graph_unique_chr$chromosome motif.meme ${chromosome}_sequences_summits_unique.fasta
+    fimo --bgfile $data_dir/background.model -oc fimo_macs_unique_chr$chromosome motif.meme macs_sequences_chr${chromosome}_summits_unique.fasta
+    fimo --bgfile $data_dir/background.model -oc fimo_graph_unique_chr$chromosome motif.meme ${chromosome}_sequences_summits_unique.fasta
 done
 
 graph_peak_caller concatenate_sequence_files -f macs_sequences_chr[chrom]_summits_unique.fasta $chromosomes unique_macs.fasta
@@ -111,8 +111,8 @@ graph_peak_caller concatenate_sequence_files -f [chrom]_sequences_summits_unique
 head -n 1200 unique_macs.fasta > unique_macs_top600.fasta
 head -n 1200 unique_graph.fasta > unique_graph_top600.fasta
 
-fimo  -oc unique_graph motif.meme unique_graph.fasta
-fimo  -oc unique_macs motif.meme unique_macs.fasta
+fimo --bgfile $data_dir/background.model -oc unique_graph motif.meme unique_graph.fasta
+fimo --bgfile $data_dir/background.model -oc unique_macs motif.meme unique_macs.fasta
 
 $base_dir/plot_motif_enrichments.sh unique_graph.fasta unique_macs.fasta $motif_url motif_enrichment_unique_peaks.png $tf
 cp motif_enrichment_unique_peaks.png ../../../figures_tables/${tf}_unique_peaks.png
