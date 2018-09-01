@@ -91,6 +91,13 @@ def check_pruned_graphs_stats(args):
         print(stats_nonpruned)
 
 
+def vg_json_alignments_to_intervals(args):
+    from pyvg.conversion import vg_json_file_to_interval_collection
+    interval_collection = vg_json_file_to_interval_collection(args.vg_json_file_name, args.graph)
+    interval_collection.to_file(args.out_file_name, text_file=True)
+    logging.info("Wrote to file %s" % args.out_file_name)
+
+
 interface = \
 {
 
@@ -411,6 +418,17 @@ interface = \
                                     'Will look for graphs on form graph_dir/[chromosome].pruned.vg')
                 ],
             'method': check_pruned_graphs_stats
+        },
+    'vg_json_alignments_to_intervals':
+        {
+            'help': 'Reads vg json alignments and converts to interval collection',
+            'requires_graph': True,
+            'arguments':
+                [
+                    ('vg_json_file_name', 'Vg json file name'),
+                    ('out_file_name', 'Out file name')
+                ],
+            'method': vg_json_alignments_to_intervals
         }
 }
 
