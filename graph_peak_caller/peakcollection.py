@@ -111,7 +111,7 @@ class PeakCollection(obg.IntervalCollection):
                 max(0, summit_position - n_base_pairs_around),
                 min(summit_position + n_base_pairs_around, peak.length()))
 
-        self.intervals = [get_summit_fancy(peak) for peak in self.intervals]
+        self.intervals = [get_summit(peak) for peak in self.intervals]
         for peak in self.intervals:
             assert peak.length() <= n_base_pairs_around * 2
 
