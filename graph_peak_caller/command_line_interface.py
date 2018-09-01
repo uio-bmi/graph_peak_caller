@@ -114,7 +114,7 @@ def get_intersecting_intervals(args):
     IntervalCollection(out).to_file(args.out_file_name, text_file=True)
     logging.info("Wrote intersecting intervals to %s" % args.out_file_name)
 
-    
+
 
 interface = \
 {
@@ -454,9 +454,9 @@ interface = \
             'requires_graph': True,
             'arguments':
                 [
-                    'file1', 'Intervalcollection file 1',
-                    'file2', 'Intervalcollection file 2',
-                    'out_file_name', 'File to write intersecting intervals to'
+                    ('file1', 'Intervalcollection file 1'),
+                    ('file2', 'Intervalcollection file 2'),
+                    ('out_file_name', 'File to write intersecting intervals to')
                 ],
             'method': get_intersecting_intervals
         }
