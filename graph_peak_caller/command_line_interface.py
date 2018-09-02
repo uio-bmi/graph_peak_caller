@@ -456,7 +456,7 @@ interface = \
                 [
                     ('file1', 'Intervalcollection file 1'),
                     ('file2', 'Intervalcollection file 2'),
-                    ('out_file_name', 'File to write intersecting intervals to')
+                    ('out_file_name', 'File to write intersecting intervals to')notes
                 ],
             'method': get_intersecting_intervals
         }
