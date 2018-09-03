@@ -114,7 +114,7 @@ def check_haplotype(args):
             args.result_folder + args.chrom + args.interval_name + "_reads.intervaldict")
         base_name = args.result_folder + args.chrom + "_" + args.interval_name
     else:
-        peaks_dict = {i: interval for i, interval in enumerate(motif_paths)}
+        peaks_dict = {i: [interval] for i, interval in enumerate(motif_paths)}
         base_name = args.result_folder + args.chrom + "_" + args.interval_name + "_pure"
 
     # peaks_dict = IntervalDict.from_file(args.result_folder + args.chrom + "_motif_reads.intervaldict").intervals
