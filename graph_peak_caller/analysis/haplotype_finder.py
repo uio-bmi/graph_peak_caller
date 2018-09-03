@@ -54,16 +54,18 @@ class VariantList:
         cur_end = 0
         var_buffer = []
         for variant in self._variants:
-            transformed_var = FullVariant(variant.offset-self._start,
-                                      variant.ref, variant.alt,
-                                      variant.precence)
+            transformed_var = FullVariant(
+                variant.offset-self._start,
+                variant.ref, variant.alt,
+                variant.precence)
             assert transformed_var.offset <= self._end-self._start, (variant, self._start, transformed_var.offset, self._end-self._start)
             if transformed_var.offset >= cur_end:
                 if var_buffer:
                     final_list.append(self._join_variants(var_buffer))
                 var_buffer = []
             var_buffer.append(transformed_var)
-            cur_end = max(transformed_var.offset + len(transformed_var.ref), cur_end)
+            cur_end = max(transformed_var.offset + len(transformed_var.ref),
+                          cur_end)
         if var_buffer:
             final_list.append(self._join_variants(var_buffer))
         return final_list
@@ -106,34 +108,31 @@ class VCF:
 
     def get_variants_from_intervals(self, intervals):
         """ intervals reveresely sorted on start """
+        StackElement = namedtuple("StackElement", ["end", "variant_list"])
         intervals = iter(intervals)
         current_intervals = deque([])
         cur_interval = next(intervals)
         is_finished = False
-        prev_start = 0
-        for line in self.f:
-            if line.startswith("#"):
-                continue
-            parts = line.split("\t", 9)
+        line_parts = (line.split("\t", 9) for line in self.f
+                      if not line.startswith("#"))
+        for parts in line_parts:
             pos = int(parts[1])-1
             while pos >= cur_interval[0] and not is_finished:
-                current_intervals.append([cur_interval[-1], False,
-                                          VariantList(*cur_interval)])
+                current_intervals.append(
+                    StackElement(cur_interval[-1],
+                                 VariantList(*cur_interval)))
                 try:
                     cur_interval = next(intervals)
-                    assert cur_interval[0]>=prev_start, (cur_interval, prev_start)
-                    prev_start = cur_interval[0]
                 except StopIteration:
                     is_finished = True
             if not current_intervals:
                 continue
 
-            # end = pos + len(parts[3])
             for entry in current_intervals:
                 entry[1] = pos+len(parts[3]) >= entry[0]
 
-            while current_intervals and current_intervals[0][1]:
-                yield current_intervals.popleft()[-1].finalize()
+            while current_intervals and current_intervals[0].end <= pos:
+                yield current_intervals.popleft().variant_list.finalize()
             if not current_intervals:
                 if is_finished:
                     break
@@ -142,9 +141,10 @@ class VCF:
             alt = parts[4].lower().split(",")
             precence = VariantPrecence.from_line(parts[-1])
             var = FullVariant(int(pos), ref.lower(), alt, precence)
-            for _, in_active, entry in current_intervals:
-                if not in_active:
-                    entry.append(var)
+            variant_end = pos+len(ref)
+            for stack_element in current_intervals:
+                if stack_element.end > variant_end:
+                    stack_element.variant_list.append(var)
 
     def get_variants_from(self, start, end):
         variants = []
@@ -191,7 +191,7 @@ def traverse_variants(alt_seq, ref_seq, variants):
                 logging.debug("--------")
                 continue
             for code, seq in enumerate([variant.ref] + variant.alt):
-                logging.debug(alt_seq[variant.offset+alt_offset:variant.offset+alt_offset+len(seq)], seq.lower())
+                # logging.debug(alt_seq[variant.offset+alt_offset:variant.offset+alt_offset+len(seq)], seq.lower())
                 if alt_seq[variant.offset+alt_offset:variant.offset+alt_offset+len(seq)] == seq.lower():
                     logging.debug("!")
                     next_tentative.append((cur_vars+[code], alt_offset+len(seq)-len(variant.ref), variant.offset+len(variant.ref)))
@@ -274,7 +274,7 @@ class Main:
         self.prev_end = -1
 
     def run_peak_set(self, peaks_dict):
-        all_name_tuples = [(key, self.get_sequence_pair(read)) 
+        all_name_tuples = [(key, self.get_sequence_pair(read))
                            for key, reads in peaks_dict.items() for read in reads]
         names, tuples = zip(*sorted(all_name_tuples, key=lambda x: x[1][2][0]))
         alts, refs, intervals = zip(*tuples)
@@ -336,8 +336,8 @@ class Main:
             return seq, self.indexed_interval.get_offset_at_node(end_node) + end_offset
         next_node = min(node for node in self.graph.adj_list[end_node]
                         if node in self.indexed_interval.nodes_in_interval())
-        p_len = self.graph.node_size(next_node)
-        seq += self.seq_graph.get_interval_sequence(obg.Interval(end_offset, 1, [end_node, next_node]))
+        seq += self.seq_graph.get_interval_sequence(
+            obg.Interval(end_offset, 1, [end_node, next_node]))
         end = self.indexed_interval.get_offset_at_node(next_node)+1
         return seq, end
 
@@ -390,10 +390,22 @@ def test4():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     h = "./.:.:.	1|1:40:8	1|1:40:11	0|0:40:9	./.:.:.	./.:.:.	./.:.:.	0|0:40:8	0|0:40:9	./.:.:.	0|0:40:12	0|0:40:16	0|0:40:40	0|0:40:35	0|0:40:21	0|0:40:13	0|0:40:44	0|0:40:15	0|0:40:86	0|0:40:69	./.:.:.	0|0:40:14	0|0:40:59	0|0:40:51"
-    precence = VariantPrecence.from_line(h)
-    print(precence._precence)
-    print(precence.get_samples(1, [0, 1, 3]))
+    # precence = VariantPrecence.from_line(h)
+    # print(precence._precence)
+    # print(precence.get_samples(1, [0, 1, 3]))
+    alt = "atgcctttattatccttcacgttgaccccacatgccccttttttttttttgg"
+    ref = "atgcctttattatccttcacgttgaccccacatgcccctgttttttttttttg"
+    variants = [FullVariant(offset=2, ref='g', alt=['a'], precence=None),
+                FullVariant(offset=18, ref='a', alt=['t'], precence=None),
+                FullVariant(offset=30, ref='c', alt=['t'], precence=None),
+                FullVariant(offset=38, ref='tgtt', alt=['ttt', 'tttt', 'tgt', 'tg'], precence=None),
+                FullVariant(offset=44, ref='t', alt=['c'], precence=None),
+                FullVariant(offset=45, ref='t', alt=['c'], precence=None)]
+
+    print(traverse_variants(alt, ref, variants))
+
 
     #alt = "aaaaaataagacgt"
     #ref = "ataaataagacgt"
@@ -431,3 +443,16 @@ if __name__ == "__main__":
 # t at 0x7fba28385940>), 
 # t at 0x7fba28385080>)]
 
+
+
+# 2018-09-03 19:19:20,165, INFO: atgcctttattatccttcacgttgaccccacatgccccttttttttttttgg
+# 2018-09-03 19:19:20,165, INFO: atgcctttattatccttcacgttgaccccacatgcccctgttttttttttttg
+# 2018-09-03 19:19:20,165, INFO: 
+# variants = [FullVariant(offset=2, ref='g', alt=['a'], precence=None), 
+#             FullVariant(offset=18, ref='a', alt=['t'], precence=None),
+#             FullVariant(offset=30, ref='c', alt=['t'], precence=None),
+#             FullVariant(offset=38, ref='tgtt', alt=['ttt', 'tttt', 'tgt', 'tg'], precence=None),
+#             FullVariant(offset=44, ref='t', alt=['c'], precence=None),
+#             FullVariant(offset=45, ref='t', alt=['c'], precence=None)]
+
+# 2018-09-03 19:19:20,165, INFO: [] / [([0, 0, 0, 1, 0, 0], -1, 46), ([0, 0, 0, 2, 0, 0], 0, 46)]
