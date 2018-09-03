@@ -22,7 +22,12 @@ class MotifMatcher():
         out_dir = "fimo_" + self.fasta_file.replace(".fasta", "")
 
         if self.run_fimo:
-            subprocess.check_output(["fimo --bgfile /data/bioinf/tair2/background.model -oc %s %s %s" % (out_dir, self.meme_file, self.fasta_file)], shell=True)
+            import os
+            bgfile = ""
+            if os.path.isfile("/data/bioinf/tair2/background.model"):
+                bgfile = "--bgfile /data/bioinf/tair2/background.model"
+
+            subprocess.check_output(["fimo %s -oc %s %s %s" % (bgfile, out_dir, self.meme_file, self.fasta_file)], shell=True)
 
         result_file = out_dir + "/fimo.txt"
 
