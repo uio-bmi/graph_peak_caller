@@ -20,7 +20,7 @@ from ..mindense import DensePileup
 from ..sparsediffs import SparseValues, SparseDiffs
 from .util import create_linear_path
 from .genotype_matrix import VariantList
-from .haplotype_finder import Main
+from .haplotype_finder import Main, VariantPrecence
 
 
 def get_motif_locations(args):
@@ -97,10 +97,11 @@ def summarize_haplotypes(types):
 
 
 def check_haplotype(args):
-    all_reads = args.all_reads=="True" if args.all_reads is not None else True
+    all_reads = args.all_reads == "True" if args.all_reads is not None else True
+    strict = args.strict == "True" if args.strict is not None else True
     name = args.data_folder+args.chrom
+    VariantPrecence.strict = strict
     main = Main.from_name(name, args.fasta_file, args.chrom)
-
     motif_paths = obg.IntervalCollection.from_file(
         args.result_folder+args.chrom+"_" + args.interval_name + ".intervalcollection", True)
     graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
@@ -119,7 +120,8 @@ def check_haplotype(args):
 
     # peaks_dict = IntervalDict.from_file(args.result_folder + args.chrom + "_motif_reads.intervaldict").intervals
     result_dict = main.run_peak_set(peaks_dict)
-
+    if strict:
+        base_name += "_strict"
     with open(base_name + ".setsummary", "w") as f:
         summaries = [summarize_haplotypes(v) for v in result_dict.values()]
         successes = sum(s[0] == s[1] for s in summaries)

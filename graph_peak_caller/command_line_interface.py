@@ -349,7 +349,8 @@ interface = \
                     ('result_folder', ''),
                     ('chrom', ''),
                     ('interval_name', ''),
-                    ("all_reads", "Optional, wheter to check all reads covering region. Default: True")
+                    ("all_reads", "Optional, wheter to check all reads covering region. Default: True"),
+                    ("strict", "Optional, wheter to consider '.'s in the vcf as reference. Default: True")
                 ],
             'method': check_haplotype
         },
