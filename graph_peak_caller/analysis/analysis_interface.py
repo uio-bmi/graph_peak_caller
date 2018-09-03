@@ -119,7 +119,7 @@ def check_haplotype(args):
     # peaks_dict = IntervalDict.from_file(args.result_folder + args.chrom + "_motif_reads.intervaldict").intervals
     result_dict = main.run_peak_set(peaks_dict)
 
-    with open(base_name ".setsummary", "w") as f:
+    with open(base_name + ".setsummary", "w") as f:
         summaries = [summarize_haplotypes(v) for v in result_dict.values()]
         successes = sum(s[0] == s[1] for s in summaries)
         f.write("# %s/%s\n" % (successes, len(summaries)))
@@ -130,7 +130,7 @@ def check_haplotype(args):
              for result in results)
     # motif_paths = list(sorted(motif_paths, key=lambda x: x.region_paths[0]))
     # haplotypes = main.run_peaks(motif_paths)
-    with open(base_name ".setcoverage", "w") as f:
+    with open(base_name + ".setcoverage", "w") as f:
         for line in lines:
             f.write(line+"\n")
         # for haplotype in haplotypes:
