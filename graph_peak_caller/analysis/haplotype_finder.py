@@ -128,7 +128,7 @@ class VCF:
             if not current_intervals:
                 continue
 
-            while current_intervals and current_intervals[0].end <= pos:
+            while current_intervals and current_intervals[0].end < pos:
                 yield current_intervals.popleft().variant_list.finalize()
             if not current_intervals:
                 if is_finished:
