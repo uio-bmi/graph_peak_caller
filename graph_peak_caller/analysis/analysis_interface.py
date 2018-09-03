@@ -1,4 +1,4 @@
-import numpy as np
+,import numpy as np
 import logging
 from collections import Counter
 from itertools import chain
@@ -96,32 +96,41 @@ def summarize_haplotypes(types):
 
 
 def check_haplotype(args):
+    all_reads = args.all_reads if args.all_reads is not None else True
     name = args.data_folder+args.chrom
     main = Main.from_name(name, args.fasta_file, args.chrom)
 
     motif_paths = obg.IntervalCollection.from_file(
         args.result_folder+args.chrom+"_" + args.interval_name + ".intervalcollection", True)
     graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
-    alignment_collection = AlignmentCollection.from_file(
-       args.result_folder + args.chrom + "_alignments.pickle", graph)
-    peaks_dict = {i: alignment_collection.get_alignments_on_interval(interval).values()
-                  for i, interval in enumerate(motif_paths)}
-    IntervalDict(peaks_dict).to_file(
-        args.result_folder + args.chrom + args.interval_name + "_reads.intervaldict")
+
+    if all_reads:
+        alignment_collection = AlignmentCollection.from_file(
+            args.result_folder + args.chrom + "_alignments.pickle", graph)
+        peaks_dict = {i: alignment_collection.get_alignments_on_interval(interval).values()
+                      for i, interval in enumerate(motif_paths)}
+        IntervalDict(peaks_dict).to_file(
+            args.result_folder + args.chrom + args.interval_name + "_reads.intervaldict")
+        base_name = args.result_folder + args.chrom + "_" + args.interval_name
+    else:
+        peaks_dict = {i: interval for i, interval in enumerate(motif_paths)}
+        base_name = args.result_folder + args.chrom + "_" + args.interval_name + "_pure"
+
     # peaks_dict = IntervalDict.from_file(args.result_folder + args.chrom + "_motif_reads.intervaldict").intervals
     result_dict = main.run_peak_set(peaks_dict)
-    with open(args.result_folder + args.chrom + "_" + args.interval_name + ".setsummary", "w") as f:
+
+    with open(base_name ".setsummary", "w") as f:
         summaries = [summarize_haplotypes(v) for v in result_dict.values()]
         successes = sum(s[0] == s[1] for s in summaries)
         f.write("# %s/%s\n" % (successes, len(summaries)))
         for k, v in result_dict.items():
             f.write("%s, %s\n" % (k, summarize_haplotypes(v)))
-        
+
     lines = ("%s\t%s" % (i, result) for i, results in result_dict.items()
              for result in results)
     # motif_paths = list(sorted(motif_paths, key=lambda x: x.region_paths[0]))
     # haplotypes = main.run_peaks(motif_paths)
-    with open(args.result_folder + args.chrom + "_" + args.interval_name + ".setcoverage", "w") as f:
+    with open(base_name ".setcoverage", "w") as f:
         for line in lines:
             f.write(line+"\n")
         # for haplotype in haplotypes:
