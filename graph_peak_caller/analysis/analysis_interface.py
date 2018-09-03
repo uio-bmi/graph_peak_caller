@@ -96,7 +96,7 @@ def summarize_haplotypes(types):
 
 
 def check_haplotype(args):
-    all_reads = args.all_reads if args.all_reads is not None else True
+    all_reads = args.all_reads=="True" if args.all_reads is not None else True
     name = args.data_folder+args.chrom
     main = Main.from_name(name, args.fasta_file, args.chrom)
 
