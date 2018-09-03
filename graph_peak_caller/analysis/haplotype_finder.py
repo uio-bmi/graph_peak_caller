@@ -11,6 +11,7 @@ FullVariant = namedtuple("FullVariant", ["offset", "ref", "alt", "precence"])
 
 
 class VariantPrecence:
+    strict = False
     def __init__(self, precence):
         self._precence = precence
 
@@ -24,7 +25,10 @@ class VariantPrecence:
 
     @classmethod
     def from_line(cls, line):
-        parts = line.replace(".", "-1").replace("/", "|").split("\t")
+        if cls.strict:
+            parts = line.replace(".", "0").replace("/", "|").split("\t")
+        else:
+            parts = line.replace(".", "-1").replace("/", "|").split("\t")
         haplo_type = [part.split(":", 2)[0].split("|") for part in parts]
         precence = np.array([[int(a), int(b)] for a, b in haplo_type])
         return cls(precence)
@@ -38,6 +42,9 @@ class VariantPrecence:
         for precence, offset in zip(precences, offsets):
             combined[precence._precence > 0] = precence._precence[precence._precence > 0] + offset
         return cls(combined)
+
+    def __repr__(self):
+        return "P(%s)" % np.count_nonzero(self._precence)
 
 
 class VariantList:
@@ -476,3 +483,18 @@ if __name__ == "__main__":
 #  FullVariant(offset=6, ref='tg', alt=['gg', 't', 'tt'], precence=None),
 #  FullVariant(offset=26, ref='a', alt=['g'], precence=None),
 #  FullVariant(offset=37, ref='c', alt=['ct'], precence=None)]
+# 
+# r = "taaaaacaaagaaagtcaactaccctattc"
+# 
+# a = "taaaaaaacaaagaaagtcaactaccctattc"
+# r = "tggaaacaaagaaagtcaactaccctattc"
+# 
+# 
+# [FullVariant(offset=1, ref='g', alt=['a'], precence=None),
+#  FullVariant(offset=2, ref='g', alt=['a', 'gaa'], precence=None),
+#  FullVariant(offset=6, ref='c', alt=['t'], precence=None),
+#  FullVariant(offset=14, ref='g', alt=['c'], precence=None),
+#  FullVariant(offset=19, ref='c', alt=['t'], precence=None),
+#  FullVariant(offset=24, ref='c', alt=['a'], precence=None)]
+# 2018-09-03 22:26:09,814, INFO: ---->
+# 2018-09-03 22:26:09,814, INFO: [] / []
