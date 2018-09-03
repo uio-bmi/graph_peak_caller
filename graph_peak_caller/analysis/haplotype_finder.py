@@ -202,18 +202,29 @@ def traverse_variants(alt_seq, ref_seq, variants):
             continue
         real.append(tentative)
 
-    if not len(real) == 1:
+    if not len(real):
         logging.info(alt_seq)
         logging.info(ref_seq)
         logging.info(variants)
         logging.info("---->")
         logging.info("%s / %s", real, tentative_valid)
         return ["No Match"]
-    codes = real[0][0]
-    f = None
-    for code, variant in zip(codes, variants):
-        f = variant.precence.get_samples(code, f)
-    return f
+    haplotypes = []
+    for valid in real:
+        codes = valid[0]
+        f = None
+        for code, variant in zip(codes, variants):
+            f = variant.precence.get_samples(code, f)
+        if f is not None:
+            haplotypes.extend(f)
+    if not haplotypes:
+        return None
+    return np.sort(np.unique(haplotypes))
+    # codes = real[0][0]
+    # f = None
+    # for code, variant in zip(codes, variants):
+    #     f = variant.precence.get_samples(code, f)
+    # return f
 
 
 def find_haplotype(seq, refseq, vcf, start, end):
@@ -261,7 +272,8 @@ class Main:
         self.prev_end = -1
 
     def run_peak_set(self, peaks_dict):
-        all_name_tuples = [(key, self.get_sequence_pair(read)) for key, reads in peaks_dict.items() for read in reads]
+        all_name_tuples = [(key, self.get_sequence_pair(read)) 
+                           for key, reads in peaks_dict.items() for read in reads]
         names, tuples = zip(*sorted(all_name_tuples, key=lambda x: x[1][2][0]))
         alts, refs, intervals = zip(*tuples)
         params = zip(alts, refs, self.vcf.get_variants_from_intervals(intervals))
@@ -406,3 +418,13 @@ if __name__ == "__main__":
     # ref = "agtttcagtagg"
     # variants = [Variant(offset=7, ref='G', alt=['C', 'A']), Variant(offset=9, ref='A', alt=['', 'G'])]
     # print(traverse_variants(alt, ref, variants))
+
+# ct at 0x7fba28385c18>),
+# t at 0x7fb8521fe9e8>),
+# t at 0x7fba2e1d35f8>), 
+# recence object at 0x7fba2e1d3860>), 
+# t at 0x7fba28385278>), 
+# ect at 0x7fba283852b0>), 
+# t at 0x7fba280af4e0>), 
+# t at 0x7fba28385940>), 
+# t at 0x7fba28385080>)]
