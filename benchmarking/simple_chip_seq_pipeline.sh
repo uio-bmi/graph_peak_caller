@@ -100,7 +100,7 @@ echo "Using $fragment_length and read length $read_length"
 echo "Mapping reads"
 if [ ! -f mapped.gam ]; then
     echo "Using indices: $vg_gcsa_index and $vg_xg_index"
-    vg1.9 map -c 5000 -f raw_trimmed.fq -g $vg_gcsa_index -x $vg_xg_index > mapped.gam
+    vg1.9 map -f raw_trimmed.fq -g $vg_gcsa_index -x $vg_xg_index > mapped.gam
     #vg mpmap --mq-method 2 -S -x $vg_xg_index -g $vg_gcsa_index -f raw_trimmed.fq > mapped.gam
 else
     echo "Mapped reads exist. Not mapping"

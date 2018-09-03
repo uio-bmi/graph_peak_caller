@@ -91,6 +91,31 @@ def check_pruned_graphs_stats(args):
         print(stats_nonpruned)
 
 
+def vg_json_alignments_to_intervals(args):
+    from pyvg.conversion import vg_json_file_to_interval_collection
+    interval_collection = vg_json_file_to_interval_collection(args.vg_json_file_name, args.graph)
+    interval_collection.to_file(args.out_file_name, text_file=True)
+    logging.info("Wrote to file %s" % args.out_file_name)
+
+
+def get_intersecting_intervals(args):
+    from offsetbasedgraph import IntervalCollection
+    intervals1 = IntervalCollection.from_file(args.file1, text_file=True, graph=args.graph)
+    intervals2 = IntervalCollection.from_file(args.file2, text_file=True, graph=args.graph)
+
+    out = []
+    for interval1 in intervals1.intervals:
+        for interval2 in intervals2.intervals:
+            if interval1.intersects(interval2):
+                out.append(interval1)
+                logging.info("Found match between %s and %s" % (interval1, interval2))
+                continue
+
+    IntervalCollection(out).to_file(args.out_file_name, text_file=True)
+    logging.info("Wrote intersecting intervals to %s" % args.out_file_name)
+
+
+
 interface = \
 {
 
@@ -412,6 +437,29 @@ interface = \
                                     'Will look for graphs on form graph_dir/[chromosome].pruned.vg')
                 ],
             'method': check_pruned_graphs_stats
+        },
+    'vg_json_alignments_to_intervals':
+        {
+            'help': 'Reads vg json alignments and converts to interval collection',
+            'requires_graph': True,
+            'arguments':
+                [
+                    ('vg_json_file_name', 'Vg json file name'),
+                    ('out_file_name', 'Out file name')
+                ],
+            'method': vg_json_alignments_to_intervals
+        },
+    'get_intersecting_intervals':
+        {
+            'help': "Finds intervals in first file that interesects any intervals in second file",
+            'requires_graph': True,
+            'arguments':
+                [
+                    ('file1', 'Intervalcollection file 1'),
+                    ('file2', 'Intervalcollection file 2'),
+                    ('out_file_name', 'File to write intersecting intervals to')
+                ],
+            'method': get_intersecting_intervals
         }
 }
 
