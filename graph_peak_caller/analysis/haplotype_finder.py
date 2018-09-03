@@ -16,7 +16,7 @@ class VariantPrecence:
 
     def get_samples(self, variant, f=None):
         s = self._precence if f is None else self._precence[f, :]
-        match = np.any(s == variant, axis=-1)
+        match = np.any((s == variant) | (s == -1), axis=-1)
         res = np.flatnonzero(match)
         if f is not None:
             return f[res]
@@ -24,7 +24,7 @@ class VariantPrecence:
 
     @classmethod
     def from_line(cls, line):
-        parts = line.replace(".", "0").replace("/", "|").split("\t")
+        parts = line.replace(".", "-1").replace("/", "|").split("\t")
         haplo_type = [part.split(":", 2)[0].split("|") for part in parts]
         precence = np.array([[int(a), int(b)] for a, b in haplo_type])
         return cls(precence)
@@ -33,8 +33,10 @@ class VariantPrecence:
     def join(cls, precences, counts):
         offsets = [0] + list(np.cumsum(counts))[:-1]
         combined = np.zeros_like(precences[0]._precence)
+        for precence in precences:
+            combined[precence._precence < 0] = -1
         for precence, offset in zip(precences, offsets):
-            combined[precence._precence > 0] += precence._precence[precence._precence > 0] + offset
+            combined[precence._precence > 0] = precence._precence[precence._precence > 0] + offset
         return cls(combined)
 
 
@@ -428,3 +430,4 @@ if __name__ == "__main__":
 # t at 0x7fba280af4e0>), 
 # t at 0x7fba28385940>), 
 # t at 0x7fba28385080>)]
+
