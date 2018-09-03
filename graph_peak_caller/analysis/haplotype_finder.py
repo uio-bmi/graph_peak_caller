@@ -178,6 +178,8 @@ class VCF:
 
 
 def traverse_variants(alt_seq, ref_seq, variants):
+    if not len(variants):
+        return None
     tentative_valid = [([], 0, 0)]
     for j, variant in enumerate(variants):
         next_tentative = []
@@ -211,16 +213,14 @@ def traverse_variants(alt_seq, ref_seq, variants):
         logging.info("---->")
         logging.info("%s / %s", real, tentative_valid)
         return ["No Match"]
+
     haplotypes = []
     for valid in real:
         codes = valid[0]
         f = None
         for code, variant in zip(codes, variants):
             f = variant.precence.get_samples(code, f)
-        if f is not None:
-            haplotypes.extend(f)
-    if not haplotypes:
-        return None
+        haplotypes.extend(f)
     return np.sort(np.unique(haplotypes))
     # codes = real[0][0]
     # f = None
