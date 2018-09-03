@@ -37,7 +37,7 @@ def get_motif_locations(args):
         args.result_folder+"fimo_graph_chr"+args.chrom+"/fimo.txt")
     motif_paths = [MotifLocation.from_fimo_and_peaks(entry, peaks).location
                    for entry in fimo.get_best_entries()]
-    obg.PeakCollection(motif_paths).to_file(
+    PeakCollection(motif_paths).to_file(
         args.result_folder+args.chrom+"_motif_paths.intervalcollection", True)
 
 
