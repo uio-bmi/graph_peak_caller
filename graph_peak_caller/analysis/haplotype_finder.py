@@ -50,9 +50,14 @@ class VariantList:
         self._variants.append(variant)
 
     def finalize(self):
+        return [FullVariant(variant.offset-self._start,
+                            variant.ref, variant.alt,
+                            variant.precence) for variant in self._variants]
+
         final_list = []
         cur_end = 0
         var_buffer = []
+
         for variant in self._variants:
             transformed_var = FullVariant(
                 variant.offset-self._start,
@@ -177,38 +182,46 @@ class VCF:
 def traverse_variants(alt_seq, ref_seq, variants):
     if not len(variants):
         return None
-    tentative_valid = [([], 0, 0)]
+    Combination = namedtuple("Combination", ["code", "alt_offset", "prev_offset"])
+    combinations = [Combination([], 0, 0)]
     for j, variant in enumerate(variants):
-        next_tentative = []
-        logging.debug(variant)
-        for tentative in tentative_valid:
-            cur_vars, alt_offset, prev_offset = tentative
-            logging.debug(tentative)
-            if not alt_seq[prev_offset+alt_offset:variant.offset+alt_offset] == ref_seq[prev_offset:variant.offset]:
-                logging.debug("--------")
+        new_combinations = []
+        for comb in combinations:
+            inter_alt = alt_seq[comb.prev_offset+comb.alt_offset:variant.offset+comb.alt_offset]
+            inter_ref = ref_seq[comb.prev_offset:variant.offset]
+            if not inter_alt == inter_ref:
                 continue
-            for code, seq in enumerate([variant.ref] + variant.alt):
-                # logging.debug(alt_seq[variant.offset+alt_offset:variant.offset+alt_offset+len(seq)], seq.lower())
-                if alt_seq[variant.offset+alt_offset:variant.offset+alt_offset+len(seq)] == seq.lower():
-                    logging.debug("!")
-                    next_tentative.append((cur_vars+[code], alt_offset+len(seq)-len(variant.ref), variant.offset+len(variant.ref)))
-        tentative_valid = next_tentative
-        assert all(len(t[0]) == j+1 for t in tentative_valid), (j, tentative_valid)
+            new_combinations.append(Combination(
+                comb.code+[0],
+                comb.alt_offset,
+                comb.prev_offset))
+            if comb.prev_offset > variant.offset:
+                continue
+            for code, seq in enumerate(variant.alt):
+                var_alt = alt_seq[variant.offset+comb.alt_offset:variant.offset+comb.alt_offset+len(seq)]
+                if var_alt == seq.lower():
+                    new_combinations.append(Combination(
+                        comb.code+[code+1],
+                        comb.alt_offset+len(seq)-len(variant.ref),
+                        variant.offset+len(variant.ref)))
+
+        combinations = new_combinations
+        # assert all(len(t[0]) == j+1 for t in combinations), (j, combinations)
     real = []
-    for tentative in tentative_valid:
-        cur_vars, alt_offset, prev_offset = tentative
-        if not len(alt_seq)-alt_offset == len(ref_seq):
+    for comb in combinations:
+        if not len(alt_seq)-comb.alt_offset == len(ref_seq):
             continue
-        if not alt_seq[prev_offset+alt_offset:len(ref_seq)+alt_offset] == ref_seq[prev_offset:len(ref_seq)]:
+        alt_stub = alt_seq[comb.prev_offset+comb.alt_offset:len(ref_seq)+comb.alt_offset]
+        if not alt_stub == ref_seq[comb.prev_offset:len(ref_seq)]:
             continue
-        real.append(tentative)
+        real.append(comb)
 
     if not len(real):
         logging.info(alt_seq)
         logging.info(ref_seq)
         logging.info(variants)
         logging.info("---->")
-        logging.info("%s / %s", real, tentative_valid)
+        logging.info("%s / %s", real, combinations)
         return ["No Match"]
 
     haplotypes = []
@@ -453,3 +466,13 @@ if __name__ == "__main__":
 #             FullVariant(offset=45, ref='t', alt=['c'], precence=None)]
 
 # 2018-09-03 19:19:20,165, INFO: [] / [([0, 0, 0, 1, 0, 0], -1, 46), ([0, 0, 0, 2, 0, 0], 0, 46)]
+
+
+# 2018-09-03 21:09:38,315, INFO: [] / [([0, 0, 0, 0, 0, 0], 0, 43), ([0, 0, 0, 1, 0, 0], 1, 43)]
+# 2018-09-03 21:09:38,327, INFO: ttttttgatagattatatcaaatccatggatactttctatatttggaaagt
+# 2018-09-03 21:09:38,328, INFO: tttttttgatagattatatcaaatccatggatactttctatatttggaaagt
+# 2018-09-03 21:09:38,328, INFO: 
+# [FullVariant(offset=0, ref='t', alt=['ta'], precence=None),
+#  FullVariant(offset=6, ref='tg', alt=['gg', 't', 'tt'], precence=None),
+#  FullVariant(offset=26, ref='a', alt=['g'], precence=None),
+#  FullVariant(offset=37, ref='c', alt=['ct'], precence=None)]
