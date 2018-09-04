@@ -10,6 +10,22 @@ Variant = namedtuple("Variant", ["offset", "ref", "alt"])
 FullVariant = namedtuple("FullVariant", ["offset", "ref", "alt", "precence"])
 
 
+def find_valid_haplotypes(variants, combination):
+    if not any(combination):
+        return np.range(1024)
+    nonzero = np.flatnonzero(combination)
+    informative_haplotypes = []
+    informative_variants = [variant for i, variant in enumerate(variants)
+                            if i in nonzero]
+    for i, variant in enumerate(informative_variants):
+        informative_haplotypes.extend(
+            variant.precence.get_samples(combination[nonzero[i]]))
+    f = np.unique(informative_haplotypes)
+    for code, variant in zip(combination, variants):
+        f = variant.precence.get_samples(code, f)
+    return f
+
+
 class VariantPrecence:
     strict = False
     def __init__(self, precence):
@@ -250,10 +266,11 @@ def traverse_variants(alt_seq, ref_seq, variants):
     haplotypes = []
     for valid in real:
         codes = valid[0]
-        f = None
-        for code, variant in zip(codes, variants):
-            f = variant.precence.get_samples(code, f)
-        haplotypes.extend(f)
+        haplotypes.extend(find_valid_haplotypes(variants, codes))
+        # f = None
+        # for code, variant in zip(codes, variants):
+        #     f = variant.precence.get_samples(code, f)
+        # haplotypes.extend(f)
 
     return np.sort(np.unique(haplotypes))
     # codes = real[0][0]
