@@ -121,8 +121,15 @@ class VCF:
                 for variant in variants for v_alt in variant.alt]
         return Variant(start, ref, alts)
 
+    def _prune_seqs(ref, alts):
+        for i, cs in enumerate(zip(*([ref]+alts))):
+            if not all(c == cs[0] for c in cs):
+                break
+        return ref[i:], [alt[i:] for alt in alts], i
+
     def get_variants_from_intervals(self, intervals):
         """ intervals reveresely sorted on start """
+        PRUNE = True
         StackElement = namedtuple("StackElement", ["end", "variant_list"])
         intervals = iter(intervals)
         current_intervals = deque([])
@@ -149,8 +156,11 @@ class VCF:
                 if is_finished:
                     break
                 continue
-            ref = parts[3]
+            ref = parts[3].lower()
             alt = parts[4].lower().split(",")
+            if PRUNE:
+                ref, alt, offset = prune_seqs(ref, alt)
+                pos = int(pos) + offset
             precence = VariantPrecence.from_line(parts[-1])
             var = FullVariant(int(pos), ref.lower(), alt, precence)
             variant_end = pos+len(ref)
@@ -514,3 +524,10 @@ if __name__ == "__main__":
 # 
 # 
 # code=[1, 0, 0, 1, 1, 1], alt_offset=17, prev_offset=29)]
+# alt = "ccttctttttttg"
+# ref = "ccttctttttttg"
+# [FullVariant(offset=0, ref='ctt', alt=['ttt', 'c', 'ctttt'], precence=P(12)),
+#  FullVariant(offset=2, ref='t', alt=['tc'], precence=P(166)),
+#  FullVariant(offset=5, ref='t', alt=['c'], precence=P(194)),
+#  FullVariant(offset=6, ref='t', alt=['a'], precence=P(8)),
+#  FullVariant(offset=7, ref='t', alt=['c', 'tc'], precence=P(18))]
