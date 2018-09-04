@@ -91,7 +91,7 @@ def summarize_diplotypes(types):
     if not counter:
         return (0, 0, N, -1, -1)
     most_common = counter.most_common(1)[0]
-    remaining_types = [t for t in types if most_common not in t]
+    remaining_types = [t for t in types if most_common[0] not in t]
     remaining_res = summarize_haplotypes(remaining_types)
     return (most_common[1], remaining_res[0], N, most_common[0], remaining_res[-1])
 
@@ -150,7 +150,7 @@ def check_haplotype(args):
         successes = sum(s[0]+s[1] == s[2] for s in summaries)
         f.write("# %s/%s\n" % (successes, len(summaries)))
         for k, v in result_dict.items():
-            f.write("%s, %s\n" % (k, summarize_haplotypes(v)))
+            f.write("%s, %s\n" % (k, summarize_diplotypes(v)))
 
     lines = ("%s\t%s" % (i, result) for i, results in result_dict.items()
              for result in results)
