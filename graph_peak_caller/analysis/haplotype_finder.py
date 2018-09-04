@@ -11,8 +11,9 @@ FullVariant = namedtuple("FullVariant", ["offset", "ref", "alt", "precence"])
 
 
 def find_valid_haplotypes(variants, combination):
-    if not any(combination):
-        return np.range(1024)
+    combination = np.asanyarray(combination)
+    if not np.any(combination):
+        return np.arange(1024)
     nonzero = np.flatnonzero(combination)
     informative_haplotypes = []
     informative_variants = [variant for i, variant in enumerate(variants)
