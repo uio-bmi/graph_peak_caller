@@ -36,7 +36,7 @@ class VariantPrecence:
 
     def get_samples(self, variant, f=None):
         s = self._precence if f is None else self._precence[f, :]
-        if variant == 0:
+        if self.accept_ref and variant == 0:
             return f if f is not None else np.arange(self._precence.shape[0])
         match = np.any((s == variant) | (s == -1),
                        axis=-1)

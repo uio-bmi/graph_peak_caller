@@ -117,6 +117,7 @@ def check_haplotype(args):
     strict = args.strict == "True" if args.strict is not None else True
     name = args.data_folder+args.chrom
     VariantPrecence.strict = strict
+    VariantPrecence.accept_ref = all_reads
     main = Main.from_name(name, args.fasta_file, args.chrom)
     motif_paths = obg.IntervalCollection.from_file(
         args.result_folder+args.chrom+"_" + args.interval_name + ".intervalcollection", True)
