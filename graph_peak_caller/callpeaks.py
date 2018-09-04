@@ -140,7 +140,7 @@ class CallPeaksFromQvalues:
             self.cutoff = config.q_values_threshold
         self._reporter = reporter
         # self.info.to_file(self.out_file_base_name + "experiment_info.pickle")
-        logging.info("Using p value cutoff %.4f" % self.cutoff)
+        logging.info("Using q value cutoff %.4f" % self.cutoff)
 
     def __threshold(self):
         threshold = -np.log10(self.cutoff)
