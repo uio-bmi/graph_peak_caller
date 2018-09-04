@@ -1,7 +1,7 @@
 import json
 import pandas
 import numpy as np
-import haplotype_finder
+
 
 def peaks_from_fasta(filename):
     with open(filename) as f:
@@ -21,7 +21,7 @@ def df_from_subgraphs(filename):
                              for name, graph in subgraphs.items()]).set_index("name")
     
 def df_from_setsummary(filename):
-    names, parts = zip(*(line.split(", (", 1) for line in open(filename)))
+    names, parts = zip(*(line.split(", (", 1) for line in open(filename) if not line.startswith("#")))
     # names = ["peak"+name for name in names]
     parts = [part.split(", ", 2) for part in parts]
     ratios = [(float(a), float(b)) for a, b, _ in parts]
@@ -45,6 +45,11 @@ def combine_dfs(folder, name):
     nonmatches = subgraphs.loc[~subgraphs["MATCH"]]
     print("MATCHES", (matches["edges"]-matches["nodes"]).mean(), matches.shape[0])
     print("NONMAtCHES", (nonmatches["edges"]-nonmatches["nodes"]).mean(), nonmatches.shape[0])
+
+
+def motif_haplotype_analysis(folder, name):
+    coverage = df_from_setsummary(folder + name + "_sequences_summits_unique.setsummary")
+
 
 if __name__ == "__main__":
     dfs = [combine_dfs("./", str(c)) for c in range(1, 6)]

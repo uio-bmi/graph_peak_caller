@@ -11,12 +11,13 @@ FullVariant = namedtuple("FullVariant", ["offset", "ref", "alt", "precence"])
 
 
 class VariantPrecence:
+    strict = False
     def __init__(self, precence):
         self._precence = precence
 
     def get_samples(self, variant, f=None):
         s = self._precence if f is None else self._precence[f, :]
-        match = np.any(s == variant, axis=-1)
+        match = np.any((s == variant) | (s == -1), axis=-1)
         res = np.flatnonzero(match)
         if f is not None:
             return f[res]
@@ -24,7 +25,10 @@ class VariantPrecence:
 
     @classmethod
     def from_line(cls, line):
-        parts = line.replace(".", "0").replace("/", "|").split("\t")
+        if cls.strict:
+            parts = line.replace(".", "0").replace("/", "|").split("\t")
+        else:
+            parts = line.replace(".", "-1").replace("/", "|").split("\t")
         haplo_type = [part.split(":", 2)[0].split("|") for part in parts]
         precence = np.array([[int(a), int(b)] for a, b in haplo_type])
         return cls(precence)
@@ -33,9 +37,14 @@ class VariantPrecence:
     def join(cls, precences, counts):
         offsets = [0] + list(np.cumsum(counts))[:-1]
         combined = np.zeros_like(precences[0]._precence)
+        for precence in precences:
+            combined[precence._precence < 0] = -1
         for precence, offset in zip(precences, offsets):
-            combined[precence._precence > 0] += precence._precence[precence._precence > 0] + offset
+            combined[precence._precence > 0] = precence._precence[precence._precence > 0] + offset
         return cls(combined)
+
+    def __repr__(self):
+        return "P(%s)" % np.count_nonzero(self._precence)
 
 
 class VariantList:
@@ -48,20 +57,27 @@ class VariantList:
         self._variants.append(variant)
 
     def finalize(self):
+        return [FullVariant(variant.offset-self._start,
+                            variant.ref, variant.alt,
+                            variant.precence) for variant in self._variants]
+
         final_list = []
         cur_end = 0
         var_buffer = []
+
         for variant in self._variants:
-            transformed_var = FullVariant(variant.offset-self._start,
-                                      variant.ref, variant.alt,
-                                      variant.precence)
+            transformed_var = FullVariant(
+                variant.offset-self._start,
+                variant.ref, variant.alt,
+                variant.precence)
             assert transformed_var.offset <= self._end-self._start, (variant, self._start, transformed_var.offset, self._end-self._start)
             if transformed_var.offset >= cur_end:
                 if var_buffer:
                     final_list.append(self._join_variants(var_buffer))
                 var_buffer = []
             var_buffer.append(transformed_var)
-            cur_end = max(transformed_var.offset + len(transformed_var.ref), cur_end)
+            cur_end = max(transformed_var.offset + len(transformed_var.ref),
+                          cur_end)
         if var_buffer:
             final_list.append(self._join_variants(var_buffer))
         return final_list
@@ -104,34 +120,28 @@ class VCF:
 
     def get_variants_from_intervals(self, intervals):
         """ intervals reveresely sorted on start """
+        StackElement = namedtuple("StackElement", ["end", "variant_list"])
         intervals = iter(intervals)
         current_intervals = deque([])
         cur_interval = next(intervals)
         is_finished = False
-        prev_start = 0
-        for line in self.f:
-            if line.startswith("#"):
-                continue
-            parts = line.split("\t", 9)
+        line_parts = (line.split("\t", 9) for line in self.f
+                      if not line.startswith("#"))
+        for parts in line_parts:
             pos = int(parts[1])-1
             while pos >= cur_interval[0] and not is_finished:
-                current_intervals.append([cur_interval[-1], False,
-                                          VariantList(*cur_interval)])
+                current_intervals.append(
+                    StackElement(cur_interval[-1],
+                                 VariantList(*cur_interval)))
                 try:
                     cur_interval = next(intervals)
-                    assert cur_interval[0]>=prev_start, (cur_interval, prev_start)
-                    prev_start = cur_interval[0]
                 except StopIteration:
                     is_finished = True
             if not current_intervals:
                 continue
 
-            # end = pos + len(parts[3])
-            for entry in current_intervals:
-                entry[1] = pos+len(parts[3]) >= entry[0]
-
-            while current_intervals and current_intervals[0][1]:
-                yield current_intervals.popleft()[-1].finalize()
+            while current_intervals and current_intervals[0].end < pos:
+                yield current_intervals.popleft().variant_list.finalize()
             if not current_intervals:
                 if is_finished:
                     break
@@ -140,9 +150,10 @@ class VCF:
             alt = parts[4].lower().split(",")
             precence = VariantPrecence.from_line(parts[-1])
             var = FullVariant(int(pos), ref.lower(), alt, precence)
-            for _, in_active, entry in current_intervals:
-                if not in_active:
-                    entry.append(var)
+            variant_end = pos+len(ref)
+            for stack_element in current_intervals:
+                if stack_element.end > variant_end:
+                    stack_element.variant_list.append(var)
 
     def get_variants_from(self, start, end):
         variants = []
@@ -176,44 +187,63 @@ class VCF:
 
 
 def traverse_variants(alt_seq, ref_seq, variants):
-    tentative_valid = [([], 0, 0)]
+    if not len(variants):
+        return None
+    Combination = namedtuple("Combination", ["code", "alt_offset", "prev_offset"])
+    combinations = [Combination([], 0, 0)]
     for j, variant in enumerate(variants):
-        next_tentative = []
-        logging.debug(variant)
-        for tentative in tentative_valid:
-            cur_vars, alt_offset, prev_offset = tentative
-            logging.debug(tentative)
-            if not alt_seq[prev_offset+alt_offset:variant.offset+alt_offset] == ref_seq[prev_offset:variant.offset]:
-                logging.debug("--------")
+        new_combinations = []
+        for comb in combinations:
+            inter_alt = alt_seq[comb.prev_offset+comb.alt_offset:variant.offset+comb.alt_offset]
+            inter_ref = ref_seq[comb.prev_offset:variant.offset]
+            if not inter_alt == inter_ref:
                 continue
-            for code, seq in enumerate([variant.ref] + variant.alt):
-                logging.debug(alt_seq[variant.offset+alt_offset:variant.offset+alt_offset+len(seq)], seq.lower())
-                if alt_seq[variant.offset+alt_offset:variant.offset+alt_offset+len(seq)] == seq.lower():
-                    logging.debug("!")
-                    next_tentative.append((cur_vars+[code], alt_offset+len(seq)-len(variant.ref), variant.offset+len(variant.ref)))
-        tentative_valid = next_tentative
-        assert all(len(t[0]) == j+1 for t in tentative_valid), (j, tentative_valid)
-    real = []
-    for tentative in tentative_valid:
-        cur_vars, alt_offset, prev_offset = tentative
-        if not len(alt_seq)-alt_offset == len(ref_seq):
-            continue
-        if not alt_seq[prev_offset+alt_offset:len(ref_seq)+alt_offset] == ref_seq[prev_offset:len(ref_seq)]:
-            continue
-        real.append(tentative)
+            new_combinations.append(Combination(
+                comb.code+[0],
+                comb.alt_offset,
+                comb.prev_offset))
+            if comb.prev_offset > variant.offset:
+                continue
+            for code, seq in enumerate(variant.alt):
+                var_alt = alt_seq[variant.offset+comb.alt_offset:variant.offset+comb.alt_offset+len(seq)]
+                if var_alt == seq.lower():
+                    new_combinations.append(Combination(
+                        comb.code+[code+1],
+                        comb.alt_offset+len(seq)-len(variant.ref),
+                        variant.offset+len(variant.ref)))
 
-    if not len(real) == 1:
+        combinations = new_combinations
+        # assert all(len(t[0]) == j+1 for t in combinations), (j, combinations)
+    real = []
+    for comb in combinations:
+        if not len(alt_seq)-comb.alt_offset == len(ref_seq):
+            continue
+        alt_stub = alt_seq[comb.prev_offset+comb.alt_offset:len(ref_seq)+comb.alt_offset]
+        if not alt_stub == ref_seq[comb.prev_offset:len(ref_seq)]:
+            continue
+        real.append(comb)
+
+    if not len(real):
         logging.info(alt_seq)
         logging.info(ref_seq)
         logging.info(variants)
         logging.info("---->")
-        logging.info("%s / %s", real, tentative_valid)
+        logging.info("%s / %s", real, combinations)
         return ["No Match"]
-    codes = real[0][0]
-    f = None
-    for code, variant in zip(codes, variants):
-        f = variant.precence.get_samples(code, f)
-    return f
+
+    haplotypes = []
+    for valid in real:
+        codes = valid[0]
+        f = None
+        for code, variant in zip(codes, variants):
+            f = variant.precence.get_samples(code, f)
+        haplotypes.extend(f)
+    return np.sort(np.unique(haplotypes))
+    # codes = real[0][0]
+    # f = None
+    # for code, variant in zip(codes, variants):
+    #     f = variant.precence.get_samples(code, f)
+    # return f
 
 
 def find_haplotype(seq, refseq, vcf, start, end):
@@ -261,7 +291,8 @@ class Main:
         self.prev_end = -1
 
     def run_peak_set(self, peaks_dict):
-        all_name_tuples = [(key, self.get_sequence_pair(read)) for key, reads in peaks_dict.items() for read in reads]
+        all_name_tuples = [(key, self.get_sequence_pair(read))
+                           for key, reads in peaks_dict.items() for read in reads]
         names, tuples = zip(*sorted(all_name_tuples, key=lambda x: x[1][2][0]))
         alts, refs, intervals = zip(*tuples)
         params = zip(alts, refs, self.vcf.get_variants_from_intervals(intervals))
@@ -322,8 +353,8 @@ class Main:
             return seq, self.indexed_interval.get_offset_at_node(end_node) + end_offset
         next_node = min(node for node in self.graph.adj_list[end_node]
                         if node in self.indexed_interval.nodes_in_interval())
-        p_len = self.graph.node_size(next_node)
-        seq += self.seq_graph.get_interval_sequence(obg.Interval(end_offset, 1, [end_node, next_node]))
+        seq += self.seq_graph.get_interval_sequence(
+            obg.Interval(end_offset, 1, [end_node, next_node]))
         end = self.indexed_interval.get_offset_at_node(next_node)+1
         return seq, end
 
@@ -376,10 +407,22 @@ def test4():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     h = "./.:.:.	1|1:40:8	1|1:40:11	0|0:40:9	./.:.:.	./.:.:.	./.:.:.	0|0:40:8	0|0:40:9	./.:.:.	0|0:40:12	0|0:40:16	0|0:40:40	0|0:40:35	0|0:40:21	0|0:40:13	0|0:40:44	0|0:40:15	0|0:40:86	0|0:40:69	./.:.:.	0|0:40:14	0|0:40:59	0|0:40:51"
-    precence = VariantPrecence.from_line(h)
-    print(precence._precence)
-    print(precence.get_samples(1, [0, 1, 3]))
+    # precence = VariantPrecence.from_line(h)
+    # print(precence._precence)
+    # print(precence.get_samples(1, [0, 1, 3]))
+    alt = "atgcctttattatccttcacgttgaccccacatgccccttttttttttttgg"
+    ref = "atgcctttattatccttcacgttgaccccacatgcccctgttttttttttttg"
+    variants = [FullVariant(offset=2, ref='g', alt=['a'], precence=None),
+                FullVariant(offset=18, ref='a', alt=['t'], precence=None),
+                FullVariant(offset=30, ref='c', alt=['t'], precence=None),
+                FullVariant(offset=38, ref='tgtt', alt=['ttt', 'tttt', 'tgt', 'tg'], precence=None),
+                FullVariant(offset=44, ref='t', alt=['c'], precence=None),
+                FullVariant(offset=45, ref='t', alt=['c'], precence=None)]
+
+    print(traverse_variants(alt, ref, variants))
+
 
     #alt = "aaaaaataagacgt"
     #ref = "ataaataagacgt"
@@ -406,3 +449,52 @@ if __name__ == "__main__":
     # ref = "agtttcagtagg"
     # variants = [Variant(offset=7, ref='G', alt=['C', 'A']), Variant(offset=9, ref='A', alt=['', 'G'])]
     # print(traverse_variants(alt, ref, variants))
+
+# ct at 0x7fba28385c18>),
+# t at 0x7fb8521fe9e8>),
+# t at 0x7fba2e1d35f8>), 
+# recence object at 0x7fba2e1d3860>), 
+# t at 0x7fba28385278>), 
+# ect at 0x7fba283852b0>), 
+# t at 0x7fba280af4e0>), 
+# t at 0x7fba28385940>), 
+# t at 0x7fba28385080>)]
+
+
+
+# 2018-09-03 19:19:20,165, INFO: atgcctttattatccttcacgttgaccccacatgccccttttttttttttgg
+# 2018-09-03 19:19:20,165, INFO: atgcctttattatccttcacgttgaccccacatgcccctgttttttttttttg
+# 2018-09-03 19:19:20,165, INFO: 
+# variants = [FullVariant(offset=2, ref='g', alt=['a'], precence=None), 
+#             FullVariant(offset=18, ref='a', alt=['t'], precence=None),
+#             FullVariant(offset=30, ref='c', alt=['t'], precence=None),
+#             FullVariant(offset=38, ref='tgtt', alt=['ttt', 'tttt', 'tgt', 'tg'], precence=None),
+#             FullVariant(offset=44, ref='t', alt=['c'], precence=None),
+#             FullVariant(offset=45, ref='t', alt=['c'], precence=None)]
+
+# 2018-09-03 19:19:20,165, INFO: [] / [([0, 0, 0, 1, 0, 0], -1, 46), ([0, 0, 0, 2, 0, 0], 0, 46)]
+
+
+# 2018-09-03 21:09:38,315, INFO: [] / [([0, 0, 0, 0, 0, 0], 0, 43), ([0, 0, 0, 1, 0, 0], 1, 43)]
+# 2018-09-03 21:09:38,327, INFO: ttttttgatagattatatcaaatccatggatactttctatatttggaaagt
+# 2018-09-03 21:09:38,328, INFO: tttttttgatagattatatcaaatccatggatactttctatatttggaaagt
+# 2018-09-03 21:09:38,328, INFO: 
+# [FullVariant(offset=0, ref='t', alt=['ta'], precence=None),
+#  FullVariant(offset=6, ref='tg', alt=['gg', 't', 'tt'], precence=None),
+#  FullVariant(offset=26, ref='a', alt=['g'], precence=None),
+#  FullVariant(offset=37, ref='c', alt=['ct'], precence=None)]
+# 
+# r = "taaaaacaaagaaagtcaactaccctattc"
+# 
+# a = "taaaaaaacaaagaaagtcaactaccctattc"
+# r = "tggaaacaaagaaagtcaactaccctattc"
+# 
+# 
+# [FullVariant(offset=1, ref='g', alt=['a'], precence=None),
+#  FullVariant(offset=2, ref='g', alt=['a', 'gaa'], precence=None),
+#  FullVariant(offset=6, ref='c', alt=['t'], precence=None),
+#  FullVariant(offset=14, ref='g', alt=['c'], precence=None),
+#  FullVariant(offset=19, ref='c', alt=['t'], precence=None),
+#  FullVariant(offset=24, ref='c', alt=['a'], precence=None)]
+# 2018-09-03 22:26:09,814, INFO: ---->
+# 2018-09-03 22:26:09,814, INFO: [] / []
