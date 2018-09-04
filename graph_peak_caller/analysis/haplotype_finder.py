@@ -342,7 +342,7 @@ class Main:
         end_node = peak.region_paths[-1]
         start_offset = peak.start_position.offset
         end_offset = peak.end_position.offset
-        rps = peak.rps
+        rps = peak.region_paths
         if start_node not in self.indexed_interval.nodes_in_interval():
             start_node = min(
                 -node for node in self.graph.reverse_adj_list[-start_node]
