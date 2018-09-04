@@ -101,6 +101,13 @@ def save_venn(numbers, out_name):
     plt.text(xs[0], 0.8, "GPC", ha="center")
     plt.text(xs[1], 0.8, "MACS", ha="center")
     plt.text(xs[2], 0.8, "SHARED", ha="center")
+    try:
+        # Try hacky way to get title
+        title = out_name.split(".")[0].split("_")[1]
+    except IndexError:
+        title = "Untitled"
+
+    plt.title(title)
     plt.savefig(out_name+"_venn.pdf", bbox_inches='tight')
 
 
