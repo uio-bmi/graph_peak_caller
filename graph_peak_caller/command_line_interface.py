@@ -164,7 +164,8 @@ interface = \
                     ('-d/--data_dir', 'Directory containing graphs.'),
                     ('-n/--out_name', 'Optional. eg experiment1_'),
                     ('-f/--fragment_length', ''),
-                    ('-r/--read_length', '')
+                    ('-r/--read_length', ''),
+                    ('-q/--q_threshold', 'Optional. q-value threshold. Default is 0.05.'),
                 ],
             'method': run_callpeaks_whole_genome_from_p_values
         },

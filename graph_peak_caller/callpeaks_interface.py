@@ -328,6 +328,13 @@ def run_callpeaks_whole_genome_from_p_values(args):
         (obg.SequenceGraph.from_file(args.data_dir + "/" + chrom + ".nobg.sequences") for chrom in chromosomes)
     out_name = args.out_name if args.out_name is not None else ""
     config = Configuration()
+
+    if args.q_threshold is not None:
+        config.q_values_threshold = float(args.q_threshold)
+        logging.info("Running with q value threshold %.3f" % config.q_values_threshold)
+    else:
+        logging.info("Q value threshold not set. Running with default 0.05.")
+
     config.fragment_length = int(args.fragment_length)
     config.read_length = int(args.read_length)
     reporter = Reporter(out_name)
