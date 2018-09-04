@@ -399,6 +399,8 @@ def plot_motif_enrichment(args):
     fasta2 = args.fasta2
     meme = args.meme_motif_file
 
+    logging.info("Got argument background model file: %s " % args.background_model_file)
+
     plot_true_positives(
         [
             ("Graph Peak Caller", fasta1),

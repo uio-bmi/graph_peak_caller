@@ -22,7 +22,7 @@ echo "Changed dir to $work_dir"
 
 echo "Will use window size $summit_window_size"
 
-background_model_file = "$data_dir/background.model"
+background_model_file="$data_dir/background.model"
 
 echo "Will use fimo background model file from $background_model_file"
 

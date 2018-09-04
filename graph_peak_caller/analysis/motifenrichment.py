@@ -86,6 +86,7 @@ def plot_true_positives(peak_file_sets, meme_file_name, plot_title="", save_to_f
 
     max_y = 0.0
     for name, fasta_file_name in peak_file_sets:
+        logging.info("Background model file is %s" % background_model_file)
         matcher = MotifMatcher(fasta_file_name, meme_file_name, background_model_file=background_model_file)
         true_positives = matcher.compute_true_positives()
         n_matching = len(matcher.peaks_matching_motif)
