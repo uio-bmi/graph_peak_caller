@@ -22,6 +22,8 @@ def find_valid_haplotypes(variants, combination):
         informative_haplotypes.extend(
             variant.precence.get_samples(combination[nonzero[i]]))
     f = np.unique(informative_haplotypes)
+    if not f.size:
+        return np.array([])
     for code, variant in zip(combination, variants):
         f = variant.precence.get_samples(code, f)
     return f
