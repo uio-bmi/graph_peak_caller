@@ -64,18 +64,18 @@ head -n 100 sequence_all_chromosomes_summits.intervalcollection > sequence_all_c
 
 
 # Project graph peaks to linear
-for chromosome in $(echo "1,2,3,4,5" | tr "," "\n")
-do
-    grep ">" ${chromosome}_sequences_summits.fasta | cut -d " " -f2-100000 > ${chromosome}_summits.intervalcollection
-	graph_peak_caller peaks_to_linear ${chromosome}_summits.intervalcollection /data/bioinf/tair2/${chromosome}_linear_pathv2.interval $chromosome ${chromosome}_peaks_to_linear.bed
-done
+#for chromosome in $(echo "1,2,3,4,5" | tr "," "\n")
+#do
+#    grep ">" ${chromosome}_sequences_summits.fasta | cut -d " " -f2-100000 > ${chromosome}_summits.intervalcollection
+#	graph_peak_caller peaks_to_linear ${chromosome}_summits.intervalcollection /data/bioinf/tair2/${chromosome}_linear_pathv2.interval $chromosome ${chromosome}_peaks_to_linear.bed
+#done
 
 # Fetch sequences for projected peaks
-cat *_peaks_to_linear.bed | sort -r -n -k 9 > peaks_to_linear.bed
-graph_peak_caller linear_peaks_to_fasta peaks_to_linear.bed /data/bioinf/tair2/reference1-5.fa peaks_to_linear_sequences.fasta
+#cat *_peaks_to_linear.bed | sort -r -n -k 9 > peaks_to_linear.bed
+#graph_peak_caller linear_peaks_to_fasta peaks_to_linear.bed /data/bioinf/tair2/reference1-5.fa peaks_to_linear_sequences.fasta
 
-fimo --bgfile $data_dir/background.model -oc fimo_peaks_to_linear_sequences motif.meme peaks_to_linear_sequences.fasta
-$base_dir/plot_motif_enrichments.sh peaks_to_linear_sequences.fasta macs_sequences_summits.fasta $motif_url motif_enrichment_peaks_to_linear.png $tf
+#fimo --bgfile $data_dir/background.model -oc fimo_peaks_to_linear_sequences motif.meme peaks_to_linear_sequences.fasta
+#$base_dir/plot_motif_enrichments.sh peaks_to_linear_sequences.fasta macs_sequences_summits.fasta $motif_url motif_enrichment_peaks_to_linear.png $tf
 
 
 # Run motif enrichment analysis
