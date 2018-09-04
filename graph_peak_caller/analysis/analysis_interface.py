@@ -405,7 +405,8 @@ def plot_motif_enrichment(args):
         meme,
         plot_title=args.plot_title.replace("ARABIDOPSIS_", ""),
         save_to_file=args.out_figure_file_name,
-        run_fimo=args.run_fimo == "True"
+        run_fimo=args.run_fimo == "True",
+        background_model_file=args.background_model_file
     )
 
 
