@@ -47,7 +47,7 @@ class VariantPrecence:
         return cls(combined)
 
     def __repr__(self):
-        return "P(%s)" % np.count_nonzero(self._precence)
+        return "P(%s)" % np.count_nonzero(self._precence > 0)
 
 
 class VariantList:
@@ -121,7 +121,7 @@ class VCF:
                 for variant in variants for v_alt in variant.alt]
         return Variant(start, ref, alts)
 
-    def _prune_seqs(ref, alts):
+    def _prune_seqs(self, ref, alts):
         for i, cs in enumerate(zip(*([ref]+alts))):
             if not all(c == cs[0] for c in cs):
                 break
@@ -159,7 +159,7 @@ class VCF:
             ref = parts[3].lower()
             alt = parts[4].lower().split(",")
             if PRUNE:
-                ref, alt, offset = prune_seqs(ref, alt)
+                ref, alt, offset = self._prune_seqs(ref, alt)
                 pos = int(pos) + offset
             precence = VariantPrecence.from_line(parts[-1])
             var = FullVariant(int(pos), ref.lower(), alt, precence)
@@ -251,6 +251,7 @@ def traverse_variants(alt_seq, ref_seq, variants):
         for code, variant in zip(codes, variants):
             f = variant.precence.get_samples(code, f)
         haplotypes.extend(f)
+
     return np.sort(np.unique(haplotypes))
     # codes = real[0][0]
     # f = None
@@ -425,14 +426,21 @@ if __name__ == "__main__":
     # precence = VariantPrecence.from_line(h)
     # print(precence._precence)
     # print(precence.get_samples(1, [0, 1, 3]))
-    alt = "atgcctttattatccttcacgttgaccccacatgccccttttttttttttgg"
-    ref = "atgcctttattatccttcacgttgaccccacatgcccctgttttttttttttg"
-    variants = [FullVariant(offset=2, ref='g', alt=['a'], precence=None),
-                FullVariant(offset=18, ref='a', alt=['t'], precence=None),
-                FullVariant(offset=30, ref='c', alt=['t'], precence=None),
-                FullVariant(offset=38, ref='tgtt', alt=['ttt', 'tttt', 'tgt', 'tg'], precence=None),
-                FullVariant(offset=44, ref='t', alt=['c'], precence=None),
-                FullVariant(offset=45, ref='t', alt=['c'], precence=None)]
+    alt = "ccttctttttttg"
+    ref = "ccttctttttttg"
+    variants = [FullVariant(offset=0, ref='ctt', alt=['ttt', 'c', 'ctttt'], precence=None),
+                FullVariant(offset=2, ref='t', alt=['tc'], precence=None),
+                FullVariant(offset=5, ref='t', alt=['c'], precence=None),
+                FullVariant(offset=6, ref='t', alt=['a'], precence=None),
+                FullVariant(offset=7, ref='t', alt=['c', 'tc'], precence=None)]
+    # alt = "atgcctttattatccttcacgttgaccccacatgccccttttttttttttgg"
+    # ref = "atgcctttattatccttcacgttgaccccacatgcccctgttttttttttttg"
+    # variants = [FullVariant(offset=2, ref='g', alt=['a'], precence=None),
+    #             FullVariant(offset=18, ref='a', alt=['t'], precence=None),
+    #             FullVariant(offset=30, ref='c', alt=['t'], precence=None),
+    #             FullVariant(offset=38, ref='tgtt', alt=['ttt', 'tttt', 'tgt', 'tg'], precence=None),
+    #             FullVariant(offset=44, ref='t', alt=['c'], precence=None),
+    #             FullVariant(offset=45, ref='t', alt=['c'], precence=None)]
 
     print(traverse_variants(alt, ref, variants))
 
@@ -524,10 +532,10 @@ if __name__ == "__main__":
 # 
 # 
 # code=[1, 0, 0, 1, 1, 1], alt_offset=17, prev_offset=29)]
-# alt = "ccttctttttttg"
-# ref = "ccttctttttttg"
-# [FullVariant(offset=0, ref='ctt', alt=['ttt', 'c', 'ctttt'], precence=P(12)),
-#  FullVariant(offset=2, ref='t', alt=['tc'], precence=P(166)),
-#  FullVariant(offset=5, ref='t', alt=['c'], precence=P(194)),
-#  FullVariant(offset=6, ref='t', alt=['a'], precence=P(8)),
-#  FullVariant(offset=7, ref='t', alt=['c', 'tc'], precence=P(18))]
+#  alt = "ccttctttttttg"
+#  ref = "ccttctttttttg"
+#  [FullVariant(offset=0, ref='ctt', alt=['ttt', 'c', 'ctttt'], precence=None),
+#   FullVariant(offset=2, ref='t', alt=['tc'], precence=None),
+#   FullVariant(offset=5, ref='t', alt=['c'], precence=None),
+#   FullVariant(offset=6, ref='t', alt=['a'], precence=None),
+#   FullVariant(offset=7, ref='t', alt=['c', 'tc'], precence=None)]
