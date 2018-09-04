@@ -2,16 +2,18 @@ import subprocess
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
+import logging
 
 
 class MotifMatcher():
 
-    def __init__(self, ranked_fasta_file_name, meme_motif_file_name, run_fimo=True):
+    def __init__(self, ranked_fasta_file_name, meme_motif_file_name, run_fimo=True, background_model_file=None):
         self.fasta_file = ranked_fasta_file_name
         self.meme_file = meme_motif_file_name
         self.run_fimo = run_fimo
         self.peaks_matching_motif = set()
         self.sorted_peaks = []
+        self.background_model_file = background_model_file
 
         self.get_sorted_peak_ids()
 
@@ -24,8 +26,11 @@ class MotifMatcher():
         if self.run_fimo:
             import os
             bgfile = ""
-            if os.path.isfile("/data/bioinf/tair2/background.model"):
-                bgfile = "--bgfile /data/bioinf/tair2/background.model"
+            if self.background_model_file is not None:
+                bgfile = "--bgfile " + self.background_model_file
+                logging.info("Using background model file %s" % self.background_model_file)
+            else:
+                logging.warning("Not using background model file when running fimo")
 
             subprocess.check_output(["fimo %s -oc %s %s %s" % (bgfile, out_dir, self.meme_file, self.fasta_file)], shell=True)
 
@@ -57,7 +62,7 @@ class MotifMatcher():
         return true_positives
 
 
-def plot_true_positives(peak_file_sets, meme_file_name, plot_title="", save_to_file=None, run_fimo=True):
+def plot_true_positives(peak_file_sets, meme_file_name, plot_title="", save_to_file=None, run_fimo=True, background_model_file=None):
     colors = ['b', 'g']
     i = 0
     font = {'family' : 'DejaVu Sans',
@@ -81,7 +86,8 @@ def plot_true_positives(peak_file_sets, meme_file_name, plot_title="", save_to_f
 
     max_y = 0.0
     for name, fasta_file_name in peak_file_sets:
-        matcher = MotifMatcher(fasta_file_name, meme_file_name)
+        logging.info("Background model file is %s" % background_model_file)
+        matcher = MotifMatcher(fasta_file_name, meme_file_name, background_model_file=background_model_file)
         true_positives = matcher.compute_true_positives()
         n_matching = len(matcher.peaks_matching_motif)
         print("Fasta: %s" % fasta_file_name)

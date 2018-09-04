@@ -260,7 +260,8 @@ interface = \
                     ('meme_motif_file', 'something.meme'),
                     ('out_figure_file_name', ''),
                     ('run_fimo', 'Set to True if fimo has not already been run.'),
-                    ('plot_title', 'Title above plot')
+                    ('plot_title', 'Title above plot'),
+                    ('background_model_file', 'Optional. Background model file for fimo. If not set, fimo will use uniform background.')
                 ],
             'method': plot_motif_enrichment
         },
