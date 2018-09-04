@@ -7,9 +7,9 @@ human_graph_dir=$4
 
 echo "Using graph dirs $arabidopsis_graph_dir, $dm_graph_dir and $human_graph_dir"
 
-macs_peaks_file="$macs_peaks_file"
+macs_peaks_file="macs_peaks.narrowPeak"
 
-if [ -z "$5" ]
+if [! -z "$5" ]
   then
     echo "Using macs peaks file: $5"
     macs_peaks_file=$5
