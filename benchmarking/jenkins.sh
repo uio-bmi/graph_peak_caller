@@ -39,6 +39,7 @@ wait
 ./analyse_peak_calling_results.sh  SRX387187 1 ARABIDOPSIS_AP1 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0940.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 macs_peaks.narrowPeak $summit_window_size &
 ./analyse_peak_calling_results.sh  SRR822350 1 ARABIDOPSIS_SOC1 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0554.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 macs_peaks.narrowPeak $summit_window_size &
 ./analyse_peak_calling_results.sh  SRR502859 1 ARABIDOPSIS_PI 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0559.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 macs_peaks.narrowPeak $summit_window_size &
+./analyse_peak_calling_results.sh  SRX159033 1 ARABIDOPSIS_PIF3 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0560.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 macs_peaks.narrowPeak $summit_window_size &
 
 if [ ! -z "$dm_graph_dir" ]
 then
