@@ -350,10 +350,10 @@ class Main:
             start_offset = self.graph.node_size(start_node)-1
             rps = [start_node]+rps
         if end_node not in self.indexed_interval.nodes_in_interval():
-            end_node = max(node for node in self.graph.adj_List[end_node]
+            end_node = max(node for node in self.graph.adj_list[end_node]
                            if node in self.indexed_interval.nodes_in_interval())
             end_offset = 1
-            rps = [end_node] + rps
+            rps = rps + [end_node]
         return obg.Interval(start_offset, end_offset, rps)
 
     def get_sequence_pair(self, peak):
@@ -361,8 +361,8 @@ class Main:
         peak = self.extend_peak_to_reference(peak)
         seq = self.seq_graph.get_interval_sequence(peak)
         assert len(seq) == peak.length(), (len(seq), peak.length())
-        interval = (self.indexed_interval.get_offset_at_node(peak.rps[0]) + peak.start_position.offset,
-                    self.indexed_interval.get_offset_at_node(peak.rps[-1]) + peak.end_position.offset)
+        interval = (self.indexed_interval.get_offset_at_node(peak.region_paths[0]) + peak.start_position.offset,
+                    self.indexed_interval.get_offset_at_node(peak.region_paths[-1]) + peak.end_position.offset)
         ref_seq = self.fasta[int(interval[0]):int(interval[1])].seq
         assert len(ref_seq) == interval[1]-interval[0]
         return seq.lower(), ref_seq.lower(), interval
