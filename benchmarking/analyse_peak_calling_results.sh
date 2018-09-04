@@ -91,7 +91,7 @@ do
     echo ""
     echo "----- Running fimo separately for chr $chromosome --- "
     fimo --bgfile $background_model_file -oc fimo_macs_chr$chromosome motif.meme macs_sequences_chr${chromosome}_summits.fasta
-    fimo --bgfile $background_model_filel -oc fimo_graph_chr$chromosome motif.meme ${chromosome}_sequences_summits.fasta
+    fimo --bgfile $background_model_file -oc fimo_graph_chr$chromosome motif.meme ${chromosome}_sequences_summits.fasta
 done
 
 # Analyse peak results
