@@ -122,10 +122,13 @@ class VCF:
         return Variant(start, ref, alts)
 
     def _prune_seqs(self, ref, alts):
-        for i, cs in enumerate(zip(*([ref]+alts))):
-            if not all(c == cs[0] for c in cs):
+        offset = 0
+        for cs in zip(*([ref]+alts)):
+            if all(c == cs[0] for c in cs):
+                offset += 1
+            else:
                 break
-        return ref[i:], [alt[i:] for alt in alts], i
+        return ref[offset:], [alt[offset:] for alt in alts], offset
 
     def get_variants_from_intervals(self, intervals):
         """ intervals reveresely sorted on start """
@@ -539,3 +542,35 @@ if __name__ == "__main__":
 #   FullVariant(offset=5, ref='t', alt=['c'], precence=None),
 #   FullVariant(offset=6, ref='t', alt=['a'], precence=None),
 #   FullVariant(offset=7, ref='t', alt=['c', 'tc'], precence=None)]
+
+
+# alt = "taaaaagagagagaggtatagaggaaaaagagaaagagataaagaaagctat"
+# ref = "taaaaaggagagagaggtatagaggaaaaagagaaagagataaagaaagctat"
+# variants = [
+#     FullVariant(offset=1, ref='t', alt=['a'], precence=P(64)), 
+#     FullVariant(offset=6, ref='ag', alt=['gg', 'a'], precence=P(4)), 
+#     FullVariant(offset=9, ref='g', alt=['a'], precence=P(362)), 
+#     FullVariant(offset=37, ref='a', alt=['g'], precence=P(64)), 
+#     FullVariant(offset=50, ref='t', alt=['c'], precence=P(26)), 
+#     FullVariant(offset=51, ref='a', alt=['t'], precence=P(2))]
+# 
+# 
+# ref = "tcacaacttatgcctattgaattatttagtgtcccgtcgtcggaatcagt"
+# alt = "tcacaacttatgcctattgaattatttagtgtcccgtcgtcggaatcagtt"
+# ref = "tcacaacttatgcctattgaattatttagtgtcccgtcgtcggaatcagt"
+# variants = [FullVariant(offset=18, ref='g', alt=['a'], precence=None),
+#             FullVariant(offset=19, ref='a', alt=['t'], precence=None),
+#             FullVariant(offset=32, ref='c', alt=['g'], precence=None),
+#             FullVariant(offset=40, ref='c', alt=['a'], precence=None)]
+# 
+# 
+# ref = "ataaaaaaaggaagagattgaattgtgtgaaacctggaggaagcggagccagt"
+# alt = "aaaaaaaggaagagattgaattgtgtgaaacctggaggaagcggagccagt"
+# ref = "ataaaaaaaggaagagattgaattgtgtgaaacctggaggaagcggagccagt"
+# variants = [FullVariant(offset=0, ref='at', alt=['a'], precence=None),
+#             FullVariant(offset=1, ref='ta', alt=['t'], precence=None),
+#             FullVariant(offset=2, ref='a', alt=['c'], precence=None),
+#             FullVariant(offset=3, ref='a', alt=['g'], precence=None),
+#             FullVariant(offset=29, ref='a', alt=['ag'], precence=None),
+#             FullVariant(offset=30, ref='a', alt=['at'], precence=None),
+#             FullVariant(offset=32, ref='c', alt=['a'], precence=None)]
