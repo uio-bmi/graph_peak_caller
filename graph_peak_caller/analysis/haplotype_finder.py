@@ -337,43 +337,35 @@ class Main:
             self.counter += 1
         return haplo
 
+    def extend_peak_to_reference(self, peak):
+        start_node = peak.region_paths[0]
+        end_node = peak.region_paths[-1]
+        start_offset = peak.start_position.offset
+        end_offset = peak.end_position.offset
+        rps = peak.rps
+        if start_node not in self.indexed_interval.nodes_in_interval():
+            start_node = min(
+                -node for node in self.graph.reverse_adj_list[-start_node]
+                if -node in self.indexed_interval.nodes_in_interval())
+            start_offset = self.graph.node_size(start_node)-1
+            rps = [start_node]+rps
+        if end_node not in self.indexed_interval.nodes_in_interval():
+            end_node = max(node for node in self.graph.adj_List[end_node]
+                           if node in self.indexed_interval.nodes_in_interval())
+            end_offset = 1
+            rps = [end_node] + rps
+        return obg.Interval(start_offset, end_offset, rps)
+
     def get_sequence_pair(self, peak):
         peak.graph = self.graph
+        peak = self.extend_peak_to_reference(peak)
         seq = self.seq_graph.get_interval_sequence(peak)
         assert len(seq) == peak.length(), (len(seq), peak.length())
-        seq, interval = self.extend_peak(seq, peak.start_position, peak.end_position)
+        interval = (self.indexed_interval.get_offset_at_node(peak.rps[0]) + peak.start_position.offset,
+                    self.indexed_interval.get_offset_at_node(peak.rps[-1]) + peak.end_position.offset)
         ref_seq = self.fasta[int(interval[0]):int(interval[1])].seq
-        if all(rp in self.indexed_interval.nodes_in_interval() for rp in peak.region_paths):
-            if len(seq) == len(ref_seq):
-                pass  # assert seq == ref_seq.lower(), (seq, ref_seq.lower())
+        assert len(ref_seq) == interval[1]-interval[0]
         return seq.lower(), ref_seq.lower(), interval
-
-    def extend_peak(self, seq, start_position, end_position):
-        seq, start_offset = self.extend_peak_start(
-            seq, start_position.offset, start_position.region_path_id)
-        seq, end_offset = self.extend_peak_end(
-            seq, end_position.offset, end_position.region_path_id)
-        return seq.lower(), (start_offset, end_offset)
-
-    def extend_peak_start(self, seq, start_offset, start_node):
-        if start_node in self.indexed_interval.nodes_in_interval():
-            return seq, self.indexed_interval.get_offset_at_node(start_node) + start_offset
-        prev_node = max(-node for node in self.graph.reverse_adj_list[-start_node]
-                        if -node in self.indexed_interval.nodes_in_interval())
-        p_len = self.graph.node_size(prev_node)
-        seq = self.seq_graph.get_interval_sequence(obg.Interval(p_len-1, start_offset, [prev_node, start_node]))+seq
-        start = self.indexed_interval.get_offset_at_node(prev_node)+p_len-1
-        return seq, start
-
-    def extend_peak_end(self, seq, end_offset, end_node):
-        if end_node in self.indexed_interval.nodes_in_interval():
-            return seq, self.indexed_interval.get_offset_at_node(end_node) + end_offset
-        next_node = min(node for node in self.graph.adj_list[end_node]
-                        if node in self.indexed_interval.nodes_in_interval())
-        seq += self.seq_graph.get_interval_sequence(
-            obg.Interval(end_offset, 1, [end_node, next_node]))
-        end = self.indexed_interval.get_offset_at_node(next_node)+1
-        return seq, end
 
     @classmethod
     def from_name(cls, name, fasta_file_name, chrom):
