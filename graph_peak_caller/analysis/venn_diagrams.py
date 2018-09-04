@@ -105,7 +105,7 @@ def save_venn(numbers, out_name):
         # Try hacky way to get title
         title = out_name.split(".")[0].split("_")[1]
     except IndexError:
-        title = "Untitled"
+        title = "Untitled %s" % out_name
 
     plt.title(title)
     plt.savefig(out_name+"_venn.pdf", bbox_inches='tight')
