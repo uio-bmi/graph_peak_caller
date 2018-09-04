@@ -17,7 +17,10 @@ class VariantPrecence:
 
     def get_samples(self, variant, f=None):
         s = self._precence if f is None else self._precence[f, :]
-        match = np.any((s == variant) | (s == -1), axis=-1)
+        if variant == 0:
+            return f if f is not None else np.arange(self._precence.shape[0])
+        match = np.any((s == variant) | (s == -1),
+                       axis=-1)
         res = np.flatnonzero(match)
         if f is not None:
             return f[res]
@@ -498,3 +501,16 @@ if __name__ == "__main__":
 #  FullVariant(offset=24, ref='c', alt=['a'], precence=None)]
 # 2018-09-03 22:26:09,814, INFO: ---->
 # 2018-09-03 22:26:09,814, INFO: [] / []
+
+
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# code=[1, 0, 0, 1, 1, 1], alt_offset=17, prev_offset=29)]
