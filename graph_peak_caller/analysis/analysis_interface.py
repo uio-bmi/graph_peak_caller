@@ -78,22 +78,35 @@ class IntervalDict(obg.IntervalCollection):
         return file_name
 
 
-def summarize_haplotypes(types):
+def summarize_diplotypes(types):
     N = len(types)
     counter = Counter()
-    refs = 0
     for t in types:
         if len(t):
-            if t[0] == "REF":
-                refs += 1
-                continue
             if isinstance(t[0], str):
                 continue
         counter.update(t)
     if not counter:
         return (refs, N, "REF")
     most_common = counter.most_common(1)[0]
-    return (most_common[1]+refs, N, most_common[0])
+    remaining_types = [t for t in types if most_common not in t]
+    remaining_res = summarize_haplotypes(remaining_types)
+    return (most_common[1], remaining_res[0], N, most_common[0], remaining_res[-1])
+
+
+def summarize_haplotypes(types):
+    N = len(types)
+    counter = Counter()
+    refs = 0
+    for t in types:
+        if len(t):
+            if isinstance(t[0], str):
+                continue
+        counter.update(t)
+    if not counter:
+        return (refs, N, "REF")
+    most_common = counter.most_common(1)[0]
+    return (most_common[1], N, most_common[0])
 
 
 def check_haplotype(args):
@@ -126,6 +139,13 @@ def check_haplotype(args):
     with open(base_name + ".setsummary", "w") as f:
         summaries = [summarize_haplotypes(v) for v in result_dict.values()]
         successes = sum(s[0] == s[1] for s in summaries)
+        f.write("# %s/%s\n" % (successes, len(summaries)))
+        for k, v in result_dict.items():
+            f.write("%s, %s\n" % (k, summarize_haplotypes(v)))
+
+    with open(base_name + "_dip.setsummary", "w") as f:
+        summaries = [summarize_diplotypes(v) for v in result_dict.values()]
+        successes = sum(s[0]+s[1] == s[2] for s in summaries)
         f.write("# %s/%s\n" % (successes, len(summaries)))
         for k, v in result_dict.items():
             f.write("%s, %s\n" % (k, summarize_haplotypes(v)))
