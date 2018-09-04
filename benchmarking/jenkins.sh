@@ -65,3 +65,5 @@ else
     # Only run arabidopsis
     python3 generate_jenkins_report.py ARABIDOPSIS_ERF115,ARABIDOPSIS_SEP3,ARABIDOPSIS_AP1,ARABIDOPSIS_SOC1,ARABIDOPSIS_PI figures_tables/index.html
 fi
+
+actcaattgttcttgttttatacaaaatggattttactactcaaatcaagaacaaaagtccaacagagtaaaatttatttgaggcttacaaaacaggacaactcttggcgttttgttcatataggtcaaaatgagaaaatgagttaccgtaggatcaagaaactggag
