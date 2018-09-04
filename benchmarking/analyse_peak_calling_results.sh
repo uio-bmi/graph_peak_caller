@@ -99,9 +99,12 @@ graph_peak_caller analyse_peaks_whole_genome $chromosomes ./ $data_dir ../../../
 
 
 # Hack to also run analysis for unique peaks
+print "Running analysis for unique peaks"
 for chromosome in $(echo $chromosomes | tr "," "\n")
 do
+    echo "Running peaks to fasta for tf $tf"
     graph_peak_caller peaks_to_fasta $data_dir/$chromosome.nobg.sequences macs_sequences_chr${chromosome}_summits_unique.intervalcollection  macs_sequences_chr${chromosome}_summits_unique.fasta
+    echo "Running peaks to fasta for tf $tf (graph)"
     graph_peak_caller peaks_to_fasta $data_dir/$chromosome.nobg.sequences ${chromosome}_sequences_summits_unique.intervalcollection ${chromosome}_sequences_summits_unique.fasta
 
     fimo --bgfile $background_model_file -oc fimo_macs_unique_chr$chromosome motif.meme macs_sequences_chr${chromosome}_summits_unique.fasta
