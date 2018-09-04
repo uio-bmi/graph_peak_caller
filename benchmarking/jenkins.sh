@@ -60,7 +60,7 @@ wait
 wget -O figures_tables/bootstrap.min.css https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css
 
 if [ ! -z "${human_graph_dir}$dm_graph_dir" ]; then
-    python3 generate_jenkins_report.py ARABIDOPSIS_ERF115,ARABIDOPSIS_SEP3,ARABIDOPSIS_AP1,ARABIDOPSIS_SOC1,ARABIDOPSIS_PI,DM_JRA,DM_SQZ,DM_JIM,DM_ANTP,HUMAN_CTCF,HUMAN_SRF figures_tables/index.html
+    python3 generate_jenkins_report.py ARABIDOPSIS_ERF115,ARABIDOPSIS_SEP3,ARABIDOPSIS_AP1,ARABIDOPSIS_SOC1,ARABIDOPSIS_PI,ARABIDOPSIS_PIF3,DM_JRA,DM_SQZ,DM_JIM,DM_ANTP,HUMAN_CTCF,HUMAN_SRF figures_tables/index.html
 else
     # Only run arabidopsis
     python3 generate_jenkins_report.py ARABIDOPSIS_ERF115,ARABIDOPSIS_SEP3,ARABIDOPSIS_AP1,ARABIDOPSIS_SOC1,ARABIDOPSIS_PI figures_tables/index.html
