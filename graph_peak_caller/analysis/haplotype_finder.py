@@ -17,7 +17,10 @@ class VariantPrecence:
 
     def get_samples(self, variant, f=None):
         s = self._precence if f is None else self._precence[f, :]
-        match = np.any((s == variant) | (s == -1), axis=-1)
+        if variant == 0:
+            return f if f is not None else np.arange(self._precence.shape[0])
+        match = np.any((s == variant) | (s == -1),
+                       axis=-1)
         res = np.flatnonzero(match)
         if f is not None:
             return f[res]
@@ -44,7 +47,7 @@ class VariantPrecence:
         return cls(combined)
 
     def __repr__(self):
-        return "P(%s)" % np.count_nonzero(self._precence)
+        return "P(%s)" % np.count_nonzero(self._precence > 0)
 
 
 class VariantList:
@@ -118,8 +121,15 @@ class VCF:
                 for variant in variants for v_alt in variant.alt]
         return Variant(start, ref, alts)
 
+    def _prune_seqs(self, ref, alts):
+        for i, cs in enumerate(zip(*([ref]+alts))):
+            if not all(c == cs[0] for c in cs):
+                break
+        return ref[i:], [alt[i:] for alt in alts], i
+
     def get_variants_from_intervals(self, intervals):
         """ intervals reveresely sorted on start """
+        PRUNE = True
         StackElement = namedtuple("StackElement", ["end", "variant_list"])
         intervals = iter(intervals)
         current_intervals = deque([])
@@ -146,8 +156,11 @@ class VCF:
                 if is_finished:
                     break
                 continue
-            ref = parts[3]
+            ref = parts[3].lower()
             alt = parts[4].lower().split(",")
+            if PRUNE:
+                ref, alt, offset = self._prune_seqs(ref, alt)
+                pos = int(pos) + offset
             precence = VariantPrecence.from_line(parts[-1])
             var = FullVariant(int(pos), ref.lower(), alt, precence)
             variant_end = pos+len(ref)
@@ -238,6 +251,7 @@ def traverse_variants(alt_seq, ref_seq, variants):
         for code, variant in zip(codes, variants):
             f = variant.precence.get_samples(code, f)
         haplotypes.extend(f)
+
     return np.sort(np.unique(haplotypes))
     # codes = real[0][0]
     # f = None
@@ -412,14 +426,21 @@ if __name__ == "__main__":
     # precence = VariantPrecence.from_line(h)
     # print(precence._precence)
     # print(precence.get_samples(1, [0, 1, 3]))
-    alt = "atgcctttattatccttcacgttgaccccacatgccccttttttttttttgg"
-    ref = "atgcctttattatccttcacgttgaccccacatgcccctgttttttttttttg"
-    variants = [FullVariant(offset=2, ref='g', alt=['a'], precence=None),
-                FullVariant(offset=18, ref='a', alt=['t'], precence=None),
-                FullVariant(offset=30, ref='c', alt=['t'], precence=None),
-                FullVariant(offset=38, ref='tgtt', alt=['ttt', 'tttt', 'tgt', 'tg'], precence=None),
-                FullVariant(offset=44, ref='t', alt=['c'], precence=None),
-                FullVariant(offset=45, ref='t', alt=['c'], precence=None)]
+    alt = "ccttctttttttg"
+    ref = "ccttctttttttg"
+    variants = [FullVariant(offset=0, ref='ctt', alt=['ttt', 'c', 'ctttt'], precence=None),
+                FullVariant(offset=2, ref='t', alt=['tc'], precence=None),
+                FullVariant(offset=5, ref='t', alt=['c'], precence=None),
+                FullVariant(offset=6, ref='t', alt=['a'], precence=None),
+                FullVariant(offset=7, ref='t', alt=['c', 'tc'], precence=None)]
+    # alt = "atgcctttattatccttcacgttgaccccacatgccccttttttttttttgg"
+    # ref = "atgcctttattatccttcacgttgaccccacatgcccctgttttttttttttg"
+    # variants = [FullVariant(offset=2, ref='g', alt=['a'], precence=None),
+    #             FullVariant(offset=18, ref='a', alt=['t'], precence=None),
+    #             FullVariant(offset=30, ref='c', alt=['t'], precence=None),
+    #             FullVariant(offset=38, ref='tgtt', alt=['ttt', 'tttt', 'tgt', 'tg'], precence=None),
+    #             FullVariant(offset=44, ref='t', alt=['c'], precence=None),
+    #             FullVariant(offset=45, ref='t', alt=['c'], precence=None)]
 
     print(traverse_variants(alt, ref, variants))
 
@@ -498,3 +519,23 @@ if __name__ == "__main__":
 #  FullVariant(offset=24, ref='c', alt=['a'], precence=None)]
 # 2018-09-03 22:26:09,814, INFO: ---->
 # 2018-09-03 22:26:09,814, INFO: [] / []
+
+
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# code=[1, 0, 0, 1, 1, 1], alt_offset=17, prev_offset=29)]
+#  alt = "ccttctttttttg"
+#  ref = "ccttctttttttg"
+#  [FullVariant(offset=0, ref='ctt', alt=['ttt', 'c', 'ctttt'], precence=None),
+#   FullVariant(offset=2, ref='t', alt=['tc'], precence=None),
+#   FullVariant(offset=5, ref='t', alt=['c'], precence=None),
+#   FullVariant(offset=6, ref='t', alt=['a'], precence=None),
+#   FullVariant(offset=7, ref='t', alt=['c', 'tc'], precence=None)]
