@@ -80,6 +80,8 @@ class IntervalDict(obg.IntervalCollection):
 
 def summarize_diplotypes(types):
     N = len(types)
+    if not N:
+        return (0, 0, 0, 0, 0)
     counter = Counter()
     for t in types:
         if len(t):
@@ -87,7 +89,7 @@ def summarize_diplotypes(types):
                 continue
         counter.update(t)
     if not counter:
-        return (refs, N, "REF")
+        return (0, 0, N, -1, -1)
     most_common = counter.most_common(1)[0]
     remaining_types = [t for t in types if most_common not in t]
     remaining_res = summarize_haplotypes(remaining_types)
@@ -96,15 +98,16 @@ def summarize_diplotypes(types):
 
 def summarize_haplotypes(types):
     N = len(types)
+    if not N:
+        return (0, 0, 0)
     counter = Counter()
-    refs = 0
     for t in types:
         if len(t):
             if isinstance(t[0], str):
                 continue
         counter.update(t)
     if not counter:
-        return (refs, N, "REF")
+        return (0, N, -1)
     most_common = counter.most_common(1)[0]
     return (most_common[1], N, most_common[0])
 
