@@ -103,7 +103,7 @@ def save_venn(numbers, out_name):
     plt.text(xs[2], 0.8, "SHARED", ha="center")
     try:
         # Try hacky way to get title
-        title = out_name.split(".")[0].split("_")[1]
+        title = out_name.split("/")[-1].split(".")[0].split("_")[1]
     except IndexError:
         title = "Untitled %s" % out_name
 
