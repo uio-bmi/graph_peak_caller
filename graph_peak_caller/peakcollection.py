@@ -180,6 +180,10 @@ class PeakCollection(obg.IntervalCollection):
             linear_interval.graph = ob_graph
             graph_peak = Peak.from_interval_and_score(
                 linear_interval, peak.score)
+
+            assert graph_peak.length() == end - start, "Graph peak length %d != linear peak length %d for peak %s" % (graph_peak.length(), end-start, graph_peak)
+            assert graph_peak.end_position.offset <= ob_graph.blocks[graph_peak.end_position.region_path_id].length()
+            
             graph_peak.unique_id = peak.unique_id
             graph_peak.sequence = peak.sequence
             intervals_on_graph.append(graph_peak)
