@@ -127,7 +127,12 @@ def save_venn_from_csvs(filenames, out_name):
     total = [sum(elems) for elems in zip(*numbers_list)]
     #print(total)
     #column_venn(axes[-1], *total)
-    plt.figure()
+    font = {'family' : 'DejaVu Sans',
+        'weight' : 'normal',
+        'size'   : 30}
+    import matplotlib
+    matplotlib.rc('font', **font)
+    plt.figure(figsize=(15, 15.0), dpi=300)
     ax = plt.gca()
     column_venn(ax, *total)
     plt.show()
