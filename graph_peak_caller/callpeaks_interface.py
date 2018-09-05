@@ -91,6 +91,18 @@ def run_callpeaks_interface(args):
             "Not saving max path sequences, since a sequence graph was not found.")
 
 
+def create_alignment_fasta(args):
+    intervals = UniqueIntervals(parse_input_file(args.vg_json_file_name, args.graph))
+    sequence_graph = obg.SequenceGraph.from_file(args.data_dir + "/" + args.chrom + ".nobg.sequences")
+    seqs = (sequence_graph.get_interval_sequence(interval)
+            for interval in intervals)
+
+    with open(args.out_file_name, "w") as f:
+        for i, seq in enumerate(seqs):
+            f.write(">1\n")
+            f.write(seq+"\n")
+
+
 def find_or_create_linear_map(graph, linear_map_name):
 
     if os.path.isfile(linear_map_name):
