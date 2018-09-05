@@ -3,7 +3,7 @@ from pyfaidx import Fasta
 import offsetbasedgraph as obg
 import logging
 from collections import namedtuple, deque
-from itertools import chain
+from itertools import chain, dropwhile, takewhile
 
 
 Variant = namedtuple("Variant", ["offset", "ref", "alt"])
@@ -148,6 +148,38 @@ class VCF:
             else:
                 break
         return ref[offset:], [alt[offset:] for alt in alts], offset
+
+    def get_haplotype_sequences(self, haplotype, interval, ref_seq, lines=None):
+        if lines is None:
+            lines = self.f
+        line_parts = (line.split("\t", 9) for line in lines
+                      if not line.startswith("#"))
+        interval_line_parts = dropwhile(
+            lambda parts: int(parts[1])-1 < interval[0],
+            line_parts)
+        interval_line_parts = takewhile(
+            lambda parts: int(parts[1])-1 <= interval[1],
+            interval_line_parts)
+
+        seqs = [[], []]
+        cur_positions = [0, 0]
+        for parts in interval_line_parts:
+            variant = VariantPrecence.from_line(parts[-1])._precence[haplotype]
+            print(variant)
+            variant_start = int(parts[1])-1-interval[0]
+            variant_end = variant_start + len(parts[3])
+            alts = parts[4].split(",")
+            print(variant_start, ref, alts, variant_end)
+            for i, (seq, allele) in enumerate(zip(seqs, variant)):
+                if allele > 0:
+                    print(ref[cur_positions[i]:variant_start])
+                    print(alts[allele-1])
+                    seq.append(ref_seq[cur_positions[i]:variant_start])
+                    seq.append(alts[allele-1])
+                    cur_positions[i] = variant_end
+        for pos, seq in zip(cur_positions, seqs):
+            seq.append(ref_seq[pos:interval[1]-interval[0]])
+        return ["".join(seq) for seq in seqs]
 
     def get_variants_from_intervals(self, intervals):
         """ intervals reveresely sorted on start """
@@ -437,152 +469,20 @@ def test4():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
+    line = ["_", "10", "_",  "aaa", "ccc"] + ["_"]*4
     h = "./.:.:.	1|1:40:8	1|1:40:11	0|0:40:9	./.:.:.	./.:.:.	./.:.:.	0|0:40:8	0|0:40:9	./.:.:.	0|0:40:12	0|0:40:16	0|0:40:40	0|0:40:35	0|0:40:21	0|0:40:13	0|0:40:44	0|0:40:15	0|0:40:86	0|0:40:69	./.:.:.	0|0:40:14	0|0:40:59	0|0:40:51"
-    # precence = VariantPrecence.from_line(h)
-    # print(precence._precence)
-    # print(precence.get_samples(1, [0, 1, 3]))
-    alt = "ccttctttttttg"
-    ref = "ccttctttttttg"
-    variants = [FullVariant(offset=0, ref='ctt', alt=['ttt', 'c', 'ctttt'], precence=None),
-                FullVariant(offset=2, ref='t', alt=['tc'], precence=None),
-                FullVariant(offset=5, ref='t', alt=['c'], precence=None),
-                FullVariant(offset=6, ref='t', alt=['a'], precence=None),
-                FullVariant(offset=7, ref='t', alt=['c', 'tc'], precence=None)]
-    # alt = "atgcctttattatccttcacgttgaccccacatgccccttttttttttttgg"
-    # ref = "atgcctttattatccttcacgttgaccccacatgcccctgttttttttttttg"
-    # variants = [FullVariant(offset=2, ref='g', alt=['a'], precence=None),
-    #             FullVariant(offset=18, ref='a', alt=['t'], precence=None),
-    #             FullVariant(offset=30, ref='c', alt=['t'], precence=None),
-    #             FullVariant(offset=38, ref='tgtt', alt=['ttt', 'tttt', 'tgt', 'tg'], precence=None),
-    #             FullVariant(offset=44, ref='t', alt=['c'], precence=None),
-    #             FullVariant(offset=45, ref='t', alt=['c'], precence=None)]
-
-    print(traverse_variants(alt, ref, variants))
-
-
-    #alt = "aaaaaataagacgt"
-    #ref = "ataaataagacgt"
-    #variants = [Variant(offset=1, ref='T', alt=['A']), Variant(offset=8, ref='GACGTACCCTCA', alt=['G', 'GAGGTACCCTCA'])]
-
-    # alt = "cccttctttttttg"
-    # ref = "cttttttttttttg"
-    # variants = [Variant(offset=0, ref='CTT', alt=['TTT', 'C', 'CTTTT', 'CTTC']), Variant(offset=5, ref='T', alt=['C']), Variant(offset=6, ref='T', alt=['A']), Variant(offset=7, ref='T', alt=['C', 'TC'])]
-
-    # alt = "ggaaataaaaaa"
-    # ref = "ggaaataaaaa"
-    # variants = [Variant(offset=5, ref='T', alt=['C', 'TA']), Variant(offset=7, ref='A', alt=['C']), Variant(offset=8, ref='A', alt=['T', 'G']), Variant(offset=11, ref='T', alt=['A'])]
-
-    # alt = "agtttcactggg"
-    # ref = "agtttcagtagg"
-    # variants = [Variant(offset=7, ref='GTA', alt=['CTA', 'ATA', 'GT', 'GTG'])]
-    # [Variant(offset=7, ref='G', alt=['C', 'A']), Variant(offset=8, ref='TA', alt=['T']), Variant(offset=9, ref='A', alt=['G'])]
-
-#     alt = "accttatagaaa"
-#     ref = "accttataagaaa"
-#     variants = [Variant(offset=6, ref='TA', alt=['T'])]
-
-    # alt = "agtttcactggg"
-    # ref = "agtttcagtagg"
-    # variants = [Variant(offset=7, ref='G', alt=['C', 'A']), Variant(offset=9, ref='A', alt=['', 'G'])]
-    # print(traverse_variants(alt, ref, variants))
-
-# ct at 0x7fba28385c18>),
-# t at 0x7fb8521fe9e8>),
-# t at 0x7fba2e1d35f8>), 
-# recence object at 0x7fba2e1d3860>), 
-# t at 0x7fba28385278>), 
-# ect at 0x7fba283852b0>), 
-# t at 0x7fba280af4e0>), 
-# t at 0x7fba28385940>), 
-# t at 0x7fba28385080>)]
-
-
-
-# 2018-09-03 19:19:20,165, INFO: atgcctttattatccttcacgttgaccccacatgccccttttttttttttgg
-# 2018-09-03 19:19:20,165, INFO: atgcctttattatccttcacgttgaccccacatgcccctgttttttttttttg
-# 2018-09-03 19:19:20,165, INFO: 
-# variants = [FullVariant(offset=2, ref='g', alt=['a'], precence=None), 
-#             FullVariant(offset=18, ref='a', alt=['t'], precence=None),
-#             FullVariant(offset=30, ref='c', alt=['t'], precence=None),
-#             FullVariant(offset=38, ref='tgtt', alt=['ttt', 'tttt', 'tgt', 'tg'], precence=None),
-#             FullVariant(offset=44, ref='t', alt=['c'], precence=None),
-#             FullVariant(offset=45, ref='t', alt=['c'], precence=None)]
-
-# 2018-09-03 19:19:20,165, INFO: [] / [([0, 0, 0, 1, 0, 0], -1, 46), ([0, 0, 0, 2, 0, 0], 0, 46)]
-
-
-# 2018-09-03 21:09:38,315, INFO: [] / [([0, 0, 0, 0, 0, 0], 0, 43), ([0, 0, 0, 1, 0, 0], 1, 43)]
-# 2018-09-03 21:09:38,327, INFO: ttttttgatagattatatcaaatccatggatactttctatatttggaaagt
-# 2018-09-03 21:09:38,328, INFO: tttttttgatagattatatcaaatccatggatactttctatatttggaaagt
-# 2018-09-03 21:09:38,328, INFO: 
-# [FullVariant(offset=0, ref='t', alt=['ta'], precence=None),
-#  FullVariant(offset=6, ref='tg', alt=['gg', 't', 'tt'], precence=None),
-#  FullVariant(offset=26, ref='a', alt=['g'], precence=None),
-#  FullVariant(offset=37, ref='c', alt=['ct'], precence=None)]
+    line = "\t".join(line+ [h])
+    print(line)
+    ref = "ttaaaggcc"
+    interval = (7, 7+len(ref))
+    print(VCF("tmp.txt").get_haplotype_sequences(1, interval, ref, [line]))
+#     
 # 
-# r = "taaaaacaaagaaagtcaactaccctattc"
-# 
-# a = "taaaaaaacaaagaaagtcaactaccctattc"
-# r = "tggaaacaaagaaagtcaactaccctattc"
-# 
-# 
-# [FullVariant(offset=1, ref='g', alt=['a'], precence=None),
-#  FullVariant(offset=2, ref='g', alt=['a', 'gaa'], precence=None),
-#  FullVariant(offset=6, ref='c', alt=['t'], precence=None),
-#  FullVariant(offset=14, ref='g', alt=['c'], precence=None),
-#  FullVariant(offset=19, ref='c', alt=['t'], precence=None),
-#  FullVariant(offset=24, ref='c', alt=['a'], precence=None)]
-# 2018-09-03 22:26:09,814, INFO: ---->
-# 2018-09-03 22:26:09,814, INFO: [] / []
-
-
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# code=[1, 0, 0, 1, 1, 1], alt_offset=17, prev_offset=29)]
-#  alt = "ccttctttttttg"
-#  ref = "ccttctttttttg"
-#  [FullVariant(offset=0, ref='ctt', alt=['ttt', 'c', 'ctttt'], precence=None),
-#   FullVariant(offset=2, ref='t', alt=['tc'], precence=None),
-#   FullVariant(offset=5, ref='t', alt=['c'], precence=None),
-#   FullVariant(offset=6, ref='t', alt=['a'], precence=None),
-#   FullVariant(offset=7, ref='t', alt=['c', 'tc'], precence=None)]
-
-
-# alt = "taaaaagagagagaggtatagaggaaaaagagaaagagataaagaaagctat"
-# ref = "taaaaaggagagagaggtatagaggaaaaagagaaagagataaagaaagctat"
-# variants = [
-#     FullVariant(offset=1, ref='t', alt=['a'], precence=P(64)), 
-#     FullVariant(offset=6, ref='ag', alt=['gg', 'a'], precence=P(4)), 
-#     FullVariant(offset=9, ref='g', alt=['a'], precence=P(362)), 
-#     FullVariant(offset=37, ref='a', alt=['g'], precence=P(64)), 
-#     FullVariant(offset=50, ref='t', alt=['c'], precence=P(26)), 
-#     FullVariant(offset=51, ref='a', alt=['t'], precence=P(2))]
-# 
-# 
-# ref = "tcacaacttatgcctattgaattatttagtgtcccgtcgtcggaatcagt"
-# alt = "tcacaacttatgcctattgaattatttagtgtcccgtcgtcggaatcagtt"
-# ref = "tcacaacttatgcctattgaattatttagtgtcccgtcgtcggaatcagt"
-# variants = [FullVariant(offset=18, ref='g', alt=['a'], precence=None),
-#             FullVariant(offset=19, ref='a', alt=['t'], precence=None),
-#             FullVariant(offset=32, ref='c', alt=['g'], precence=None),
-#             FullVariant(offset=40, ref='c', alt=['a'], precence=None)]
-# 
-# 
-# ref = "ataaaaaaaggaagagattgaattgtgtgaaacctggaggaagcggagccagt"
-# alt = "aaaaaaaggaagagattgaattgtgtgaaacctggaggaagcggagccagt"
-# ref = "ataaaaaaaggaagagattgaattgtgtgaaacctggaggaagcggagccagt"
-# variants = [FullVariant(offset=0, ref='at', alt=['a'], precence=None),
-#             FullVariant(offset=1, ref='ta', alt=['t'], precence=None),
-#             FullVariant(offset=2, ref='a', alt=['c'], precence=None),
-#             FullVariant(offset=3, ref='a', alt=['g'], precence=None),
-#             FullVariant(offset=29, ref='a', alt=['ag'], precence=None),
-#             FullVariant(offset=30, ref='a', alt=['at'], precence=None),
-#             FullVariant(offset=32, ref='c', alt=['a'], precence=None)]
+#     alt = "ccttctttttttg"
+#     ref = "ccttctttttttg"
+#     variants = [FullVariant(offset=0, ref='ctt', alt=['ttt', 'c', 'ctttt'], precence=None),
+#                 FullVariant(offset=2, ref='t', alt=['tc'], precence=None),
+#                 FullVariant(offset=5, ref='t', alt=['c'], precence=None),
+#                 FullVariant(offset=6, ref='t', alt=['a'], precence=None),
+#                 FullVariant(offset=7, ref='t', alt=['c', 'tc'], precence=None)]
+#     print(traverse_variants(alt, ref, variants))
