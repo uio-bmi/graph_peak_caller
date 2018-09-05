@@ -112,6 +112,14 @@ def summarize_haplotypes(types):
     return (most_common[1], N, most_common[0])
 
 
+def get_haplotype_sequence(args):
+    name = args.data_folder+args.chrom
+    main = Main.from_name(name, args.fasta_file, args.chrom)
+    intervals = obg.IntervalCollection.from_file(
+        args.result_folder+args.chrom+"_" + args.interval_name + ".intervalcollection", True)
+    print(main.get_haplotype_sequence_around_intervals(intervals, args.haplotype))
+
+
 def check_haplotype(args):
     all_reads = args.all_reads == "True" if args.all_reads is not None else True
     strict = args.strict == "True" if args.strict is not None else True
