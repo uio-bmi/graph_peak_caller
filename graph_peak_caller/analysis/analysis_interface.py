@@ -124,13 +124,13 @@ def check_haplotype(args):
     graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
 
     if all_reads:
-        # alignment_collection = AlignmentCollection.from_file(
-        #     args.result_folder + args.chrom + "_alignments.pickle", graph)
-        # peaks_dict = {i: alignment_collection.get_alignments_on_interval(interval).values()
-        #               for i, interval in enumerate(motif_paths)}
-        # IntervalDict(peaks_dict).to_file(
-        #     args.result_folder + args.chrom + args.interval_name + "_reads.intervaldict")
-        peaks_dict = IntervalDict.from_file(args.result_folder + args.chrom + args.interval_name + "_reads.intervaldict").intervals
+        alignment_collection = AlignmentCollection.from_file(
+            args.result_folder + args.chrom + "_alignments.pickle", graph)
+        peaks_dict = {i: alignment_collection.get_alignments_on_interval(interval).values()
+                      for i, interval in enumerate(motif_paths)}
+        IntervalDict(peaks_dict).to_file(
+            args.result_folder + args.chrom + args.interval_name + "_reads.intervaldict")
+        # peaks_dict = IntervalDict.from_file(args.result_folder + args.chrom + args.interval_name + "_reads.intervaldict").intervals
         base_name = args.result_folder + args.chrom + "_" + args.interval_name
     else:
         peaks_dict = {i: [interval] for i, interval in enumerate(motif_paths)}

@@ -16,7 +16,7 @@ from graph_peak_caller.mindense import DensePileup
 
 from graph_peak_caller.callpeaks_interface import \
     run_callpeaks_interface, run_callpeaks_whole_genome,\
-    run_callpeaks_whole_genome_from_p_values, run_callpeaks2
+    run_callpeaks_whole_genome_from_p_values, run_callpeaks2, create_alignment_fasta
 
 from graph_peak_caller.analysis.analysis_interface import analyse_peaks_whole_genome,\
     analyse_peaks, peaks_to_fasta, linear_peaks_to_fasta,\
@@ -451,6 +451,19 @@ interface = \
                     ('out_file_name', 'Out file name')
                 ],
             'method': vg_json_alignments_to_intervals
+        },
+    'vg_json_alignments_to_fasta':
+        {
+            'help': 'Reads vg json alignments and converts to interval collection',
+            'requires_graph': True,
+            'arguments':
+                [
+                    ('vg_json_file_name', 'Vg json file name'),
+                    ('data_dir', ""),
+                    ('chrom', ""),
+                    ('out_file_name', 'Out file name'),
+                ],
+            'method': create_alignment_fasta
         },
     'get_intersecting_intervals':
         {
