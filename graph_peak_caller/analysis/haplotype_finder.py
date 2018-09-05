@@ -31,6 +31,8 @@ def find_valid_haplotypes(variants, combination):
 
 class VariantPrecence:
     strict = False
+    accept_ref = False
+
     def __init__(self, precence):
         self._precence = precence
 
@@ -358,6 +360,18 @@ class Main:
         self.vcf = vcf
         self.counter = 0
         self.prev_end = -1
+
+    def get_haplo_sequence_around_intervals(self, intervals, haplotype):
+        extended = (self.extend_peak_to_reference(interval) for interval in intervals)
+        ref_intervals = [
+            (self.indexed_interval.get_offset_at_node(peak.region_paths[0]) + peak.start_position.offset,
+             self.indexed_interval.get_offset_at_node(peak.region_paths[-1]) + peak.end_position.offset)
+            for peak in extended]
+        starts, ends = zip(*ref_intervals)
+        interval = (min(starts), max(ends))
+        ref_seq = self.fasta[int(interval[0]):int(interval[1])].seq
+        var_seqs = self.vcf.get_haplotype_sequences(haplotype, interval, ref_seq)
+        return var_seqs
 
     def run_peak_set(self, peaks_dict):
         all_name_tuples = [(key, self.get_sequence_pair(read))
