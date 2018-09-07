@@ -18,9 +18,11 @@ from .motifenrichment import plot_true_positives
 from ..peakfasta import PeakFasta
 from ..mindense import DensePileup
 from ..sparsediffs import SparseValues, SparseDiffs
+from ..intervals import UniqueIntervals
 from .util import create_linear_path
 from .genotype_matrix import VariantList
 from .haplotype_finder import Main, VariantPrecence
+from graph_peak_caller.intervals import UniqueIntervals
 
 def get_motif_locations(args):
     graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
@@ -116,22 +118,25 @@ def get_haplotype_sequence(args):
     main = Main.from_name(name, args.fasta_file, args.chrom)
     intervals = obg.IntervalCollection.from_file(
         args.result_folder+args.chrom+"_" + args.interval_name + ".intervalcollection", True)
-    print(main.get_haplotype_sequence_around_intervals(intervals, args.haplotype))
+    print(main.get_haplo_sequence_around_intervals(intervals, int(args.haplotype)))
 
 
 def get_overlapping_alignments(args):
-    graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
-    base_name = args.result_folder + args.chrom
-    intervals = PeakCollection.from_file(base_name + "_" + args.interval_name+".interval_collection", True)
+    for chrom in args.chromosomes.split(","):
+        logging.info("Running on chromosome %s" % chrom)
+        graph = obg.Graph.from_file(args.data_folder+chrom+".nobg")
+        base_name = args.result_folder + chrom
+        intervals = PeakCollection.from_file(base_name + "_" + args.interval_name+".intervalcollection", True)
 
-    alignment_collection = AlignmentCollection.from_file(
-        args.result_folder + args.chrom + "_alignments.pickle", graph)
-    peaks_dict = {interval.unique_id:
-                  list(UniqueIntervals(
-                      alignment_collection.get_alignments_on_interval(interval).values()))
-                  for interval in intervals}
-    IntervalDict(peaks_dict).to_file(
-        base_name + "_" + args.interval_name+"_alignments.intevaldict")
+        alignment_collection = AlignmentCollection.from_file(
+            args.result_folder + chrom + "_alignments.pickle", graph)
+        peaks_dict = {interval.unique_id:
+                      list(UniqueIntervals(
+                          alignment_collection.get_alignments_on_interval(interval).values()))
+                      for interval in intervals}
+        logging.info("Writing interval dict to file")
+        IntervalDict(peaks_dict).to_file(
+            base_name + "_" + args.interval_name+"_alignments.intevaldict")
 
 
 def check_haplotype(args):
@@ -167,7 +172,6 @@ def check_haplotype_old(args):
     else:
         peaks_dict = {i: [interval] for i, interval in enumerate(motif_paths)}
         base_name = args.result_folder + args.chrom + "_" + args.interval_name + "_pure"
-
     # peaks_dict = IntervalDict.from_file(args.result_folder + args.chrom + "_motif_reads.intervaldict").intervals
     result_dict = main.run_peak_set(peaks_dict)
     if strict:

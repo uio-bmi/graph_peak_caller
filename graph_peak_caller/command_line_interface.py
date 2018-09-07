@@ -361,7 +361,7 @@ interface = \
                 [
                     ('data_folder', ''),
                     ('result_folder', ''),
-                    ('chrom', ''),
+                    ('chromosomes', 'Comma-separated list of chromosomes'),
                     ('interval_name', ''),
                 ],
             'method': get_overlapping_alignments

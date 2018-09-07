@@ -9,8 +9,8 @@ for line in bed:
     chrom = l[0]
     start = l[1]
     strand = l[5]
-    if int(l[2]) <= start(l[1]):
-        logging.warning("End %d <= start %d. Skipping".)
+    if int(l[2]) <= int(l[1]):
+        logging.warning("End %d <= start %s. Skipping" % (int(l[2]), start))
         continue
     pos = chrom + start + strand
     if pos in found:

@@ -121,6 +121,14 @@ class VariantList:
         precences = [variant.precence for variant in variants]
         combined_precence = VariantPrecence.join(precences, counts)
         return FullVariant(start, ref, alts, combined_precence)
+def prune_seqs(ref, alts):
+    offset = 0
+    for cs in zip(*([ref]+alts)):
+        if all(c == cs[0] for c in cs):
+            offset += 1
+        else:
+            break
+    return ref[offset:], [alt[offset:] for alt in alts], offset
 
 
 class VCF:
@@ -142,16 +150,9 @@ class VCF:
                 for variant in variants for v_alt in variant.alt]
         return Variant(start, ref, alts)
 
-    def _prune_seqs(self, ref, alts):
-        offset = 0
-        for cs in zip(*([ref]+alts)):
-            if all(c == cs[0] for c in cs):
-                offset += 1
-            else:
-                break
-        return ref[offset:], [alt[offset:] for alt in alts], offset
 
     def get_haplotype_sequences(self, haplotype, interval, ref_seq, lines=None):
+        interval = (int(interval[0]), int(interval[1]))
         if lines is None:
             lines = self.f
         line_parts = (line.split("\t", 9) for line in lines
@@ -167,15 +168,11 @@ class VCF:
         cur_positions = [0, 0]
         for parts in interval_line_parts:
             variant = VariantPrecence.from_line(parts[-1])._precence[haplotype]
-            print(variant)
-            variant_start = int(parts[1])-1-interval[0]
+            variant_start = int(parts[1])-1-int(interval[0])
             variant_end = variant_start + len(parts[3])
             alts = parts[4].split(",")
-            print(variant_start, ref, alts, variant_end)
             for i, (seq, allele) in enumerate(zip(seqs, variant)):
                 if allele > 0:
-                    print(ref[cur_positions[i]:variant_start])
-                    print(alts[allele-1])
                     seq.append(ref_seq[cur_positions[i]:variant_start])
                     seq.append(alts[allele-1])
                     cur_positions[i] = variant_end
@@ -207,7 +204,8 @@ class VCF:
                 continue
 
             while current_intervals and current_intervals[0].end < pos:
-                yield current_intervals.popleft().variant_list.finalize()
+                tmp = current_intervals.popleft()
+                yield tmp.variant_list.finalize()
             if not current_intervals:
                 if is_finished:
                     break
@@ -215,13 +213,13 @@ class VCF:
             ref = parts[3].lower()
             alt = parts[4].lower().split(",")
             if PRUNE:
-                ref, alt, offset = self._prune_seqs(ref, alt)
+                ref, alt, offset = prune_seqs(ref, alt)
                 pos = int(pos) + offset
             precence = VariantPrecence.from_line(parts[-1])
             var = FullVariant(int(pos), ref.lower(), alt, precence)
             variant_end = pos+len(ref)
             for stack_element in current_intervals:
-                if stack_element.end > variant_end:
+                if stack_element.end > pos:
                     stack_element.variant_list.append(var)
 
     def get_variants_from(self, start, end):
@@ -274,21 +272,26 @@ def traverse_variants(alt_seq, ref_seq, variants):
             if comb.prev_offset > variant.offset:
                 continue
             for code, seq in enumerate(variant.alt):
-                var_alt = alt_seq[variant.offset+comb.alt_offset:variant.offset+comb.alt_offset+len(seq)]
+                p_ref, p_alt, p_offset = prune_seqs(variant.ref, [seq])
+                seq = p_alt[0]
+                start_on_alt = variant.offset+comb.alt_offset+p_offset
+                var_alt = alt_seq[start_on_alt:start_on_alt+len(seq)]
                 if var_alt == seq.lower():
                     new_combinations.append(Combination(
                         comb.code+[code+1],
-                        comb.alt_offset+len(seq)-len(variant.ref),
+                        comb.alt_offset+len(seq)-len(p_ref),
                         variant.offset+len(variant.ref)))
 
         combinations = new_combinations
         # assert all(len(t[0]) == j+1 for t in combinations), (j, combinations)
     real = []
     for comb in combinations:
-        if not len(alt_seq)-comb.alt_offset == len(ref_seq):
-            continue
+        # if not len(alt_seq)-comb.alt_offset == len(ref_seq):
+        #     continue
         alt_stub = alt_seq[comb.prev_offset+comb.alt_offset:len(ref_seq)+comb.alt_offset]
-        if not alt_stub == ref_seq[comb.prev_offset:len(ref_seq)]:
+        ref_stub = ref_seq[comb.prev_offset:len(ref_seq)]
+        l = min(len(alt_stub), len(ref_stub))
+        if not alt_stub[:l] == ref_stub[:l]:
             continue
         real.append(comb)
 
@@ -298,6 +301,7 @@ def traverse_variants(alt_seq, ref_seq, variants):
         logging.info(variants)
         logging.info("---->")
         logging.info("%s / %s", real, combinations)
+        print("")
         return ["No Match"]
 
     haplotypes = []
@@ -383,6 +387,7 @@ class Main:
         haplotypes = (h if h is not None else list(range(1136)) for h in haplotypes)
         result_dict = {name: [] for name in peaks_dict}
         for name, result in zip(names, haplotypes):
+            
             result_dict[name].append(result)
         return result_dict
 
@@ -404,6 +409,9 @@ class Main:
         return haplo
 
     def extend_peak_to_reference(self, peak):
+        if peak.region_paths[0] < 0:
+            peak.graph = self.graph
+            peak = peak.get_reverse()
         start_node = peak.region_paths[0]
         end_node = peak.region_paths[-1]
         start_offset = peak.start_position.offset
@@ -414,7 +422,7 @@ class Main:
                 -node for node in self.graph.reverse_adj_list[-start_node]
                 if -node in self.indexed_interval.nodes_in_interval())
             start_offset = self.graph.node_size(start_node)-1
-            rps = [start_node]+rps
+            rps = [start_node] + rps
         if end_node not in self.indexed_interval.nodes_in_interval():
             end_node = max(node for node in self.graph.adj_list[end_node]
                            if node in self.indexed_interval.nodes_in_interval())
