@@ -117,7 +117,7 @@ def get_haplotype_sequence(args):
     main = Main.from_name(name, args.fasta_file, args.chrom)
     intervals = obg.IntervalCollection.from_file(
         args.result_folder+args.chrom+"_" + args.interval_name + ".intervalcollection", True)
-    print(main.get_haplotype_sequence_around_intervals(intervals, args.haplotype))
+    print(main.get_haplo_sequence_around_intervals(intervals, int(args.haplotype)))
 
 
 def check_haplotype(args):
@@ -143,7 +143,6 @@ def check_haplotype(args):
     else:
         peaks_dict = {i: [interval] for i, interval in enumerate(motif_paths)}
         base_name = args.result_folder + args.chrom + "_" + args.interval_name + "_pure"
-
     # peaks_dict = IntervalDict.from_file(args.result_folder + args.chrom + "_motif_reads.intervaldict").intervals
     result_dict = main.run_peak_set(peaks_dict)
     if strict:
