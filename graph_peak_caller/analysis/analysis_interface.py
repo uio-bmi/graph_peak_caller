@@ -125,7 +125,7 @@ def get_overlapping_alignments(args):
     for chrom in args.chromosomes.split(","):
         logging.info("Running on chromosome %s" % chrom)
         graph = obg.Graph.from_file(args.data_folder+chrom+".nobg")
-        base_name = args.result_folder + args.chrom
+        base_name = args.result_folder + chrom
         intervals = PeakCollection.from_file(base_name + "_" + args.interval_name+".intervalcollection", True)
 
         alignment_collection = AlignmentCollection.from_file(
@@ -134,6 +134,7 @@ def get_overlapping_alignments(args):
                       list(UniqueIntervals(
                           alignment_collection.get_alignments_on_interval(interval).values()))
                       for interval in intervals}
+        logging.info("Writing interval dict to file")
         IntervalDict(peaks_dict).to_file(
             base_name + "_" + args.interval_name+"_alignments.intevaldict")
 
