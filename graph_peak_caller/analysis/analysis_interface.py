@@ -135,7 +135,7 @@ def get_overlapping_alignments(args):
 
 
 def check_haplotype(args):
-    dict_filename = args.result_folder + args.chrom + args.intervals_name + ".intervaldict"
+    dict_filename = args.result_folder + args.chrom + args.intervals_name + ".intevaldict"
     interval_dict = IntervalDict.from_file(dict_filename).intervals
     pipeline = obg.tracevariants.pipeline_func_for_chromosome(args.chrom, args.data_folder)
     results = ((peak_id, pipeline(intervals)) for peak_id, intervals in interval_dict.items())
