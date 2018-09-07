@@ -120,6 +120,21 @@ def get_haplotype_sequence(args):
     print(main.get_haplo_sequence_around_intervals(intervals, int(args.haplotype)))
 
 
+def get_overlapping_alignments(args):
+    name = args.data_folder+args.chrom
+    base_name = args.result_folder + args.chrom
+    intervals = PeakCollection.from_file(base_name + "_" + args.interval_name+".interval_collection", True)
+
+    alignment_collection = AlignmentCollection.from_file(
+        args.result_folder + args.chrom + "_alignments.pickle", graph)
+    peaks_dict = {interval.unique_id:
+                  list(UniqueIntervals(
+                      alignment_collection.get_alignments_on_interval(interval).values()))
+                  for interval in intervals}
+    IntervalDict(peaks_dict).to_file(
+        base_name + "_" + args.interval_name+"_alignments.intevaldict")
+
+
 def check_haplotype(args):
     all_reads = args.all_reads == "True" if args.all_reads is not None else True
     strict = args.strict == "True" if args.strict is not None else True
@@ -134,7 +149,7 @@ def check_haplotype(args):
     if all_reads:
         alignment_collection = AlignmentCollection.from_file(
             args.result_folder + args.chrom + "_alignments.pickle", graph)
-        peaks_dict = {i: alignment_collection.get_alignments_on_interval(interval).values()
+        peaks_dict = {i: list(UniqueIntervals(alignment_collection.get_alignments_on_interval(interval).values()))
                       for i, interval in enumerate(motif_paths)}
         IntervalDict(peaks_dict).to_file(
             args.result_folder + args.chrom + args.interval_name + "_reads.intervaldict")

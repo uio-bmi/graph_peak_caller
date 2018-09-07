@@ -13,7 +13,7 @@ FullVariant = namedtuple("FullVariant", ["offset", "ref", "alt", "precence"])
 def find_valid_haplotypes(variants, combination):
     combination = np.asanyarray(combination)
     if not np.any(combination):
-        return np.arange(1024)
+        return np.arange(1136)
     nonzero = np.flatnonzero(combination)
     informative_haplotypes = []
     informative_variants = [variant for i, variant in enumerate(variants)
@@ -384,7 +384,7 @@ class Main:
         alts, refs, intervals = zip(*tuples)
         params = zip(alts, refs, self.vcf.get_variants_from_intervals(intervals))
         haplotypes = (traverse_variants(*param) for param in params)
-        haplotypes = (h if h is not None else list(range(1024)) for h in haplotypes)
+        haplotypes = (h if h is not None else list(range(1136)) for h in haplotypes)
         result_dict = {name: [] for name in peaks_dict}
         for name, result in zip(names, haplotypes):
             
