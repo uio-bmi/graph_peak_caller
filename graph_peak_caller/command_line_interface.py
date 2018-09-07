@@ -362,6 +362,7 @@ interface = \
             'help': 'Check motifs for haplotype',
             'arguments':
                 [
+                    ('data_folder', ''),
                     ('result_folder', ''),
                     ('chrom', ''),
                     ('interval_name', ''),

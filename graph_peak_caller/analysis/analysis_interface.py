@@ -22,7 +22,6 @@ from .util import create_linear_path
 from .genotype_matrix import VariantList
 from .haplotype_finder import Main, VariantPrecence
 
-
 def get_motif_locations(args):
     graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
     peaks = PeakCollection.from_fasta_file(
@@ -121,7 +120,7 @@ def get_haplotype_sequence(args):
 
 
 def get_overlapping_alignments(args):
-    name = args.data_folder+args.chrom
+    graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
     base_name = args.result_folder + args.chrom
     intervals = PeakCollection.from_file(base_name + "_" + args.interval_name+".interval_collection", True)
 
@@ -136,6 +135,16 @@ def get_overlapping_alignments(args):
 
 
 def check_haplotype(args):
+    dict_filename = args.result_folder + args.chrom + args.intervals_name + ".intervaldict"
+    interval_dict = IntervalDict.from_file(dict_filename).intervals
+    pipeline = obg.tracevariants.pipeline_func_for_chromosome(args.chrom, args.data_folder)
+    results = ((peak_id, pipeline(intervals)) for peak_id, intervals in interval_dict.items())
+    with open(args.result_folder + args.chrom + args.intervals_name + "_diplotypes.tsv") as outfile:
+        for result in results:
+            outfile.write("%s\t%s\n" % result)
+
+
+def check_haplotype_old(args):
     all_reads = args.all_reads == "True" if args.all_reads is not None else True
     strict = args.strict == "True" if args.strict is not None else True
     name = args.data_folder+args.chrom
