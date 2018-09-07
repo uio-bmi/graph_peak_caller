@@ -18,6 +18,7 @@ from .motifenrichment import plot_true_positives
 from ..peakfasta import PeakFasta
 from ..mindense import DensePileup
 from ..sparsediffs import SparseValues, SparseDiffs
+from ..intervals import UniqueIntervals
 from .util import create_linear_path
 from .genotype_matrix import VariantList
 from .haplotype_finder import Main, VariantPrecence
@@ -121,10 +122,9 @@ def get_haplotype_sequence(args):
 
 
 def get_overlapping_alignments(args):
-    name = args.data_folder+args.chrom
+    graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
     base_name = args.result_folder + args.chrom
-    intervals = PeakCollection.from_file(base_name + "_" + args.interval_name+".interval_collection", True)
-
+    intervals = PeakCollection.from_file(base_name + "_" + args.interval_name+".intervalcollection", True)
     alignment_collection = AlignmentCollection.from_file(
         args.result_folder + args.chrom + "_alignments.pickle", graph)
     peaks_dict = {interval.unique_id:
