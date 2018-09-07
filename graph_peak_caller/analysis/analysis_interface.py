@@ -121,18 +121,20 @@ def get_haplotype_sequence(args):
 
 
 def get_overlapping_alignments(args):
-    graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
-    base_name = args.result_folder + args.chrom
-    intervals = PeakCollection.from_file(base_name + "_" + args.interval_name+".interval_collection", True)
+    for chrom in args.chromosomes.split(","):
+        logging.info("Running on chromosome %s" % chrom)
+        graph = obg.Graph.from_file(args.data_folder+chrom+".nobg")
+        base_name = args.result_folder + args.chrom
+        intervals = PeakCollection.from_file(base_name + "_" + args.interval_name+".intervalcollection", True)
 
-    alignment_collection = AlignmentCollection.from_file(
-        args.result_folder + args.chrom + "_alignments.pickle", graph)
-    peaks_dict = {interval.unique_id:
-                  list(UniqueIntervals(
-                      alignment_collection.get_alignments_on_interval(interval).values()))
-                  for interval in intervals}
-    IntervalDict(peaks_dict).to_file(
-        base_name + "_" + args.interval_name+"_alignments.intevaldict")
+        alignment_collection = AlignmentCollection.from_file(
+            args.result_folder + args.chrom + "_alignments.pickle", graph)
+        peaks_dict = {interval.unique_id:
+                      list(UniqueIntervals(
+                          alignment_collection.get_alignments_on_interval(interval).values()))
+                      for interval in intervals}
+        IntervalDict(peaks_dict).to_file(
+            base_name + "_" + args.interval_name+"_alignments.intevaldict")
 
 
 def check_haplotype(args):
