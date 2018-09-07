@@ -21,6 +21,7 @@ from ..sparsediffs import SparseValues, SparseDiffs
 from .util import create_linear_path
 from .genotype_matrix import VariantList
 from .haplotype_finder import Main, VariantPrecence
+from graph_peak_caller.intervals import UniqueIntervals
 
 def get_motif_locations(args):
     graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
