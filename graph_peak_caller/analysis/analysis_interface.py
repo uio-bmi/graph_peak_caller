@@ -3,6 +3,7 @@ import logging
 from collections import Counter
 from itertools import chain
 import offsetbasedgraph as obg
+from offsetbasedgraph.tracevariants import pipeline_func_for_chromosome
 import pyvg
 from pyvg.sequences import SequenceRetriever
 from pyvg.alignmentcollection import AlignmentCollection
@@ -140,11 +141,11 @@ def get_overlapping_alignments(args):
 
 
 def check_haplotype(args):
-    dict_filename = args.result_folder + args.chrom + args.intervals_name + ".intevaldict"
+    dict_filename = args.result_folder + args.chrom +"_"+ args.interval_name + ".intevaldict"
     interval_dict = IntervalDict.from_file(dict_filename).intervals
-    pipeline = obg.tracevariants.pipeline_func_for_chromosome(args.chrom, args.data_folder)
+    pipeline = pipeline_func_for_chromosome(args.chrom, args.data_folder)
     results = ((peak_id, pipeline(intervals)) for peak_id, intervals in interval_dict.items())
-    with open(args.result_folder + args.chrom + args.intervals_name + "_diplotypes.tsv") as outfile:
+    with open(args.result_folder + args.chrom + "_"+ args.interval_name + "_diplotypes.tsv", "w") as outfile:
         for result in results:
             outfile.write("%s\t%s\n" % result)
 
