@@ -147,32 +147,38 @@ def _check_haplotype(args, chrom):
     interval_dict = IntervalDict.from_file(dict_filename).intervals
     pipeline = obg.tracevariants.pipeline_func_for_chromosome(chrom, args.data_folder)
     results = ((peak_id, pipeline(intervals)) for peak_id, intervals in interval_dict.items())
-    final_results = []
     with open(args.result_folder + chrom + "_" + args.interval_name + "_diplotypes.tsv", "w") as outfile:
         for result in results:
             outfile.write("%s\t%s\n" % result)
-            final_results.append(result)
-        summary = summarize_results(final_results)
-        outfile.write("# "+",".join(str(c) for c in summary))
-
-    return summary
 
 
 def get_analysis_summaries(args):
-    def parse_results(chrom):
-        filename = args.result_folder + chrom + "_" +  args.interval_name + "_diplotypes.tsv"
-        commands = (line.split("\t")[1] for line in open(filename)
-                    if not line.startswith("#"))
-        results = [eval(command) for command in commands]
+    def get_motif_match_ids(chrom):
+        filename = args.result_folder + "fimo_graph_chr%s/fimo.txt" % chrom
+        return [line.split("\t")[2] for line in open(filename) if
+                not line.startswith("#")]
+
+    def parse_results(chrom, filterfunc=lambda x, y: True):
+        motif_ids = get_motif_match_ids(chrom)
+        filename = args.result_folder + chrom + "_" + args.interval_name + "_diplotypes.tsv"
+        pairs = ((line.split("\t")[0], eval(line.split("\t")[1])) for line in open(filename)
+                 if not line.startswith("#"))
+        results = [result for peak_id, result in pairs if filterfunc(peak_id, motif_ids)]
         summary = summarize_results(results)
         return summary
-    summaries = [parse_results(chrom) for chrom in args.chrom.split(",")]
-    summary = sum(summaries)
-    print(" ".join(str(c) for c in summary))
-    means = summary[1:]/summary[0]
-    print(" ".join(str(c) for c in means))
-    out_file_name = args.result_folder + args.interval_name + "_type_summary.npz"
-    np.savez(out_file_name, summary=means[:5], haplo_hist=means[5:25], diplo_hist=means[25:45])
+
+    def get_summary(filterfunc=lambda x, y: True):
+        summaries = [parse_results(chrom, filterfunc) for chrom in args.chrom.split(",")]
+        summary = sum(summaries)
+        means = summary.copy()
+        means[1:] /= means[0]
+        return means
+
+    for name, func in (("all", lambda x, motif_ids: True), ("motif", lambda peak_id, motif_ids: peak_id in motif_ids)
+                       ("nonmotif", lambda peak_id, motif_ids: peak_id not in motif_ids)):
+        out_file_name = args.result_folder + args.interval_name + "_%s_summary.npz" % name
+        means = get_summary(func)
+        np.savez(out_file_name, summary=means[:6], haplo_hist=means[6:26], diplo_hist=means[26:46])
 
 
 def check_haplotype(args):
