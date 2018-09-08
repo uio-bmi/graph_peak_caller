@@ -174,8 +174,10 @@ def get_analysis_summaries(args):
         means[1:] /= means[0]
         return means
 
-    for name, func in (("all", lambda x, motif_ids: True), ("motif", lambda peak_id, motif_ids: peak_id in motif_ids)
-                       ("nonmotif", lambda peak_id, motif_ids: peak_id not in motif_ids)):
+    pairs = (("all", lambda x, motif_ids: True),
+             ("motif", lambda peak_id, motif_ids: peak_id in motif_ids),
+             ("nonmotif", lambda peak_id, motif_ids: peak_id not in motif_ids))
+    for name, func in pairs:
         out_file_name = args.result_folder + args.interval_name + "_%s_summary.npz" % name
         means = get_summary(func)
         np.savez(out_file_name, summary=means[:6], haplo_hist=means[6:26], diplo_hist=means[26:46])
