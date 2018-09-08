@@ -145,14 +145,34 @@ def _check_haplotype(args, chrom):
     interval_dict = IntervalDict.from_file(dict_filename).intervals
     pipeline = obg.tracevariants.pipeline_func_for_chromosome(chrom, args.data_folder)
     results = ((peak_id, pipeline(intervals)) for peak_id, intervals in interval_dict.items())
+    final_results = []
     with open(args.result_folder + chrom + args.intervals_name + "_diplotypes.tsv") as outfile:
         for result in results:
             outfile.write("%s\t%s\n" % result)
+            final_results.append(result)
+        summary = summarize_results(final_results)
+        outfile.write(",".join(str(c) for c in summary))
+
+    return summary
+
+
+def get_analysis_summaries(args):
+    def parse_results(chrom):
+        filename = args.result_folder + chrom + args.intervals_name + "_diplotypes.tsv"
+        results = [eval(line.split("\t")[1]) for line in open(filename)
+                   if not line.startswith()]
+        summary = summarize_results(results)
+        return summary
+    summaries = [parse_results(chrom) for chrom in args.chrom]
+    sum(summaries)
 
 
 def check_haplotype(args):
-    for chrom in args.chrom.split(","):
-        _check_haplotype(args, chrom)
+    summaries = [_check_haplotype(args, chrom)
+                 for chrom in args.chrom.split(",")]
+    means = summaries[1:]/summaries[0]
+    print(" ".join(str(c) for c in summaries))
+    print(" ".join(str(c) for c in means))
 
 
 def check_haplotype_old(args):
