@@ -3,8 +3,6 @@ import logging
 from collections import Counter
 from itertools import chain
 import offsetbasedgraph as obg
-from offsetbasedgraph.tracevariants import pipeline_func_for_chromosome,\
-    summarize_results, AnalysisResults
 import pyvg
 from pyvg.sequences import SequenceRetriever
 from pyvg.alignmentcollection import AlignmentCollection
@@ -25,6 +23,8 @@ from .util import create_linear_path
 from .genotype_matrix import VariantList
 from .haplotype_finder import Main, VariantPrecence
 from graph_peak_caller.intervals import UniqueIntervals
+from offsetbasedgraph.tracevariants import pipeline_func_for_chromosome,\
+    summarize_results, AnalysisResults
 
 
 def get_motif_locations(args):
@@ -142,38 +142,44 @@ def get_overlapping_alignments(args):
             base_name + "_" + args.interval_name+"_alignments.intevaldict")
 
 
-
 def _check_haplotype(args, chrom):
-    dict_filename = args.result_folder + chrom + args.intervals_name + ".intevaldict"
+    dict_filename = args.result_folder +  chrom + "_" +  args.interval_name + ".intevaldict"
     interval_dict = IntervalDict.from_file(dict_filename).intervals
     pipeline = obg.tracevariants.pipeline_func_for_chromosome(chrom, args.data_folder)
     results = ((peak_id, pipeline(intervals)) for peak_id, intervals in interval_dict.items())
     final_results = []
-    with open(args.result_folder + chrom + "_" + args.intervals_name + "_diplotypes.tsv", "w") as outfile:
+    with open(args.result_folder + chrom + "_" + args.interval_name + "_diplotypes.tsv", "w") as outfile:
         for result in results:
             outfile.write("%s\t%s\n" % result)
             final_results.append(result)
         summary = summarize_results(final_results)
-        outfile.write(",".join(str(c) for c in summary))
+        outfile.write("# "+",".join(str(c) for c in summary))
 
     return summary
 
 
 def get_analysis_summaries(args):
     def parse_results(chrom):
-        filename = args.result_folder + chrom + args.intervals_name + "_diplotypes.tsv"
-        results = [eval(line.split("\t")[1]) for line in open(filename)
-                   if not line.startswith()]
+        filename = args.result_folder + chrom + "_" +  args.interval_name + "_diplotypes.tsv"
+        commands = (line.split("\t")[1] for line in open(filename)
+                    if not line.startswith("#"))
+        results = [eval(command) for command in commands]
         summary = summarize_results(results)
         return summary
-    summaries = [parse_results(chrom) for chrom in args.chrom]
-    sum(summaries)
+    summaries = [parse_results(chrom) for chrom in args.chrom.split(",")]
+    summary = sum(summaries)
+    print(" ".join(str(c) for c in summary))
+    means = summary[1:]/summary[0]
+    print(" ".join(str(c) for c in means))
+    out_file_name = args.result_folder + args.interval_name + "_type_summary.npz"
+    np.savez(out_file_name, summary=means[:5], haplo_hist=means[5:25], diplo_hist=means[25:45])
 
 
 def check_haplotype(args):
     summaries = [_check_haplotype(args, chrom)
                  for chrom in args.chrom.split(",")]
-    means = summaries[1:]/summaries[0]
+    summary = sum(summaries)
+    means = summary[1:]/summary[0]
     print(" ".join(str(c) for c in summaries))
     print(" ".join(str(c) for c in means))
 
