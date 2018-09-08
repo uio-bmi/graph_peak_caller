@@ -25,6 +25,7 @@ from .genotype_matrix import VariantList
 from .haplotype_finder import Main, VariantPrecence
 from graph_peak_caller.intervals import UniqueIntervals
 
+
 def get_motif_locations(args):
     graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
     peaks = PeakCollection.from_fasta_file(
@@ -140,14 +141,20 @@ def get_overlapping_alignments(args):
             base_name + "_" + args.interval_name+"_alignments.intevaldict")
 
 
-def check_haplotype(args):
-    dict_filename = args.result_folder + args.chrom +"_"+ args.interval_name + ".intevaldict"
+
+def _check_haplotype(args, chrom):
+    dict_filename = args.result_folder + chrom + args.intervals_name + ".intevaldict"
     interval_dict = IntervalDict.from_file(dict_filename).intervals
-    pipeline = pipeline_func_for_chromosome(args.chrom, args.data_folder)
+    pipeline = obg.tracevariants.pipeline_func_for_chromosome(chrom, args.data_folder)
     results = ((peak_id, pipeline(intervals)) for peak_id, intervals in interval_dict.items())
-    with open(args.result_folder + args.chrom + "_"+ args.interval_name + "_diplotypes.tsv", "w") as outfile:
+    with open(args.result_folder + chrom + "_" + args.intervals_name + "_diplotypes.tsv") as outfile:
         for result in results:
             outfile.write("%s\t%s\n" % result)
+
+
+def check_haplotype(args):
+    for chrom in args.chrom.split(","):
+        _check_haplotype(args, chrom)
 
 
 def check_haplotype_old(args):
