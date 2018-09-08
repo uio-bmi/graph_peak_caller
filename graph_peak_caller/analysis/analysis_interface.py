@@ -176,12 +176,8 @@ def get_analysis_summaries(args):
 
 
 def check_haplotype(args):
-    summaries = [_check_haplotype(args, chrom)
-                 for chrom in args.chrom.split(",")]
-    summary = sum(summaries)
-    means = summary[1:]/summary[0]
-    print(" ".join(str(c) for c in summaries))
-    print(" ".join(str(c) for c in means))
+    [_check_haplotype(args, chrom) for chrom in args.chrom.split(",")]
+    get_analysis_summaries(args)
 
 
 def check_haplotype_old(args):
