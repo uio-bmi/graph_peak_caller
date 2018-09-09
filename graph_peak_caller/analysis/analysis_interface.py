@@ -153,6 +153,7 @@ def _check_haplotype(args, chrom):
 
 
 def get_analysis_summaries(args):
+    nbins = 100
     def get_motif_match_ids(chrom):
         filename = args.result_folder + "fimo_graph_chr%s/fimo.txt" % chrom
         return [line.split("\t")[2] for line in open(filename) if
@@ -164,7 +165,7 @@ def get_analysis_summaries(args):
         pairs = ((line.split("\t")[0], eval(line.split("\t")[1])) for line in open(filename)
                  if not line.startswith("#"))
         results = [result for peak_id, result in pairs if filterfunc(peak_id, motif_ids)]
-        summary = summarize_results(results)
+        summary = summarize_results(results, nbins)
         return summary
 
     def get_summary(filterfunc=lambda x, y: True):
@@ -180,8 +181,7 @@ def get_analysis_summaries(args):
     for name, func in pairs:
         out_file_name = args.result_folder + args.interval_name + "_%s_summary.npz" % name
         means = get_summary(func)
-        np.savez(out_file_name, summary=means[:6], haplo_hist=means[6:26], diplo_hist=means[26:46])
-
+        np.savez(out_file_name, summary=means[:6], haplo_hist=means[6:(nbins+6)], diplo_hist=means[nbins+6:2*nbins+6])
 
 def check_haplotype(args):
     [_check_haplotype(args, chrom) for chrom in args.chrom.split(",")]

@@ -20,7 +20,7 @@ if __name__ == "__main__":
     paths = sys.argv[1].split(",")
     for path in paths:
         plot(path)
-    plt.xlabel("Ratio of reads covered by haplotype")
+    plt.xlabel("Ratio of reads covered by diplotypes threshold")
     plt.ylabel("Motif match percentage")
     plt.legend()
 
