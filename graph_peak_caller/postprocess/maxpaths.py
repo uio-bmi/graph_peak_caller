@@ -21,10 +21,11 @@ class SparseMaxPaths:
         self.reference_mask = None
         if reference_path is not None:
             logging.info("Creating reference mask")
-            nodes_in_linear = np.array(reference_path.nodes_in_interval()) - graph.min_node
+            nodes_in_linear = np.array(list(reference_path.nodes_in_interval())) - graph.blocks.node_id_offset
             reference_mask = np.zeros_like(self._graph.blocks._array, dtype=bool)
             reference_mask[nodes_in_linear] = True
             self.reference_mask = reference_mask
+            logging.info("Done creating reference mask")
         else:
             logging.info("Not creating reference mask")
 
@@ -71,7 +72,7 @@ class SparseMaxPaths:
         if self.reference_mask is not None:
             logging.info("Using reference mask when finding max paths to choose path when ambiguous")
             for node_ids, scores in scored_segments:
-                is_reference = self.reference_mask[node_ids]
+                is_reference = self.reference_mask[node_ids.astype(int)]
                 scores *= 2
                 scores[is_reference] += 1
         else:
