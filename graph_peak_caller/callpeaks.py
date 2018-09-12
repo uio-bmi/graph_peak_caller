@@ -98,13 +98,14 @@ class CallPeaks(object):
         self.q_values_pileup.track_size = self.p_values_pileup.track_size
         self._reporter.add("qvalues", self.q_values_pileup)
 
-    def call_peaks_from_q_values(self):
+    def call_peaks_from_q_values(self, linear_path=None):
         assert self.q_values_pileup is not None
         caller = CallPeaksFromQvalues(
             self.graph, self.q_values_pileup,
             self.config, self._reporter,
             touched_nodes=self.touched_nodes,
-            config=self.config
+            config=self.config,
+            linear_path=linear_path
             )
         caller.callpeaks()
         self.max_path_peaks = caller.max_paths
@@ -124,7 +125,7 @@ class CallPeaksFromQvalues:
     def __init__(self, graph, q_values_pileup,
                  experiment_info, reporter,
                  cutoff=0.1, raw_pileup=None, touched_nodes=None,
-                 config=None, q_values_max_path=False):
+                 config=None, q_values_max_path=False, linear_path=None):
 
         self.graph = graph
         self.q_values = q_values_pileup
@@ -135,6 +136,7 @@ class CallPeaksFromQvalues:
         self.save_tmp_results_to_file = False
         self.graph_is_partially_ordered = False
         self.q_values_max_path = q_values_max_path
+        self.linear_path = linear_path
 
         if config is not None:
             self.cutoff = config.q_values_threshold
@@ -173,7 +175,7 @@ class CallPeaksFromQvalues:
         assert(self.graph.uses_numpy_backend)
         logging.info("Running Sparse Max Paths")
         max_paths, sub_graphs = SparseMaxPaths(
-            self.filtered_peaks, self.graph, _pileup).run()
+            self.filtered_peaks, self.graph, _pileup, self.linear_path).run()
 
         self._reporter.add("all_max_paths", max_paths)
         logging.info("All max paths found")

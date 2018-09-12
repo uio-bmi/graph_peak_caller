@@ -8,7 +8,7 @@ from .graphs import PosDividedLineGraph, SubGraph
 
 
 class SparseMaxPaths:
-    def __init__(self, sparse_values, graph, score_pileup):
+    def __init__(self, sparse_values, graph, score_pileup, reference_path=None):
         self._node_indexes = graph.node_indexes
         self._sparse_values = sparse_values
         self._graph = graph
@@ -17,6 +17,16 @@ class SparseMaxPaths:
         self._node_ids = self.get_node_ids()
         self._analyzer = SegmentSplitter(self._segments, self._node_ids,
                                          graph.node_indexes)
+
+        self.reference_mask = None
+        if reference_path is not None:
+            logging.info("Creating reference mask")
+            nodes_in_linear = np.array(reference_path.nodes_in_interval()) - graph.min_node
+            reference_mask = np.zeros_like(self._graph.blocks._array, dtype=bool)
+            reference_mask[nodes_in_linear] = True
+            self.reference_mask = reference_mask
+        else:
+            logging.info("Not creating reference mask")
 
     def _handle_internal(self, mask):
         ids = self._analyzer._internal_ids[:, 0][mask]
@@ -57,6 +67,15 @@ class SparseMaxPaths:
                                         self._analyzer.start_mask,
                                         self._analyzer.end_mask,
                                         self._analyzer.full_mask]]
+
+        if self.reference_mask is not None:
+            logging.info("Using reference mask when finding max paths to choose path when ambiguous")
+            for node_ids, scores in scored_segments:
+                is_reference = self.reference_mask[node_ids]
+                scores *= 2
+                scores[is_reference] += 1
+        else:
+            logging.info("Not using reference mask when finding max paths")
 
         self._handle_internal(self._analyzer.internal_mask)
         linegraph = PosDividedLineGraph(scored_segments[2],
