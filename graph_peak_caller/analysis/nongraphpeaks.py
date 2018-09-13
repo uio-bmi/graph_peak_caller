@@ -75,7 +75,7 @@ class NonGraphPeakCollection(object):
         peaks = []
         f = open(file_name)
         for line in f:
-            if line.startswith("#"):
+            if line.startswith("#") or line.startswith("track"):
                 continue
             peak = line.split()
             chrom = peak[0]
