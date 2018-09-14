@@ -24,7 +24,7 @@ def max_path_func(pileup, graph, variant_maps):
 
         node_ids = node_ids-graph.min_node
         non_variants = node_ids[not_variant[node_ids]]
-        start = np.min(non_variants)
+        start = np.min(non_variants) if len(non_variants) else np.min(node_ids)
         cur_node = start+graph.min_node
         path = []
         while True:
