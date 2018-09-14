@@ -294,11 +294,23 @@ class PosDividedLineGraph(DividedLinegraph):
         n_components, connected_components = csgraph.connected_components(
             self._matrix[:self.end_stub, :self.end_stub])
         logging.info("Found %s components", n_components)
+        
         # args = np.argsort(connected_components)
         # diffs = np.r_[-1, np.flatnonzero(np.diff(connected_components[args]), args.size-1]
         # component_dict = {i+1: args[diffs[i]+1:diffs[i+1]+1 for i in range(0, len(diffs)-1)}}
         # component_dict[0] = args[:diffs[0]]
-        return {comp: np.flatnonzero(connected_components == comp) for comp in range(n_components)}
+        components = []
+        subgraphs = []
+        for comp in range(n_components):
+            idxs = np.flatnonzero(connected_components == comp)
+            subgraph = -self._matrix[idxs][:, idxs]
+            subgraph.data = subgraph.data + 1
+            components.append(idxs)
+            subgraphs.append(subgraph)
+        return components, subgraphs
+    # return {comp: np.flatnonzero(connected_components == comp) for comp in range(n_components)}
+    # subgraph = -self._matrix[idxs][:, idxs]
+    # subgraph.data = subgraph.data + 1
 
                 
 
