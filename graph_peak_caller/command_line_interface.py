@@ -292,7 +292,8 @@ interface = \
                     ('chromosomes', 'Comma seaparated list of chromosomes to use'),
                     ('results_dir', 'Directory of result files (should contain fasta files from both linear and graph peak calling'),
                     ('graphs_dir', 'Dir containing obg graphs on form 1.nobg, 2.nobg, ... and vg graphs 1.json, 2.json, ...'),
-                    ('out_file', 'Out file base name (file endings for different formats will be appended)')
+                    ('out_file', 'Out file base name (file endings for different formats will be appended)'),
+                    ('-f/--use_graph_fasta', 'Optional. Specify fasta file to use for graph, format file_[chrom].fasta, where [chrom] will be replaced')               
                 ],
             'method': analyse_peaks_whole_genome
         },
