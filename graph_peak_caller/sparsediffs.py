@@ -75,7 +75,6 @@ class SparseValues:
             pileup = pileup.astype("bool")
         return pileup
 
-
     @classmethod
     def from_dense_pileup(cls, pileup):
         changes = pileup[1:] != pileup[:-1]
@@ -140,7 +139,6 @@ class SparseDiffs:
         diffs = self._diffs[args]
         values = np.cumsum(diffs)
         return SparseValues(self._indices[args], values, sanitize=True)
-
 
     def maximum(self, other):
         all_indices = np.r_[self._indices, other._indices]
