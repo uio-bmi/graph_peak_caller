@@ -72,7 +72,6 @@ class SparseMaxPaths:
         get_max_path = max_path_func(self._score_pileup, self._graph, self._variant_maps)
         max_paths = []
         for i, component in enumerate(components.values()):
-            print("#", component)
             if i % 100 == 0:
                 print("path: ", i)
             max_paths.append(get_max_path(component))
@@ -103,10 +102,6 @@ class SparseMaxPaths:
 
 
         paths, infos, subgraphs = linegraph.max_paths()
-        for path in paths:
-            for node_id in path:
-                if self._insertion_map[node_id-1]:
-                    print(node_id-1)
         converted = self._convert_paths(paths, infos)
         small_subgraphs = [
             SubGraph(path.region_paths,
@@ -140,18 +135,13 @@ class SparseMaxPaths:
 
     def _convert_connected_components(self, node_dict):
         reverse_map = self._get_reverse_map()
-        print("MAP:", reverse_map)
-        print("NODE_IDS:", self._analyzer._internal_ids[:, 0])
         return {key: self._convert_node_ids(node_ids, reverse_map)
                 for key, node_ids in node_dict.items()}
 
     def _convert_node_ids(self, raw_node_ids, reverse_map):
-        print("RAW:", raw_node_ids)
         idxs = reverse_map[raw_node_ids]
-        print("IDXS:", idxs)
         node_ids = self._analyzer._internal_ids[:, 0]
-        node_ids = node_ids[idxs]
-        print("NODE_IDS:", node_ids)
+        node_ids = node_ids[idxs]+self._graph.min_node-1
         return node_ids
 
     def get_segment_scores(self):
