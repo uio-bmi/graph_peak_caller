@@ -231,7 +231,7 @@ do
     	echo "Peaks already called for $chromosome. Not calling"
     elif [ -f ${chromosome}_pvalues_values.npy ]; then
         graph_peak_caller callpeaks_whole_genome_from_p_values $chromosome \
-            -d $graph_dir -f $fragment_length -r $read_length > log_after_p_values_$chromosome.txt 2>&1 &
+            -v $graph_dir -d $graph_dir -f $fragment_length -r $read_length > log_after_p_values_$chromosome.txt 2>&1 &
 	echo "Peak calling from p-values for chr $chromosome started as process. Log will be written to $work_dir/log_after_p_values_$chromosome.txt"
     else
         echo "P values not computed for $chromosome. Will not call peaks now."
