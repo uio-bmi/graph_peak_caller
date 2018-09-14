@@ -22,23 +22,25 @@ class SparseMaxPaths:
         if reference_path is not None:
             logging.info("Creating reference mask")
             nodes_in_linear = reference_path.nodes_in_interval()
+            to_remove = set()
             logging.info("N nodes before insertion removal: %d" % len(nodes_in_linear))
             # Remove insertions
             for node in nodes_in_linear:
+                assert node in self._graph.blocks, node
                 is_insertion = False
                 for prev in self._graph.reverse_adj_list[-node]:
                     if -prev in nodes_in_linear:
                         # Check if -prev has a next on linear
-                        for next in self._graph.adj_list[-prev]:
-                            if next != node and next in nodes_in_linear:
+                        for next_node in self._graph.adj_list[-prev]:
+                            if next_node != node and next_node in nodes_in_linear:
                                 is_insertion = True
                                 break
                         break
 
                 if is_insertion:
-                    nodes_in_linear.remove(node)
-                    logging.info("Removed insertion node %d" % node)
+                    to_remove.add(node)
 
+            nodes_in_linear = nodes_in_linear - to_remove
             logging.info("N nodes after insertion removal: %d" % len(nodes_in_linear))
 
             nodes_in_linear = np.array(list(nodes_in_linear)) - graph.blocks.node_id_offset

@@ -17,11 +17,11 @@ class HtmlReportGenerator:
         <tr>
             <td>%s</td>
             <td>%d</td>
-            <td>%d (%d)</td>
-            <td>%d (%d)</td>
+            <td>%d (%d) = %.3f </td>
+            <td>%d (%d) = %.3f</td>
             <td>%d</td>
-            <td>%d (%d)</td>
-            <td>%d (%d)</td>
+            <td>%d (%d) = %.3f</td>
+            <td>%d (%d) = %.3f</td>
             <td>%.2f</td>
             <td>%.2f</td>
             <td>%.4f</td>
@@ -41,13 +41,17 @@ class HtmlReportGenerator:
                analysis_result.tot_peaks1,
                analysis_result.peaks1_in_peaks2,
                analysis_result.peaks1_in_peaks2_matching_motif,
+               100 * analysis_result.peaks1_in_peaks2_matching_motif / analysis_result.peaks1_in_peaks2,
                analysis_result.peaks1_not_in_peaks2,
                analysis_result.peaks1_not_in_peaks2_matching_motif,
+               100 * analysis_result.peaks1_not_in_peaks2_matching_motif / analysis_result.peaks1_not_in_peaks2,
                analysis_result.tot_peaks2,
                analysis_result.peaks2_in_peaks1,
                analysis_result.peaks2_in_peaks1_matching_motif,
+               100 * analysis_result.peaks2_in_peaks1_matching_motif / analysis_result.peaks2_in_peaks1,
                analysis_result.peaks2_not_in_peaks1,
                analysis_result.peaks2_not_in_peaks1_matching_motif,
+               100 * analysis_result.peaks2_not_in_peaks1_matching_motif / analysis_result.peaks2_not_in_peaks1,
                np.mean(analysis_result.peaks1_in_peaks2_bp_not_on_linear),
                np.mean(analysis_result.peaks1_not_in_peaks2_bp_not_on_linear),
                analysis_result.peaks1_total_nodes / analysis_result.peaks1_total_basepairs,
@@ -67,7 +71,7 @@ class HtmlReportGenerator:
     def _create_report_table(self):
         self.html += """
         <table class='table' style='margin-top: 40px;'>
-            <h3>Overview of peaks found</h3>
+            <h3>Overview of peaks found.</h3>
             <thead>
                 <tr>
                     <th></th>
@@ -106,7 +110,7 @@ class HtmlReportGenerator:
             self._write_table_row(tf, results)
             summed_results += results
 
-        #self._write_table_row("SUM", summed_results)
+        self._write_table_row("SUM", summed_results)
 
         self.html += "</table>"
 

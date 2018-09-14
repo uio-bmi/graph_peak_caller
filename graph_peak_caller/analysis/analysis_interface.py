@@ -382,6 +382,7 @@ def get_summits(args):
 
 def analyse_peaks_whole_genome(args):
     chromosomes = args.chromosomes.split(",")
+    from graph_peak_caller.analysis.peakscomparer import AnalysisResults
     results = AnalysisResults()
     for chrom in chromosomes:
         graph = obg.GraphWithReversals.from_numpy_file(
@@ -399,11 +400,16 @@ def analyse_peaks_whole_genome(args):
         #except FileNotFoundError:
         #    logging.warning("Did not find alignment collection. Will analyse without")
         #    alignments = None
-
+        
+        if args.use_graph_fasta is not None:
+            graph_fasta = args.use_graph_fasta.replace("[chrom]", chrom)
+        else:
+            graph_fasta = "%s_sequences_summits.fasta" % chrom
+        
         analyser = PeaksComparerV2(
             graph,
             args.results_dir + "macs_sequences_chr%s_summits.fasta" % chrom,
-            args.results_dir + "%s_sequences_summits.fasta" % chrom,
+            args.results_dir + graph_fasta,
             args.results_dir + "/fimo_macs_chr%s/fimo.txt" % chrom,
             args.results_dir + "/fimo_graph_chr%s/fimo.txt" % chrom,
             linear_path,
