@@ -5,7 +5,6 @@ from scipy.sparse import csr_matrix
 from .segmentanalyzer import SegmentSplitter
 from ..peakcollection import Peak
 from .graphs import PosDividedLineGraph, SubGraph
-from .indel_scores import find_invalid_insertions
 from .reference_based_max_path import max_path_func
 
 
@@ -22,43 +21,6 @@ class SparseMaxPaths:
 
         if variant_maps is not None:
             self._variant_maps = variant_maps
-        # if reference_path is not None and variant_maps is not None:
-        #     self._invalid_insertions = find_invalid_insertions(score_pileup, variant_maps.insertions, graph, reference_path)
-        #     self._insertion_map = variant_maps.insertions
-        #     self._reference_path = reference_path
-        #     
-        # else:
-        #     self._invalid_insertions = None
-        # self.reference_mask = None
-        # if reference_path is not None:
-        #     logging.info("Creating reference mask")
-        #     nodes_in_linear = reference_path.nodes_in_interval()
-        #     logging.info("N nodes before insertion removal: %d" % len(nodes_in_linear))
-        #     # Remove insertions
-        #     for node in nodes_in_linear:
-        #         is_insertion = False
-        #         for prev in self._graph.reverse_adj_list[-node]:
-        #             if -prev in nodes_in_linear:
-        #                 # Check if -prev has a next on linear
-        #                 for next in self._graph.adj_list[-prev]:
-        #                     if next != node and next in nodes_in_linear:
-        #                         is_insertion = True
-        #                         break
-        #                 break
-        # 
-        #         if is_insertion:
-        #             nodes_in_linear.remove(node)
-        #             logging.info("Removed insertion node %d" % node)
-        # 
-        #     logging.info("N nodes after insertion removal: %d" % len(nodes_in_linear))
-        #     
-        #     nodes_in_linear = np.array(list(nodes_in_linear)) - graph.blocks.node_id_offset
-        #     reference_mask = np.zeros_like(self._graph.blocks._array, dtype=bool)
-        #     reference_mask[nodes_in_linear] = True
-        #     self.reference_mask = reference_mask
-        #     logging.info("Done creating reference mask")
-        # else:
-        #     logging.info("Not creating reference mask")
 
     def _handle_internal(self, mask):
         ids = self._analyzer._internal_ids[:, 0][mask]
@@ -100,22 +62,6 @@ class SparseMaxPaths:
                                         self._analyzer.end_mask,
                                         self._analyzer.full_mask]]
 
-        # if self.reference_mask is not None:
-        #     logging.info("Using reference mask when finding max paths to choose path when ambiguous")
-        #     for node_ids, scores in scored_segments:
-        #         is_reference = self.reference_mask[node_ids.astype(int)]
-        #         scores *= 2
-        #         scores[is_reference] += 1
-        # else:
-        #     logging.info("Not using reference mask when finding max paths")
-
-        if self._invalid_insertions is not None:
-            for node_ids, scores in scored_segments:
-                print("------------")
-                print(self._invalid_insertions[node_ids.astype(int)-1])
-                print(scores[self._invalid_insertions[node_ids.astype(int)-1]])
-                scores[self._invalid_insertions[node_ids.astype(int)-1]] = 0
-
         self._handle_internal(self._analyzer.internal_mask)
         linegraph = PosDividedLineGraph(scored_segments[2],
                                         scored_segments[3],
@@ -126,11 +72,12 @@ class SparseMaxPaths:
         get_max_path = max_path_func(self._score_pileup, self._graph, self._variant_maps)
         max_paths = []
         for i, component in enumerate(components.values()):
+            print("#", component)
             if i % 100 == 0:
                 print("path: ", i)
             max_paths.append(get_max_path(component))
-        start_nodes = np.array([max_path[0] for max_path in max_paths])-self._graph.min_node
-        end_nodes = np.array([max_path[-1] for max_path in max_paths])-self._graph.min_node
+        start_nodes = np.array([max_path[0] for max_path in max_paths]) - self._graph.min_node
+        end_nodes = np.array([max_path[-1] for max_path in max_paths]) - self._graph.min_node
 
         start_args = np.digitize(self._graph.node_indexes[start_nodes+1],
                                  self._sparse_values.indices, right=True)-1
@@ -192,15 +139,19 @@ class SparseMaxPaths:
         return Peak(start_offset, end_offset, list(node_ids + self._graph.min_node-1), self._graph)
 
     def _convert_connected_components(self, node_dict):
-        reverse_map= self._get_reverse_map()
+        reverse_map = self._get_reverse_map()
+        print("MAP:", reverse_map)
+        print("NODE_IDS:", self._analyzer._internal_ids[:, 0])
         return {key: self._convert_node_ids(node_ids, reverse_map)
                 for key, node_ids in node_dict.items()}
 
-
-    def _convert_node_ids(self,raw_node_ids, reverse_map):
+    def _convert_node_ids(self, raw_node_ids, reverse_map):
+        print("RAW:", raw_node_ids)
         idxs = reverse_map[raw_node_ids]
+        print("IDXS:", idxs)
         node_ids = self._analyzer._internal_ids[:, 0]
         node_ids = node_ids[idxs]
+        print("NODE_IDS:", node_ids)
         return node_ids
 
     def get_segment_scores(self):
