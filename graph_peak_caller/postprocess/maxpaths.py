@@ -67,11 +67,13 @@ class SparseMaxPaths:
                                         scored_segments[3],
                                         scored_segments[1],
                                         self._graph)
-        components = linegraph.get_connected_components()
+        components, subgraphs = linegraph.get_connected_components()
         components = self._convert_connected_components(components)
+        subgraphs = [SubGraph(*pair) for pair in zip(components, subgraphs)]
+
         get_max_path = max_path_func(self._score_pileup, self._graph, self._variant_maps)
         max_paths = []
-        for i, component in enumerate(components.values()):
+        for i, component in enumerate(components):
             if i % 100 == 0:
                 print("path: ", i)
             max_paths.append(get_max_path(component))
@@ -81,33 +83,12 @@ class SparseMaxPaths:
         start_args = np.digitize(self._graph.node_indexes[start_nodes+1],
                                  self._sparse_values.indices, right=True)-1
         start_offset = np.maximum(0, self._sparse_values.indices[start_args]-self._graph.node_indexes[start_nodes])
-        # prev_indexes = self._sparse_values.indices[start_args-1]
-        # node_indexes = self._graph.node_indexes[start_nodes]
-        # start_offset = np.where(prev_indexes >= node_indexes, prev_indexes-node_indexes, 0)
-
         end_args = np.digitize(self._graph.node_indexes[end_nodes], self._sparse_values.indices)-1
         next_indexes = self._sparse_values.indices[end_args+1]
         end_offset = np.minimum(next_indexes, self._graph.node_indexes[end_nodes+1])-self._graph.node_indexes[end_nodes]        
-        # max_paths = [get_max_paths(component) for component in components.values()]
-        s = SubGraph([], csr_matrix(([], ([], [])), shape=(1, 1)))
         peaks = [Peak(start, end, path, graph=self._graph) for path, start, end in
                  zip(max_paths, start_offset, end_offset)]
-        return peaks, [s]*len(max_paths)
-
-        for i in range(10):
-            print(components[i])
-            print("PATH:", get_max_path(components[i]))
-            
-        exit()
-
-
-        paths, infos, subgraphs = linegraph.max_paths()
-        converted = self._convert_paths(paths, infos)
-        small_subgraphs = [
-            SubGraph(path.region_paths,
-                     csr_matrix(([], ([], [])), shape=(1, 1)))
-            for path in self.internal_paths]
-        return converted+self.internal_paths, subgraphs+small_subgraphs
+        return peaks, subgraphs
 
     def _get_reverse_map(self):
         return np.concatenate(
@@ -133,10 +114,9 @@ class SparseMaxPaths:
         end_offset = self._segments[idxs[-1], 1] - self._node_indexes[node_ids[-1]-1]
         return Peak(start_offset, end_offset, list(node_ids + self._graph.min_node-1), self._graph)
 
-    def _convert_connected_components(self, node_dict):
+    def _convert_connected_components(self, nodes_list):
         reverse_map = self._get_reverse_map()
-        return {key: self._convert_node_ids(node_ids, reverse_map)
-                for key, node_ids in node_dict.items()}
+        return [self._convert_node_ids(node_ids, reverse_map) for node_ids in nodes_list]
 
     def _convert_node_ids(self, raw_node_ids, reverse_map):
         idxs = reverse_map[raw_node_ids]
