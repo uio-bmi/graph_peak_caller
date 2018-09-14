@@ -20,7 +20,10 @@ class SparseMaxPaths:
                                          graph.node_indexes)
 
         if variant_maps is not None:
+            logging.info("Will use variant maps when finding max paths")
             self._variant_maps = variant_maps
+        else:
+            logging.info("Not using variant maps when finding max path")
 
     def _handle_internal(self, mask):
         ids = self._analyzer._internal_ids[:, 0][mask]

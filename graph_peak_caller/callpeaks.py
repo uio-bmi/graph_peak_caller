@@ -35,13 +35,14 @@ class Configuration:
 
 class CallPeaks(object):
 
-    def __init__(self, graph, config, reporter):
+    def __init__(self, graph, config, reporter, variant_maps=None):
         self.graph = graph
         self.config = config
         assert self.config.fragment_length > self.config.read_length, \
             "Read length %d is larger than fragment size" % (self.config.read_length)
         self.info = config
         self._reporter = reporter
+        self.variant_maps = variant_maps
 
     def run_pre_callpeaks(self, input_reads, control_reads):
         try:
@@ -105,7 +106,8 @@ class CallPeaks(object):
             self.config, self._reporter,
             touched_nodes=self.touched_nodes,
             config=self.config,
-            linear_path=linear_path
+            linear_path=linear_path,
+            variant_maps=self.variant_maps
             )
         caller.callpeaks()
         self.max_path_peaks = caller.max_paths
@@ -114,7 +116,7 @@ class CallPeaks(object):
         self.run_to_p_values(input_intervals, control_intervals)
         self.get_p_to_q_values_mapping()
         self.get_q_values()
-        self.call_peaks_from_q_values()
+        self.call_peaks_from_q_values(variant_maps=self.variant_maps)
 
     def run_to_p_values(self, input_intervals, control_intervals):
         self.run_pre_callpeaks(input_intervals, control_intervals)
@@ -125,7 +127,7 @@ class CallPeaksFromQvalues:
     def __init__(self, graph, q_values_pileup,
                  experiment_info, reporter,
                  cutoff=0.1, raw_pileup=None, touched_nodes=None,
-                 config=None, q_values_max_path=False, linear_path=None):
+                 config=None, q_values_max_path=False, linear_path=None, variant_maps=None):
 
         self.graph = graph
         self.q_values = q_values_pileup
@@ -137,6 +139,7 @@ class CallPeaksFromQvalues:
         self.graph_is_partially_ordered = False
         self.q_values_max_path = q_values_max_path
         self.linear_path = linear_path
+        self.variant_maps = variant_maps
 
         if config is not None:
             self.cutoff = config.q_values_threshold
@@ -175,7 +178,7 @@ class CallPeaksFromQvalues:
         assert(self.graph.uses_numpy_backend)
         logging.info("Running Sparse Max Paths")
         max_paths, sub_graphs = SparseMaxPaths(
-            self.filtered_peaks, self.graph, _pileup, self.linear_path).run()
+            self.filtered_peaks, self.graph, _pileup, self.linear_path, self.variant_maps).run()
 
         self._reporter.add("all_max_paths", max_paths)
         logging.info("All max paths found")

@@ -167,6 +167,9 @@ interface = \
                     ('-f/--fragment_length', ''),
                     ('-r/--read_length', ''),
                     ('-q/--q_threshold', 'Optional. q-value threshold. Default is 0.05.'),
+                    ('-v/--variant_maps_path', 'Optional. Path where variant maps are stored. '
+                                               'If set, variant maps will be used to try to improve max paths '
+                                               'through subgraphs (better handling of insertions and deletions)')
                 ],
             'method': run_callpeaks_whole_genome_from_p_values
         },
