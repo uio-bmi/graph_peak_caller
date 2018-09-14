@@ -382,6 +382,7 @@ def get_summits(args):
 
 def analyse_peaks_whole_genome(args):
     chromosomes = args.chromosomes.split(",")
+    from graph_peak_caller.analysis.peakscomparer import AnalysisResults
     results = AnalysisResults()
     for chrom in chromosomes:
         graph = obg.GraphWithReversals.from_numpy_file(
