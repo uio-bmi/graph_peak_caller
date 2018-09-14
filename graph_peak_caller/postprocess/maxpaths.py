@@ -24,6 +24,7 @@ class SparseMaxPaths:
             nodes_in_linear = reference_path.nodes_in_interval()
             logging.info("N nodes before insertion removal: %d" % len(nodes_in_linear))
             # Remove insertions
+            i = 0
             for node in nodes_in_linear:
                 is_insertion = False
                 for prev in self._graph.reverse_adj_list[-node]:

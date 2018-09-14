@@ -21,7 +21,7 @@ from graph_peak_caller.callpeaks_interface import \
 from graph_peak_caller.analysis.analysis_interface import analyse_peaks_whole_genome,\
     analyse_peaks, peaks_to_fasta, linear_peaks_to_fasta,\
     analyse_manually_classified_peaks, differential_expression,\
-    plot_motif_enrichment, get_summits, peaks_to_linear, move_linear_reads_to_graph,\
+    plot_motif_enrichment, get_summits, get_super_summits, peaks_to_linear, move_linear_reads_to_graph,\
     find_linear_path, concatenate_sequence_files, check_haplotype, get_motif_locations,\
     get_haplotype_sequence, get_overlapping_alignments, get_analysis_summaries
 
@@ -453,6 +453,21 @@ interface = \
                                     'from summit to include. Default is 60.')
                 ],
             'method': get_summits
+        },
+    'get_super_summits':
+        {
+            'help': 'Get summit around peaks. Will write to a new file, using input file base name + _summits.fasta',
+            'requires_graph': True,
+            'arguments':
+                [
+                    ('linear_ref', 'Fasta file containing graph peaks.'),
+                    ('peaks_fasta_file', 'Fasta file containing graph peaks.'),
+                    ('q_values_base_name', 'Base file name of q values from running '
+                                           'the peak caller. Will be peak caller output base name + _qvalues'),
+                    ('window_size', 'Optional. Number of basepairs to each side '
+                                    'from summit to include. Default is 60.'),
+                ],
+            'method': get_super_summits
         },
     'project_vg_alignments':
         {

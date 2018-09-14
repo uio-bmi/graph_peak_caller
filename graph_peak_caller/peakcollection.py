@@ -91,6 +91,19 @@ class Peak(obg.DirectedInterval):
 class PeakCollection(obg.IntervalCollection):
     interval_class = Peak
 
+    def cut_around_summit_super(self, q_values, linear_ref, n_base_pairs_around=60):
+
+        def get_super_summit(peak, linear_ref):
+            peak_qvalues = q_values.get_interval_values(peak)
+            max_positions = np.flatnonzero(peak_qvalues == np.max(peak_qvalues))
+            summit_position = np.partition(max_positions, max_positions.size//2)[max_positions.size//2]
+            return peak.get_superinterval(summit_position, n_base_pairs_around, linear_ref)
+
+        self.intervals = [get_super_summit(peak, linear_ref) for peak in self.intervals]
+        for peak in self.intervals:
+            assert peak.length() <= n_base_pairs_around * 2
+
+
     def cut_around_summit(self, q_values, n_base_pairs_around=60):
         def get_summit(peak):
             peak_qvalues = q_values.get_interval_values(peak)
@@ -99,6 +112,7 @@ class PeakCollection(obg.IntervalCollection):
             return peak.get_subinterval(
                 max(0, summit_position - n_base_pairs_around),
                 min(summit_position + n_base_pairs_around, peak.length()))
+
 
         def get_summit_fancy(peak):
             peak_qvalues = q_values.get_interval_values(peak)

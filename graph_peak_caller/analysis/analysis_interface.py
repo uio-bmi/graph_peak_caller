@@ -379,6 +379,28 @@ def get_summits(args):
     peaks.to_fasta_file(out_file_name, args.sequence_graph)
     logging.info("Wrote summits to " + out_file_name)
 
+def get_super_summits(args):
+    graph = args.graph
+    qvalues = SparseDiffs.from_sparse_files(args.q_values_base_name)
+    #qvalues = SparseValues.from_sparse_files(args.q_values_base_name)
+    dense_qvalues = qvalues.to_dense_pileup(size=graph.number_of_basepairs())
+    qvalues = DensePileup(graph, dense_qvalues)
+    logging.info("Q values fetched")
+    peaks = PeakCollection.from_fasta_file(args.peaks_fasta_file, graph)
+
+    if args.window_size is not None:
+        window = int(args.window_size)
+    else:
+        window = 60
+        logging.warning("Using default window size %d when cutting peaks around summits." % window)
+
+    from offsetbasedgraph import NumpyIndexedInterval
+    linear_ref = NumpyIndexedInterval.from_file(args.linear_ref)
+    peaks.cut_around_summit_super(qvalues, linear_ref, n_base_pairs_around=window)
+    out_file_name = args.peaks_fasta_file.split(".")[0] + "_summits.fasta"
+    peaks.to_fasta_file(out_file_name, args.sequence_graph)
+    logging.info("Wrote summits to " + out_file_name)
+
 
 def analyse_peaks_whole_genome(args):
     chromosomes = args.chromosomes.split(",")
