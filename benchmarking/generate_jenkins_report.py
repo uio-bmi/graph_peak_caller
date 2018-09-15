@@ -123,6 +123,7 @@ class HtmlReportGenerator:
                          "<img style='width: 300px; height: auto; padding: 50px;' src='" + tf + "_unique_peaks.png'/>"
 
     def _html_start(self):
+        import datetime
         return """
         <!doctype html>
         <html>
@@ -141,8 +142,9 @@ class HtmlReportGenerator:
 
 
         <h1>Graph Peak Caller - experiment results</h1>
+        <h2>Report generated %s</h2>
         <div id='bar-plot'></div>
-        """
+        """ % datetime.datetime.now().strftime("%I:%M%p on %B %d, %Y")
 
     def _html_end(self):
         return "</div></body></html>"
