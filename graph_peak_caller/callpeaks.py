@@ -196,7 +196,7 @@ class CallPeaksFromQvalues:
 
             score = np.max(self.q_values.get_interval_values(max_path))
             max_path.set_score(score)
-            max_path.chromosome = self.reporter._base_name.replace("_", "")
+            max_path.chromosome = self._reporter._base_name.replace("_", "")
             assert not np.isnan(score), "Score %s is nan" % score
 
 
