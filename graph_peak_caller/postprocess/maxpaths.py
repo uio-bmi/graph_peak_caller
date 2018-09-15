@@ -58,6 +58,11 @@ class SparseMaxPaths:
         self._analyzer.run()
         self._segments = self._analyzer.splitted_segments
         self.get_segment_scores()
+        if self._variant_maps is not None:
+            return self._run_refmaxpath()
+        return self._run_maxpath()
+
+    def _run_refmaxpath(self):
         scored_segments = [np.vstack((self._analyzer._internal_ids[:, 0][mask],
                                       self.scores[mask]))
                            for mask in [self._analyzer.internal_mask,
@@ -73,7 +78,6 @@ class SparseMaxPaths:
         components, subgraphs = linegraph.get_connected_components()
         components = self._convert_connected_components(components)
         subgraphs = [SubGraph(*pair) for pair in zip(components, subgraphs)]
-
         get_max_path = max_path_func(self._score_pileup, self._graph, self._variant_maps)
         max_paths = []
         for i, component in enumerate(components):
