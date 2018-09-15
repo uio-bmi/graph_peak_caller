@@ -536,7 +536,7 @@ interface = \
                     ('out_file_name_ending', 'Will add *chromosome*_ before this name for each chromosome found.')
                 ],
             'method': split_peaks_by_chromosome
-        }
+        },
     'clean_vcfs':
         {
             'help': "Indexes the vcf files so variants can be looked up by node id",
