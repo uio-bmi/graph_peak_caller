@@ -23,7 +23,8 @@ from graph_peak_caller.analysis.analysis_interface import analyse_peaks_whole_ge
     analyse_manually_classified_peaks, differential_expression,\
     plot_motif_enrichment, get_summits, peaks_to_linear, move_linear_reads_to_graph,\
     find_linear_path, concatenate_sequence_files, check_haplotype, get_motif_locations,\
-    get_haplotype_sequence, get_overlapping_alignments, get_analysis_summaries
+    get_haplotype_sequence, get_overlapping_alignments, get_analysis_summaries, \
+    split_peaks_by_chromosome
 
 from graph_peak_caller.preprocess_interface import \
     count_unique_reads_interface, create_ob_graph,\
@@ -517,6 +518,17 @@ interface = \
                     ('out_file_name', 'File to write intersecting intervals to')
                 ],
             'method': get_intersecting_intervals
+        },
+    'split_peaks_by_chromosome':
+        {
+            'help': 'Splits a peak intervalcollection file by chromosomes',
+            'arguments':
+                [
+                    ('in_file_name', ''),
+                    ('chromosomes', 'Comma separated list of chromosomes to look for'),
+                    ('out_file_name_ending', 'Will add *chromosome*_ before this name for each chromosome found.')
+                ],
+            'method': split_peaks_by_chromosome
         }
 }
 

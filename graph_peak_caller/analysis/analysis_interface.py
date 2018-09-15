@@ -303,6 +303,23 @@ def concatenate_sequence_files(args):
     logging.info("Wrote all peaks in sorted order to %s" % out_file_name_json)
 
 
+def split_peaks_by_chromosome(args):
+    chromosomes = args.chromosomes.split(",")
+    peaks = PeakCollection.from_file(args.in_file_name, text_file=True)
+
+    out_peaks = {chrom: [] for chrom in chromosomes}
+    #out_files = {chrom: open(chrom + "_" + args.out_file_name_ending) for chrom in chromosomes}
+
+    for peak in peaks:
+        if peak.chromosome in chromosomes:
+            out_peaks[peak.chromosomes].append(peak)
+        else:
+            logging.warning("Found peak %s that has a chromosome which is not in list of chromosomes %s" % (peak, chromosomes))
+
+    for chrom in chromosomes:
+        PeakCollection(out_peaks[chrom]).to_file(chrom + "_" + args.out_file_name_ending, text_file=True)
+
+
 def find_linear_path(args):
     graph = args.graph
     vg_graph = pyvg.Graph.from_file(args.vg_json_graph_file_name)
