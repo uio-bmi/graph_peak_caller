@@ -178,7 +178,7 @@ class CallPeaksFromQvalues:
         assert(self.graph.uses_numpy_backend)
         logging.info("Running Sparse Max Paths")
         max_paths, sub_graphs = SparseMaxPaths(
-            self.filtered_peaks, self.graph, _pileup, self.linear_path, self.variant_maps).run()
+            self.filtered_peaks, self.graph, _pileup, self.variant_maps).run()
 
         self._reporter.add("all_max_paths", max_paths)
         logging.info("All max paths found")

@@ -9,7 +9,7 @@ from .reference_based_max_path import max_path_func
 
 
 class SparseMaxPaths:
-    def __init__(self, sparse_values, graph, score_pileup, reference_path=None, variant_maps=None):
+    def __init__(self, sparse_values, graph, score_pileup, variant_maps=None):
         self._node_indexes = graph.node_indexes
         self._sparse_values = sparse_values
         self._graph = graph
@@ -89,6 +89,41 @@ class SparseMaxPaths:
         peaks = [Peak(start, end, path, graph=self._graph) for path, start, end in
                  zip(max_paths, start_offset, end_offset)]
         return peaks, subgraphs
+
+    def _run_maxpath(self):
+        scored_segments = [np.vstack((self._analyzer._internal_ids[:, 0][mask],
+                                      self.scores[mask]))
+                           for mask in [self._analyzer.internal_mask,
+                                        self._analyzer.start_mask,
+                                        self._analyzer.end_mask,
+                                        self._analyzer.full_mask]]
+
+        self._handle_internal(self._analyzer.internal_mask)
+        linegraph = PosDividedLineGraph(scored_segments[2],
+                                        scored_segments[3],
+                                        scored_segments[1],
+                                        self._graph)
+
+        paths, infos, subgraphs = linegraph.max_paths()
+        converted = self._convert_paths(paths, infos)
+        small_subgraphs = [
+            SubGraph(path.region_paths,
+                     csr_matrix(([], ([], [])), shape=(1, 1)))
+            for path in self.internal_paths]
+        return converted+self.internal_paths, subgraphs+small_subgraphs
+
+    def _convert_paths(self, paths, infos):
+        reverse_map = np.concatenate(
+            [np.flatnonzero(mask) for mask in
+             [self._analyzer.end_mask,
+              self._analyzer.full_mask,
+              self._analyzer.start_mask,
+              ]])
+        peaks = [self._convert_path(path, reverse_map)
+                 for path in paths]
+        for peak, info in zip(peaks, infos):
+            peak.info = info
+        return peaks
 
     def get_start_offsets(self, start_nodes):
         start_nodes = np.asanyarray(start_nodes)-self._graph.min_node
