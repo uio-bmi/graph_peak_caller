@@ -23,6 +23,7 @@ class SparseMaxPaths:
             logging.info("Will use variant maps when finding max paths")
             self._variant_maps = variant_maps
         else:
+            self._variant_maps = None
             logging.info("Not using variant maps when finding max path")
 
     def _handle_internal(self, mask):

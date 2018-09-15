@@ -191,11 +191,15 @@ class CallPeaksFromQvalues:
             assert max_path.length() >= 0, "Max path %s has negative length" % max_path
             if max_path.length() == 0:
                 logging.warning("Max path has 0 length: %s" % max_path)
+                max_path.set_score(0)
                 continue
 
             score = np.max(self.q_values.get_interval_values(max_path))
             max_path.set_score(score)
+            max_path.chromosome = self._reporter._base_name.replace("_", "")
             assert not np.isnan(score), "Score %s is nan" % score
+
+
 
         pairs = list(zip(max_paths, sub_graphs))
         pairs.sort(key=lambda p: p[0].score, reverse=True)
