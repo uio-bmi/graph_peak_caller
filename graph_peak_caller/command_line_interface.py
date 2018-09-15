@@ -412,6 +412,7 @@ interface = \
                 [
                     ('data_folder', ''),
                     ('result_folder', ''),
+                    ('interval_name', ''),
                     ('chrom', '')
                 ],
             'method': get_motif_locations
