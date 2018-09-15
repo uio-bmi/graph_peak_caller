@@ -312,7 +312,7 @@ def split_peaks_by_chromosome(args):
 
     for peak in peaks:
         if peak.chromosome in chromosomes:
-            out_peaks[peak.chromosomes].append(peak)
+            out_peaks[peak.chromosome].append(peak)
         else:
             logging.warning("Found peak %s that has a chromosome which is not in list of chromosomes %s" % (peak, chromosomes))
 
