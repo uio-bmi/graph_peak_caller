@@ -196,7 +196,10 @@ class CallPeaksFromQvalues:
 
             score = np.max(self.q_values.get_interval_values(max_path))
             max_path.set_score(score)
+            max_path.chromosome = self.base_name.replace("_", "")
             assert not np.isnan(score), "Score %s is nan" % score
+
+
 
         pairs = list(zip(max_paths, sub_graphs))
         pairs.sort(key=lambda p: p[0].score, reverse=True)
