@@ -129,8 +129,8 @@ def get_overlapping_alignments(args):
         logging.info("Running on chromosome %s" % chrom)
         graph = obg.Graph.from_file(args.data_folder+chrom+".nobg")
         base_name = args.result_folder + chrom
-        intervals = PeakCollection.from_file(base_name + "_" + args.interval_name+".intervalcollection", True)
-
+        intervals = PeakCollection.from_fasta_file(base_name + "_sequences_" + args.interval_name+".fasta")
+        # intervals = PeakCollection.from_file(base_name + "_" + args.interval_name+".intervalcollection", True)
         alignment_collection = AlignmentCollection.from_file(
             args.result_folder + chrom + "_alignments.pickle", graph)
         peaks_dict = {interval.unique_id:
