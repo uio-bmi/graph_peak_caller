@@ -363,6 +363,7 @@ interface = \
                     ('result_folder', ''),
                     ('chrom', ''),
                     ('interval_name', ''),
+                    ('from_peakcollection', 'Optional if given then use intervalcollectionfile')
                 ],
             'method': check_haplotype
         },
