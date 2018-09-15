@@ -10,9 +10,11 @@ import matplotlib as mpl
 mpl.use('Agg')  # Required for server usage (e.g. travis)
 
 import offsetbasedgraph as obg
+import offsetbasedgraph.vcfmap
 from graph_peak_caller.peakcollection import Peak, PeakCollection
 from graph_peak_caller.sparsediffs import SparseValues
 from graph_peak_caller.mindense import DensePileup
+
 
 from graph_peak_caller.callpeaks_interface import \
     run_callpeaks_interface, run_callpeaks_whole_genome,\
@@ -39,6 +41,11 @@ def main():
 
 def version(args):
     print("Graph Peak Caller v1.1.1")
+
+
+def clean_vcf_wrapper(args):
+    for chromosome in args.chromosomes.split(","):
+        offsetbasedgraph.vcfmap.simplify_vcf(chromosome, args.data_folder)
 
 
 def project_alignments(alignments, linear_path):
@@ -518,6 +525,16 @@ interface = \
                 ],
             'method': get_intersecting_intervals
         }
+    'clean_vcfs':
+        {
+            'help': "Indexes the vcf files so variants can be looked up by node id",
+            'arguments':
+                [
+                    ('data_folder', 'Folder containing graph files and vcf files'),
+                    ('chromosomes', 'Comma separated list of chromosome names corresponding to file names')
+                ],
+            'method': clean_vcf_wrapper
+        }
 }
 
 
@@ -597,8 +614,6 @@ def run_argument_parser(args):
     if len(args) == 0:
         parser.print_help()
         sys.exit(1)
-
-
     try:
         args = parser.parse_args(args)
     except GraphNotFoundException:

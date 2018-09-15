@@ -192,7 +192,7 @@ class CallPeaksFromQvalues:
             if max_path.length() == 0:
                 logging.warning("Max path has 0 length: %s" % max_path)
                 continue
-                
+
             score = np.max(self.q_values.get_interval_values(max_path))
             max_path.set_score(score)
             assert not np.isnan(score), "Score %s is nan" % score
