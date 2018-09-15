@@ -28,6 +28,7 @@ from offsetbasedgraph.tracevariants import pipeline_func_for_chromosome,\
 
 
 def _get_motif_locations(args, chrom):
+
     graph = obg.Graph.from_file(args.data_folder+chrom+".nobg")
     peaks = PeakCollection.from_fasta_file(
         args.result_folder+chrom+"_sequences_" + args.interval_name + ".fasta", graph)
@@ -42,6 +43,7 @@ def _get_motif_locations(args, chrom):
 
 
 def get_motif_locations(args):
+    print(args.chrom)
     [_get_motif_locations(args, chrom) for chrom in args.chrom.split(",")]
 
 
