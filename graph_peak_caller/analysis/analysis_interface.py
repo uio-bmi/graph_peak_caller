@@ -30,20 +30,15 @@ from offsetbasedgraph.tracevariants import pipeline_func_for_chromosome,\
 def get_motif_locations(args):
     graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
     peaks = PeakCollection.from_fasta_file(
-        args.result_folder+args.chrom+"_sequences_summits.fasta", graph)
+        args.result_folder+args.chrom+"_sequences_" + args.interval_name + ".fasta", graph)
     peaks = list(peaks)
-
-    #for i, p in enumerate(peaks):
-    #    p.graph = graph
-    #    p.unique_id = "peak%s" % i
-
     fimo = FimoFile.from_file(
         args.result_folder+"fimo_graph_chr"+args.chrom+"/fimo.txt")
     motif_paths = [MotifLocation.from_fimo_and_peaks(entry, peaks).location
                    for entry in fimo.get_best_entries()]
     print(type(motif_paths[0]))
     PeakCollection(motif_paths).to_file(
-        args.result_folder+args.chrom+"_motif_paths.intervalcollection", True)
+        args.result_folder+args.chrom+"_" + args.interval_name + "_motif_paths.intervalcollection", True)
 
 
 class IntervalDict(obg.IntervalCollection):
