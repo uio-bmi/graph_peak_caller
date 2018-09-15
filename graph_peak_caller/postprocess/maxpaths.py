@@ -77,19 +77,23 @@ class SparseMaxPaths:
             if i % 100 == 0:
                 print("path: ", i)
             max_paths.append(get_max_path(component))
-        start_nodes = np.array([max_path[0] for max_path in max_paths]) - self._graph.min_node
-        end_nodes = np.array([max_path[-1] for max_path in max_paths]) - self._graph.min_node
-
-        start_args = np.digitize(self._graph.node_indexes[start_nodes+1],
-                                 self._sparse_values.indices, right=True)-1
-        start_offset = np.maximum(0, self._sparse_values.indices[start_args]-self._graph.node_indexes[start_nodes])
-        end_args = np.digitize(self._graph.node_indexes[end_nodes], self._sparse_values.indices)-1
-        next_indexes = self._sparse_values.indices[end_args+1]
-        end_offset = np.minimum(next_indexes, self._graph.node_indexes[end_nodes+1])-self._graph.node_indexes[end_nodes]        
+        start_offset = self.get_start_offsets([max_path[0] for max_path in max_paths])
+        end_offset = self.get_end_offsets([max_path[-1] for max_path in max_paths])
         peaks = [Peak(start, end, path, graph=self._graph) for path, start, end in
                  zip(max_paths, start_offset, end_offset)]
         return peaks, subgraphs
 
+    def get_start_offsets(self, start_nodes):
+        start_nodes = np.asanyarray(start_nodes)-self._graph.min_node
+        start_args = np.digitize(self._graph.node_indexes[start_nodes+1],
+                                 self._sparse_values.indices, right=True)-1
+        return np.maximum(0, self._sparse_values.indices[start_args]-self._graph.node_indexes[start_nodes])
+
+    def get_end_offsets(self, end_nodes):
+        end_nodes = np.asanyarray(end_nodes)-self._graph.min_node
+        end_args = np.digitize(self._graph.node_indexes[end_nodes], self._sparse_values.indices)-1
+        next_indexes = self._sparse_values.indices[end_args+1]
+        return np.minimum(next_indexes, self._graph.node_indexes[end_nodes+1])-self._graph.node_indexes[end_nodes]        
     def _get_reverse_map(self):
         return np.concatenate(
             [np.flatnonzero(mask) for mask in
