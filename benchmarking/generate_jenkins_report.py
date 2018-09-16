@@ -15,13 +15,19 @@ class HtmlReportGenerator:
         self._create_report_figures()
 
     def _write_simple_table_row(self, tf, analysis_result):
-        assert analysis_result.tot_peaks1 == analysis_result.tot_peaks2, "Only use simple report when number of peaks are the same"
-        assert analysis_result.peaks1_in_peaks2 == analysis_result.peaks2_in_peaks1, "Only use simple report when number of peaks are the same"
+        #assert analysis_result.tot_peaks1 == analysis_result.tot_peaks2, "Only use simple report when number of peaks are the same"
+        #assert analysis_result.peaks1_in_peaks2 == analysis_result.peaks2_in_peaks1, "Only use simple report when number of peaks are the same"
+        if analysis_result.tot_peaks1 != analysis_result.tot_peaks2:
+            logging.warning("Not same number of total peaks in the two sets (%d, %d)" % (analysis_result.tot_peaks1, analysis_result.tot_peaks2))
+        
+        if analysis_result.peaks1_in_peaks2 != analysis_result.peaks2_in_peaks1:
+            logging.warning("Not same number of shared peaks in the two sets (%d, %d)" % (analysis_result.peaks1_in_peaks2, analysis_result.peaks2_in_peaks1))
+
         self.html += "<tr>"
         self.html += "<td>%s</td>" % tf
-        self.html += "<td>%d</td>" % (analysis_result.tot_peaks1)
+        self.html += "<td>%d / %d</td>" % (analysis_result.tot_peaks1, analysis_result.tot_peaks2)
         self.html += "<td>%d</td>" % (analysis_result.peaks1_in_peaks2)
-        self.html += "<td>%d</td>" % (analysis_result.peaks1_not_in_peaks2)
+        self.html += "<td>%d / %d</td>" % (analysis_result.peaks1_not_in_peaks2, analysis_result.peaks2_not_in_peaks1)
         self.html += "<td>%d (%.3f %%)</td>" % (analysis_result.peaks1_in_peaks2_matching_motif, 100 * analysis_result.peaks1_in_peaks2_matching_motif / analysis_result.peaks1_in_peaks2)
         self.html += "<td>%d (%.3f %%)</td>" % (analysis_result.peaks1_not_in_peaks2_matching_motif, 100 * analysis_result.peaks1_not_in_peaks2_matching_motif / analysis_result.peaks1_not_in_peaks2)
         self.html += "<td>%d (%.3f %%)</td>" % (analysis_result.peaks2_in_peaks1_matching_motif, 100 * analysis_result.peaks2_in_peaks1_matching_motif / analysis_result.peaks2_in_peaks1)
@@ -31,14 +37,23 @@ class HtmlReportGenerator:
         self.html += "</tr>"
                 
         #   \multicolumn{1}{r|}{SOC1} &15553 & 1664/14314  (11.6\%) & 117/1239    (9.44\%) &16407 &1681/14314   (11.7\%)  &142/2093  (6.78\%) \\
+        if tf == "SUM":
+            self.latex_table += "\midrule"
+
         self.latex_table += "\multicolumn{1}{r|}{" + tf.split("_")[-1] + "} & "
+
         self.latex_table += "%d & " % analysis_result.tot_peaks1
-        self.latex_table += "%d & " % analysis_result.peaks1_in_peaks2
-        self.latex_table += "%d & " % analysis_result.peaks1_not_in_peaks2
-        self.latex_table += "\multicolumn{1}{|l}{%d} & %.2f\%% & " % (analysis_result.peaks1_in_peaks2_matching_motif, 100 * analysis_result.peaks1_in_peaks2_matching_motif / analysis_result.peaks1_in_peaks2)
-        self.latex_table += "%d & %.2f\%% & " % (analysis_result.peaks1_not_in_peaks2_matching_motif, 100 * analysis_result.peaks1_not_in_peaks2_matching_motif / analysis_result.peaks1_not_in_peaks2)
-        self.latex_table += "\multicolumn{1}{|l}{%d} & %.2f\%% & " % (analysis_result.peaks2_in_peaks1_matching_motif, 100 * analysis_result.peaks2_in_peaks1_matching_motif / analysis_result.peaks2_in_peaks1)
-        self.latex_table += "%d & %.2f\%%" % (analysis_result.peaks2_not_in_peaks1_matching_motif, 100 * analysis_result.peaks2_not_in_peaks1_matching_motif / analysis_result.peaks2_not_in_peaks1)
+        self.latex_table += "%d/%d & " % (analysis_result.peaks1_in_peaks2_matching_motif, analysis_result.peaks1_in_peaks2)
+        self.latex_table += "%.2f\%% & " % (100 * analysis_result.peaks1_in_peaks2_matching_motif / analysis_result.peaks1_in_peaks2)
+        self.latex_table += "%d/%d & " % (analysis_result.peaks1_not_in_peaks2_matching_motif, analysis_result.peaks1_not_in_peaks2)
+        self.latex_table += "%.2f\%% & " % (100 * analysis_result.peaks1_not_in_peaks2_matching_motif / analysis_result.peaks1_not_in_peaks2)
+
+        self.latex_table += "\multicolumn{1}{|l}{%d} & " % analysis_result.tot_peaks2
+        self.latex_table += "%d/%d & " % (analysis_result.peaks2_in_peaks1_matching_motif, analysis_result.peaks2_in_peaks1)
+        self.latex_table += "%.2f\%% & " % (100 * analysis_result.peaks2_in_peaks1_matching_motif / analysis_result.peaks2_in_peaks1)
+        self.latex_table += "%d/%d & " % (analysis_result.peaks2_not_in_peaks1_matching_motif, analysis_result.peaks2_not_in_peaks1)
+        self.latex_table += "%.2f\%% & " % (100 * analysis_result.peaks2_not_in_peaks1_matching_motif / analysis_result.peaks2_not_in_peaks1)
+        
         self.latex_table += "\\\ \n" 
         
     
@@ -120,8 +135,8 @@ class HtmlReportGenerator:
                 <th># Among unique peaks</th>
                 <th># Among shared peaks</th>
                 <th># Among unique peaks</th>
-                <th>GPC</th>
-                <th>MACS</th>
+                <th>Shard</th>
+                <th>Unique</th>
             </tr>
         """
         summed_results = AnalysisResults()
