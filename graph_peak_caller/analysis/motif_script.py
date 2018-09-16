@@ -169,7 +169,37 @@ def run(folder, includes="all"):
     # plt.show()
     return res
 
+
+def run_func(folder, func):
+    includes = "all"
+    interval_name = ""
+    rs = {i: parse_results("%s%s_%slimited_summits_alignments_diplotypes.tsv" % (folder, i, interval_name)) for i in range(1, 6)}
+    summary_name = "fimo_graphmotif_summary.tsv"
+    motifs = {line.split("\t")[0]: {peak.strip() for peak in line.split("\t")[1].split(",")} for line in open(folder+"/" + summary_name)}        
+    unique = {line.split("\t")[0]: {peak.strip() for peak in line.split("\t")[1].split(",")} for line in open(folder+"/unqiue_summary.tsv")}
+    filter_funcs = {"all": lambda peak, i: True,
+                    "unique": lambda peak, i: peak in unique[str(i)],
+                    "shared": lambda peak, i: peak not in unique[str(i)]}
+    non_motif_results = [result for i, results in rs.items()
+                         for peak, result in results if filter_funcs[includes](peak, i) and peak not in motifs[str(i)]]
+    motif_results = [result for i, results in rs.items()
+                     for peak, result in results if filter_funcs[includes](peak, i) and peak in motifs[str(i)]]
+    print("Folder")
+    print("Motif")
+    func(non_motif_results)
+    print("NonMotif")
+    func(motif_results)
+
+
+def count_haplo(results):
+    haplo = sum(result.A_count == result.total for result in results)
+    t = len(results)
+    print(haplo, t, haplo/t)
+
 if __name__ == "__main__":
+    if sys.argv[1] == "haplo":
+        [run_func(folder+"/", count_haplo) for folder in sys.argv[2:]]
+
     folders = sys.argv[1].split(",")
     output = [run(folder+"/", includes="unique") for folder in folders]
     s = np.sum(output, axis=0)
