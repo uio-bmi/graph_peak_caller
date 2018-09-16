@@ -26,7 +26,7 @@ class MotifMatcher():
         if self.run_fimo:
             import os
             bgfile = ""
-            if self.background_model_file is not None:
+            if self.background_model_file is not None and self.background_model_file != "None":
                 bgfile = "--bgfile " + self.background_model_file
                 logging.info("Using background model file %s" % self.background_model_file)
             else:
