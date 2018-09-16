@@ -8,6 +8,7 @@ class HtmlReportGenerator:
     def __init__(self, transcription_factors):
         self.tfs = transcription_factors
         self.html = ""
+        self.latex_table = ""
         #self._create_report_table()
         self._create_simple_report_table()
         self.create_bar_plots()
@@ -22,13 +23,24 @@ class HtmlReportGenerator:
         self.html += "<td>%d</td>" % (analysis_result.peaks1_in_peaks2)
         self.html += "<td>%d</td>" % (analysis_result.peaks1_not_in_peaks2)
         self.html += "<td>%d (%.3f %%)</td>" % (analysis_result.peaks1_in_peaks2_matching_motif, 100 * analysis_result.peaks1_in_peaks2_matching_motif / analysis_result.peaks1_in_peaks2)
-        self.html += "<td>%d (%.3f %%)</td>" % (analysis_result.peaks2_in_peaks1_matching_motif, 100 * analysis_result.peaks2_in_peaks1_matching_motif / analysis_result.peaks2_in_peaks1)
         self.html += "<td>%d (%.3f %%)</td>" % (analysis_result.peaks1_not_in_peaks2_matching_motif, 100 * analysis_result.peaks1_not_in_peaks2_matching_motif / analysis_result.peaks1_not_in_peaks2)
+        self.html += "<td>%d (%.3f %%)</td>" % (analysis_result.peaks2_in_peaks1_matching_motif, 100 * analysis_result.peaks2_in_peaks1_matching_motif / analysis_result.peaks2_in_peaks1)
         self.html += "<td>%d (%.3f %%)</td>" % (analysis_result.peaks2_not_in_peaks1_matching_motif, 100 * analysis_result.peaks2_not_in_peaks1_matching_motif / analysis_result.peaks2_not_in_peaks1)
         self.html += "<td>%.3f</td>" % np.mean(analysis_result.peaks1_in_peaks2_bp_not_on_linear)
         self.html += "<td>%.3f</td>" % np.mean(analysis_result.peaks1_not_in_peaks2_bp_not_on_linear)
         self.html += "</tr>"
                 
+        #   \multicolumn{1}{r|}{SOC1} &15553 & 1664/14314  (11.6\%) & 117/1239    (9.44\%) &16407 &1681/14314   (11.7\%)  &142/2093  (6.78\%) \\
+        self.latex_table += "\multicolumn{1}{r|}{" + tf.split("_")[-1] + "} & "
+        self.latex_table += "%d & " % analysis_result.tot_peaks1
+        self.latex_table += "%d & " % analysis_result.peaks1_in_peaks2
+        self.latex_table += "%d & " % analysis_result.peaks1_not_in_peaks2
+        self.latex_table += "\multicolumn{1}{|l}{%d} & %.2f\%% & " % (analysis_result.peaks1_in_peaks2_matching_motif, 100 * analysis_result.peaks1_in_peaks2_matching_motif / analysis_result.peaks1_in_peaks2)
+        self.latex_table += "%d & %.2f\%% & " % (analysis_result.peaks1_not_in_peaks2_matching_motif, 100 * analysis_result.peaks1_not_in_peaks2_matching_motif / analysis_result.peaks1_not_in_peaks2)
+        self.latex_table += "\multicolumn{1}{|l}{%d} & %.2f\%% & " % (analysis_result.peaks2_in_peaks1_matching_motif, 100 * analysis_result.peaks2_in_peaks1_matching_motif / analysis_result.peaks2_in_peaks1)
+        self.latex_table += "%d & %.2f\%%" % (analysis_result.peaks2_not_in_peaks1_matching_motif, 100 * analysis_result.peaks2_not_in_peaks1_matching_motif / analysis_result.peaks2_not_in_peaks1)
+        self.latex_table += "\\\ \n" 
+        
     
     def _write_table_row(self, tf, analysis_result):
         self.html += """
@@ -122,6 +134,7 @@ class HtmlReportGenerator:
 
         self.html += "</table>"
 
+        self.html += "<pre>" + self.latex_table + "</pre>"
 
     def _create_report_table(self):
         self.html += """
