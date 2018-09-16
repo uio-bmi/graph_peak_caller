@@ -18,27 +18,33 @@ from .motifenrichment import plot_true_positives
 from ..peakfasta import PeakFasta
 from ..mindense import DensePileup
 from ..sparsediffs import SparseValues, SparseDiffs
+from ..intervals import UniqueIntervals
 from .util import create_linear_path
 from .genotype_matrix import VariantList
-from .haplotype_finder import Main
+from .haplotype_finder import Main, VariantPrecence
+from graph_peak_caller.intervals import UniqueIntervals
+from offsetbasedgraph.tracevariants import pipeline_func_for_chromosome,\
+    summarize_results, AnalysisResults
+
+
+def _get_motif_locations(args, chrom):
+
+    graph = obg.Graph.from_file(args.data_folder+chrom+".nobg")
+    peaks = PeakCollection.from_fasta_file(
+        args.result_folder+chrom+"_sequences_" + args.interval_name + ".fasta", graph)
+    peaks = list(peaks)
+    fimo = FimoFile.from_file(
+        args.result_folder+"fimo_graph_chr"+chrom+"/fimo.txt")
+    motif_paths = [MotifLocation.from_fimo_and_peaks(entry, peaks).location
+                   for entry in fimo.get_best_entries()]
+    print(type(motif_paths[0]))
+    PeakCollection(motif_paths).to_file(
+        args.result_folder+chrom+"_" + args.interval_name + "_motif_paths.intervalcollection", True)
 
 
 def get_motif_locations(args):
-    graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
-    peaks = obg.IntervalCollection.from_file(
-        args.result_folder+args.chrom+"_max_paths.intervalcollection", True)
-    peaks = list(peaks)
-
-    for i, p in enumerate(peaks):
-        p.graph = graph
-        p.unique_id = "peak%s" % i
-
-    fimo = FimoFile.from_file(
-        args.result_folder+"fimo_graph_chr"+args.chrom+"/fimo.txt")
-    motif_paths = [MotifLocation.from_fimo_and_peaks(entry, peaks).location
-                   for entry in fimo.get_best_entries()]
-    obg.IntervalCollection(motif_paths).to_file(
-        args.result_folder+args.chrom+"_motif_paths.intervalcollection", True)
+    print(args.chrom)
+    [_get_motif_locations(args, chrom) for chrom in args.chrom.split(",")]
 
 
 class IntervalDict(obg.IntervalCollection):
@@ -77,51 +83,164 @@ class IntervalDict(obg.IntervalCollection):
         return file_name
 
 
-def summarize_haplotypes(types):
+def summarize_diplotypes(types):
     N = len(types)
+    if not N:
+        return (0, 0, 0, 0, 0)
     counter = Counter()
-    refs = 0
     for t in types:
         if len(t):
-            if t[0] == "REF":
-                refs += 1
-                continue
             if isinstance(t[0], str):
                 continue
         counter.update(t)
     if not counter:
-        return (refs, N, "REF")
+        return (0, 0, N, -1, -1)
     most_common = counter.most_common(1)[0]
-    return (most_common[1]+refs, N, most_common[0])
+    remaining_types = [t for t in types if most_common[0] not in t]
+    remaining_res = summarize_haplotypes(remaining_types)
+    return (most_common[1], remaining_res[0], N, most_common[0], remaining_res[-1])
 
 
-def check_haplotype(args):
+def summarize_haplotypes(types):
+    N = len(types)
+    if not N:
+        return (0, 0, 0)
+    counter = Counter()
+    for t in types:
+        if len(t):
+            if isinstance(t[0], str):
+                continue
+        counter.update(t)
+    if not counter:
+        return (0, N, -1)
+    most_common = counter.most_common(1)[0]
+    return (most_common[1], N, most_common[0])
+
+
+def get_haplotype_sequence(args):
     name = args.data_folder+args.chrom
     main = Main.from_name(name, args.fasta_file, args.chrom)
+    intervals = obg.IntervalCollection.from_file(
+        args.result_folder+args.chrom+"_" + args.interval_name + ".intervalcollection", True)
+    print(main.get_haplo_sequence_around_intervals(intervals, int(args.haplotype)))
 
+
+def get_overlapping_alignments(args):
+    for chrom in args.chromosomes.split(","):
+        logging.info("Running on chromosome %s" % chrom)
+        graph = obg.Graph.from_file(args.data_folder+chrom+".nobg")
+        base_name = args.result_folder + chrom
+        try:
+            intervals = PeakCollection.from_fasta_file(base_name + "_sequences_" + args.interval_name+".fasta")
+        except:
+            intervals = PeakCollection.from_file(base_name + "_" + args.interval_name+".intervalcollection", True)
+        alignment_collection = AlignmentCollection.from_file(
+            args.result_folder + chrom + "_alignments.pickle", graph)
+        peaks_dict = {interval.unique_id:
+                      list(UniqueIntervals(
+                          alignment_collection.get_alignments_on_interval(interval).values()))
+                      for interval in intervals}
+        logging.info("Writing interval dict to file")
+        IntervalDict(peaks_dict).to_file(
+            base_name + "_" + args.interval_name+"_alignments.intevaldict")
+
+
+def _check_haplotype(args, chrom):
+    if args.from_peakcollection == "True":
+        filename = args.result_folder + chrom + "_" + args.interval_name + ".intervalcollection"
+        interval_dict = {peak.unique_id: [peak] for peak in PeakCollection.from_file(filename, True)}
+    else:
+        dict_filename = args.result_folder + chrom + "_" + args.interval_name + ".intevaldict"
+        interval_dict = IntervalDict.from_file(dict_filename).intervals
+    pipeline = obg.tracevariants.pipeline_func_for_chromosome(chrom, args.data_folder)
+    results = ((peak_id, pipeline(intervals)) for peak_id, intervals in interval_dict.items())
+    with open(args.result_folder + chrom + "_" + args.interval_name + "_diplotypes.tsv", "w") as outfile:
+        for result in results:
+            outfile.write("%s\t%s\n" % result)
+
+
+def get_analysis_summaries(args):
+    nbins = 100
+    def get_motif_match_ids(chrom):
+        filename = args.result_folder + "fimo_graph_chr%s/fimo.txt" % chrom
+        return [line.split("\t")[2] for line in open(filename) if
+                not line.startswith("#")]
+
+    def parse_results(chrom, filterfunc=lambda x, y: True):
+        motif_ids = get_motif_match_ids(chrom)
+        filename = args.result_folder + chrom + "_" + args.interval_name + "_diplotypes.tsv"
+        pairs = ((line.split("\t")[0], eval(line.split("\t")[1])) for line in open(filename)
+                 if not line.startswith("#"))
+        results = [result for peak_id, result in pairs if filterfunc(peak_id, motif_ids)]
+        summary = summarize_results(results, nbins)
+        return summary
+
+    def get_summary(filterfunc=lambda x, y: True):
+        summaries = [parse_results(chrom, filterfunc) for chrom in args.chrom.split(",")]
+        summary = sum(summaries)
+        means = summary.copy()
+        means[1:] /= means[0]
+        return means
+
+    pairs = (("all", lambda x, motif_ids: True),
+             ("motif", lambda peak_id, motif_ids: peak_id in motif_ids),
+             ("nonmotif", lambda peak_id, motif_ids: peak_id not in motif_ids))
+    for name, func in pairs:
+        out_file_name = args.result_folder + args.interval_name + "_%s_summary.npz" % name
+        means = get_summary(func)
+        np.savez(out_file_name, summary=means[:6], haplo_hist=means[6:(nbins+6)], diplo_hist=means[nbins+6:2*nbins+6])
+
+def check_haplotype(args):
+    [_check_haplotype(args, chrom) for chrom in args.chrom.split(",")]
+    get_analysis_summaries(args)
+
+
+def check_haplotype_old(args):
+    all_reads = args.all_reads == "True" if args.all_reads is not None else True
+    strict = args.strict == "True" if args.strict is not None else True
+    name = args.data_folder+args.chrom
+    VariantPrecence.strict = strict
+    # VariantPrecence.accept_ref = all_reads
+    main = Main.from_name(name, args.fasta_file, args.chrom)
     motif_paths = obg.IntervalCollection.from_file(
         args.result_folder+args.chrom+"_" + args.interval_name + ".intervalcollection", True)
     graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
-    alignment_collection = AlignmentCollection.from_file(
-       args.result_folder + args.chrom + "_alignments.pickle", graph)
-    peaks_dict = {i: alignment_collection.get_alignments_on_interval(interval).values()
-                  for i, interval in enumerate(motif_paths)}
-    IntervalDict(peaks_dict).to_file(
-        args.result_folder + args.chrom + args.interval_name + "_reads.intervaldict")
+
+    if all_reads:
+        alignment_collection = AlignmentCollection.from_file(
+            args.result_folder + args.chrom + "_alignments.pickle", graph)
+        peaks_dict = {i: list(UniqueIntervals(alignment_collection.get_alignments_on_interval(interval).values()))
+                      for i, interval in enumerate(motif_paths)}
+        IntervalDict(peaks_dict).to_file(
+            args.result_folder + args.chrom + args.interval_name + "_reads.intervaldict")
+        # peaks_dict = IntervalDict.from_file(args.result_folder + args.chrom + args.interval_name + "_reads.intervaldict").intervals
+        base_name = args.result_folder + args.chrom + "_" + args.interval_name
+    else:
+        peaks_dict = {i: [interval] for i, interval in enumerate(motif_paths)}
+        base_name = args.result_folder + args.chrom + "_" + args.interval_name + "_pure"
     # peaks_dict = IntervalDict.from_file(args.result_folder + args.chrom + "_motif_reads.intervaldict").intervals
     result_dict = main.run_peak_set(peaks_dict)
-    with open(args.result_folder + args.chrom + "_" + args.interval_name + ".setsummary", "w") as f:
+    if strict:
+        base_name += "_strict"
+    with open(base_name + ".setsummary", "w") as f:
         summaries = [summarize_haplotypes(v) for v in result_dict.values()]
         successes = sum(s[0] == s[1] for s in summaries)
         f.write("# %s/%s\n" % (successes, len(summaries)))
         for k, v in result_dict.items():
             f.write("%s, %s\n" % (k, summarize_haplotypes(v)))
-        
+
+    with open(base_name + "_dip.setsummary", "w") as f:
+        summaries = [summarize_diplotypes(v) for v in result_dict.values()]
+        successes = sum(s[0]+s[1] == s[2] for s in summaries)
+        f.write("# %s/%s\n" % (successes, len(summaries)))
+        for k, v in result_dict.items():
+            f.write("%s, %s\n" % (k, summarize_diplotypes(v)))
+
     lines = ("%s\t%s" % (i, result) for i, results in result_dict.items()
              for result in results)
     # motif_paths = list(sorted(motif_paths, key=lambda x: x.region_paths[0]))
     # haplotypes = main.run_peaks(motif_paths)
-    with open(args.result_folder + args.chrom + "_" + args.interval_name + ".setcoverage", "w") as f:
+    with open(base_name + ".setcoverage", "w") as f:
         for line in lines:
             f.write(line+"\n")
         # for haplotype in haplotypes:
@@ -189,6 +308,23 @@ def concatenate_sequence_files(args):
 
     logging.info("Wrote all peaks in sorted order to %s" % out_file_name)
     logging.info("Wrote all peaks in sorted order to %s" % out_file_name_json)
+
+
+def split_peaks_by_chromosome(args):
+    chromosomes = args.chromosomes.split(",")
+    peaks = PeakCollection.from_file(args.in_file_name, text_file=True)
+
+    out_peaks = {chrom: [] for chrom in chromosomes}
+    #out_files = {chrom: open(chrom + "_" + args.out_file_name_ending) for chrom in chromosomes}
+
+    for peak in peaks:
+        if peak.chromosome in chromosomes:
+            out_peaks[peak.chromosome].append(peak)
+        else:
+            logging.warning("Found peak %s that has a chromosome which is not in list of chromosomes %s" % (peak, chromosomes))
+
+    for chrom in chromosomes:
+        PeakCollection(out_peaks[chrom]).to_file(chrom + "_" + args.out_file_name_ending, text_file=True)
 
 
 def find_linear_path(args):
@@ -267,9 +403,32 @@ def get_summits(args):
     peaks.to_fasta_file(out_file_name, args.sequence_graph)
     logging.info("Wrote summits to " + out_file_name)
 
+def get_super_summits(args):
+    graph = args.graph
+    qvalues = SparseDiffs.from_sparse_files(args.q_values_base_name)
+    #qvalues = SparseValues.from_sparse_files(args.q_values_base_name)
+    dense_qvalues = qvalues.to_dense_pileup(size=graph.number_of_basepairs())
+    qvalues = DensePileup(graph, dense_qvalues)
+    logging.info("Q values fetched")
+    peaks = PeakCollection.from_fasta_file(args.peaks_fasta_file, graph)
+
+    if args.window_size is not None:
+        window = int(args.window_size)
+    else:
+        window = 60
+        logging.warning("Using default window size %d when cutting peaks around summits." % window)
+
+    from offsetbasedgraph import NumpyIndexedInterval
+    linear_ref = NumpyIndexedInterval.from_file(args.linear_ref)
+    peaks.cut_around_summit_super(qvalues, linear_ref, n_base_pairs_around=window)
+    out_file_name = args.peaks_fasta_file.split(".")[0] + "_summits.fasta"
+    peaks.to_fasta_file(out_file_name, args.sequence_graph)
+    logging.info("Wrote summits to " + out_file_name)
+
 
 def analyse_peaks_whole_genome(args):
     chromosomes = args.chromosomes.split(",")
+    from graph_peak_caller.analysis.peakscomparer import AnalysisResults
     results = AnalysisResults()
     for chrom in chromosomes:
         graph = obg.GraphWithReversals.from_numpy_file(
@@ -287,11 +446,16 @@ def analyse_peaks_whole_genome(args):
         #except FileNotFoundError:
         #    logging.warning("Did not find alignment collection. Will analyse without")
         #    alignments = None
-
+        
+        if args.use_graph_fasta is not None:
+            graph_fasta = args.use_graph_fasta.replace("[chrom]", chrom)
+        else:
+            graph_fasta = "%s_sequences_summits.fasta" % chrom
+        
         analyser = PeaksComparerV2(
             graph,
             args.results_dir + "macs_sequences_chr%s_summits.fasta" % chrom,
-            args.results_dir + "%s_sequences_summits.fasta" % chrom,
+            args.results_dir + graph_fasta,
             args.results_dir + "/fimo_macs_chr%s/fimo.txt" % chrom,
             args.results_dir + "/fimo_graph_chr%s/fimo.txt" % chrom,
             linear_path,
@@ -386,6 +550,8 @@ def plot_motif_enrichment(args):
     fasta2 = args.fasta2
     meme = args.meme_motif_file
 
+    logging.info("Got argument background model file: %s " % args.background_model_file)
+
     plot_true_positives(
         [
             ("Graph Peak Caller", fasta1),
@@ -394,7 +560,8 @@ def plot_motif_enrichment(args):
         meme,
         plot_title=args.plot_title.replace("ARABIDOPSIS_", ""),
         save_to_file=args.out_figure_file_name,
-        run_fimo=args.run_fimo == "True"
+        run_fimo=args.run_fimo == "True",
+        background_model_file=args.background_model_file
     )
 
 

@@ -8,20 +8,65 @@ class HtmlReportGenerator:
     def __init__(self, transcription_factors):
         self.tfs = transcription_factors
         self.html = ""
-        self._create_report_table()
+        self.latex_table = ""
+        #self._create_report_table()
+        self._create_simple_report_table()
         self.create_bar_plots()
         self._create_report_figures()
 
+    def _write_simple_table_row(self, tf, analysis_result):
+        #assert analysis_result.tot_peaks1 == analysis_result.tot_peaks2, "Only use simple report when number of peaks are the same"
+        #assert analysis_result.peaks1_in_peaks2 == analysis_result.peaks2_in_peaks1, "Only use simple report when number of peaks are the same"
+        if analysis_result.tot_peaks1 != analysis_result.tot_peaks2:
+            logging.warning("Not same number of total peaks in the two sets (%d, %d)" % (analysis_result.tot_peaks1, analysis_result.tot_peaks2))
+        
+        if analysis_result.peaks1_in_peaks2 != analysis_result.peaks2_in_peaks1:
+            logging.warning("Not same number of shared peaks in the two sets (%d, %d)" % (analysis_result.peaks1_in_peaks2, analysis_result.peaks2_in_peaks1))
+
+        self.html += "<tr>"
+        self.html += "<td>%s</td>" % tf
+        self.html += "<td>%d / %d</td>" % (analysis_result.tot_peaks1, analysis_result.tot_peaks2)
+        self.html += "<td>%d</td>" % (analysis_result.peaks1_in_peaks2)
+        self.html += "<td>%d / %d</td>" % (analysis_result.peaks1_not_in_peaks2, analysis_result.peaks2_not_in_peaks1)
+        self.html += "<td>%d (%.3f %%)</td>" % (analysis_result.peaks1_in_peaks2_matching_motif, 100 * analysis_result.peaks1_in_peaks2_matching_motif / analysis_result.peaks1_in_peaks2)
+        self.html += "<td>%d (%.3f %%)</td>" % (analysis_result.peaks1_not_in_peaks2_matching_motif, 100 * analysis_result.peaks1_not_in_peaks2_matching_motif / analysis_result.peaks1_not_in_peaks2)
+        self.html += "<td>%d (%.3f %%)</td>" % (analysis_result.peaks2_in_peaks1_matching_motif, 100 * analysis_result.peaks2_in_peaks1_matching_motif / analysis_result.peaks2_in_peaks1)
+        self.html += "<td>%d (%.3f %%)</td>" % (analysis_result.peaks2_not_in_peaks1_matching_motif, 100 * analysis_result.peaks2_not_in_peaks1_matching_motif / analysis_result.peaks2_not_in_peaks1)
+        self.html += "<td>%.3f</td>" % np.mean(analysis_result.peaks1_in_peaks2_bp_not_on_linear)
+        self.html += "<td>%.3f</td>" % np.mean(analysis_result.peaks1_not_in_peaks2_bp_not_on_linear)
+        self.html += "</tr>"
+                
+        #   \multicolumn{1}{r|}{SOC1} &15553 & 1664/14314  (11.6\%) & 117/1239    (9.44\%) &16407 &1681/14314   (11.7\%)  &142/2093  (6.78\%) \\
+        if tf == "SUM":
+            self.latex_table += "\midrule"
+
+        self.latex_table += "\multicolumn{1}{r|}{" + tf.split("_")[-1] + "} & "
+
+        self.latex_table += "%d & " % analysis_result.tot_peaks1
+        self.latex_table += "%d/%d & " % (analysis_result.peaks1_in_peaks2_matching_motif, analysis_result.peaks1_in_peaks2)
+        self.latex_table += "%.2f\%% & " % (100 * analysis_result.peaks1_in_peaks2_matching_motif / analysis_result.peaks1_in_peaks2)
+        self.latex_table += "%d/%d & " % (analysis_result.peaks1_not_in_peaks2_matching_motif, analysis_result.peaks1_not_in_peaks2)
+        self.latex_table += "%.2f\%% & " % (100 * analysis_result.peaks1_not_in_peaks2_matching_motif / analysis_result.peaks1_not_in_peaks2)
+
+        self.latex_table += "\multicolumn{1}{|l}{%d} & " % analysis_result.tot_peaks2
+        self.latex_table += "%d/%d & " % (analysis_result.peaks2_in_peaks1_matching_motif, analysis_result.peaks2_in_peaks1)
+        self.latex_table += "%.2f\%% & " % (100 * analysis_result.peaks2_in_peaks1_matching_motif / analysis_result.peaks2_in_peaks1)
+        self.latex_table += "%d/%d & " % (analysis_result.peaks2_not_in_peaks1_matching_motif, analysis_result.peaks2_not_in_peaks1)
+        self.latex_table += "%.2f\%% & " % (100 * analysis_result.peaks2_not_in_peaks1_matching_motif / analysis_result.peaks2_not_in_peaks1)
+        
+        self.latex_table += "\\\ \n" 
+        
+    
     def _write_table_row(self, tf, analysis_result):
         self.html += """
         <tr>
             <td>%s</td>
             <td>%d</td>
-            <td>%d (%d)</td>
-            <td>%d (%d)</td>
+            <td>%d (%d) = %.3f </td>
+            <td>%d (%d) = %.3f</td>
             <td>%d</td>
-            <td>%d (%d)</td>
-            <td>%d (%d)</td>
+            <td>%d (%d) = %.3f</td>
+            <td>%d (%d) = %.3f</td>
             <td>%.2f</td>
             <td>%.2f</td>
             <td>%.4f</td>
@@ -41,13 +86,17 @@ class HtmlReportGenerator:
                analysis_result.tot_peaks1,
                analysis_result.peaks1_in_peaks2,
                analysis_result.peaks1_in_peaks2_matching_motif,
+               100 * analysis_result.peaks1_in_peaks2_matching_motif / analysis_result.peaks1_in_peaks2,
                analysis_result.peaks1_not_in_peaks2,
                analysis_result.peaks1_not_in_peaks2_matching_motif,
+               100 * analysis_result.peaks1_not_in_peaks2_matching_motif / analysis_result.peaks1_not_in_peaks2,
                analysis_result.tot_peaks2,
                analysis_result.peaks2_in_peaks1,
                analysis_result.peaks2_in_peaks1_matching_motif,
+               100 * analysis_result.peaks2_in_peaks1_matching_motif / analysis_result.peaks2_in_peaks1,
                analysis_result.peaks2_not_in_peaks1,
                analysis_result.peaks2_not_in_peaks1_matching_motif,
+               100 * analysis_result.peaks2_not_in_peaks1_matching_motif / analysis_result.peaks2_not_in_peaks1,
                np.mean(analysis_result.peaks1_in_peaks2_bp_not_on_linear),
                np.mean(analysis_result.peaks1_not_in_peaks2_bp_not_on_linear),
                analysis_result.peaks1_total_nodes / analysis_result.peaks1_total_basepairs,
@@ -64,10 +113,48 @@ class HtmlReportGenerator:
                np.mean(analysis_result.peaks2_unique_scores),
                )
 
+    def _create_simple_report_table(self):                                                                                                                                                                                                    
+        self.html += """
+        <table class='table' style='margin-top: 40px;'>
+            <h3>Overview of peaks found.</h3>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th colspan='3'>Peaks found</th>
+                    <th colspan='2'>Graph Peak Caller motif enrichment</th>
+                    <th colspan='2'>MACS motif enrichment</th>
+                    <th colspan='2'>BP not on ref</th>
+                </tr>
+            </theads>
+            <tr>
+                <th>TF</th>
+                <th># Found in total</th>
+                <th># Found by both</th>
+                <th># Unique</th>
+                <th># Among shared peaks</th>
+                <th># Among unique peaks</th>
+                <th># Among shared peaks</th>
+                <th># Among unique peaks</th>
+                <th>Shard</th>
+                <th>Unique</th>
+            </tr>
+        """
+        summed_results = AnalysisResults()
+        for tf in self.tfs:
+            results = AnalysisResults.from_file("figures_tables/" + tf + ".pickle")
+            self._write_simple_table_row(tf, results)
+            summed_results += results
+
+        self._write_simple_table_row("SUM", summed_results)
+
+        self.html += "</table>"
+
+        self.html += "<pre>" + self.latex_table + "</pre>"
+
     def _create_report_table(self):
         self.html += """
         <table class='table' style='margin-top: 40px;'>
-            <h3>Overview of peaks found</h3>
+            <h3>Overview of peaks found.</h3>
             <thead>
                 <tr>
                     <th></th>
@@ -106,7 +193,7 @@ class HtmlReportGenerator:
             self._write_table_row(tf, results)
             summed_results += results
 
-        #self._write_table_row("SUM", summed_results)
+        self._write_table_row("SUM", summed_results)
 
         self.html += "</table>"
 
@@ -114,11 +201,12 @@ class HtmlReportGenerator:
         self.html += "<h3>Motifenrichment plots</h3>"
         for tf in self.tfs:
             self.html += "<p>All peaks.</p>" \
-                         "<img style='width: 300px; height: auto; padding: 50px;' src='" + tf + ".png'/>"
+                         "<img style='width: 700px; height: auto; padding: 50px;' src='" + tf + ".png'/>"
             self.html += "<p>Unique peaks:</p>" \
-                         "<img style='width: 300px; height: auto; padding: 50px;' src='" + tf + "_unique_peaks.png'/>"
+                         "<img style='width: 700px; height: auto; padding: 50px;' src='" + tf + "_unique_peaks.png'/>"
 
     def _html_start(self):
+        import datetime
         return """
         <!doctype html>
         <html>
@@ -133,12 +221,13 @@ class HtmlReportGenerator:
             <title>Graph Peak Caller - Jenkins results</title>
         </head>
         <body>
-        <div class="container" style='margin-top: 50px;'>
+        <div class="container" style='margin-top: 50px; max-width: 1600px;'>
 
 
         <h1>Graph Peak Caller - experiment results</h1>
+        <h2>Report generated %s</h2>
         <div id='bar-plot'></div>
-        """
+        """ % datetime.datetime.now().strftime("%I:%M%p on %B %d, %Y")
 
     def _html_end(self):
         return "</div></body></html>"

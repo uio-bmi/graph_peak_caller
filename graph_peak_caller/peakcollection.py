@@ -9,12 +9,14 @@ from .summits import find_summits
 
 class Peak(obg.DirectedInterval):
     def __init__(self, start_position, end_position,
-                 region_paths=None, graph=None, direction=None, score=0, unique_id=None):
+                 region_paths=None, graph=None, direction=None, score=0, unique_id=None,
+                 chromosome=None):
         super().__init__(start_position, end_position,
                          region_paths, graph, direction)
         self.score = score
         self.unique_id = unique_id
         self.info = (0, 0)
+        self.chromosome=chromosome
 
     def __str__(self):
         return super().__str__() + " [%s]" % self.score
@@ -37,7 +39,8 @@ class Peak(obg.DirectedInterval):
                   "average_q_value": float(self.score),
                   "unique_id": str(self.unique_id),
                   "is_ambigous": int(self.info[1]),
-                  "is_diff": int(self.info[0])
+                  "is_diff": int(self.info[0]),
+                  "chromosome": self.chromosome
                   }
         try:
             d = json.dumps(object)
@@ -57,6 +60,9 @@ class Peak(obg.DirectedInterval):
                   direction=object["direction"], graph=graph,
                   score=object["average_q_value"],
                   unique_id=unique_id)
+        if "chromosome" in object:
+            obj.chromosome = object["chromosome"]
+
         obj.info = (object["is_diff"], object["is_ambigous"])
         return obj
 
@@ -91,6 +97,19 @@ class Peak(obg.DirectedInterval):
 class PeakCollection(obg.IntervalCollection):
     interval_class = Peak
 
+    def cut_around_summit_super(self, q_values, linear_ref, n_base_pairs_around=60):
+
+        def get_super_summit(peak, linear_ref):
+            peak_qvalues = q_values.get_interval_values(peak)
+            max_positions = np.flatnonzero(peak_qvalues == np.max(peak_qvalues))
+            summit_position = np.partition(max_positions, max_positions.size//2)[max_positions.size//2]
+            return peak.get_superinterval(summit_position, n_base_pairs_around, linear_ref)
+
+        self.intervals = [get_super_summit(peak, linear_ref) for peak in self.intervals]
+        for peak in self.intervals:
+            assert peak.length() <= n_base_pairs_around * 2
+
+
     def cut_around_summit(self, q_values, n_base_pairs_around=60):
         def get_summit(peak):
             peak_qvalues = q_values.get_interval_values(peak)
@@ -99,6 +118,7 @@ class PeakCollection(obg.IntervalCollection):
             return peak.get_subinterval(
                 max(0, summit_position - n_base_pairs_around),
                 min(summit_position + n_base_pairs_around, peak.length()))
+
 
         def get_summit_fancy(peak):
             peak_qvalues = q_values.get_interval_values(peak)
@@ -180,6 +200,10 @@ class PeakCollection(obg.IntervalCollection):
             linear_interval.graph = ob_graph
             graph_peak = Peak.from_interval_and_score(
                 linear_interval, peak.score)
+
+            assert graph_peak.length() == end - start, "Graph peak length %d != linear peak length %d for peak %s" % (graph_peak.length(), end-start, graph_peak)
+            assert graph_peak.end_position.offset <= ob_graph.blocks[graph_peak.end_position.region_path_id].length()
+
             graph_peak.unique_id = peak.unique_id
             graph_peak.sequence = peak.sequence
             intervals_on_graph.append(graph_peak)

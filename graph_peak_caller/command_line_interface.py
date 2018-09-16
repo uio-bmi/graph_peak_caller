@@ -10,19 +10,23 @@ import matplotlib as mpl
 mpl.use('Agg')  # Required for server usage (e.g. travis)
 
 import offsetbasedgraph as obg
+import offsetbasedgraph.vcfmap
 from graph_peak_caller.peakcollection import Peak, PeakCollection
 from graph_peak_caller.sparsediffs import SparseValues
 from graph_peak_caller.mindense import DensePileup
 
+
 from graph_peak_caller.callpeaks_interface import \
     run_callpeaks_interface, run_callpeaks_whole_genome,\
-    run_callpeaks_whole_genome_from_p_values, run_callpeaks2
+    run_callpeaks_whole_genome_from_p_values, run_callpeaks2, create_alignment_fasta
 
 from graph_peak_caller.analysis.analysis_interface import analyse_peaks_whole_genome,\
     analyse_peaks, peaks_to_fasta, linear_peaks_to_fasta,\
     analyse_manually_classified_peaks, differential_expression,\
-    plot_motif_enrichment, get_summits, peaks_to_linear, move_linear_reads_to_graph,\
-    find_linear_path, concatenate_sequence_files, check_haplotype, get_motif_locations
+    plot_motif_enrichment, get_summits, get_super_summits, peaks_to_linear, move_linear_reads_to_graph,\
+    find_linear_path, concatenate_sequence_files, check_haplotype, get_motif_locations,\
+    get_haplotype_sequence, get_overlapping_alignments, get_analysis_summaries, \
+    split_peaks_by_chromosome
 
 from graph_peak_caller.preprocess_interface import \
     count_unique_reads_interface, create_ob_graph,\
@@ -38,6 +42,11 @@ def main():
 
 def version(args):
     print("Graph Peak Caller v1.1.1")
+
+
+def clean_vcf_wrapper(args):
+    for chromosome in args.chromosomes.split(","):
+        offsetbasedgraph.vcfmap.simplify_vcf(chromosome, args.data_folder)
 
 
 def project_alignments(alignments, linear_path):
@@ -164,7 +173,11 @@ interface = \
                     ('-d/--data_dir', 'Directory containing graphs.'),
                     ('-n/--out_name', 'Optional. eg experiment1_'),
                     ('-f/--fragment_length', ''),
-                    ('-r/--read_length', '')
+                    ('-r/--read_length', ''),
+                    ('-q/--q_threshold', 'Optional. q-value threshold. Default is 0.05.'),
+                    ('-m/--variant_maps_path', 'Optional. Path where variant maps are stored. '
+                                               'If set, variant maps will be used to try to improve max paths '
+                                               'through subgraphs (better handling of insertions and deletions)')
                 ],
             'method': run_callpeaks_whole_genome_from_p_values
         },
@@ -260,7 +273,8 @@ interface = \
                     ('meme_motif_file', 'something.meme'),
                     ('out_figure_file_name', ''),
                     ('run_fimo', 'Set to True if fimo has not already been run.'),
-                    ('plot_title', 'Title above plot')
+                    ('plot_title', 'Title above plot'),
+                    ('background_model_file', 'Optional. Background model file for fimo. If not set, fimo will use uniform background.')
                 ],
             'method': plot_motif_enrichment
         },
@@ -289,7 +303,8 @@ interface = \
                     ('chromosomes', 'Comma seaparated list of chromosomes to use'),
                     ('results_dir', 'Directory of result files (should contain fasta files from both linear and graph peak calling'),
                     ('graphs_dir', 'Dir containing obg graphs on form 1.nobg, 2.nobg, ... and vg graphs 1.json, 2.json, ...'),
-                    ('out_file', 'Out file base name (file endings for different formats will be appended)')
+                    ('out_file', 'Out file base name (file endings for different formats will be appended)'),
+                    ('-f/--use_graph_fasta', 'Optional. Specify fasta file to use for graph, format file_[chrom].fasta, where [chrom] will be replaced')               
                 ],
             'method': analyse_peaks_whole_genome
         },
@@ -345,12 +360,51 @@ interface = \
             'arguments':
                 [
                     ('data_folder', ''),
+                    ('result_folder', ''),
+                    ('chrom', ''),
+                    ('interval_name', ''),
+                    ('from_peakcollection', 'Optional if given then use intervalcollectionfile')
+                ],
+            'method': check_haplotype
+        },
+    'analysis_summary':
+        {
+            'help': 'Check motifs for haplotype',
+            'arguments':
+                [
+                    ('data_folder', ''),
+                    ('result_folder', ''),
+                    ('chrom', ''),
+                    ('interval_name', ''),
+                ],
+            'method': get_analysis_summaries
+        },
+
+    'overlapping_alignments':
+        {
+            'help': 'Check motifs for haplotype',
+            'arguments':
+                [
+                    ('data_folder', ''),
+                    ('result_folder', ''),
+                    ('chromosomes', 'Comma-separated list of chromosomes'),
+                    ('interval_name', ''),
+                ],
+            'method': get_overlapping_alignments
+        },
+    'haplotype_sequence':
+        {
+            'help': 'Find haplotype sequence around intervals',
+            'arguments':
+                [
+                    ('data_folder', ''),
                     ('fasta_file', ''),
                     ('result_folder', ''),
                     ('chrom', ''),
-                    ('interval_name', '')
+                    ('interval_name', ''),
+                    ('haplotype', '')
                 ],
-            'method': check_haplotype
+            'method': get_haplotype_sequence
         },
     'motif_locations':
         {
@@ -359,6 +413,7 @@ interface = \
                 [
                     ('data_folder', ''),
                     ('result_folder', ''),
+                    ('interval_name', ''),
                     ('chrom', '')
                 ],
             'method': get_motif_locations
@@ -413,6 +468,21 @@ interface = \
                 ],
             'method': get_summits
         },
+    'get_super_summits':
+        {
+            'help': 'Get summit around peaks. Will write to a new file, using input file base name + _summits.fasta',
+            'requires_graph': True,
+            'arguments':
+                [
+                    ('linear_ref', 'Fasta file containing graph peaks.'),
+                    ('peaks_fasta_file', 'Fasta file containing graph peaks.'),
+                    ('q_values_base_name', 'Base file name of q values from running '
+                                           'the peak caller. Will be peak caller output base name + _qvalues'),
+                    ('window_size', 'Optional. Number of basepairs to each side '
+                                    'from summit to include. Default is 60.'),
+                ],
+            'method': get_super_summits
+        },
     'project_vg_alignments':
         {
             'help': '',
@@ -448,6 +518,19 @@ interface = \
                 ],
             'method': vg_json_alignments_to_intervals
         },
+    'vg_json_alignments_to_fasta':
+        {
+            'help': 'Reads vg json alignments and converts to interval collection',
+            'requires_graph': True,
+            'arguments':
+                [
+                    ('vg_json_file_name', 'Vg json file name'),
+                    ('data_dir', ""),
+                    ('chrom', ""),
+                    ('out_file_name', 'Out file name'),
+                ],
+            'method': create_alignment_fasta
+        },
     'get_intersecting_intervals':
         {
             'help': "Finds intervals in first file that interesects any intervals in second file",
@@ -459,6 +542,27 @@ interface = \
                     ('out_file_name', 'File to write intersecting intervals to')
                 ],
             'method': get_intersecting_intervals
+        },
+    'split_peaks_by_chromosome':
+        {
+            'help': 'Splits a peak intervalcollection file by chromosomes',
+            'arguments':
+                [
+                    ('in_file_name', ''),
+                    ('chromosomes', 'Comma separated list of chromosomes to look for'),
+                    ('out_file_name_ending', 'Will add *chromosome*_ before this name for each chromosome found.')
+                ],
+            'method': split_peaks_by_chromosome
+        },
+    'clean_vcfs':
+        {
+            'help': "Indexes the vcf files so variants can be looked up by node id",
+            'arguments':
+                [
+                    ('data_folder', 'Folder containing graph files and vcf files'),
+                    ('chromosomes', 'Comma separated list of chromosome names corresponding to file names')
+                ],
+            'method': clean_vcf_wrapper
         }
 }
 
@@ -539,8 +643,6 @@ def run_argument_parser(args):
     if len(args) == 0:
         parser.print_help()
         sys.exit(1)
-
-
     try:
         args = parser.parse_args(args)
     except GraphNotFoundException:

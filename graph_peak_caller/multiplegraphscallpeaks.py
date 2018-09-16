@@ -8,6 +8,7 @@ from .sparsediffs import SparseValues
 from .intervals import Intervals, UniqueIntervals
 
 from .peakfasta import PeakFasta
+from offsetbasedgraph import NumpyIndexedInterval
 
 
 class MultipleGraphsCallpeaks:
@@ -18,6 +19,8 @@ class MultipleGraphsCallpeaks:
                  config, reporter,
                  sequence_retrievers=None,
                  stop_after_p_values=False,
+                 linear_path_file_names=None,
+                 variant_maps_path=None
                  ):
         self._config = config
         self._reporter = reporter
@@ -28,6 +31,9 @@ class MultipleGraphsCallpeaks:
         self.samples = samples
         self.controls = controls
         self.stop_after_p_values = stop_after_p_values
+        self.linear_path_file_names=linear_path_file_names
+        self.variant_maps_path = variant_maps_path
+
         if self.stop_after_p_values:
             logging.info("Will only run until p-values have been computed.")
 
@@ -127,9 +133,21 @@ class MultipleGraphsCallpeaks:
             graph_file_name = self.graph_file_names[i]
             ob_graph = obg.Graph.from_numpy_file(
                 graph_file_name)
+
+            variant_maps = None
+            if self.variant_maps_path is not None:
+                from offsetbasedgraph.vcfmap import load_variant_maps
+                logging.info("Will use variant maps when calling peaks (in max path finding)")
+                variant_maps = load_variant_maps(name, self.variant_maps_path)
+
+            linear_path = None
+            if self.linear_path_file_names is not None:
+                linear_path = NumpyIndexedInterval.from_file(self.linear_path_file_names[i])
+
             assert ob_graph is not None
             caller = CallPeaks(ob_graph, self._config,
-                               self._reporter.get_sub_reporter(name))
+                               self._reporter.get_sub_reporter(name),
+                               variant_maps=variant_maps)
             caller.p_to_q_values_mapping = self._q_value_mapping
             if name != "":
                 name += "_"
@@ -138,7 +156,7 @@ class MultipleGraphsCallpeaks:
             caller.touched_nodes = set(np.load(
                 self._reporter._base_name + name + "touched_nodes.npy"))
             caller.get_q_values()
-            caller.call_peaks_from_q_values()
+            caller.call_peaks_from_q_values(linear_path)
             if self.sequence_retrievers is not None:
                 try:
                     sequencegraph = self.sequence_retrievers.__next__()

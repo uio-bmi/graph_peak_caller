@@ -91,6 +91,18 @@ def run_callpeaks_interface(args):
             "Not saving max path sequences, since a sequence graph was not found.")
 
 
+def create_alignment_fasta(args):
+    intervals = UniqueIntervals(parse_input_file(args.vg_json_file_name, args.graph))
+    sequence_graph = obg.SequenceGraph.from_file(args.data_dir + "/" + args.chrom + ".nobg.sequences")
+    seqs = (sequence_graph.get_interval_sequence(interval)
+            for interval in intervals)
+
+    with open(args.out_file_name, "w") as f:
+        for i, seq in enumerate(seqs):
+            f.write(">1\n")
+            f.write(seq+"\n")
+
+
 def find_or_create_linear_map(graph, linear_map_name):
 
     if os.path.isfile(linear_map_name):
@@ -328,6 +340,13 @@ def run_callpeaks_whole_genome_from_p_values(args):
         (obg.SequenceGraph.from_file(args.data_dir + "/" + chrom + ".nobg.sequences") for chrom in chromosomes)
     out_name = args.out_name if args.out_name is not None else ""
     config = Configuration()
+
+    if args.q_threshold is not None:
+        config.q_values_threshold = float(args.q_threshold)
+        logging.info("Running with q value threshold %.3f" % config.q_values_threshold)
+    else:
+        logging.info("Q value threshold not set. Running with default 0.05.")
+
     config.fragment_length = int(args.fragment_length)
     config.read_length = int(args.read_length)
     reporter = Reporter(out_name)
@@ -340,6 +359,7 @@ def run_callpeaks_whole_genome_from_p_values(args):
         config,
         reporter,
         sequence_retrievers=sequence_retrievers,
+        variant_maps_path=args.variant_maps_path
     )
     caller.create_joined_q_value_mapping()
     caller.run_from_p_values(only_chromosome=chromosome)

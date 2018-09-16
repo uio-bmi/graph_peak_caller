@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='graph_peak_caller',
-      version='1.2.0',
+      version='1.2.1',
       description='Graph peak caller',
       url='http://github.com/uio-bmi/graph_peak_caller',
       author='Ivar Grytten and Knut Rand',
