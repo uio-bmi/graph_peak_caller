@@ -116,7 +116,7 @@ class CallPeaks(object):
         self.run_to_p_values(input_intervals, control_intervals)
         self.get_p_to_q_values_mapping()
         self.get_q_values()
-        self.call_peaks_from_q_values(variant_maps=self.variant_maps)
+        self.call_peaks_from_q_values()
 
     def run_to_p_values(self, input_intervals, control_intervals):
         self.run_pre_callpeaks(input_intervals, control_intervals)
