@@ -3,9 +3,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 from scipy.stats import binom_test
-# import motif_models
+import motif_models
 
 count_mismatch = lambda result: result.total - (result.A_count + result.B_count)
+
+def check_is_diplo(result):
+    return result.total == result.A_count+result.B_count
 
 
 def _get_binomial_ps(mismatches, total, rate):
@@ -94,19 +97,27 @@ def analyze_result(motif_results, all_results, col="b"):
     # print("#POST:", (motif_ps>=threshold).sum(), (all_ps>=threshold).sum(), (motif_ps>=threshold).sum()/float((all_ps>=threshold).sum()))
     return (a, b)
 
+def count_diplo(results):
+    return sum(check_is_diplo(result) for result in results)
+
 
 def parse_results(filename):
     return [(line.split("\t")[0], eval(line.split("\t")[1]))
             for line in open(filename) if not line.startswith("#")]
 
-def run_comarison(folder):
+def run_comparison(folder, unique=True):
     print(folder)
-    macs_results = {i: parse_results("%s%s_macs_unique_summits_alignments_diplotypes.tsv" % (folder, i)) for i in range(1, 6)}
-    graph_results = {i: parse_results("%s%s_limited-summits_alignments_diplotypes.tsv" % (folder, i)) for i in range(1, 6)}
-    macs_motifs = {line.split("\t")[0]: {peak.strip() for peak in line.split("\t")[1].split(",")} for line in open(folder+"/fimo_macs_uniquemotif_summary.tsv")}
-    graph_motifs = {line.split("\t")[0]: {peak.strip() for peak in line.split("\t")[1].split(",")} for line in open(folder+"/motif_summary.tsv")}
+    if unique:
+        macs_results = {i: parse_results("%s%s_macs_unique_summits_alignments_diplotypes.tsv" % (folder, i)) for i in range(1, 6)}
+        is_unique = lambda peak, i: peak in graph_unique[str(i)]
+    else:
+        macs_results = {i: parse_results("%s%s_macs_all_summits_alignments_diplotypes.tsv" % (folder, i)) for i in range(1, 6)}        
+        is_unique= lambda peak, i: True
+    graph_results = {i: parse_results("%s%s_limited_summits_alignments_diplotypes.tsv" % (folder, i)) for i in range(1, 6)}
+    macs_motifs = {line.split("\t")[0]: {peak.strip() for peak in line.split("\t")[1].split(",")} for line in open(folder+"/fimo_macsmotif_summary.tsv")}
+    graph_motifs = {line.split("\t")[0]: {peak.strip() for peak in line.split("\t")[1].split(",")} for line in open(folder+"/fimo_graphmotif_summary.tsv")}
     graph_unique = {line.split("\t")[0]: {peak.strip() for peak in line.split("\t")[1].split(",")} for line in open(folder+"/unqiue_summary.tsv")}
-    is_unique = lambda peak, i: peak in graph_unique[str(i)]
+
     macs_non_motif_results = [result for i, results in macs_results.items()
                               for peak, result in results if  peak not in macs_motifs[str(i)]]
     macs_motif_results = [result for i, results in macs_results.items()
@@ -118,10 +129,51 @@ def run_comarison(folder):
     # compare_two(graph_motif_results, graph_motif_results+graph_non_motif_results,
     # macs_motif_results, macs_motif_results+macs_non_motif_results)
     # plt.show()
+    return graph_motif_results, graph_non_motif_results, macs_motif_results, macs_non_motif_results
     motif_models.simple_model(graph_motif_results, graph_non_motif_results,
                               macs_motif_results, macs_non_motif_results)
 
 
+def compare_folders(folders):
+    results = [[], [], [], []]
+    counts = []
+    tots = []
+    for folder in folders:
+        res = run_comparison(folder)
+
+        for i in range(4):
+            results[i].extend(res[i])
+        print([len(r) for r in res])
+        print(folder)
+        counts.append([count_diplo(r) for r in res])
+        tots.append([len(r) for r in res])
+        # compare_two(res[0], res[0]+res[1], res[2], res[2]+res[3])
+        # plt.show()
+    print(counts)
+    print(tots)
+    tots = np.array(tots)
+    counts = np.array(counts)
+    inv = tots-counts
+    props1 = counts[:, 0]/(counts[:, 0]+counts[:, 1])
+    props2 = counts[:, 2]/(counts[:, 2]+counts[:, 3])
+    props3 = inv[:, 0]/(inv[:, 0]+inv[:, 1])
+    props4 = inv[:, 2]/(inv[:, 2]+inv[:, 3])
+    print("graph1", props1)
+    print("graph2", props3)
+    print("graphdiff", props1-props3)
+    print("macs1", props2)
+    print("macs2", props4)
+    print("macsdiff", props2-props4)
+
+    # props = counts/tots
+    # print(tots.T)
+    # print(counts.T)
+    # print(props.T)
+    res = results
+    compare_two(res[0], res[0]+res[1], res[2], res[2]+res[3])
+    plt.show()
+    motif_models.simple_model(*results)
+        
 
 def run(folder, includes="all"):
     #interval_name = "macs_unique_graph_"
@@ -202,6 +254,12 @@ if __name__ == "__main__":
     if sys.argv[1] == "haplo":
         [run_func(folder+"/", sys.argv[2], count_haplo) for folder in sys.argv[3:]]
         exit()
+    if sys.argv[1] == "compare":
+        compare_folders(sys.argv[2:])
+        # [run_comparisons(folder+"/") for folder in sys.argv[2:]]
+        exit()
+
+
 
     folders = sys.argv[1:]
     output = [run(folder+"/", includes="unique") for folder in folders]
@@ -213,46 +271,3 @@ if __name__ == "__main__":
     print(" ".join(str(n) for n in results[0]/results[1]))
     print(s[0], s[1], s[0]/s[1])
     plt.show()
-# includes = sys.argv[1]
-# succses, total = zip(*[run(folder+"/", includes) for folder in ["ERF", "SOC", "AP", "PI", "SEP"]])
-
-
-# plt.show()
-
-# successes = sum(succses)
-# total = sum(total)
-# print(successes, total, successes/total)
-
-
-# n_reads = np.array([result.total for result in all_results])
-# 
-# 
-# n_mismatches = np.array([count_mismatch(result) for result in all_results])
-# 
-# # plt.boxplot([n_reads[n_mismatches<2], n_reads[n_mismatches>=2]])
-# # plt.show()
-# 
-# 
-# plt.plot(n_reads, n_mismatches, ".")
-# plt.show()
-# motif_mismatches = np.array([count_mismatch(r) for r in motif_results])
-# nonmotif_mismatches = np.array([count_mismatch(r) for r in non_motif_results])
-# max_types = max(np.max(motif_mismatches), np.max(nonmotif_mismatches))
-# 
-# # motif_hist = np.histogram(motif_mismatches, 100, (0, 1))
-# # nonmotif_hist = np.histogram(nonmotif_mismatches, 100, (0, 1))
-# 
-# motif_hist = np.histogram(motif_mismatches, max_types, (0, max_types))
-# nonmotif_hist = np.histogram(nonmotif_mismatches, max_types, (0, max_types))
-# 
-# m_counts = np.cumsum(motif_hist[0])
-# n_counts = np.cumsum(nonmotif_hist[0])
-# plt.plot(m_counts/(m_counts+n_counts), "r")
-# # plt.plot(m_counts/(m_counts[-1]+n_counts[-1]), "g")
-# plt.show()
-# m_counts_r = np.cumsum(motif_hist[0][::-1])
-# n_counts_r = np.cumsum(nonmotif_hist[0][::-1])
-# plt.plot(m_counts_r/(m_counts_r+n_counts_r), "r")
-# # plt.plot(m_counts_r/(m_counts_r[-1]+n_counts_r[-1]), "g")
-# 
-# plt.show()
