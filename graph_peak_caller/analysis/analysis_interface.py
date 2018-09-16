@@ -146,7 +146,7 @@ def get_overlapping_alignments(args):
 
 
 def _check_haplotype(args, chrom):
-    if args.from_peakcollection is not None:
+    if args.from_peakcollection == "True":
         filename = args.result_folder + chrom + "_" + args.interval_name + ".intervalcollection"
         interval_dict = {peak.unique_id: [peak] for peak in PeakCollection.from_file(filename, True)}
     else:
