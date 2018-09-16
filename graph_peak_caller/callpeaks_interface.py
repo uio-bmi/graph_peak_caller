@@ -359,6 +359,7 @@ def run_callpeaks_whole_genome_from_p_values(args):
         config,
         reporter,
         sequence_retrievers=sequence_retrievers,
+        variant_maps_path=args.variant_maps_path
     )
     caller.create_joined_q_value_mapping()
     caller.run_from_p_values(only_chromosome=chromosome)

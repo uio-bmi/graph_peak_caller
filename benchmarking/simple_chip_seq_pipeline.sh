@@ -21,6 +21,17 @@ vg_xg_index=$7
 vg_gcsa_index=$8
 graph_dir=$9
 
+if [ -n "${10}" ]
+  then
+    echo "Will use variant maps ${10}"
+    variant_maps_flag="--variant_maps_path ${10}"
+else
+    echo "Will not use variant maps (graph dir is $graph_dir)"
+fi
+
+
+
+
 base_dir=$(pwd)
 n_threads=$(grep -c ^processor /proc/cpuinfo)
 
@@ -231,7 +242,7 @@ do
     	echo "Peaks already called for $chromosome. Not calling"
     elif [ -f ${chromosome}_pvalues_values.npy ]; then
         graph_peak_caller callpeaks_whole_genome_from_p_values $chromosome \
-            -d $graph_dir -f $fragment_length -r $read_length > log_after_p_values_$chromosome.txt 2>&1 &
+            $variant_maps_flag -d $graph_dir -f $fragment_length -r $read_length > log_after_p_values_$chromosome.txt 2>&1 &
 	echo "Peak calling from p-values for chr $chromosome started as process. Log will be written to $work_dir/log_after_p_values_$chromosome.txt"
     else
         echo "P values not computed for $chromosome. Will not call peaks now."

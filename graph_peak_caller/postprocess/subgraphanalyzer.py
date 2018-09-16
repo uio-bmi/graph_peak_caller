@@ -32,7 +32,7 @@ class SubGraphAnalyzer:
                 if next_node in self._max_path:
                     continue
                 s = to_dist + d + self._dists[next_node, -1]
-                assert s >= self._score
+                assert s+0.0001 >= self._score, (self._score, s)
                 if s == self._score:
                     return True
 

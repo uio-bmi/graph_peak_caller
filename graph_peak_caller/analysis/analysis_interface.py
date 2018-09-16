@@ -27,23 +27,24 @@ from offsetbasedgraph.tracevariants import pipeline_func_for_chromosome,\
     summarize_results, AnalysisResults
 
 
-def get_motif_locations(args):
-    graph = obg.Graph.from_file(args.data_folder+args.chrom+".nobg")
+def _get_motif_locations(args, chrom):
+
+    graph = obg.Graph.from_file(args.data_folder+chrom+".nobg")
     peaks = PeakCollection.from_fasta_file(
-        args.result_folder+args.chrom+"_sequences_summits.fasta", graph)
+        args.result_folder+chrom+"_sequences_" + args.interval_name + ".fasta", graph)
     peaks = list(peaks)
-
-    #for i, p in enumerate(peaks):
-    #    p.graph = graph
-    #    p.unique_id = "peak%s" % i
-
     fimo = FimoFile.from_file(
-        args.result_folder+"fimo_graph_chr"+args.chrom+"/fimo.txt")
+        args.result_folder+"fimo_graph_chr"+chrom+"/fimo.txt")
     motif_paths = [MotifLocation.from_fimo_and_peaks(entry, peaks).location
                    for entry in fimo.get_best_entries()]
     print(type(motif_paths[0]))
     PeakCollection(motif_paths).to_file(
-        args.result_folder+args.chrom+"_motif_paths.intervalcollection", True)
+        args.result_folder+chrom+"_" + args.interval_name + "_motif_paths.intervalcollection", True)
+
+
+def get_motif_locations(args):
+    print(args.chrom)
+    [_get_motif_locations(args, chrom) for chrom in args.chrom.split(",")]
 
 
 class IntervalDict(obg.IntervalCollection):
@@ -129,8 +130,10 @@ def get_overlapping_alignments(args):
         logging.info("Running on chromosome %s" % chrom)
         graph = obg.Graph.from_file(args.data_folder+chrom+".nobg")
         base_name = args.result_folder + chrom
-        intervals = PeakCollection.from_file(base_name + "_" + args.interval_name+".intervalcollection", True)
-
+        try:
+            intervals = PeakCollection.from_fasta_file(base_name + "_sequences_" + args.interval_name+".fasta")
+        except:
+            intervals = PeakCollection.from_file(base_name + "_" + args.interval_name+".intervalcollection", True)
         alignment_collection = AlignmentCollection.from_file(
             args.result_folder + chrom + "_alignments.pickle", graph)
         peaks_dict = {interval.unique_id:
@@ -143,8 +146,12 @@ def get_overlapping_alignments(args):
 
 
 def _check_haplotype(args, chrom):
-    dict_filename = args.result_folder + chrom + "_" + args.interval_name + ".intevaldict"
-    interval_dict = IntervalDict.from_file(dict_filename).intervals
+    if args.from_peakcollection == "True":
+        filename = args.result_folder + chrom + "_" + args.interval_name + ".intervalcollection"
+        interval_dict = {peak.unique_id: [peak] for peak in PeakCollection.from_file(filename, True)}
+    else:
+        dict_filename = args.result_folder + chrom + "_" + args.interval_name + ".intevaldict"
+        interval_dict = IntervalDict.from_file(dict_filename).intervals
     pipeline = obg.tracevariants.pipeline_func_for_chromosome(chrom, args.data_folder)
     results = ((peak_id, pipeline(intervals)) for peak_id, intervals in interval_dict.items())
     with open(args.result_folder + chrom + "_" + args.interval_name + "_diplotypes.tsv", "w") as outfile:
@@ -303,6 +310,23 @@ def concatenate_sequence_files(args):
     logging.info("Wrote all peaks in sorted order to %s" % out_file_name_json)
 
 
+def split_peaks_by_chromosome(args):
+    chromosomes = args.chromosomes.split(",")
+    peaks = PeakCollection.from_file(args.in_file_name, text_file=True)
+
+    out_peaks = {chrom: [] for chrom in chromosomes}
+    #out_files = {chrom: open(chrom + "_" + args.out_file_name_ending) for chrom in chromosomes}
+
+    for peak in peaks:
+        if peak.chromosome in chromosomes:
+            out_peaks[peak.chromosome].append(peak)
+        else:
+            logging.warning("Found peak %s that has a chromosome which is not in list of chromosomes %s" % (peak, chromosomes))
+
+    for chrom in chromosomes:
+        PeakCollection(out_peaks[chrom]).to_file(chrom + "_" + args.out_file_name_ending, text_file=True)
+
+
 def find_linear_path(args):
     graph = args.graph
     vg_graph = pyvg.Graph.from_file(args.vg_json_graph_file_name)
@@ -404,6 +428,7 @@ def get_super_summits(args):
 
 def analyse_peaks_whole_genome(args):
     chromosomes = args.chromosomes.split(",")
+    from graph_peak_caller.analysis.peakscomparer import AnalysisResults
     results = AnalysisResults()
     for chrom in chromosomes:
         graph = obg.GraphWithReversals.from_numpy_file(
@@ -421,11 +446,16 @@ def analyse_peaks_whole_genome(args):
         #except FileNotFoundError:
         #    logging.warning("Did not find alignment collection. Will analyse without")
         #    alignments = None
-
+        
+        if args.use_graph_fasta is not None:
+            graph_fasta = args.use_graph_fasta.replace("[chrom]", chrom)
+        else:
+            graph_fasta = "%s_sequences_summits.fasta" % chrom
+        
         analyser = PeaksComparerV2(
             graph,
             args.results_dir + "macs_sequences_chr%s_summits.fasta" % chrom,
-            args.results_dir + "%s_sequences_summits.fasta" % chrom,
+            args.results_dir + graph_fasta,
             args.results_dir + "/fimo_macs_chr%s/fimo.txt" % chrom,
             args.results_dir + "/fimo_graph_chr%s/fimo.txt" % chrom,
             linear_path,

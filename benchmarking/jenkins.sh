@@ -24,7 +24,6 @@ fi
 ./simple_chip_seq_pipeline.sh SRR1042995 1 ARABIDOPSIS_SEP3 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 ./simple_chip_seq_pipeline.sh SRX387187 1 ARABIDOPSIS_AP1 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 ./simple_chip_seq_pipeline.sh SRR822350	 1 ARABIDOPSIS_SOC1 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
-#./simple_chip_seq_pipeline.sh SRR1044950 1 ARABIDOPSIS_HBI1 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 ./simple_chip_seq_pipeline.sh SRR502859 1 ARABIDOPSIS_PI 1,2,3,4,5 135000000 $arabidopsis_graph_dir/reference1-5.fa $arabidopsis_graph_dir/wg.xg $arabidopsis_graph_dir/wg.gcsa $arabidopsis_graph_dir/ &
 
 # Drosophila
@@ -45,12 +44,13 @@ fi
 
 wait
 
+
+
 ./analyse_peak_calling_results.sh  SRR931836 1 ARABIDOPSIS_ERF115 1,2,3,4,5 https://hyperbrowser.uio.no/graph-peak-caller/static/graph_peak_caller_data/motifs/ARABIDOPSIS_ERF115.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 $macs_peaks_file $summit_window_size &
 ./analyse_peak_calling_results.sh  SRR1042995 1 ARABIDOPSIS_SEP3 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0563.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 $macs_peaks_file $summit_window_size &
 ./analyse_peak_calling_results.sh  SRX387187 1 ARABIDOPSIS_AP1 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0940.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 $macs_peaks_file $summit_window_size &
 ./analyse_peak_calling_results.sh  SRR822350 1 ARABIDOPSIS_SOC1 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0554.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 $macs_peaks_file $summit_window_size &
 ./analyse_peak_calling_results.sh  SRR502859 1 ARABIDOPSIS_PI 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0559.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 $macs_peaks_file $summit_window_size &
-./analyse_peak_calling_results.sh  SRX159033 1 ARABIDOPSIS_PIF3 1,2,3,4,5 http://jaspar.genereg.net/api/v1/matrix/MA0560.1.meme $arabidopsis_graph_dir/ $arabidopsis_graph_dir/reference1-5.fa 135000000 $macs_peaks_file $summit_window_size &
 
 if [ ! -z "$dm_graph_dir" ]
 then
@@ -70,10 +70,10 @@ wait
 
 wget -O figures_tables/bootstrap.min.css https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css
 
+python3 generate_jenkins_report.py ARABIDOPSIS_ERF115,ARABIDOPSIS_SEP3,ARABIDOPSIS_AP1,ARABIDOPSIS_SOC1,ARABIDOPSIS_PI figures_tables/index.html
+
 if [ ! -z "${human_graph_dir}$dm_graph_dir" ]; then
-    python3 generate_jenkins_report.py ARABIDOPSIS_ERF115,ARABIDOPSIS_SEP3,ARABIDOPSIS_AP1,ARABIDOPSIS_SOC1,ARABIDOPSIS_PI,ARABIDOPSIS_PIF3,DM_JRA,DM_SQZ,DM_JIM,DM_ANTP,HUMAN_CTCF,HUMAN_SRF figures_tables/index.html
-else
-    # Only run arabidopsis
-    python3 generate_jenkins_report.py ARABIDOPSIS_ERF115,ARABIDOPSIS_SEP3,ARABIDOPSIS_AP1,ARABIDOPSIS_SOC1,ARABIDOPSIS_PI figures_tables/index.html
+    python3 generate_jenkins_report.py DM_JRA,DM_SQZ,DM_JIM,DM_ANTP figures_tables/index_dm.html
+    python3 generate_jenkins_report.py HUMAN_CTCF,HUMAN_SRF figures_tables/index_human.html
 fi
 

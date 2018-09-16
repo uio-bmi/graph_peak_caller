@@ -9,12 +9,14 @@ from .summits import find_summits
 
 class Peak(obg.DirectedInterval):
     def __init__(self, start_position, end_position,
-                 region_paths=None, graph=None, direction=None, score=0, unique_id=None):
+                 region_paths=None, graph=None, direction=None, score=0, unique_id=None,
+                 chromosome=None):
         super().__init__(start_position, end_position,
                          region_paths, graph, direction)
         self.score = score
         self.unique_id = unique_id
         self.info = (0, 0)
+        self.chromosome=chromosome
 
     def __str__(self):
         return super().__str__() + " [%s]" % self.score
@@ -37,7 +39,8 @@ class Peak(obg.DirectedInterval):
                   "average_q_value": float(self.score),
                   "unique_id": str(self.unique_id),
                   "is_ambigous": int(self.info[1]),
-                  "is_diff": int(self.info[0])
+                  "is_diff": int(self.info[0]),
+                  "chromosome": self.chromosome
                   }
         try:
             d = json.dumps(object)
@@ -57,6 +60,9 @@ class Peak(obg.DirectedInterval):
                   direction=object["direction"], graph=graph,
                   score=object["average_q_value"],
                   unique_id=unique_id)
+        if "chromosome" in object:
+            obj.chromosome = object["chromosome"]
+
         obj.info = (object["is_diff"], object["is_ambigous"])
         return obj
 
