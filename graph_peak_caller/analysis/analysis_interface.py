@@ -342,11 +342,13 @@ def move_linear_reads_to_graph(args):
     chrom_lookup = set(chromosomes)
     graphs = {}
     out_files = {}
-    linear_paths = {}
+    linear_paths = {} 
+    linear_path_file_name = args.data_dir + "/" + chrom + "_linear_pathv2.interval"
+    #if args.linear_path_file_name is not None:
+    #linear_path_file_name = args.linear_path_file_name
+
     for chrom in chromosomes:
-        linear_paths[chrom] = obg.NumpyIndexedInterval.from_file(
-            args.data_dir + "/" + chrom + "_linear_pathv2.interval"
-        )
+        linear_paths[chrom] = obg.NumpyIndexedInterval.from_file(linear_path_file_name)
         graphs[chrom] = obg.Graph.from_numpy_file(args.data_dir + "/" + chrom + ".nobg")
         out_files[chrom] = open(args.out_files_base_name + "_" + chrom + ".intervalcollection", "w")
 

@@ -124,6 +124,15 @@ def get_intersecting_intervals(args):
     logging.info("Wrote intersecting intervals to %s" % args.out_file_name)
 
 
+def index_interval(args):
+    intervals = obg.IntervalCollection.from_file(args.file_name, text_file=True, graph=args.graph)
+    intervals = list(intervals.intervals)
+    assert len(intervals) == 1, "Only a single interval in file is supported"
+    interval = intervals[0]
+    indexed = interval.to_numpy_indexed_interval()
+    indexed.to_file(args.file_name + ".indexed")
+    logging.info("Wrote indexed interval to file %s" % args.file_name + ".indexed")
+    
 
 interface = \
 {
@@ -563,7 +572,18 @@ interface = \
                     ('chromosomes', 'Comma separated list of chromosome names corresponding to file names')
                 ],
             'method': clean_vcf_wrapper
+        },
+    'index_interval':
+        {
+            'help': "Creates an indexed interval from a normal single interval in an intervalcollection file",
+            'requires_graph': True,
+            'arguments':
+                [
+                    ('file_name', 'File name of interval collection file. File should only contain a single interval to be indexed.'),
+                ],
+            'method': index_interval
         }
+                
 }
 
 
