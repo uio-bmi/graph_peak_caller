@@ -142,7 +142,7 @@ echo "Removing low quality reads."
 #python3 $base_dir/filter_json_alignments.py low_qual.txt filtered.json filtered_low_qual_reads_removed.json
 #cp filtered.json filtered_low_qual_reads_removed.json
 
-
+com
 # Get fragment length
 
 #if [ ! -f shift_estimation_log.txt ]; then
@@ -164,16 +164,17 @@ fi
 
 
 # Project filtered reads onto reference
-if [ ! -f projected_alignments.bed ]; then
+if [ ! -f projected_alignments.bam ]; then
+    vg surject -x -t $n_threads $vg_xg_index -b filtered.gam > projected_alignments.bam
+    #for chromosome in $(echo $chromosomes | tr "," "\n")
+    #do
+    #    echo "Projecting alignments for chrom $chromosome"
+    #    #graph_peak_caller project_vg_alignments -g $graph_dir/$chromosome.nobg filtered_low_qual_reads_removed_$chromosome.json $graph_dir/${chromosome}_linear_pathv2.interval $chromosome projected_alignments_$chromosome.bed &
+    #
+    #done
 
-    for chromosome in $(echo $chromosomes | tr "," "\n")
-    do
-        echo "Projecting alignments for chrom $chromosome"
-        graph_peak_caller project_vg_alignments -g $graph_dir/$chromosome.nobg filtered_low_qual_reads_removed_$chromosome.json $graph_dir/${chromosome}_linear_pathv2.interval $chromosome projected_alignments_$chromosome.bed &
-    done
-
-    wait  # Wait for all projections
-    cat projected_alignments_*.bed > projected_alignments.bed
+    #wait  # Wait for all projections
+    #cat projected_alignments_*.bed > projected_alignments.bed
 else
     echo "Not projecting alignments, already done"
 fi
@@ -181,7 +182,7 @@ fi
 # Run MACS2 with projected alignments
 echo "Running macs2 with projected alignments."
 if [ ! -f macs_output_projected_alignments.txt ]; then
-        macs2 callpeak --nomodel --bdg --trackline --extsize $fragment_length -g $genome_size -t projected_alignments.bed -n macs_projected_alignments > macs_output_projected_alignments.txt 2>&1
+        macs2 callpeak --nomodel --bdg --trackline --extsize $fragment_length -g $genome_size -t projected_alignments.bam -n macs_projected_alignments > macs_output_projected_alignments.txt 2>&1
 else
     echo "Not running, already done"
 fi
