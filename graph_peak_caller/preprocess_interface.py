@@ -76,7 +76,7 @@ def create_linear_map_interface(args):
 
 
 def split_vg_json_reads_into_chromosomes(args):
-    reads_base_name = args.vg_json_reads_file_name.split(".")[0:-1]
+    reads_base_name = '.'.join(args.vg_json_reads_file_name.split(".")[0:-1])
     logging.info("Will write reads to files %s_[chromosome].json",
                  reads_base_name)
 
@@ -93,6 +93,7 @@ def split_vg_json_reads_into_chromosomes(args):
         logging.info("   Chr%s: %d-%d" % (chrom, start, end))
         f.close()
 
+    
     out_files = {chrom: open(reads_base_name + "_" + chrom + ".json", "w")
                  for chrom in chromosomes}
 
