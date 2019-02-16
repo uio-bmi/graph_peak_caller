@@ -49,7 +49,7 @@ def count_unique_reads(chromosomes, graph_file_names, reads_file_names):
 
 
 def create_ob_graph(args):
-    logging.info("Creating obgraph")
+    logging.info("Creating obgraph (graph and sequencegraph)")
     ob_graph = json_file_to_obg_numpy_graph(args.vg_json_file_name, 0)
     logging.info("Writing ob graph to file")
     out_name = args.out_file_name if args.out_file_name is not None \
@@ -58,6 +58,11 @@ def create_ob_graph(args):
 
     logging.info("Creating sequence graph")
     from offsetbasedgraph import SequenceGraph
+    sequence_graph_v2 = obg.SequenceGraphv2.create_empty_from_ob_graph(ob_graph)
+    sequence_graph_v2.set_sequences_using_vg_json_graph(args.vg_json_file_name)
+    sequence_graph_v2.to_file(out_name + ".sequencesv2")
+    logging.info("Created sequence graph v2, wrote to file %s" % out_name + "sequencesv2")
+
     sequence_graph = SequenceGraph.create_empty_from_ob_graph(ob_graph)
     sequence_graph.set_sequences_using_vg_json_graph(args.vg_json_file_name)
     out_file_name = out_name + ".sequences"
