@@ -87,8 +87,8 @@ class SparseValues:
 
 class SparseDiffs:
     def __init__(self, indices, diffs, sanitize=False):
-        self._indices = np.asanyarray(indices)
-        self._diffs = np.asanyarray(diffs)
+        self._indices = np.asanyarray(indices, dtype="int")
+        self._diffs = np.asanyarray(diffs, dtype="int")
         if sanitize:
             self._sanitize()
 
