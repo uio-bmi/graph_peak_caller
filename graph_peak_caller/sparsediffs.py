@@ -128,6 +128,7 @@ class SparseDiffs:
                                  to_begin=sparse_values.values[0])
 
     def clip_min(self, min_value):
+        print(self._diffs)
         values = np.cumsum(self._diffs)
         np.clip(values, min_value, None, values)
         self._diffs[1:] = np.diff(values)

@@ -61,43 +61,35 @@ class MotifMatcher():
 
         return true_positives
 
-
-def plot_true_positives(peak_file_sets, meme_file_name, plot_title="", save_to_file=None, run_fimo=True, background_model_file=None):
+def plot_true_positives(peak_file_sets, meme_file_name, plot_title="", save_to_file=None, 
+                        run_fimo=True, background_model_file=None):
     colors = ['b', 'g']
     i = 0
-    font = {'family' : 'DejaVu Sans',
-        'weight' : 'normal',
-        'size'   : 8}
+    font = {'family': 'DejaVu Sans',
+            'weight': 'normal',
+            'size': 8}
     import matplotlib
     import numpy as np
     matplotlib.rc('font', **font)
 
     plt.figure(figsize=(3.0, 3.0), dpi=300)
     axis = plt.gca()
-    # Major ticks every 20, minor ticks every 5
-    major_ticks = np.linspace(0, 1.0, 5)
-    minor_ticks = np.arange(0, 1, 20)
-
     possible_yticks = np.array(np.linspace(0, 1, 11))
-    #ax.set_yticks(minor_ticks, minor=True)
-
-    #ax.set_xticks(major_ticks)
-    #ax.set_xticks(minor_ticks, minor=True)
-
     max_y = 0.0
     for name, fasta_file_name in peak_file_sets:
         logging.info("Background model file is %s" % background_model_file)
-        matcher = MotifMatcher(fasta_file_name, meme_file_name, background_model_file=background_model_file)
+        matcher = MotifMatcher(fasta_file_name, meme_file_name,
+                               background_model_file=background_model_file)
         true_positives = matcher.compute_true_positives()
         n_matching = len(matcher.peaks_matching_motif)
         print("Fasta: %s" % fasta_file_name)
         n_tot = len(matcher.sorted_peaks)
         print("N tot: %d" % n_tot)
-        print("True positives for %s: %d / %d = %.3f" % (name, n_matching, n_tot, n_matching/n_tot))
+        print("True positives for %s: %d / %d = %.3f" %
+              (name, n_matching, n_tot, n_matching/n_tot))
         plt.plot(true_positives, color=colors[i], label=name, linewidth=1.0)
         max_y = max(max_y, np.max(true_positives[2:]))
         i += 1
-    #axis.set_ylim([0.75,1.0])
     axis.set_xlim(0)
     min_y = n_matching / n_tot
     idx = np.where(possible_yticks > min_y)
@@ -106,8 +98,8 @@ def plot_true_positives(peak_file_sets, meme_file_name, plot_title="", save_to_f
     axis.set_yticks(yticks)
     axis.grid(which='both')
 
-    #plt.xlabel("Number of peaks included (of the total set of peaks sorted descending on score)")
-    #plt.ylabel("Proportion of peaks enriched for motif")
+    plt.xlabel("Top n peaks")
+    plt.ylabel("Motif occurence rate")
     plt.title(plot_title)
     plt.legend()
     if save_to_file is not None:

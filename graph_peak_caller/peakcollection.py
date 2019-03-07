@@ -70,6 +70,7 @@ class Peak(obg.DirectedInterval):
         # Assuming graph is partially ordered DAG
         intersecting_nodes = set(self.region_paths).intersection(linear_path.nodes_in_interval())
         intersecting_nodes = sorted(list(intersecting_nodes))
+        assert intersecting_nodes, self.region_paths
 
         first_node = intersecting_nodes[0]
         start_offset = 0
