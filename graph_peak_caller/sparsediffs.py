@@ -84,11 +84,21 @@ class SparseValues:
         obj.track_size = pileup.size
         return obj
 
+    def apply_binary_func(self, func, other, return_values=True):
+        merge_indices = np.searchsorted(other.indices, self.indices, side="right")-1
+        my_values = func(self.values, other.values[merge_indices])
+        other_indices = np.searchsorted(self.indices, other.indices, side="right")-1
+        other_values = func(self.values, other.values[merge_indices])
+        indices = np.concatenate((self.indices, other.indices))
+        unique_indices, where = np.unique(indices, return_index=True)
+        values = np.concatenate((my_values, other_values))[where]
+        return SparseValues(unique_indices, values, sanitize=True)
+
 
 class SparseDiffs:
     def __init__(self, indices, diffs, sanitize=False):
         self._indices = np.asanyarray(indices, dtype="int")
-        self._diffs = np.asanyarray(diffs, dtype="int")
+        self._diffs = np.asanyarray(diffs)
         if sanitize:
             self._sanitize()
 
@@ -128,7 +138,6 @@ class SparseDiffs:
                                  to_begin=sparse_values.values[0])
 
     def clip_min(self, min_value):
-        print(self._diffs)
         values = np.cumsum(self._diffs)
         np.clip(values, min_value, None, values)
         self._diffs[1:] = np.diff(values)
