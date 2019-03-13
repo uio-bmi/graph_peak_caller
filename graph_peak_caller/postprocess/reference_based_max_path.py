@@ -19,8 +19,10 @@ def max_path_func(pileup, graph, variant_maps):
     def get_max_path(node_ids):
         node_set = set(node_ids)
         node_ids = np.asanyarray(node_ids)
-        start_values = dict(zip(node_ids, get_start_value(node_ids-graph.min_node)))
-        end_values = dict(zip(node_ids, get_end_value(node_ids-graph.min_node)))
+        start_values = dict(zip(node_ids,
+                                get_start_value(node_ids-graph.min_node)))
+        end_values = dict(zip(node_ids,
+                              get_end_value(node_ids-graph.min_node)))
 
         node_ids = node_ids-graph.min_node
         non_variants = node_ids[not_variant[node_ids]]

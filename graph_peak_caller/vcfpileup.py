@@ -64,6 +64,13 @@ class EdgePileup:
         for from_node, to_node in zip(node_ids[:-1], node_ids[1:]):
             self.add_edge(from_node, to_node)
 
+    def get_reverse(self, rev_adj_list):
+        new_pileup = self.__class__(rev_adj_list)
+        for i in range(new_pileup._node_index.size-1):
+            start, end = new_pileup._node_index[i:i+2]
+            new_pileup
+        new_pileup = np.empty_like(self._pileup)
+
 
 class MainPileup:
     def __init__(self, graph, linear_repr, d):
@@ -199,3 +206,21 @@ class ReversePileup(Pileup):
 
     def _items(self, remains_array):
         return zip(range(len(remains_array)-1, -1, -1), remains_array[::-1])
+
+
+class HaploPileup(Pileup):
+    def extend_intervals(self, edge_pileup):
+        remains_array = np.array([Remains(ends, node_id)
+                                  for node_id, ends in
+                                  enumerate(self._open)], dtype=object)
+
+        for node_id, remains in self._items(remains_array):
+            remains = remains_array[node_id]
+            n_incoming = remains.count()
+            self._add_node_starts(node_id, n_incoming-remains.n_own)
+            closed = remains.cover_distance(self._graph._node_lens[node_id])
+            self._add_node_ends(node_id, n_incoming-len(closed))
+            self._set_closed(node_id, closed)
+            next_node = self._adj_list[np.argmax(edge_pileup)]
+            remains_array[next_node].add(remains)
+            remains_array[node_id] = None
