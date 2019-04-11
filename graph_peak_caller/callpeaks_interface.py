@@ -192,6 +192,12 @@ def run_callpeaks2(args):
         config.keep_duplicates = True
         logging.info("Keeping duplicates")
 
+    if args.q_threshold is not None:
+        config.q_values_threshold = float(args.q_threshold)
+        logging.info("Running with q value threshold %.3f" % config.q_values_threshold)
+    else:
+        logging.info("Q value threshold not set. Running with default 0.05.")
+
     if args.fragment_length is None:
         logging.info("Fragment length was not specified. Will now"
                      " predict fragment length.")
