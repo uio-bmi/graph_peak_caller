@@ -166,6 +166,7 @@ interface = \
                                              'duplicate input alignments.'),
                     ('-m/--min_fold_enrichment', 'Optional. Minimum fold enrichment required for '
                                                'candidate peaks when estimating fragment length. Default 5.'),
+                    ('-q/--q_threshold', 'Optional. q-value threshold. Default is 0.05.'),
                     ('-M /--max_fold_enrichment', 'Optional. Maximum fold enrichment required for '
                                                'candidate peaks when estimating fragment length. Default 50.'),
 
