@@ -142,7 +142,6 @@ echo "Removing low quality reads."
 #python3 $base_dir/filter_json_alignments.py low_qual.txt filtered.json filtered_low_qual_reads_removed.json
 #cp filtered.json filtered_low_qual_reads_removed.json
 
-com
 # Get fragment length
 
 #if [ ! -f shift_estimation_log.txt ]; then
@@ -165,7 +164,7 @@ fi
 
 # Project filtered reads onto reference
 if [ ! -f projected_alignments.bam ]; then
-    vg surject -x -t $n_threads $vg_xg_index -b filtered.gam > projected_alignments.bam
+    vg surject -t $n_threads -t $vg_xg_index -b filtered.gam > projected_alignments.bam
     #for chromosome in $(echo $chromosomes | tr "," "\n")
     #do
     #    echo "Projecting alignments for chrom $chromosome"
