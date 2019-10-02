@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='graph_peak_caller',
-      version='1.2.1',
+      version='1.2.2',
       description='Graph peak caller',
       url='http://github.com/uio-bmi/graph_peak_caller',
       author='Ivar Grytten and Knut Rand',
@@ -30,5 +30,5 @@ To update package:
 
 sudo python3 setup.py sdist
 sudo python3 setup.py bdist_wheel
-twine upload dist/graph_peak_caller-1.1.1.tar.gz
+twine upload dist/graph_peak_caller-1.1.2.tar.gz
 """
