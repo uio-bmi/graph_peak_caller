@@ -41,7 +41,7 @@ def main():
 
 
 def version(args):
-    print("Graph Peak Caller v1.1.1")
+    print("Graph Peak Caller v1.2.2")
 
 
 def clean_vcf_wrapper(args):
