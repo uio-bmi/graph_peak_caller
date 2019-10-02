@@ -30,5 +30,5 @@ To update package:
 
 sudo python3 setup.py sdist
 sudo python3 setup.py bdist_wheel
-twine upload dist/graph_peak_caller-1.1.2.tar.gz
+twine upload dist/graph_peak_caller-1.1.2.tar.gz 
 """
