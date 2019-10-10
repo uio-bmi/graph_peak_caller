@@ -123,15 +123,6 @@ class ReadsAdderWDirect(ReadsAdder):
             self.pos_read_ends.append(
                 self._node_indexes[abs(rp)-self.min_id]+end_pos.offset)
 
-class ATACReadsAdder(ReadsAdderWDirect):
-    def add_reads(self, intervals):
-        i = 0
-        for interval in intervals:
-            if i % 5000 == 0:
-                logging.info("%d reads processed" % i)
-            self._handle_interval(interval)
-            self._handle_interval(reverse_interval_start_thing(interval))
-            i += 1
 
 class SparseExtender:
     def __init__(self, graph, pileup, fragment_length):
@@ -224,16 +215,55 @@ class ReverseSparseExtender(SparseExtender):
     def _add_end(self, index):
         self._pileup.starts.append(self._graph_size-index)
 
+class ATACSamplePileupGenerator:
+    def __init__(self, graph, extension, rev_extension):
+        logging.info("Using extension %d when extending reads. " % extension)
+        if extension < 0:
+            raise Exception("Invalid extension size %d used. Must be positive. Is fragment length < read length?" % extension)
+        self._pileup = SparseGraphPileup(graph)
+        self._graph = graph
+        self._reads_adder = ReadsAdderWDirect(graph, self._pileup)
+        self._reads_adder2 = ReadsAdderWDirect(graph, self._pileup)
+        self._pos_extender = SparseExtender(graph, self._pileup, extension)
+        self._neg_extender = ReverseSparseExtender(
+            graph, self._pileup, extension)
+        self._pos_extender2 = SparseExtender(graph, self._pileup, rev_extension)
+        self._neg_extender2 = ReverseSparseExtender(
+            graph, self._pileup, rev_extension)
+
+    def run(self, reads, reporter=None):
+        i = 0
+        for interval in reads:
+            if i % 5000 == 0:
+                logging.info("%d reads processed" % i)
+            self._reads_adder._handle_interval(interval)
+            self._reads_adder2._handle_interval(reverse_interval_start_thing(interval))
+            i += 1
+
+        #self._reads_adder.add_reads(reads)
+        if reporter is not None:
+            reporter.add("direct_pileup", self.get_direct_pileup())
+        self._pos_extender.run_linear(self._reads_adder.get_pos_ends())
+        self._neg_extender.run_linear(self._reads_adder.get_neg_ends())
+
+        self._pos_extender2.run_linear(self._reads_adder2.get_pos_ends())
+        self._neg_extender2.run_linear(self._reads_adder2.get_neg_ends())
+        sdiffs = SparseDiffs.from_pileup(self._pileup,
+                                         self._graph.node_indexes)
+        sdiffs.touched_nodes = set(
+            np.flatnonzero(
+                self._pileup.touched_nodes[:-2]) + self._graph.min_node)
+        return sdiffs
+
 
 class SamplePileupGenerator:
-    _reads_adder_cls = ReadsAdderWDirect
     def __init__(self, graph, extension):
         logging.info("Using extension %d when extending reads. " % extension)
         if extension < 0:
             raise Exception("Invalid extension size %d used. Must be positive. Is fragment length < read length?" % extension)
         self._pileup = SparseGraphPileup(graph)
         self._graph = graph
-        self._reads_adder = self._reads_adder_cls(graph, self._pileup)
+        self._reads_adder = ReadsAdderWDirect(graph, self._pileup)
         self._pos_extender = SparseExtender(graph, self._pileup, extension)
         self._neg_extender = ReverseSparseExtender(
             graph, self._pileup, extension)
@@ -265,5 +295,3 @@ class SamplePileupGenerator:
         return sdiffs
 
 
-class ATACSamplePileupGenerator:
-    _reads_adder_cls = ATACReadsAdder
