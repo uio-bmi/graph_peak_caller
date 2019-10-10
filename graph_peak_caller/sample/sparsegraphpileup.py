@@ -99,6 +99,11 @@ class ReadsAdder:
             self._handle_interval(interval)
             i += 1
 
+def reverse_interval_start_thing(interval):
+    rp = interval.start_position.region_path_id 
+    offset = interval.graph.blocks[rp].length()-interval.start_position.offset
+    return Interval(offset, offset, [rp], graph=interval.graph)
+
 
 class ReadsAdderWDirect(ReadsAdder):
     def __init__(self, graph, pileup):
@@ -118,6 +123,15 @@ class ReadsAdderWDirect(ReadsAdder):
             self.pos_read_ends.append(
                 self._node_indexes[abs(rp)-self.min_id]+end_pos.offset)
 
+class ATACReadsAdder(ReadsAdderWDirect):
+    def add_reads(self, intervals):
+        i = 0
+        for interval in intervals:
+            if i % 5000 == 0:
+                logging.info("%d reads processed" % i)
+            self._handle_interval(interval)
+            self._handle_interval(reverse_interval_start_thing(interval))
+            i += 1
 
 class SparseExtender:
     def __init__(self, graph, pileup, fragment_length):
@@ -212,13 +226,14 @@ class ReverseSparseExtender(SparseExtender):
 
 
 class SamplePileupGenerator:
+    _reads_adder_cls = ReadsAdderWDirect
     def __init__(self, graph, extension):
         logging.info("Using extension %d when extending reads. " % extension)
         if extension < 0:
             raise Exception("Invalid extension size %d used. Must be positive. Is fragment length < read length?" % extension)
         self._pileup = SparseGraphPileup(graph)
         self._graph = graph
-        self._reads_adder = ReadsAdderWDirect(graph, self._pileup)
+        self._reads_adder = self._reads_adder_cls(graph, self._pileup)
         self._pos_extender = SparseExtender(graph, self._pileup, extension)
         self._neg_extender = ReverseSparseExtender(
             graph, self._pileup, extension)
@@ -248,3 +263,7 @@ class SamplePileupGenerator:
             np.flatnonzero(
                 self._pileup.touched_nodes[:-2]) + self._graph.min_node)
         return sdiffs
+
+
+class ATACSamplePileupGenerator:
+    _reads_adder_cls = ATACReadsAdder
