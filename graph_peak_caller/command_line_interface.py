@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+import logging 
+mpl_logger = logging.getLogger('matplotlib')
+mpl_logger.setLevel(logging.WARNING) 
 import argparse
 import sys
 import logging
