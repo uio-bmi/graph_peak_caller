@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 from .mindense import DensePileup
-from .sample import get_fragment_pileup
+from .sample import get_fragment_pileup, get_fragment_pileup_atac
 from .control import get_background_track_from_control,\
     get_background_track_from_input, scale_tracks
 from .sparsepvalues import PValuesFinder, PToQValuesMapper, QValuesFinder
@@ -48,9 +48,15 @@ class CallPeaks(object):
 
     def run_pre_callpeaks(self, input_reads, control_reads):
         try:
-            sample_pileup = get_fragment_pileup(
-                self.graph, input_reads, self.config,
-                self._reporter)
+            if self.config.atac_seq:
+                logging.info("Getting ATAQ-seq pileup")
+                sample_pileup = get_fragment_pileup_atac(
+                    self.graph, input_reads, self.config,
+                    self._reporter)
+            else:
+                sample_pileup = get_fragment_pileup(
+                    self.graph, input_reads, self.config,
+                    self._reporter)
 
             background_func = get_background_track_from_control
         except json.decoder.JSONDecodeError as e:

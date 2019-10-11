@@ -54,6 +54,32 @@ class TestWholeCallPeaks(unittest.TestCase):
         self.assert_final_peaks_equals_input_peaks()
 
 
+class TestWholeCallPeaksAtacSeq(TestWholeCallPeaks):
+    def _create_reads(self):
+        self.sample_reads = []
+        for peak in self.peaks:
+            for i in range(0, 10):
+                read = peak.get_subinterval(self.fragment_length // 2, self.fragment_length // 2 + self.read_length)
+                self.sample_reads.append(read)
+                read_reverse = peak.get_subinterval(self.fragment_length // 2 -
+                                                    self.read_length, self.fragment_length // 2).get_reverse()
+                self.sample_reads.append(read_reverse)
+
+    def run_callpeaks(self):
+        self._create_reads()
+        control_reads = self.sample_reads.copy()
+
+        self.graph_size = sum(block.length()
+                              for block in self.graph.blocks.values())
+        config = Configuration()
+        config.fragment_length = self.fragment_length
+        config.read_length = self.read_length
+        config.linear_map_name = "test_linear_map.npz"
+        config.atac_seq = True
+        caller = CallPeaks(self.graph, config, Reporter("test_"))
+        caller.run(Intervals(self.sample_reads), Intervals(control_reads))
+
+
 class TestWholeCallpeaksSplitGraph(TestWholeCallPeaks):
 
     def set_graph(self):
@@ -84,6 +110,44 @@ class TestWholeCallpeaksSplitGraph(TestWholeCallPeaks):
         self.do_asserts()
 
     def test_multiple_peaks(self):
+        self.peaks = [
+            DirectedInterval(3, 8, [1], self.graph),
+            DirectedInterval(7, 12, [4], self.graph),
+            DirectedInterval(14, 4, [3, 4], self.graph),
+        ]
+        self.do_asserts()
+
+
+class TestWholeCallpeaksSplitGraphAtacSeq(TestWholeCallPeaksAtacSeq):
+
+    def set_graph(self):
+        self.fragment_length = 6
+        self.read_length = 1
+
+        self.graph = GraphWithReversals(
+            {i: Block(15) for i in range(1, 4)},
+            {
+                1: [2],
+                2: [3]
+            }
+        )
+        LinearMap.from_graph(self.graph).to_file("test_linear_map.npz")
+
+    def test_single_peak(self):
+        self.peaks = [
+            DirectedInterval(3, 9, [2], self.graph),
+        ]
+        self.do_asserts()
+
+    def test_peak_crossing_blocks(self):
+        self.peaks = [
+            DirectedInterval(13, 4, [1, 2], self.graph),
+            DirectedInterval(13, 4, [2, 3], self.graph),
+        ]
+        self.do_asserts()
+
+    def test_multiple_peaks(self):
+        pass
         self.peaks = [
             DirectedInterval(3, 8, [1], self.graph),
             DirectedInterval(7, 12, [4], self.graph),
