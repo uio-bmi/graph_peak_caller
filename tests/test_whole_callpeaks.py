@@ -118,7 +118,7 @@ class TestWholeCallpeaksSplitGraph(TestWholeCallPeaks):
         self.do_asserts()
 
 
-class TestWholeCallpeaksSplitGraphAtacSeq(TestWholeCallPeaksAtacSeq):
+class TestWholeCallpeaksLinearGraphGraphAtacSeq(TestWholeCallPeaksAtacSeq):
 
     def set_graph(self):
         self.fragment_length = 6
@@ -147,11 +147,9 @@ class TestWholeCallpeaksSplitGraphAtacSeq(TestWholeCallPeaksAtacSeq):
         self.do_asserts()
 
     def test_multiple_peaks(self):
-        pass
         self.peaks = [
-            DirectedInterval(3, 8, [1], self.graph),
-            DirectedInterval(7, 12, [4], self.graph),
-            DirectedInterval(14, 4, [3, 4], self.graph),
+            DirectedInterval(3, 9, [1], self.graph),
+            DirectedInterval(14, 5, [2, 3], self.graph),
         ]
         self.do_asserts()
 
