@@ -81,7 +81,7 @@ def create_linear_map_interface(args):
 
 
 def split_vg_json_reads_into_chromosomes(args):
-    reads_base_name = args.vg_json_reads_file_name.split(".")[0:-1]
+    reads_base_name = ".".join(args.vg_json_reads_file_name.split(".")[0:-1])
     logging.info("Will write reads to files %s_[chromosome].json",
                  reads_base_name)
 
@@ -133,7 +133,7 @@ def split_vg_json_reads_into_chromosomes(args):
                 continue
             out_files[mapped_chrom].writelines([line])
         else:
-            print("No groups fond")
+            logging.warning("No node id found in alignment %s" % line)
 
     for file in out_files.values():
         file.close()

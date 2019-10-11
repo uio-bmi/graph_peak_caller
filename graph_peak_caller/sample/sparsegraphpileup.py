@@ -4,6 +4,7 @@ from itertools import chain
 from collections import defaultdict
 from ..sparsediffs import SparseDiffs
 from ..custom_exceptions import InvalidPileupInterval
+from offsetbasedgraph import Interval
 
 
 class NodeInfo:
@@ -99,7 +100,8 @@ class ReadsAdder:
             self._handle_interval(interval)
             i += 1
 
-def reverse_interval_start_thing(interval):
+
+def get_reverse_dummy_interval_at_start(interval):
     rp = interval.start_position.region_path_id 
     offset = interval.graph.blocks[rp].length()-interval.start_position.offset
     return Interval(offset, offset, [rp], graph=interval.graph)
@@ -215,10 +217,11 @@ class ReverseSparseExtender(SparseExtender):
     def _add_end(self, index):
         self._pileup.starts.append(self._graph_size-index)
 
+
 class ATACSamplePileupGenerator:
     def __init__(self, graph, extension, rev_extension):
-        logging.info("Using extension %d when extending reads. " % extension)
-        if extension < 0:
+        logging.info("Will extend in both directions using extensions %d and %d" % (extension, rev_extension))
+        if extension < 0 or rev_extension < 0:
             raise Exception("Invalid extension size %d used. Must be positive. Is fragment length < read length?" % extension)
         self._pileup = SparseGraphPileup(graph)
         self._graph = graph
@@ -237,10 +240,9 @@ class ATACSamplePileupGenerator:
             if i % 5000 == 0:
                 logging.info("%d reads processed" % i)
             self._reads_adder._handle_interval(interval)
-            self._reads_adder2._handle_interval(reverse_interval_start_thing(interval))
+            self._reads_adder2._handle_interval(get_reverse_dummy_interval_at_start(interval))
             i += 1
 
-        #self._reads_adder.add_reads(reads)
         if reporter is not None:
             reporter.add("direct_pileup", self.get_direct_pileup())
         self._pos_extender.run_linear(self._reads_adder.get_pos_ends())

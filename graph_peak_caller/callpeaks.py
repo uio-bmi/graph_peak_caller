@@ -20,6 +20,7 @@ class Configuration:
         self.q_values_threshold = 0.05
         self.global_min = None
         self.keep_duplicates = False
+        self.atac_seq = False
 
     def copy(self):
         o = Configuration()
@@ -30,6 +31,7 @@ class Configuration:
         o.q_values_threshold = self.q_values_threshold
         o.global_min = self.global_min
         o.keep_duplicates = self.keep_duplicates
+        o.atac_seq = self.atac_seq
         return o
 
 

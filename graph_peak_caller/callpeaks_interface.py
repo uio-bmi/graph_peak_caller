@@ -211,6 +211,11 @@ def run_callpeaks2(args):
                                        " Change -m/-M to try to get more paired peaks."
     else:
         config.fragment_length = int(args.fragment_length)
+
+    if args.atac_seq == "True":
+        logging.info("Running in ATAC-seq mode, meaning that reads will be extended in both directions.")
+        config.atac_seq = True
+
     if args.read_length is None:
         config.read_length = estimate_read_length(samples[0], graphs[0])
         logging.info("Estimated read length to %s" % config.read_length)

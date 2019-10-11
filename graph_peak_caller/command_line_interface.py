@@ -168,6 +168,9 @@ interface = \
                     ('-q/--q_threshold', 'Optional. q-value threshold. Default is 0.05.'),
                     ('-M /--max_fold_enrichment', 'Optional. Maximum fold enrichment required for '
                                                'candidate peaks when estimating fragment length. Default 50.'),
+                    ('-a/--atac_seq', 'Optional. Set to True to enable atac-seq mode. Reads will be extended in both '
+                                      'direction, into final fragments with the given --fragment_length size, '
+                                      'centered on the beginning position of the read.')
 
                 ],
                 'method': run_callpeaks2,

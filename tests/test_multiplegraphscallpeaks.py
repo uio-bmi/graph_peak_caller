@@ -155,7 +155,8 @@ class TestMultipleGraphsCallPeaksCommandLine(TestMultipleGraphsCallPeaks):
                              "-G", "150",
                              "-n", "multigraphs_",
                              "-p", "True",
-                             "-D", "True"])
+                             "-D", "True",
+                             "-a", "False"])
 
 
         for i, chromosome in enumerate(self.chromosomes):
