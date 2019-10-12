@@ -133,7 +133,7 @@ def index_interval(args):
 
 def get_variant_edges(args):
     graph = args.graph
-    linear_ref = list(obg.IntervalCollection.from_file(args.linear_ref_interval).intervals, text_file=True)[0]
+    linear_ref = list(obg.IntervalCollection.from_file(args.linear_reference_interval).intervals, text_file=True)[0]
     logging.info("Finding liner ref edges")
     linear_ref_edges = set((e1, e2) for e1, e2 in zip(linear_ref.region_paths[0:-1], linear_ref.region_paths[1:]))
 
