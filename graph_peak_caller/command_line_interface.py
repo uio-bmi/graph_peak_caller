@@ -599,7 +599,7 @@ interface = \
     'get_variant_edges':
         {
             'help': "Get variant edges in a graph",
-            'requires_graaph': True,
+            'requires_graph': True,
             'arguments':
                 [
                     ('linear_reference_interval', ''),
