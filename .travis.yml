@@ -18,7 +18,7 @@ before_install:
 
     - sudo apt-get -y install macs
     - pip install nose
-    - pip install pytest-cov
+    - pip install pytest-cov==2.4.0
     - pip install codecov
     - cd
 

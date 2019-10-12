@@ -5,10 +5,6 @@ import logging
 from graph_peak_caller.logging_config import set_logging_config
 from graph_peak_caller.custom_exceptions import *
 import pyvg
-
-import matplotlib as mpl
-mpl.use('Agg')  # Required for server usage (e.g. travis)
-
 import offsetbasedgraph as obg
 import offsetbasedgraph.vcfmap
 from graph_peak_caller.peakcollection import Peak, PeakCollection
@@ -41,7 +37,7 @@ def main():
 
 
 def version(args):
-    print("Graph Peak Caller v1.1.1")
+    print("Graph Peak Caller v1.2.3")
 
 
 def clean_vcf_wrapper(args):
@@ -338,6 +334,8 @@ interface = \
                     ('vg_json_graph_file_name', ''),
                     ('linear_path_name', 'Name of path in the vg graph (typically ref or chromosome name'),
                     ('out_file_name', ''),
+                    ('-i/--out_file_name_interval', 'Optional. When specified, an IntervalCollection will '
+                                                    'be written to this file.'),
                 ],
             'method': find_linear_path
         },
