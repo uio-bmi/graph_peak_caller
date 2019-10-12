@@ -334,6 +334,8 @@ interface = \
                     ('vg_json_graph_file_name', ''),
                     ('linear_path_name', 'Name of path in the vg graph (typically ref or chromosome name'),
                     ('out_file_name', ''),
+                    ('-i/--out_file_name_interval', 'Optional. When specified, an IntervalCollection will '
+                                                    'be written to this file.'),
                 ],
             'method': find_linear_path
         },
