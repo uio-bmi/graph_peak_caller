@@ -12,7 +12,7 @@ setup(name='graph_peak_caller',
                 'graph_peak_caller.analysis', "graph_peak_caller.shiftestimation"],
       zip_safe=False,
       install_requires=['pymysql', 'numpy', 'filecache', 'scipy',
-                        'memory_profiler', 'python-coveralls', 'matplotlib==3.0.0',
+                        'memory_profiler', 'python-coveralls',
                         'biopython', 'pyfaidx', 'pyvg', 'offsetbasedgraph'
                         ],
       classifiers=[
