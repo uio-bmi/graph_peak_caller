@@ -7,6 +7,7 @@ from graph_peak_caller.custom_exceptions import *
 import pyvg
 import offsetbasedgraph as obg
 import offsetbasedgraph.vcfmap
+import pickle
 from graph_peak_caller.peakcollection import Peak, PeakCollection
 from graph_peak_caller.sparsediffs import SparseValues
 from graph_peak_caller.mindense import DensePileup
@@ -128,7 +129,20 @@ def index_interval(args):
     indexed = interval.to_numpy_indexed_interval()
     indexed.to_file(args.file_name + ".indexed")
     logging.info("Wrote indexed interval to file %s" % args.file_name + ".indexed")
-    
+
+
+def get_variant_edges(args):
+    graph = args.graph
+    linear_ref = list(obg.IntervalCollection.from_file(args.linear_reference_interval, text_file=True).intervals)[0]
+    logging.info("Finding liner ref edges")
+    linear_ref_edges = set((e1, e2) for e1, e2 in zip(linear_ref.region_paths[0:-1], linear_ref.region_paths[1:]))
+
+    variant_edges = set((node, edge) for node in graph.blocks.keys()
+                        for edge in graph.adj_list[node] if (node, edge) not in linear_ref_edges)
+
+    with open(args.out_file_name, "wb") as f:
+        pickle.dump(variant_edges, f)
+        logging.info("Wrote variant edges to %s" % args.out_file_name)
 
 interface = \
 {
@@ -581,6 +595,17 @@ interface = \
                     ('file_name', 'File name of interval collection file. File should only contain a single interval to be indexed.'),
                 ],
             'method': index_interval
+        },
+    'get_variant_edges':
+        {
+            'help': "Get variant edges in a graph",
+            'requires_graph': True,
+            'arguments':
+                [
+                    ('linear_reference_interval', ''),
+                    ('out_file_name', '')
+                ],
+            'method': get_variant_edges
         }
                 
 }
