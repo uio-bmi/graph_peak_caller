@@ -99,6 +99,7 @@ def split_vg_json_reads_into_chromosomes(args):
         f.close()
 
     
+    chromosomes.append("unmapped")
     out_files = {chrom: open(reads_base_name + "_" + chrom + ".json", "w")
                  for chrom in chromosomes}
 
@@ -123,6 +124,7 @@ def split_vg_json_reads_into_chromosomes(args):
 
         groups = regex.search(line)
         if groups is None:
+            out_files["unmapped"].writelines([line])
             n_without_node_id += 1
             continue
         groups = groups.groups()
@@ -131,6 +133,7 @@ def split_vg_json_reads_into_chromosomes(args):
             mapped_chrom = get_mapped_chrom(node)
             if mapped_chrom is None:
                 n_without_node_id += 1
+                out_files["unmapped"].writelines([line])
                 continue
             out_files[mapped_chrom].writelines([line])
         else:
