@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='graph_peak_caller',
-      version='1.2.1',
+      version='1.2.3',
       description='Graph peak caller',
       url='http://github.com/uio-bmi/graph_peak_caller',
       author='Ivar Grytten and Knut Rand',
@@ -12,7 +12,7 @@ setup(name='graph_peak_caller',
                 'graph_peak_caller.analysis', "graph_peak_caller.shiftestimation"],
       zip_safe=False,
       install_requires=['pymysql', 'numpy', 'filecache', 'scipy',
-                        'memory_profiler', 'python-coveralls', 'matplotlib',
+                        'memory_profiler', 'python-coveralls',
                         'biopython', 'pyfaidx', 'pyvg', 'offsetbasedgraph'
                         ],
       classifiers=[
@@ -30,5 +30,5 @@ To update package:
 
 sudo python3 setup.py sdist
 sudo python3 setup.py bdist_wheel
-twine upload dist/graph_peak_caller-1.1.1.tar.gz
+twine upload dist/graph_peak_caller-1.2.3.tar.gz 
 """

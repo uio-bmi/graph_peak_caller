@@ -7,6 +7,8 @@ import pickle
 import logging
 import numpy as np
 
+import matplotlib as mpl
+mpl.use('Agg')  # Required for server usage (e.g. travis)
 
 class AnalysisResults:
     def __init__(self):

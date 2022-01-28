@@ -332,7 +332,7 @@ def find_linear_path(args):
     vg_graph = pyvg.Graph.from_file(args.vg_json_graph_file_name)
     linear_path = create_linear_path(graph, vg_graph,
                                      path_name=args.linear_path_name,
-                                     write_to_file=None)
+                                     write_to_file=args.out_file_name_interval)
     linear_path.to_file(args.out_file_name)
     logging.info("Wrote to file %s" % args.out_file_name)
 
