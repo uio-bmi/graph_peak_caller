@@ -121,5 +121,5 @@ class QValuesFinder:
 
     def get_q_array_from_p_array(self, p_values):
         assert isinstance(p_values, np.ndarray)
-        trans = np.vectorize(self.p_to_q_values.get, otypes=[np.float])
+        trans = np.vectorize(self.p_to_q_values.get, otypes=[float])
         return trans(p_values)

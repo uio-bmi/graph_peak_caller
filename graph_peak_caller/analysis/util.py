@@ -46,6 +46,9 @@ def get_linear_paths_in_graph(ob_graph, vg_graph, write_to_file_name=None):
     intervals = {}
     for path in vg_graph.paths:
         obg_interval = path.to_obg(ob_graph=ob_graph)
+        if not obg_interval:
+            logging.info("OBG interval for path " + path.name + " is False. Skipping.")
+            continue
         obg_interval.name = path.name
         print("Path name: %s" % path.name)
         intervals[obg_interval.name] = obg_interval

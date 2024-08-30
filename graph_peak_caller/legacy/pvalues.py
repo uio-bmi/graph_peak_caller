@@ -127,6 +127,6 @@ class QValuesFinder:
                 logging.error("P value not found in mapping dict. Could be due to rounding errors.")
             return self.p_to_q_values[x]
 
-        trans = np.vectorize(translation, otypes=[np.float])
+        trans = np.vectorize(translation, otypes=[float])
         new_values = trans(p_values)
         return new_values

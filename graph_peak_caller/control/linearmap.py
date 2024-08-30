@@ -120,7 +120,10 @@ class LinearMap:
     def find_starts(graph, node_ids=None):
         if node_ids is None:
             node_ids = list(graph.get_topological_sorted_node_ids())
-        max_dists = np.zeros(len(node_ids))
+        # this does not work for node id spaces that are not compactec
+        # max_dists = np.zeros(len(node_ids))
+        # find size of array from the largest named node instead
+        max_dists = np.zeros(int(graph.get_sorted_node_ids()[-1]))
         n_processed = 0
         for node_id in node_ids:
             if n_processed % 500000 == 0:
@@ -139,7 +142,10 @@ class LinearMap:
         adj_list = graph.reverse_adj_list
         if node_ids is None:
             node_ids = list(graph.get_sorted_node_ids(reverse=True))
-        max_dists = np.zeros(len(node_ids))
+        # this does not work for node id spaces that are not compactec
+        # max_dists = np.zeros(len(node_ids))
+        # find size of array from the largest named node instead
+        max_dists = np.zeros(int(graph.get_sorted_node_ids()[-1]))
         n_processed = 0
         for node_id in node_ids:
             if n_processed % 500000 == 0:

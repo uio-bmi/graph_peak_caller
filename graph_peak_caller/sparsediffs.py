@@ -62,7 +62,7 @@ class SparseValues:
         return new
 
     def to_dense_pileup(self, size):
-        if self.values.dtype == np.bool:
+        if self.values.dtype == bool:
             values = self.values.astype("int")
         else:
             values = self.values
